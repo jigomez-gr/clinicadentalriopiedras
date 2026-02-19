@@ -4,10 +4,11 @@
 }
 
 @section Estilos {
-    <!-- Estilos de DataTables y Select2, igual que en otras vistas -->
-    <link href="~/lib/datatables2/css/dataTables.dataTables.css" rel="stylesheet" />
-    <link href="~/lib/select2/css/select2.min.css" rel="stylesheet" />
-    <link href="~/lib/select2/css/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
       
 }
 
@@ -385,9 +386,9 @@
 
 @section Scripts {
     <!-- JS base de DataTables -->
-   
-
-    <script src="~/lib/select2/js/select2.min.js"></script>
+    @* cambio 99 comzo *@
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    @* cambio 99 fin *@
 
     <script>
                (function () {

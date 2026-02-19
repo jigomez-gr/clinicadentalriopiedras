@@ -2,7 +2,10 @@
     For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 *@
 @section Estilos {
-    <link href="~/lib/datatables2/css/dataTables.dataTables.css" rel="stylesheet" />
+  
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css" />
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap4.min.css" />
 }
 <h2 class="mt-4 mb-4">Especialidades</h2>
 
@@ -67,9 +70,11 @@
 </div>
 
 @section Scripts {
-    <script src="~/lib/datatables2/js/moment.min.js"></script>
-    <script src="~/lib/datatables2/js/dataTables.js"></script>
-    <script src="~/views/especialidad/especialidad.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+
+    <script src="/views/especialidad/especialidad.js"></script>
     <script>
             (function () {
             "use strict";
