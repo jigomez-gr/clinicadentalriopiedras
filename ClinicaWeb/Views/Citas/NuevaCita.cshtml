@@ -16,7 +16,7 @@
     - Administrador: crea cita para el paciente indicado en ViewBag.IdUsuarioPaciente
 *@
 @section Estilos {
-    <link href="~/lib/jquery-ui/jquery-ui.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
     <style>
         .ui-datepicker-highlight-disabled a {
             border: 1px solid #c5c5c5 !important;
@@ -486,7 +486,7 @@
             });
         }
 
-        function ObtenerDoctoreHorarioDetalle() {
+               function ObtenerDoctoreHorarioDetalle() {
             $("#txtFechaCita").datepicker("destroy");
             $("#tab-horario").LoadingOverlay("show");
             $("#contenedor-am").html("");
@@ -504,6 +504,9 @@
                     DoctorHorario = responseJson.data;
 
                     $("#txtFechaCita").datepicker({
+                        /* comienzo cambio 9898 */
+                        dateFormat: "dd/mm/yy", // Forzamos el formato aquí también
+                        /* final cambio 9898 */
                         defaultDate: "",
                         minDate: 0,
                         beforeShowDay: function (date) {
@@ -517,36 +520,50 @@
                             $("#contenedor-pm").html("");
 
                             const selectedDate = $(this).val();
-                            const Fecha = DoctorHorario.find(element => element.fecha == selectedDate);
 
-                            const HorarioAM = Fecha.horarioDTO.filter(element => element.turno == "AM");
-                            const HorarioPM = Fecha.horarioDTO.filter(element => element.turno == "PM");
+                            /* comienzo cambio 9898 */
+                            // Buscamos la fecha tal cual la devuelve el datepicker configurado arriba
+                            const Fecha = DoctorHorario.find(element => element.fecha.trim() == selectedDate.trim());
 
-                            HorarioAM.forEach(function (item) {
-                                $("#contenedor-am").append(
-                                    `<div class="col mb-4">
-                                        <div class="text-center card-hora"
-                                             style="cursor: pointer;border-radius: 0.375rem;border: 1px solid #ccc !important;"
-                                             data-id="${item.idDoctorHorarioDetalle}"
-                                             data-text="${item.turnoHora}">
-                                            <h6 class="card-title mt-2">${item.turnoHora}</h6>
-                                        </div>
-                                     </div>`
-                                );
-                            });
+                            // Si por algún motivo de cultura de servidor 'Fecha' sigue siendo undefined,
+                            // evitamos el crujido del programa con esta validación simple:
+                            if (Fecha && Fecha.horarioDTO) {
+                                const HorarioAM = Fecha.horarioDTO.filter(element => element.turno == "AM");
+                                const HorarioPM = Fecha.horarioDTO.filter(element => element.turno == "PM");
 
-                            HorarioPM.forEach(function (item) {
-                                $("#contenedor-pm").append(
-                                    `<div class="col mb-4">
-                                        <div class="text-center card-hora"
-                                             style="cursor: pointer;border-radius: 0.375rem;border: 1px solid #ccc !important;"
-                                             data-id="${item.idDoctorHorarioDetalle}"
-                                             data-text="${item.turnoHora}">
-                                            <h6 class="card-title mt-2">${item.turnoHora}</h6>
-                                        </div>
-                                     </div>`
-                                );
-                            });
+                                HorarioAM.forEach(function (item) {
+                                    $("#contenedor-am").append(
+                                        `<div class="col mb-4">
+                                            <div class="text-center card-hora"
+                                                 style="cursor: pointer;border-radius: 0.375rem;border: 1px solid #ccc !important;"
+                                                 data-id="${item.idDoctorHorarioDetalle}"
+                                                 data-text="${item.turnoHora}">
+                                                <h6 class="card-title mt-2">${item.turnoHora}</h6>
+                                            </div>
+                                         </div>`
+                                    );
+                                });
+
+                                HorarioPM.forEach(function (item) {
+                                    $("#contenedor-pm").append(
+                                        `<div class="col mb-4">
+                                            <div class="text-center card-hora"
+                                                 style="cursor: pointer;border-radius: 0.375rem;border: 1px solid #ccc !important;"
+                                                 data-id="${item.idDoctorHorarioDetalle}"
+                                                 data-text="${item.turnoHora}">
+                                                <h6 class="card-title mt-2">${item.turnoHora}</h6>
+                                            </div>
+                                         </div>`
+                                    );
+                                });
+                            } else {
+                                // Si no hay coincidencia, mostramos el aviso que ya conoces
+                                Swal.fire({
+                                    text: "No se encontró información detallada para la fecha seleccionada.",
+                                    icon: "info"
+                                });
+                            }
+                            /* final cambio 9898 */
                         }
                     });
                 } else {
@@ -560,12 +577,11 @@
                 $("#tab-horario").LoadingOverlay("hide");
                 Swal.fire({
                     title: "Error!",
-                    text: "No se encontraron coincidencias.",
+                    text: "No se pudieron cargar los horarios.",
                     icon: "warning"
                 });
             });
         }
-
         function enviarCita(objeto) {
             fetch(`/Citas/Guardar`, {
                 method: "POST",
