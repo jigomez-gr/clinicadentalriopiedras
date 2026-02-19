@@ -1,0 +1,1634 @@
+﻿@using System.Net
+
+@{
+    ViewData["Title"] = "Calendario Horarios y Citas";
+
+    bool esAdmin = (ViewBag.EsAdmin ?? 0) == 1;
+    bool esDoctor = (ViewBag.EsDoctor ?? 0) == 1;
+
+    int idDoctorFijo = ViewBag.IdDoctorFijo != null ? (int)ViewBag.IdDoctorFijo : 0;
+    // ✅ IMPORTANTE: definirla AQUÍ, sin llaves extra
+    string doctorNombreCompleto = WebUtility.HtmlDecode((ViewBag.DoctorNombreCompleto ?? "").ToString());
+    var raw = (ViewBag.DoctorNombreCompleto ?? "").ToString();
+    doctorNombreCompleto = WebUtility.HtmlDecode(WebUtility.HtmlDecode(raw));
+
+    string helpVideoUrl = Url.Content("~/helps/calendario_horarios_citas.mp4");
+}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+
+<style>
+    .agenda-header {
+        border-radius: .5rem;
+        padding: .75rem 1rem;
+    }
+
+    .slot-card {
+        cursor: pointer;
+        border-radius: .5rem;
+        border: 1px solid rgba(0,0,0,.12);
+        padding: 10px 12px;
+        min-height: 74px;
+        background: #f8f9fa;
+        color: #0b2239;
+    }
+
+        .slot-card.libre {
+            background: #f8f9fa;
+            color: #0b2239;
+        }
+
+        .slot-card.ocupado {
+            background: #dc3545;
+            color: #fff;
+            border-color: rgba(220,53,69,.65);
+        }
+
+        .slot-card:hover {
+            filter: brightness(1.03);
+        }
+
+    .slot-time {
+        font-size: 1.05rem;
+        line-height: 1.1;
+    }
+
+    .slot-date {
+        font-size: .85rem;
+        opacity: .8;
+    }
+
+    .slot-actions button {
+        margin-right: .5rem;
+    }
+
+    .muted {
+        opacity: .85;
+    }
+
+    /* Caja del modal: VERDE CLARO + letras negras */
+    .cita-box {
+        background: #d1e7dd;
+        /* success-subtle */
+        border-radius: .5rem;
+        padding: .75rem 1rem;
+        color: #212529;
+        border: 1px solid rgba(0,0,0,.08);
+    }
+
+        .cita-box label {
+            opacity: .9;
+        }
+
+        .cita-box input,
+        .cita-box textarea {
+            background: rgba(255,255,255,.9);
+            border: 1px solid rgba(0,0,0,.15);
+            color: #212529;
+        }
+
+    /* Tooltips (agenda): fondo blanco, texto negro */
+    .tooltip-agenda {
+        --bs-tooltip-bg: #fff;
+        --bs-tooltip-color: #000;
+        --bs-tooltip-opacity: 1;
+    }
+
+        .tooltip-agenda .tooltip-inner {
+            border: 1px solid rgba(0,0,0,.15);
+        }
+    /* Compactar el contenido del modal de cita */
+    #mdCita .modal-body {
+        padding: .75rem;
+        /* antes era más grande */
+    }
+
+    #mdCita .cita-box {
+        padding: .6rem .8rem;
+        /* un poco menos */
+    }
+
+        #mdCita .cita-box label {
+            font-size: .85rem;
+            margin-bottom: .15rem;
+        }
+
+        #mdCita .cita-box .form-control,
+        #mdCita .cita-box textarea {
+            font-size: .9rem;
+            padding: .25rem .5rem;
+        }
+
+    /* Botones del footer más compactos */
+    #mdCita .modal-footer .btn {
+        padding: .35rem .7rem;
+    }
+
+    .btn-chk-calcom {
+        background-color: #00bcd4 !important;
+        color: white !important;
+    }
+
+        .btn-chk-calcom:hover {
+            background-color: #00acc1 !important;
+        }
+
+    .slot-actions .btn {
+        font-size: 0.75rem; /* Fuente más pequeña */
+        padding: 0.25rem 0.4rem; /* Padding muy ajustado */
+        white-space: nowrap; /* Evita que el texto interno se rompa */
+    }
+</style>
+<div class="d-flex align-items-center justify-content-between mb-3 agenda-header"
+     style="background: #198754; color:#fff;">
+    <div>
+        <h3 class="mb-0">Calendario Horarios y Citas</h3>
+        <div class="muted">Selecciona una fecha para ver horarios y citas</div>
+    </div>
+
+    <div class="ms-2">
+        <button type="button"
+                class="btn btn-outline-light btn-sm"
+                onclick="openHelpVideo('Doctor_Horario.mp4')"
+                data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-citas"
+                title="Ayuda: abre el vídeo de explicación (wwwroot/helps/Doctor_Horario.mp4).">
+            <i class="fa fa-circle-question"></i> Ayuda
+        </button>
+
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="row g-2 align-items-end">
+
+            <div class="col-12 col-md-3">
+                <div class="d-grid gap-2">
+                    <button id="btnHoy" class="btn btn-outline-secondary w-100" data-bs-toggle="tooltip" data-bs-placement="top" title="Si haces doble click en este botón se despliega la fecha de hoy en el campo fecha">Hoy</button>
+                    <div>
+                        <label class="form-label">Fecha</label>
+                        <input id="txtFecha" class="form-control" placeholder="dd/mm/aaaa" data-bs-toggle="tooltip" data-bs-placement="top" title="Registre mediante el asistente de fechas la fecha de la agenda de citas del doctor para el calendario" />
+                    </div>
+                </div>
+            </div>
+
+            @if (esAdmin)
+            {
+
+                <div class="col-12 col-md-5">
+                    <label class="form-label">Doctor</label>
+                    <select id="cboDoctor" class="form-select" data-bs-toggle="tooltip" data-bs-placement="top" title="Selección del doctor/especialidad cuyo calendario de citas se muestra en pantalla"></select>
+                    <small class="text-muted">* Un doctor tiene una única especialidad (solo informativo)</small>
+                </div>
+
+            }
+            else
+            {
+
+                <div class="col-12 col-md-5">
+
+                    <label class="form-label">Doctor</label>
+                    <input id="txtDoctorFijo" class="form-control"
+                           value="@doctorNombreCompleto"
+                           readonly
+                           data-bs-toggle="tooltip" data-bs-placement="top"
+                           title="* Se usa el doctor logueado automáticamente" />
+
+                </div>
+            }
+
+            <div class="col-12 col-md-2">
+                <div class="d-flex gap-2">
+                    <button id="btnVer" title="* Redespliega los  slot de la agenda de la fecha en pantalla" type="button" class="btn btn-warning flex-grow-1">Ver horarios/citas</button>
+
+                    <a id="btnCalAgenda"
+                       class="btn btn-success ms-2"
+                       title="Acceder al repositorio sincronizado de Cal.com, permite videoconferencias opcionales en las citas"
+                       href="https://app.cal.com/jose-ignacio-tikb55/"
+                       target="_blank"
+                       rel="noopener"
+                       style="white-space:nowrap;">
+                        Cal.
+                    </a>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="col-12 col-md-2">
+                <div class="card border-0 shadow-sm" style="background: rgba(0,0,0,.03);">
+                    <div class="card-body p-2">
+                        <label class="form-label mb-1" style="font-size:.85rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="Registre en formato de horas y minutos el slot horario específico de la agenda que quiere añadir p.e. 06:30">  Nuevo slot (HH:MM)</label>
+                        <input id="txtNuevoSlotHora" class="form-control form-control-sm mb-2" placeholder="00:00" data-bs-toggle="tooltip" data-bs-placement="top" title="Registre en formato de horas y minutos el slot horario específico de la agenda que quiere añadir p.e. 06:30" />
+                        <button id="btnAddSlot" class="btn btn-sm btn-outline-success w-100" data-bs-toggle="tooltip" data-bs-placement="top" title="Al realizar doble click en este botón se añadirá ese slot horario específico en la agenda del doctor cuyo día está en pantalla">  Añadir Slot</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-lg-6">
+        <div class="card">
+            <div class="card-header" style="background: var(--brand-blue); color:#fff;">
+                <strong>Mañana</strong>
+            </div>
+            <div class="card-body">
+                <div id="slotsAM" class="row g-2" data-bs-custom-class="tooltip-agenda" data-bs-toggle="tooltip" data-bs-placement="top" title="Slot horario: ventana contenedor para citas de pacientes en donde se marca la hora"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-6">
+        <div class="card">
+            <div class="card-header" style="background: var(--brand-blue); color:#fff;">
+                <strong>Tarde</strong>
+            </div>
+            <div class="card-body">
+                <div id="slotsPM" class="row g-2" data-bs-custom-class="tooltip-agenda" data-bs-toggle="tooltip" data-bs-placement="top" title="Slot horario: ventana contenedor para citas de pacientes en donde se marca la hora"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="modal fade" id="mdCita" tabindex="-1" aria-labelledby="mdCitaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header" style="background: var(--brand-blue); color:#fff;">
+                <h5 class="modal-title" id="mdCitaLabel">Detalle de la cita</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="cita-box">
+                    <div class="row g-2">
+
+                        <div class="col-12 col-md-3">
+                            <label class="form-label"
+                                   data-bs-toggle="tooltip" data-bs-placement="top"
+                                   data-bs-custom-class="tooltip-agenda"
+                                   title="Hora de la cita">Hora</label>
+                            <input id="citaHora" class="form-control" readonly
+                                   data-bs-toggle="tooltip" data-bs-placement="top"
+                                   data-bs-custom-class="tooltip-agenda"
+                                   title="Hora de la cita" />
+                        </div>
+
+                        <div class="col-12 col-md-5">
+                            <label class="form-label"
+                                   data-bs-toggle="tooltip" data-bs-placement="top"
+                                   data-bs-custom-class="tooltip-agenda"
+                                   title="Datos Identificativos del paciente">Paciente</label>
+                            <input id="citaPaciente" class="form-control" readonly
+                                   data-bs-toggle="tooltip" data-bs-placement="top"
+                                   data-bs-custom-class="tooltip-agenda"
+                                   title="Datos Identificativos del paciente" />
+                        </div>
+
+                        <div class="col-12 col-md-4">
+                            <label class="form-label"
+                                   data-bs-toggle="tooltip" data-bs-placement="top"
+                                   data-bs-custom-class="tooltip-agenda"
+                                   title="Estado actual de la cita (p.e. pendiente, confirmada, cancelada, etc.)">Estado</label>
+                            <input id="citaEstado" class="form-control" readonly
+                                   data-bs-toggle="tooltip" data-bs-placement="top"
+                                   data-bs-custom-class="tooltip-agenda"
+                                   title="Estado actual de la cita (p.e. pendiente, confirmada, cancelada, etc.)" />
+                        </div>
+
+                        <div class="col-12 col-md-4">
+                            <label class="form-label"
+                                   data-bs-toggle="tooltip" data-bs-placement="top"
+                                   data-bs-custom-class="tooltip-agenda"
+                                   title="La cita puede haber sido registrada por Email, en la WEB (esta aplicación), por teléfono VAPI, por WASSAP, SMS y/o por Telegram">Origen</label>
+                            <input id="citaOrigen" class="form-control" readonly
+                                   data-bs-toggle="tooltip" data-bs-placement="top"
+                                   data-bs-custom-class="tooltip-agenda"
+                                   title="La cita puede haber sido registrada por Email, en la WEB (esta aplicación), por teléfono VAPI, por WASSAP, SMS y/o por Telegram" />
+                        </div>
+
+                        <div class="col-12 col-md-2">
+                            <label class="form-label"
+                                   data-bs-toggle="tooltip" data-bs-placement="top"
+                                   data-bs-custom-class="tooltip-agenda"
+                                   title="La cita se intenta reconfirmar con el paciente 24 horas antes; este campo vale 'N' ó 'S'">Confirmada</label>
+                            <input id="citaConfirmada" class="form-control" readonly
+                                   data-bs-toggle="tooltip" data-bs-placement="top"
+                                   data-bs-custom-class="tooltip-agenda"
+                                   title="La cita se intenta reconfirmar con el paciente 24 horas antes; este campo vale 'N' ó 'S'" />
+                        </div>
+
+                        <div class="col-12 col-md-3">
+                            <label class="form-label"
+                                   data-bs-toggle="tooltip" data-bs-placement="top"
+                                   data-bs-custom-class="tooltip-agenda"
+                                   title="Es la fecha y hora a la que se le pidió que reconfirmara">Fecha petición</label>
+                            <input id="citaFechaPeticion" class="form-control" readonly
+                                   data-bs-toggle="tooltip" data-bs-placement="top"
+                                   data-bs-custom-class="tooltip-agenda"
+                                   title="Es la fecha y hora a la que se le pidió que reconfirmara" />
+                        </div>
+
+                        <div class="col-12 col-md-3">
+                            <label class="form-label"
+                                   data-bs-toggle="tooltip" data-bs-placement="top"
+                                   data-bs-custom-class="tooltip-agenda"
+                                   title="Es la fecha y hora a la que el usuario reconfirmó la cita en el caso en el que lo hiciera">Fecha confirmación</label>
+                            <input id="citaFechaConfirmacion" class="form-control" readonly
+                                   data-bs-toggle="tooltip" data-bs-placement="top"
+                                   data-bs-custom-class="tooltip-agenda"
+                                   title="Es la fecha y hora a la que el usuario reconfirmó la cita en el caso en el que lo hiciera" />
+                        </div>
+
+                        <div class="col-12 col-md-4">
+                            <label class="form-label"
+                                   data-bs-toggle="tooltip" data-bs-placement="top"
+                                   data-bs-custom-class="tooltip-agenda"
+                                   title="Es el método por el que se le solicitó la reconfirmación de la cita; será SMS ó Wassap">Método petición</label>
+                            <input id="citaMetodoPeticion" class="form-control" readonly
+                                   data-bs-toggle="tooltip" data-bs-placement="top"
+                                   data-bs-custom-class="tooltip-agenda"
+                                   title="Es el método por el que se le solicitó la reconfirmación de la cita; será SMS ó Wassap" />
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label"
+                                   data-bs-toggle="tooltip" data-bs-placement="top"
+                                   data-bs-custom-class="tooltip-agenda"
+                                   title="Es el texto que pone el paciente al pedir la cita">Razón del paciente</label>
+                            <textarea id="citaRazon" class="form-control" rows="2" readonly
+                                      data-bs-toggle="tooltip" data-bs-placement="top"
+                                      data-bs-custom-class="tooltip-agenda"
+                                      title="Es el texto que pone el paciente al pedir la cita"></textarea>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label"
+                                   data-bs-toggle="tooltip" data-bs-placement="top"
+                                   data-bs-custom-class="tooltip-agenda"
+                                   title="Texto que pone el doctor indicando diagnóstico y las recomendaciones">Indicaciones</label>
+                            <textarea id="citaIndicaciones" class="form-control" rows="2" readonly
+                                      data-bs-toggle="tooltip" data-bs-placement="top"
+                                      data-bs-custom-class="tooltip-agenda"
+                                      title="Texto que pone el doctor indicando diagnóstico y las recomendaciones"></textarea>
+                        </div>
+
+                        <div class="col-12 mt-3">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white py-1 d-flex justify-content-between align-items-center"
+                                     style="cursor:pointer"
+                                     onclick="$('#secResCalcom').collapse('toggle')">
+                                    <small><strong><i class="fa fa-sync-alt"></i> ESTADO SINCRONIZACIÓN CAL.COM</strong></small>
+                                    <i class="fa fa-chevron-down small"></i>
+                                </div>
+                                <div id="secResCalcom" class="collapse">
+                                    <div class="card-body bg-light p-3">
+                                        <div class="row g-2">
+                                            <div class="col-md-6">
+                                                <label class="text-muted small d-block">Resultado Global</label>
+                                                <span id="resCalStatus" class="fw-bold">-</span>
+                                            </div>
+                                            <div class="col-md-6 text-md-end">
+                                                <label class="text-muted small d-block">Último Chequeo</label>
+                                                <span id="resCalFecha" class="text-dark">-</span>
+                                            </div>
+                                            <div class="col-12 mt-2 border-top pt-2">
+                                                <label class="text-muted small d-block text-danger">Detalle de Error / Observaciones</label>
+                                                <div id="resCalError" class="p-2 bg-white border rounded text-danger small" style="min-height: 40px; overflow-y: auto;">
+                                                    Sin errores registrados.
+                                                </div>
+                                            </div>
+                                            <div class="col-12 mt-2">
+                                                <div class="d-flex justify-content-between small">
+                                                    <span><strong>Booking UID:</strong> <code id="resCalUID" class="text-info">-</code></span>
+                                                    <span><strong>Status API:</strong> <span id="resCalApiStatus" class="badge bg-secondary">-</span></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+                <div class="row g-2 mt-3">
+                    <div class="col-12 col-md-6">
+                        <button id="btnDescDocPaciente" type="button"
+                                class="btn btn-warning w-100 btn-sm"
+                                disabled
+                                data-bs-toggle="tooltip" data-bs-placement="top"
+                                data-bs-custom-class="tooltip-agenda"
+                                title="Sirve para descargar un documento opcionalmente registrado por el paciente al registrar la cita (puede ser un ZIP)">
+                            Descargar doc. paciente
+                        </button>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <button id="btnDescDocDoctor" type="button"
+                                class="btn btn-warning w-100 btn-sm"
+                                disabled
+                                data-bs-toggle="tooltip" data-bs-placement="top"
+                                data-bs-custom-class="tooltip-agenda"
+                                title="Sirve para descargar el documento que opcionalmente puede poner el doctor junto a las indicaciones al paciente">
+                            Descargar doc. doctor
+                        </button>
+                    </div>
+                </div>
+
+
+                <div class="mt-2 text-muted">
+                    * Vista de consulta.
+                </div>
+                <div class="mt-3 border-top pt-2">
+                    <label class="fw-bold small text-info">Metadata Cal.com</label>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <input type="text" id="calApe" class="form-control form-control-sm" placeholder="Apellido" readonly />
+                        </div>
+                        <div class="col-md-6">
+                            <input type="text" id="calEmail" class="form-control form-control-sm" placeholder="Email" readonly />
+                        </div>
+                        <div class="col-md-6">
+                            <input type="text" id="calMovil" class="form-control form-control-sm" placeholder="Teléfono" readonly />
+                        </div>
+                        <div class="col-md-6">
+                            <input type="text" id="calUid" class="form-control form-control-sm" placeholder="UID" readonly />
+                        </div>
+                        <div class="col-12 d-flex gap-2">
+                            <textarea id="calRazon" class="form-control form-control-sm" rows="1" placeholder="Razón de cita" readonly></textarea>
+                            <button type="button" class="btn btn-sm btn-success" onclick="descargarJSON()" style="white-space:nowrap;">
+                                Descargar JSON
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3 border-top pt-2">
+               
+                <div id="infoDirectaSincro" class="small mt-2" style="display:none">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* /* cambio comienzo */ *@
+<div class="modal fade" id="mdReprogramar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title"><i class="fa fa-calendar-day"></i> Reprogramar Cita</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="reproIdCitaVieja" />
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nueva Fecha</label>
+                    <input id="reproFecha" class="form-control" placeholder="dd/mm/aaaa" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nueva Hora (HH:MM)</label>
+                    <input id="reproHora" class="form-control" placeholder="00:00" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Motivo de Reprogramación</label>
+                    <textarea id="reproMotivo" class="form-control" rows="3" placeholder="Indique la razón del cambio..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button id="btnConfirmarRepro" class="btn btn-warning">Confirmar Reprogramación</button>
+            </div>
+        </div>
+    </div>
+</div>
+@* /* cambio fin */ *@
+
+<div class="modal fade" id="mdCancelarCita" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-trash me-2"></i>Cancelar Cita</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="cancelarIdCita" />
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-danger">Motivo de la cancelación (Obligatorio):</label>
+                    <textarea id="cancelarMotivo" class="form-control border-danger" rows="3"
+                              placeholder="Ej: Ausencia del doctor, cierre de clínica..."></textarea>
+                </div>
+                <div class="alert alert-warning small py-2">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    Esta acción notificará al paciente y liberará el horario.
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" id="btnConfirmarCancelacion" class="btn btn-danger px-4" onclick="ejecutarCancelacionCita()">
+                    Confirmar Cancelación
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="mdChkCalcom" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header btn-chk-calcom text-white">
+                <h5 class="modal-title"><i class="fa fa-sync"></i> Estado de Sincronización Cal.com</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="chk_idCita" />
+
+                <div class="alert alert-info py-2 mb-3">
+                    <i class="fa fa-question-circle"></i> Seleccione el tipo de chequeo si desea re-validar la cita ahora.
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="form-check card p-2">
+                            <input class="form-check-input ms-1" type="radio" name="radRefresh" id="refN" value="N" checked>
+                            <label class="form-check-label ms-4" for="refN">
+                                <strong>Chequeo Simple</strong><br><small class="text-muted">Solo verifica integridad.</small>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check card p-2">
+                            <input class="form-check-input ms-1" type="radio" name="radRefresh" id="refS" value="S">
+                            <label class="form-check-label ms-4" for="refS">
+                                <strong>Refresh Forzado</strong><br><small class="text-muted">Actualiza datos en Cal.com.</small>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="secResultadoSincro" style="display:none;">
+                    <h6 class="border-bottom pb-2 text-primary"><i class="fa fa-database"></i> Datos en Repositorio y Cal.com</h6>
+                    <div class="bg-light p-3 rounded border">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="text-muted small d-block">Resultado Sincro</label>
+                                <span id="lblResStatus" class="badge p-2 w-100">-</span>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="text-muted small d-block">Última Conexión</label>
+                                <strong id="lblResFecha">-</strong>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="text-muted small d-block">Booking UID</label>
+                                <code id="lblResUID" class="text-dark small">-</code>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="text-muted small d-block">Estado API (Cal.com)</label>
+                                <span id="lblResApiStatus" class="fw-bold">-</span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small d-block">Cita Local ID</label>
+                                <span id="lblResIdCita" class="fw-bold">-</span>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="text-muted small d-block text-danger">Log de Errores / Observaciones</label>
+                                <div id="lblResError" class="p-2 bg-white border rounded small text-danger" style="min-height:50px;">
+                                    -
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" onclick="visualizarResultadoSincro()"><i class="fa fa-eye"></i> Cargar/Ver Datos</button>
+                <button type="button" class="btn btn-chk-calcom text-white" onclick="ejecutarChequeoSincro()"><i class="fa fa-play"></i> Lanzar Chequeo</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+
+<script>
+    /* cambio cancelacion: VARIABLES */
+    let modalReproObj;
+    let modalCancelarObj;
+    /* final cambio */
+         /* MODI44 */
+     console.log("Detalle_Horario_Citas JS cargado");
+     window.addEventListener("error", function (e) {
+         console.error("JS ERROR:", e.message, "at", e.filename + ":" + e.lineno + ":" + e.colno);
+     });
+     window.addEventListener("unhandledrejection", function (e) {
+         console.error("PROMISE ERROR:", e.reason);
+     });
+     /*FIN MODI44 */
+
+          (function () {
+        "use strict";
+
+        // ========= HELP VIDEO (simple) =========
+        window.openHelpVideo = function (fileName) {
+          const w = 900, h = 520;
+          const left = Math.max(0, (screen.width - w) / 2);
+          const top = Math.max(0, (screen.height - h) / 2);
+
+
+          const url = "/helps/" + encodeURIComponent(fileName);
+
+          window.open(
+            url,
+            "helpVideo",
+            `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no`
+          );
+        };
+      })();
+      const ES_ADMIN = @(esAdmin ? "true" : "false");
+      const ES_DOCTOR = @(esDoctor ? "true" : "false");
+      const ID_DOCTOR_FIJO = @idDoctorFijo;
+      // const DOCTOR_NOMBRE = "@doctorNombreCompleto".trim();
+       const DOCTOR_NOMBRE = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(doctorNombreCompleto));
+
+
+      let FECHA_EN_PANTALLA = "";
+      let idCitaActual = 0;
+      function hoyDmy() {
+          const d = new Date();
+          const dd = String(d.getDate()).padStart(2, "0");
+          const mm = String(d.getMonth() + 1).padStart(2, "0");
+          const yy = d.getFullYear();
+          return `${dd}/${mm}/${yy}`;
+      }
+
+      function normHora(v) {
+          if (!v) return "";
+          const s = String(v).trim();
+          return s.length >= 5 ? s.substring(0, 5) : s;
+      }
+
+      function fmtDateTime(v) {
+          if (!v) return "";
+          const s = String(v).trim();
+
+          // ya viene bonito tipo 29/12/2025 10:00
+          if (s.includes("/") && !s.includes("T")) return s;
+          // ISO
+          if (s.includes("T")) {
+              const d = new Date(s);
+              if (!isNaN(d.getTime())) {
+                  const dd = String(d.getDate()).padStart(2, "0");
+                  const mm = String(d.getMonth() + 1).padStart(2, "0");
+                  const yy = d.getFullYear();
+                  const hh = String(d.getHours()).padStart(2, "0");
+                  const mi = String(d.getMinutes()).padStart(2, "0");
+                  return `${dd}/${mm}/${yy} ${hh}:${mi}`;
+              }
+          }
+          return s;
+      }
+
+      async function cargarDoctores() {
+          const r = await fetch("/Doctor/Lista", { headers: { "Accept": "application/json" } });
+          const j = await r.json().catch(() => null);
+          const arr = (j && j.data) ? j.data : [];
+          const cbo = document.getElementById("cboDoctor");
+          cbo.innerHTML = "";
+
+          const opt0 = document.createElement("option");
+          opt0.value = "";
+          opt0.textContent = "-- Seleccione --";
+          cbo.appendChild(opt0);
+          for (const d of arr) {
+              const id = d.idDoctor ??
+              d.IdDoctor ?? 0;
+              const nom = d.nombres ?? d.Nombres ?? "";
+              const ape = d.apellidos ?? d.Apellidos ?? "";
+              const esp = d.especialidad?.nombre ?? d.Especialidad?.Nombre ?? "";
+              const o = document.createElement("option");
+              o.value = id;
+              o.textContent = `${nom} ${ape}${esp ?
+              " - " + esp : ""}`.trim();
+              cbo.appendChild(o);
+          }
+      }
+     /* MODI44 */
+         /* CAMBIO CALCOM empieza */
+     async function refrescarBotonCalAgenda(idDoctor) {
+         const btn = document.getElementById("btnCalAgenda");
+         if (!btn) return;
+
+         // si no hay doctor seleccionado, oculta
+         if (!idDoctor || idDoctor <= 0) {
+             btn.style.display = "none";
+             btn.href = "#";
+             return;
+         }
+
+         try {
+             const r = await fetch(`/Doctor/GetCalPublicUrl?idDoctor=${encodeURIComponent(idDoctor)}`, {
+                 headers: { "Accept": "application/json" }
+             });
+             const j = await r.json().catch(() => null);
+             const url = (j && j.ok && j.cal_public_url) ?
+             ("" + j.cal_public_url).trim() : "";
+
+             btn.href = url || "#";
+             btn.style.display = url ? "" : "none";
+             // re-init tooltip si usas initTooltips()
+             if (typeof initTooltips === "function") initTooltips(btn.parentElement || document);
+         } catch (e) {
+             console.error("Cal.com URL error:", e);
+             btn.style.display = "none";
+             btn.href = "#";
+         }
+     }
+     /* CAMBIO CALCOM fin */
+
+         /* MODI44 */
+     function getIdDoctorPantalla_SAFE() {
+         if (typeof ES_ADMIN !== "undefined" && ES_ADMIN) {
+             const cbo = document.getElementById("cboDoctor");
+             if (!cbo) return null;
+             const v = (cbo.value || "").trim();
+             if (!v) return null;
+             const id = parseInt(v, 10);
+             return Number.isFinite(id) && id > 0 ? id : null;
+         }
+
+         const fijo = (typeof ID_DOCTOR_FIJO !== "undefined") ? parseInt(ID_DOCTOR_FIJO, 10) : 0;
+         return Number.isFinite(fijo) && fijo > 0 ? fijo : null;
+     }
+     /*FIN MODI44 */
+
+         /* MODI44 */
+     function getIdDoctorPantalla() {
+         if (ES_ADMIN) {
+             const cbo = document.getElementById("cboDoctor");
+             if (!cbo) return null;                 // <- evita null.value
+             const v = (cbo.value || "").trim();
+             if (!v) return null;                   // <- "-- Seleccione --"
+             const id = parseInt(v, 10);
+             return Number.isFinite(id) && id > 0 ? id : null;
+         }
+
+         // doctor fijo
+         const fijo = (typeof ID_DOCTOR_FIJO !== "undefined") ?
+         parseInt(ID_DOCTOR_FIJO, 10) : 0;
+         return Number.isFinite(fijo) && fijo > 0 ? fijo : null;
+     }
+     /*FIN MODI44 */
+
+     /*FIN MODI44 */
+      function initTooltips(scope) {
+          // Bootstrap 5 tooltips need JS initialization
+          const root = scope ||
+          document;
+          const triggers = root.querySelectorAll('[data-bs-toggle="tooltip"]');
+          triggers.forEach(el => {
+              // Evita duplicados si se re-renderiza
+              if (el._bsTooltip) return;
+              el._bsTooltip = new bootstrap.Tooltip(el);
+          });
+      }
+               function renderSlots(containerId, slots, fechaTxt) {
+        const cont = document.getElementById(containerId);
+        cont.innerHTML = "";
+
+        if (!slots || slots.length === 0) {
+            cont.innerHTML = `<div class="text-muted">Sin horarios para esta fecha.</div>`;
+            return;
+        }
+
+        const fecha = (fechaTxt || document.getElementById("txtFecha").value || "").trim();
+
+        for (const s of slots) {
+            /* ========================================================== */
+            /* 1. DETECCIÓN POR EL CAMPO 'ESTADO' (Tu versión antigua)     */
+            /* ========================================================== */
+            const textoEstado = (s.estado || "").toString().toUpperCase();
+            const esAnulada = textoEstado.includes("ANULA") || s.idEstadoCita === 3;
+
+            let tieneCitaEfectiva = !!s.tieneCita;
+            if (esAnulada) {
+                tieneCitaEfectiva = false;
+            }
+            /* ========================================================== */
+
+            const col = document.createElement("div");
+            col.className = "col-12 col-md-6 mb-3";
+
+            const hora = normHora(s.hora || s.turnoHora);
+
+            const div = document.createElement("div");
+            div.className = "slot-card " + (tieneCitaEfectiva ? "ocupado" : "libre");
+
+            /* comienzo cambio slot_inex_calcom */
+            // Verificamos si el slot existe en Cal.com (0 o null es inexistente)
+            const idCalcom = parseInt(s.idDoctorHorarioDetalleCalcom) || 0;
+            let avisoCalcom = "";
+            if (idCalcom === 0) {
+                avisoCalcom = ` <span style="color:red; font-weight:bold; font-size:0.85em; margin-left:5px;">(Slot Inex Cal.Com)</span>`;
+            }
+            /* final cambio slot_inex_calcom */
+
+            const titulo = document.createElement("div");
+            titulo.innerHTML = `
+                <div class="slot-time"><strong>${hora || "(sin hora)"}</strong>${avisoCalcom}</div>
+                <div class="slot-date">${fecha}</div>
+            `;
+
+            const subt = document.createElement("div");
+            subt.className = "muted";
+            subt.textContent = tieneCitaEfectiva
+                ? `Cita: ${s.paciente || ""}${s.estado ? " (" + s.estado + ")" : ""}`
+                : "Libre";
+
+            const acciones = document.createElement("div");
+            acciones.className = "slot-actions mt-2 d-flex flex-wrap gap-1";
+
+            if (tieneCitaEfectiva) {
+                // --- BLOQUE CITA ACTIVA ---
+                const btn = document.createElement("button");
+                btn.className = "btn btn-sm btn-light px-2";
+                btn.textContent = "Ver";
+                btn.onclick = (ev) => { ev.stopPropagation(); abrirModalCita(s); };
+                acciones.appendChild(btn);
+
+                const btnRepro = document.createElement("button");
+                btnRepro.className = "btn btn-sm btn-dark px-2";
+                btnRepro.textContent = "Repro";
+                btnRepro.onclick = (ev) => { ev.stopPropagation(); abrirModalReprogramar(s); };
+                acciones.appendChild(btnRepro);
+
+                const btnCancel = document.createElement("button");
+                btnCancel.className = "btn btn-sm btn-warning text-dark fw-bold px-2";
+                btnCancel.innerHTML = '<i class="bi bi-x-circle"></i> Canc';
+                btnCancel.onclick = function(ev) {
+                    ev.stopPropagation();
+                    let idCita = s.idCita || (s.cita ? s.cita.idCita : 0) || s.IdCita || (s.cita ? s.cita.IdCita : 0);
+                    if (idCita > 0) {
+                        if (typeof abrirModalCancelarCita === "function") {
+                            abrirModalCancelarCita(idCita);
+                        } else {
+                            console.error("La función abrirModalCancelarCita no está definida.");
+                        }
+                    } else {
+                        Swal.fire("Aviso", "ID de cita no encontrado.", "warning");
+                    }
+                };
+                acciones.appendChild(btnCancel);
+
+                const btnChk = document.createElement("button");
+                btnChk.className = "btn btn-sm btn-chk-calcom text-white px-2";
+                btnChk.title = "Chequear integridad en Cal.com";
+                btnChk.innerHTML = '<i class="fa fa-sync"></i> Sinc';
+                btnChk.onclick = (e) => {
+                    e.stopPropagation();
+                    let idCitaChk = s.idCita || (s.cita ? s.cita.idCita : 0) || s.IdCita || (s.cita ? s.cita.IdCita : 0);
+                    if (idCitaChk > 0) {
+                        abrirModalChequeo(idCitaChk);
+                    } else {
+                        Swal.fire("Aviso", "ID de cita no encontrado.", "warning");
+                    }
+                };
+                acciones.appendChild(btnChk);
+
+            } else {
+                // --- BLOQUE LIBRE ---
+                const btnDel = document.createElement("button");
+                btnDel.className = "btn btn-sm btn-outline-danger";
+                btnDel.textContent = "Borrar slot";
+                btnDel.onclick = async (ev) => {
+                    ev.stopPropagation();
+                    await borrarSlot(parseInt(s.idDoctorHorarioDetalle || "0", 10));
+                };
+                acciones.appendChild(btnDel);
+            }
+
+            div.appendChild(titulo);
+            div.appendChild(subt);
+            div.appendChild(acciones);
+            col.appendChild(div);
+            cont.appendChild(col);
+        }
+
+        if (typeof initTooltips === "function") initTooltips(cont);
+    }
+      @* /* cambio comienzo */ *@
+     let fpRepro;
+     function abrirModalReprogramar(slot) {
+         // 0) Limpieza de tooltips
+         try {
+             document.querySelectorAll(".tooltip").forEach(t => t.remove());
+         } catch (e) { }
+
+         // 1) Identificar cita
+         const idCita = (slot && (slot.idCita ?? slot.IdCita)) ??
+                        (slot && slot.cita && (slot.cita.idCita ?? slot.cita.IdCita)) ?? 0;
+
+         if (!idCita) {
+             Swal.fire("Error", "No se identificó la cita.", "error");
+             return;
+         }
+
+         document.getElementById("reproIdCitaVieja").value = idCita;
+         document.getElementById("reproHora").value = "";
+         document.getElementById("reproMotivo").value = "";
+
+         // 2) Inicializar flatpickr interno si no existe
+         if (!fpRepro) {
+             fpRepro = flatpickr("#reproFecha", {
+                 locale: "es",
+                 dateFormat: "d/m/Y",
+                 minDate: "today"
+             });
+         }
+
+         const myModal = new bootstrap.Modal(document.getElementById('mdReprogramar'));
+         myModal.show();
+     }
+
+     /* cambio comienzo */
+    document.getElementById("btnConfirmarRepro").onclick = async () => {
+        const idCitaVieja = document.getElementById("reproIdCitaVieja").value;
+        const fecha = document.getElementById("reproFecha").value;
+        const hora = document.getElementById("reproHora").value;
+        const motivo = document.getElementById("reproMotivo").value;
+
+        if (!fecha || !hora) {
+            Swal.fire("Aviso", "Debe indicar nueva fecha y hora.", "info");
+            return;
+        }
+            Swal.fire({
+            title: 'Sincronizando...',
+            text: 'Por favor, espere mientras se procesa el cambio en Cal.com',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        try {
+            const res = await fetch("/Citas/ReprogramarCita", {
+                method: "POST",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    idCitaVieja: parseInt(idCitaVieja),
+                    nuevaFecha: fecha,
+                    nuevaHora: hora,
+                    motivo: motivo
+                })
+            });
+            const result = await res.json();
+
+            if (!result.ok) {
+                Swal.fire("Error", result.data, "error");
+                return;
+            }
+
+            const idAccion = result.idAccion || result.IdAccion;
+
+            // Bucle de consulta (Polling) cada 3 segundos
+            let intentos = 0;
+            const intervalo = setInterval(async () => {
+                intentos++;
+                try {
+                    const check = await fetch(`/Citas/ConsultarEstadoAccion?id=${idAccion}`);
+                    const resAccion = await check.json();
+
+                    const estado = (resAccion.status || resAccion.Status || "").trim().toUpperCase();
+                    const log = (resAccion.log || resAccion.Log || "");
+
+                    if (estado === 'S') {
+                        clearInterval(intervalo);
+
+                        // ✅ CERRAMOS MODAL Y REFRESCAMOS AGENDA (Clic Virtual)
+                        bootstrap.Modal.getInstance(document.getElementById('mdReprogramar')).hide();
+
+                        Swal.fire({
+                            title: "¡Éxito!",
+                            text: "Cita reprogramada. Refrescando agenda...",
+                            icon: "success",
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+
+                        // Invocamos la función que refresca los slots
+                        await verAgenda();
+                    }
+                    else if (estado === 'Z' || (estado === 'R' && log.includes("KO|"))) {
+                        clearInterval(intervalo);
+                        Swal.fire("Atención", "Error en Cal.com: " + log, "warning");
+                    }
+                } catch (err) {
+                    console.error("Error consultando estado:", err);
+                }
+
+                if (intentos > 20) {
+                    clearInterval(intervalo);
+                    Swal.fire("Sincronización lenta", "El proceso sigue en curso, refresque manualmente en unos segundos.", "info");
+                }
+            }, 3000);
+
+        } catch (e) {
+            Swal.fire("Error", "No se pudo conectar con el servidor.", "error");
+        }
+    };
+    /* cambio fin */
+     @* /* cambio fin */ *@
+
+    function abrirModalChequeo(idCita) {
+        $("#chk_idCita").val(idCita);
+        $("#secResultadoSincro").hide();
+        new bootstrap.Modal(document.getElementById('mdChkCalcom')).show();
+    }
+
+    function ejecutarChequeoSincro() {
+        const idCita = parseInt($("#chk_idCita").val());
+        const refresh = $("input[name='radRefresh']:checked").val();
+
+        $.LoadingOverlay("show");
+        $.ajax({
+            url: "/Citas/LanzarChequeoCalcom",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({ IdCita: idCita, Refresh: refresh }),
+            success: function (res) {
+                if (res.ok) {
+                    hacerPollingSincro(res.idAccion);
+                } else {
+                    $.LoadingOverlay("hide");
+                    Swal.fire("Error", res.data, "error");
+                }
+            }
+        });
+    }
+
+    function hacerPollingSincro(idAccion) {
+        let intentos = 0;
+        const intervalo = setInterval(async () => {
+            intentos++;
+            const check = await fetch(`/Citas/ConsultarEstadoAccionSincro?idAccion=${idAccion}`);
+            const estado = await check.text();
+
+            if (estado === 'S' || intentos > 15) {
+                clearInterval(intervalo);
+                $.LoadingOverlay("hide");
+                visualizarResultadoSincro();
+            }
+        }, 3000);
+    }
+
+    function visualizarResultadoSincro() {
+        const idCita = $("#chk_idCita").val();
+        $.get("/Citas/VerResultadoSincro", { idCita: idCita }, function (res) {
+            if (res.ok) {
+                $("#lblResStatus").text(res.data.resultsincro || "OK");
+                $("#lblResFecha").text(res.data.fecha_sincro ? new Date(res.data.fecha_sincro).toLocaleString() : "---");
+                $("#lblResError").text(res.data.cal_last_error || "Ninguno");
+                $("#secResultadoSincro").slideDown();
+            } else {
+                Swal.fire("Info", "Sin registros de sincronización previos.", "info");
+            }
+        });
+    }
+
+    function visualizarResultadoSincroDirecto() {
+       // Muestra el modal de chequeo con los datos ya cargados
+        const idCita = $("#chk_idCita").val();
+         $("#chk_idCita").val(idCita);
+         visualizarResultadoSincro();
+
+    }
+    // fin cambio chkcalcom */
+      async function descargarDocumento(tipo) {
+          if (!idCitaActual) {
+              Swal.fire("Aviso", "No se ha podido identificar la cita.", "info");
+              return;
+          }
+
+          const url = (tipo === "paciente")
+              ?
+              `/Citas/DescargarDocumentoPaciente?idCita=${idCitaActual}`
+              : `/Citas/DescargarDocumentoDoctor?idCita=${idCitaActual}`;
+          const r = await fetch(url, { method: "GET" });
+
+          if (!r.ok) {
+              if (r.status === 404) Swal.fire("Información", "No hay documento para descargar.", "info");
+              else Swal.fire("Error", "No se pudo descargar el documento.", "error");
+              return;
+          }
+
+          const blob = await r.blob();
+
+          let filename = "";
+          const cd = r.headers.get("content-disposition") || "";
+          const m = /filename\*=UTF-8''([^;]+)|filename="?([^"]+)"?/i.exec(cd);
+          if (m) filename = decodeURIComponent(m[1] || m[2] || "");
+
+          if (!filename) {
+              filename = (tipo === "paciente")
+                  ? `documento_paciente_cita_${idCitaActual}`
+                  : `documento_doctor_cita_${idCitaActual}`;
+          }
+
+
+          const urlObj = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = urlObj;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(urlObj), 1000);
+      }
+                 function abrirModalCita(slot) {
+        // 0) Limpieza y habilitar descargas
+        try {
+            document.querySelectorAll(".tooltip").forEach(t => t.remove());
+        } catch (e) { }
+
+        if (typeof initTooltips === "function") initTooltips();
+
+        // 1) Identificación de cita
+        const rawId = (slot && (slot.idCita ?? slot.IdCita)) ?? (slot && slot.cita && (slot.cita.idCita ?? slot.cita.IdCita)) ?? 0;
+        idCitaActual = parseInt(rawId || 0, 10);
+
+        // Botones descarga
+        const btnPac = document.getElementById("btnDescDocPaciente");
+        const btnDoc = document.getElementById("btnDescDocDoctor");
+        if (btnPac) btnPac.disabled = !idCitaActual;
+        if (btnDoc) btnDoc.disabled = !idCitaActual;
+
+        const modalEl = document.getElementById("mdCita");
+        const setVal = (sel, val) => {
+            const el = modalEl.querySelector(sel);
+            if (el) el.value = (val ?? "").toString();
+        };
+
+        // 2) Datos básicos de la cita
+        const cita = (slot && slot.cita) ? slot.cita : {};
+        setVal("#citaHora", normHora(cita.hora || slot.hora || ""));
+        setVal("#citaPaciente", (cita.paciente || slot.paciente || "").trim());
+        setVal("#citaEstado", (cita.estado || "").trim());
+        setVal("#citaOrigen", (cita.origenCita || "").trim());
+        setVal("#citaRazon", (cita.razonCitaUsr || "").trim());
+        setVal("#citaIndicaciones", (cita.indicaciones || "").trim());
+
+        // 3) CARGA DE METADATA CAL.COM (JSON)
+        const idSlot = slot.idDoctorHorarioDetalle;
+        window.ultimoSlotIdParaCalcom = idSlot;
+
+        // Reset campos Metadata
+        document.getElementById("calApe").value = "Cargando...";
+        document.getElementById("calEmail").value = "";
+        document.getElementById("calMovil").value = "";
+        document.getElementById("calUid").value = "";
+        document.getElementById("calRazon").value = "";
+
+        fetch(`/Doctor/ObtenerDetalleCalcom?idSlot=${idSlot}`)
+            .then(r => r.json())
+            .then(r => {
+                if (r.ok && r.data) {
+                    document.getElementById("calApe").value = r.data.pacienteApellido || "";
+                    document.getElementById("calEmail").value = r.data.pacienteEmail || "";
+                    document.getElementById("calMovil").value = r.data.pacienteMovil || "";
+                    document.getElementById("calUid").value = r.data.bookingUid || "";
+                    document.getElementById("calRazon").value = r.data.razoncitausr || "";
+                    window.currentCalJsonStr = r.data.calJsonFull;
+                } else {
+                    document.getElementById("calApe").value = "Sin datos";
+                    document.getElementById("calRazon").value = "No hay información extendida.";
+                }
+            }).catch(e => console.error("Error calcom", e));
+
+        // 4) ACTUALIZAR ESTADO DE SINCRONIZACIÓN (Badge OK/ERROR)
+        // Llamamos a tu función existente para que rellene la parte de abajo
+        if (idCitaActual > 0 && typeof cargarDetalleSincroCita === "function") {
+            cargarDetalleSincroCita(idCitaActual);
+        }
+
+        // 5) Abrir modal
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+
+        // 6) Cargar detalles de reconfirmación
+        if (idCitaActual > 0) {
+            fetch("/Citas/ObtenerDetalleCita?idCita=" + encodeURIComponent(idCitaActual))
+                .then(r => r.json())
+                    .then(json => {
+                    const d = json.data ?? json.Data;
+                    if (!d) return;
+                    setVal("#citaConfirmada", d.citaConfirmada ?? "");
+                    setVal("#citaFechaPeticion", fmtDateTime(d.fechaPeticion ?? ""));
+                    setVal("#citaFechaConfirmacion", fmtDateTime(d.fechaConfirmacion ?? ""));
+                    setVal("#citaMetodoPeticion", d.metodoPeticion ?? "");
+                });
+        }
+    }
+          function descargarJSON() {
+        if (!window.currentCalJsonStr) { alert("No hay datos"); return; }
+        const blob = new Blob([window.currentCalJsonStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "cita_calcom.json";
+        a.click();
+    }
+
+      async function borrarSlot(idDoctorHorarioDetalle) {
+          if (!idDoctorHorarioDetalle) return;
+          const confirm = await Swal.fire({
+              title: "Borrar slot",
+              text: "¿Seguro? Solo se permite si NO hay cita asignada.",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonText: "Sí, borrar",
+              cancelButtonText: "Cancelar"
+
+          });
+
+          if (!confirm.isConfirmed) return;
+
+          const r = await fetch(`/Citas/EliminarSlot?idDoctorHorarioDetalle=${idDoctorHorarioDetalle}`, { method: "DELETE" });
+          const j = await r.json().catch(() => null);
+
+          if (!r.ok || (j && j.ok === false)) {
+              Swal.fire("Error", (j && (j.msg || j.data)) ? (j.msg || j.data) : "No se pudo borrar el slot.", "error");
+              return;
+          }
+
+          Swal.fire("OK", "Slot borrado.", "success");
+          await verAgenda();
+      }
+
+      // ✅ Validación mínima HH:MM (no rangos, no 00/30, SOLO formato)
+      function esHoraValidaMinima(hhmm) {
+          const s = (hhmm || "").trim();
+          return /^([01]\d|2[0-3]):([0-5]\d)$/.test(s);
+      }
+
+      async function addSlot() {
+          const fechaInput = (document.getElementById("txtFecha").value || "").trim();
+          const horaInput = (document.getElementById("txtNuevoSlotHora").value || "").trim();
+         // const idDoctor = getIdDoctorPantalla();
+           const idDoctor = getIdDoctorPantalla_SAFE();
+          if (!fechaInput) { Swal.fire("Aviso", "Selecciona una fecha.", "info"); return; }
+          if (!idDoctor) { Swal.fire("Aviso", "IdDoctor inválido.", "error");
+          return; }
+
+          if (!esHoraValidaMinima(horaInput)) {
+              Swal.fire("Aviso", "Hora inválida. Usa formato HH:MM (ej: 10:00).", "info");
+              return;
+          }
+
+          // endpoint: el tuyo (el que ya te funcionó antes)
+          const url = `/Citas/AgregarSlot?fecha=${encodeURIComponent(fechaInput)}&idDoctor=${idDoctor}&hora=${encodeURIComponent(horaInput)}`;
+          const r = await fetch(url, { method: "POST", headers: { "Accept": "application/json" } });
+          const j = await r.json().catch(() => null);
+
+          if (!r.ok || !j || j.ok === false) {
+              Swal.fire("Error", (j && j.msg) ? j.msg : "No se pudo crear el slot.", "error");
+              return;
+          }
+
+          document.getElementById("txtNuevoSlotHora").value = "";
+
+            Swal.fire("OK", "Slot creado. " + horaInput, "success");
+          await verAgenda();
+      }
+       function getIdDoctorPantalla() {
+           const v = document.getElementById("ddlDoctor").value;
+           return v ? parseInt(v) : null;
+       }
+     async function verAgenda() {
+
+         /* MODI44 */
+         // 1) Fecha (si no hay, no hacemos nada)
+         const txtFechaEl = document.getElementById("txtFecha");
+         const fechaInput = (txtFechaEl ? (txtFechaEl.value || "") : "").trim();
+         if (!fechaInput) { Swal.fire("Aviso", "Selecciona una fecha.", "info"); return;
+         }
+
+         // 2) Doctor (blindado)
+        // const idDoctor = getIdDoctorPantalla();
+         const idDoctor = getIdDoctorPantalla_SAFE();
+
+         if (ES_ADMIN && !idDoctor) { Swal.fire("Aviso", "Selecciona un doctor.", "info"); return;
+         }
+         if (ES_DOCTOR && !idDoctor) { Swal.fire("Aviso", "No se ha podido resolver el doctor logueado.", "warning");
+         return; }
+         if (!idDoctor) {
+             // No hay doctor todavía: oculto botón Cal.com y salgo sin reventar nada
+             const btn = document.getElementById("btnCalAgenda");
+             if (btn) { btn.style.display = "none"; btn.href = "#"; }
+             return;
+         }
+         /*FIN MODI44 */
+
+         const url = `/Citas/AgendaDia?fecha=${encodeURIComponent(fechaInput)}&idDoctor=${idDoctor}`;
+         const r = await fetch(url, { headers: { "Accept": "application/json" } });
+         const payload = await r.json().catch(() => null);
+         if (!r.ok || !payload || payload.ok === false) {
+             Swal.fire("Aviso", (payload && payload.msg) ? payload.msg : "No se pudo cargar la agenda.", "warning");
+             return;
+         }
+
+         FECHA_EN_PANTALLA = (payload.fecha || fechaInput || "").trim();
+         renderSlots("slotsAM", payload.am || [], FECHA_EN_PANTALLA);
+         renderSlots("slotsPM", payload.pm || [], FECHA_EN_PANTALLA);
+         /* MODI44 */
+        //await refrescarBotonCalAgenda(idDoctor);
+         /*FIN MODI44 */
+     }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+        // 1. Inicialización de Flatpickr (Calendario principal)
+        const fp = flatpickr("#txtFecha", {
+            locale: "es",
+            dateFormat: "d/m/Y",
+            allowInput: true,
+            defaultDate: hoyDmy()
+        });
+
+        fp.setDate(hoyDmy(), true, "d/m/Y");
+
+        /* cambio cancelacion: INICIALIZAR MODAL Y EVENTO */
+        const elModalCancel = document.getElementById('mdCancelarCita');
+        if (elModalCancel) {
+            modalCancelarObj = new bootstrap.Modal(elModalCancel);
+        }
+
+        const btnConfCancel = document.getElementById("btnConfirmarCancelacionCita");
+        if (btnConfCancel) {
+            btnConfCancel.onclick = async () => {
+                await ejecutarCancelacionCita();
+            };
+        }
+        /* final cambio */
+
+        // 2. Inicializar tooltips de Bootstrap 5
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+            new bootstrap.Tooltip(el);
+        });
+
+        // 3. Eventos de botones de la interfaz
+        document.getElementById("btnHoy").addEventListener("dblclick", async () => {
+            fp.setDate(new Date(), true);
+            await verAgenda();
+        });
+
+        document.getElementById("btnVer").addEventListener("click", async () => {
+            await verAgenda();
+        });
+
+        document.getElementById("btnAddSlot").addEventListener("dblclick", async () => {
+            await addSlot();
+        });
+
+        const btnPac = document.getElementById("btnDescDocPaciente");
+        if (btnPac) btnPac.addEventListener("click", async () => await descargarDocumento("paciente"));
+
+        const btnDoc = document.getElementById("btnDescDocDoctor");
+        if (btnDoc) btnDoc.addEventListener("click", async () => await descargarDocumento("doctor"));
+
+        // 4. Lógica de carga según Rol (Admin o Doctor)
+        if (ES_ADMIN) {
+            await cargarDoctores();
+
+            const cbo = document.getElementById("cboDoctor");
+            if (cbo) {
+                cbo.addEventListener("change", async () => {
+                    const idDoctor = getIdDoctorPantalla_SAFE();
+                    if (!idDoctor) return;
+                    await verAgenda();
+                    await refrescarBotonCalAgenda(idDoctor);
+                });
+            }
+        } else {
+            const idDoctor = getIdDoctorPantalla_SAFE();
+            if (idDoctor) {
+                await verAgenda();
+                await refrescarBotonCalAgenda(idDoctor);
+            }
+        }
+    }); // <--- Aquí cerramos correctamente el DOMContentLoaded
+
+    function cargarDetalleSincroCita(idCita) {
+        // Limpiamos los campos antes de cargar
+        $("#resCalStatus").text("-").removeClass("text-success text-danger");
+        $("#resCalFecha").text("-");
+        $("#resCalError").text("Cargando...").removeClass("text-danger");
+        $("#resCalUID").text("-");
+        $("#resCalApiStatus").text("-").removeClass("bg-success bg-danger bg-secondary").addClass("bg-secondary");
+
+        // Ocultamos la sección por defecto al abrir nueva cita
+        $("#secResCalcom").collapse('hide');
+
+        if (!idCita || idCita <= 0) return;
+
+        $.get("/Citas/VerResultadoSincro", { idCita: idCita }, function (res) {
+            if (res.ok && res.data) {
+                const d = res.data;
+
+                // 1. Resultado Texto (OK/KO)
+                const isOk = (d.resultsincro || "").toUpperCase() === "OK";
+                $("#resCalStatus").text(isOk ? "SINCRONIZADO" : "ERROR DE SINCRONÍA")
+                                 .addClass(isOk ? "text-success" : "text-danger");
+
+                // 2. Fecha formateada
+                if (d.fecha_sincro) {
+                    $("#resCalFecha").text(new Date(d.fecha_sincro).toLocaleString());
+                }
+
+                // 3. Error técnico
+                $("#resCalError").text(d.cal_last_error || "Proceso finalizado correctamente.")
+                                 .toggleClass("text-danger", !isOk);
+
+                // 4. Datos de la API
+                $("#resCalUID").text(d.booking_uid || "N/A");
+
+                // 5. Badge de estado API
+                const apiStat = (d.booking_status || "UNKNOWN").toUpperCase();
+                $("#resCalApiStatus").text(apiStat);
+                if(apiStat === "ACCEPTED") $("#resCalApiStatus").addClass("bg-success");
+                else if(apiStat === "CANCELLED" || apiStat === "REJECTED") $("#resCalApiStatus").addClass("bg-danger");
+                else $("#resCalApiStatus").addClass("bg-secondary");
+
+            } else {
+                $("#resCalError").text("No hay registros de sincronización para esta cita.");
+            }
+        });
+    }
+
+       function visualizarResultadoSincro() {
+        const idCita = $("#chk_idCita").val();
+        if (!idCita) return;
+
+        $.get("/Citas/VerResultadoSincro", { idCita: idCita }, function (res) {
+            if (res.ok && res.data) {
+                const d = res.data;
+                const isOk = (d.resultsincro || "").toUpperCase() === "OK";
+
+                // Poblar campos de la tabla doctorhorariodetallecalcom
+                $("#lblResIdCita").text(idCita);
+                $("#lblResUID").text(d.booking_uid || "Sin UID");
+                $("#lblResFecha").text(d.fecha_sincro ? new Date(d.fecha_sincro).toLocaleString() : "---");
+
+                // Estado visual
+                $("#lblResStatus").text(isOk ? "SINCRONIZADO" : "ERROR")
+                                 .removeClass("bg-success bg-danger")
+                                 .addClass(isOk ? "bg-success" : "bg-danger");
+
+                // Mensaje técnico del programa chkcitacalcom
+                $("#lblResError").text(d.cal_last_error || "Sin observaciones.");
+
+                // Estado que viene directamente de la API de Cal.com
+                const apiStat = (d.booking_status || "UNKNOWN").toUpperCase();
+                $("#lblResApiStatus").text(apiStat);
+
+                $("#secResultadoSincro").slideDown();
+            } else {
+                Swal.fire("Aviso", "No hay datos de sincronización para esta cita.", "info");
+            }
+        });
+    }
+    function abrirModalCancelarCita(idCita) {
+        document.getElementById("cancelarIdCita").value = idCita;
+        document.getElementById("cancelarMotivo").value = "";
+        if(!modalCancelarObj) {
+            modalCancelarObj = new bootstrap.Modal(document.getElementById('mdCancelarCita'));
+        }
+        modalCancelarObj.show();
+    }
+             async function ejecutarCancelacionCita() {
+        const idCita = document.getElementById("cancelarIdCita").value;
+        const motivo = document.getElementById("cancelarMotivo").value.trim();
+
+        Swal.fire({ title: 'Procesando...', didOpen: () => Swal.showLoading() });
+
+        try {
+            // Llamamos al NUEVO método
+            const response = await fetch(`/Citas/CancelarCitaAgenda?idCita=${idCita}&motivo=${encodeURIComponent(motivo)}`, {
+    method: "POST"
+            });
+
+            const result = await response.json();
+
+            if (result.ok) {
+                // Cerramos modal y empezamos a vigilar Cal.com
+                if(modalCancelarObj) modalCancelarObj.hide();
+                iniciarPollingCancelacion(result.idAccion);
+            } else {
+                Swal.fire("Error", result.mensaje, "error");
+            }
+        } catch (error) {
+            Swal.fire("Error", "No se pudo conectar con el servidor", "error");
+        }
+    }
+    function iniciarPollingCancelacion(idAccion) {
+        let intentos = 0;
+        const intervalo = setInterval(async () => {
+            intentos++;
+            try {
+                const check = await fetch(`/Citas/ConsultarEstadoAccion?id=${idAccion}`);
+                const res = await check.json();
+                const estado = (res.status || "").trim().toUpperCase();
+
+                if (estado === 'S') {
+                    clearInterval(intervalo);
+                    if(modalCancelarObj) modalCancelarObj.hide();
+                    Swal.fire("Éxito", "Cita cancelada correctamente.", "success").then(() => verAgenda());
+                } else if (estado === 'Z' || intentos > 20) {
+                    clearInterval(intervalo);
+                    if(modalCancelarObj) modalCancelarObj.hide();
+                    Swal.fire("Info", "El proceso terminará en breve.", "info").then(() => verAgenda());
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }, 3000);
+    }
+    /* final cambio */
+</script>
+@section Scripts {
+    @* Mantenemos los scripts que ya tenías antes si los hay *@
+
+            /* cambio txtfecha comzo */
+    <script>
+        // Usamos esta forma de jQuery para asegurar que no haya conflictos
+        jQuery(document).ready(function ($) {
+            console.log("Detalle_Horario_Citas JS cargado y jQuery detectado");
+
+            // Escuchamos el cambio en el campo de fecha
+            $("#txtFecha").on("change", async function () {
+                const fechaVal = $(this).val();
+                const idDoc = $("#cboDoctor").val();
+
+                // Validación: Fecha con longitud mínima y Doctor seleccionado
+                if (fechaVal && fechaVal.length >= 8 && idDoc && parseInt(idDoc) > 0) {
+                    console.log("Detectado cambio en fecha. Refrescando agenda...");
+
+                    // Verificamos si la función verAgenda existe antes de llamarla
+                    if (typeof verAgenda === "function") {
+                        await verAgenda();
+                    } else {
+                        console.warn("La función verAgenda() no está definida todavía.");
+                    }
+                }
+            });
+
+            // Refrescar automáticamente al cambiar el doctor
+            $("#cboDoctor").on("change", function() {
+                if($("#txtFecha").val()){
+                    $("#txtFecha").trigger("change");
+                }
+            });
+        });
+    </script>
+            /* cambio txtfecha fin */
+}
+
+<style>
+    /* ✅ Tooltips Bootstrap: fondo verde oscuro + texto blanco */
+    .tooltip .tooltip-inner {
+        background-color: #1f7a3a !important;
+        /* verde oscuro */
+        color: #ffffff !important;
+        /* blanco */
+        opacity: 1 !important;
+    }
+
+    /* ✅ Color de la flechita (arrow) */
+    .bs-tooltip-top .tooltip-arrow::before {
+        border-top-color: #1f7a3a !important;
+    }
+
+    .bs-tooltip-bottom .tooltip-arrow::before {
+        border-bottom-color: #1f7a3a !important;
+    }
+
+    .bs-tooltip-start .tooltip-arrow::before {
+        border-left-color: #1f7a3a !important;
+    }
+
+    .bs-tooltip-end .tooltip-arrow::before {
+        border-right-color: #1f7a3a !important;
+    }
+</style>
+}

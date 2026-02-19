@@ -1,0 +1,433 @@
+﻿@{
+    ViewData["Title"] = "Análisis VAPI";
+}
+
+@section Styles {
+    <link href="/lib/datatables2/css/dataTables.dataTables.css" rel="stylesheet" />
+}
+
+<h2 class="mt-4 mb-4">Análisis VAPI</h2>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header d-flex align-items-center">
+                <i class="fas fa-chart-bar me-1"></i>
+                <span>  Llamadas analizadas</span>
+
+                <button type="button"
+                        class="btn btn-success btn-sm ms-auto"
+                        onclick="openHelpVideo('Doctor_Horario.mp4')"
+                        data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-citas"
+                        title="Ayuda: abre el vídeo de explicación (wwwroot/helps/Doctor_Horario.mp4).">
+                    <i class="fa fa-circle-question"></i> Ayuda
+                </button>
+            </div>
+
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="display table table-striped table-bordered table-hover nowrap"
+                           id="tbVapi"
+                           cellspacing="0"
+                           style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Inicio</th>
+                                <th>Fin</th>
+                                <th>Teléfono</th>
+                                <th>Coste</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <small class="text-muted d-block mt-2">
+                    * Vista de solo consulta (solo Administrador).
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DETALLE -->
+<div class="modal fade" id="mdDetalle"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false"
+     tabindex="-1"
+     aria-labelledby="mdDetalleLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <div class="modal-header" style="background: var(--brand-blue); color:#fff;">
+                <h5 class="modal-title" id="mdDetalleLabel">Detalle</h5>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="hdIdLlamada" />
+
+                <div class="row g-2 mb-2">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Título</label>
+                        <input type="text" class="form-control" id="txtTitle" readonly />
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label">ID asistente</label>
+                        <input type="text" class="form-control" id="txtIdAsistente" readonly />
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label">Nombre asistente</label>
+                        <input type="text" class="form-control" id="txtNombreAsistente" readonly />
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-2">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Inicio</label>
+                        <input type="text" class="form-control" id="txtInicio" readonly />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Fin</label>
+                        <input type="text" class="form-control" id="txtFin" readonly />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Teléfono</label>
+                        <input type="text" class="form-control" id="txtTelefono" readonly />
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-2">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Coste</label>
+                        <input type="text" class="form-control" id="txtCoste" readonly />
+                    </div>
+                </div>
+
+                <hr />
+
+                <div class="row g-2 mb-2">
+                    <div class="col-12">
+                        <label class="form-label">Transcripción</label>
+                        <textarea class="form-control" id="txtTranscripcion" rows="5" readonly></textarea>
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-2">
+                    <div class="col-12">
+                        <label class="form-label">Sugerencia mejora</label>
+                        <textarea class="form-control" id="txtSugerencia" rows="4" readonly></textarea>
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-2">
+                    <div class="col-12">
+                        <label class="form-label">Resumen</label>
+                        <textarea class="form-control" id="txtResumen" rows="4" readonly></textarea>
+                    </div>
+                </div>
+
+                <hr />
+
+                <div class="alert alert-info mb-2">
+                    Audio: puedes escucharlo o descargarlo. Si no existe, te lo dirá.
+                </div>
+
+                <audio id="audioPlayer" controls style="width:100%"></audio>
+
+                <div class="mt-3 d-flex gap-2 flex-wrap">
+                    <button id="btnEscucharAudio" type="button" class="btn btn-warning">
+                        Escuchar
+                    </button>
+                    <button id="btnDescargarAudio" type="button" class="btn btn-warning">
+                        Descargar
+                    </button>
+                </div>
+
+                <small id="lblAudioInfo" class="text-muted d-block mt-2"></small>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Cerrar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="/lib/datatables2/js/moment.min.js"></script>
+    <script src="/lib/datatables2/js/dataTables.js"></script>
+
+    <script>
+                   (function () {
+          "use strict";
+
+          // ========= HELP VIDEO (simple) =========
+          window.openHelpVideo = function (fileName) {
+            const w = 900, h = 520;
+            const left = Math.max(0, (screen.width - w) / 2);
+            const top = Math.max(0, (screen.height - h) / 2);
+
+            const url = "/helps/" + encodeURIComponent(fileName);
+
+            window.open(
+              url,
+              "helpVideo",
+              `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no`
+            );
+          };
+        })();
+        let tablaVapi = null;
+
+        // para audio
+        let audioBlobUrlActual = null;
+        let audioFileNameActual = "audio_llamada.wav";
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+            // Si aquí falla, es que el Layout no está cargando jQuery antes de esta sección
+            if (!window.jQuery) {
+                console.error("jQuery NO está cargado (Layout).");
+                return;
+            }
+            if (!jQuery.fn || !jQuery.fn.DataTable) {
+                console.error("DataTables NO está cargado. Revisa rutas /lib/datatables2/js/dataTables.js");
+                return;
+            }
+
+            tablaVapi = $("#tbVapi").DataTable({
+                responsive: false,
+                scrollX: true,
+                autoWidth: false,
+                ajax: {
+                    url: "/AnalisisVapi/Lista",
+                    type: "GET",
+                    datatype: "json"
+                },
+                columns: [
+                    {
+                        title: "Inicio",
+                        data: null,
+                        width: "170px",
+                        render: function (data, type, row) {
+                            const v = row.fecha_inicio || row.fechaInicio || row.fecha_inicio_txt || row.fechaInicioTxt;
+                            return v ? formatearFechaHora(v) : "";
+                        }
+                    },
+                    {
+                        title: "Fin",
+                        data: null,
+                        width: "170px",
+                        render: function (data, type, row) {
+                            const v = row.fecha_fin || row.fechaFin || row.fecha_fin_txt || row.fechaFinTxt;
+                            return v ? formatearFechaHora(v) : "";
+                        }
+                    },
+                    {
+                        title: "Teléfono",
+                        data: null,
+                        width: "150px",
+                        render: function (data, type, row) {
+                            return escapeHtml(row.telefono || "");
+                        }
+                    },
+                    {
+                        title: "Coste",
+                        data: null,
+                        width: "110px",
+                        className: "text-end",
+                        render: function (data, type, row) {
+                            const v = row.coste;
+                            if (v === null || v === undefined || v === "") return "";
+                            const n = Number(v);
+                            if (isNaN(n)) return escapeHtml(String(v));
+                            return n.toFixed(2);
+                        }
+                    },
+                    {
+                        title: "Acciones",
+                        data: null,
+                        orderable: false,
+                        width: "180px",
+                        render: function () {
+                            // BOTÓN SIEMPRE (no depende de audio)
+                            return `
+                                <button type="button" class="btn btn-sm btn-outline-primary btn-detalle">
+                                    Detalle
+                                </button>
+                            `;
+                        }
+                    }
+                ],
+                language: {
+                    url: "https://cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json"
+                }
+            });
+
+            // Click Detalle -> abre modal SIEMPRE
+            $("#tbVapi tbody").on("click", ".btn-detalle", function () {
+                const row = tablaVapi.row($(this).closest("tr")).data();
+                if (!row) return;
+                abrirModalDetalle(row);
+            });
+
+            // Botones del modal
+            $("#btnEscucharAudio").on("click", async function () {
+                const id = parseInt($("#hdIdLlamada").val() || "0", 10);
+                if (!id) return;
+
+                await cargarAudioEnPlayer(id);
+            });
+
+            $("#btnDescargarAudio").on("click", async function () {
+                const id = parseInt($("#hdIdLlamada").val() || "0", 10);
+                if (!id) return;
+
+                await descargarAudio(id);
+            });
+
+            // limpiar al cerrar
+            $("#mdDetalle").on("hidden.bs.modal", function () {
+                try {
+                    const ap = document.getElementById("audioPlayer");
+                    ap.pause();
+                    ap.removeAttribute("src");
+                    ap.load();
+                } catch { }
+
+                if (audioBlobUrlActual) {
+                    URL.revokeObjectURL(audioBlobUrlActual);
+                    audioBlobUrlActual = null;
+                }
+                $("#lblAudioInfo").text("");
+            });
+        });
+
+        function abrirModalDetalle(row) {
+            const id = row.id_llamada || row.idLlamada || row.id || 0;
+            $("#hdIdLlamada").val(id);
+
+            $("#txtTitle").val(row.title || row.Title || "");
+            $("#txtIdAsistente").val(row.id_asistente || row.idAsistente || "");
+            $("#txtNombreAsistente").val(row.nombre_asistente || row.nombreAsistente || "");
+
+            const ini = row.fecha_inicio || row.fechaInicio;
+            const fin = row.fecha_fin || row.fechaFin;
+
+            $("#txtInicio").val(ini ? formatearFechaHora(ini) : "");
+            $("#txtFin").val(fin ? formatearFechaHora(fin) : "");
+            $("#txtTelefono").val(row.telefono || "");
+            $("#txtCoste").val((row.coste ?? "") !== "" && row.coste != null ? Number(row.coste).toFixed(2) : "");
+
+            $("#txtTranscripcion").val(row.transcripcion || "");
+            $("#txtSugerencia").val(row.sugerencia_mejora || row.sugerenciaMejora || "");
+            $("#txtResumen").val(row.resumen || "");
+
+            // info inicial audio (sin fiarnos de que venga audio en la lista)
+            const tieneAudio = (row.tieneAudio === true)
+                || (row.tiene_audio === true)
+                || (row.TieneAudio === true)
+                || (row.tieneAudio === 1)
+                || (row.tiene_audio === 1)
+                || (row.TieneAudio === 1);
+
+            $("#lblAudioInfo").text(tieneAudio ? "Audio: parece que hay audio. Pulsa Escuchar o Descargar." : "Audio: puede que no exista. Si no existe te avisará.");
+
+            const modal = new bootstrap.Modal(document.getElementById("mdDetalle"));
+            modal.show();
+        }
+
+        async function cargarAudioEnPlayer(id) {
+            $("#lblAudioInfo").text("Cargando audio...");
+
+            const r = await fetch(`/AnalisisVapi/ObtenerAudio?idLlamada=${id}`, { method: "GET" });
+            if (!r.ok) {
+                $("#lblAudioInfo").text("");
+                Swal.fire("Información", "No hay audio para esta llamada.", "info");
+                return;
+            }
+
+            const blob = await r.blob();
+
+            // filename por header (si existe)
+            let filename = "";
+            const cd = r.headers.get("content-disposition") || "";
+            const m = /filename\*=UTF-8''([^;]+)|filename="?([^"]+)"?/i.exec(cd);
+            if (m) filename = decodeURIComponent(m[1] || m[2] || "");
+
+            if (!filename) filename = `audio_llamada_${id}`;
+
+            audioFileNameActual = filename;
+
+            if (audioBlobUrlActual) URL.revokeObjectURL(audioBlobUrlActual);
+            audioBlobUrlActual = URL.createObjectURL(blob);
+
+            const ap = document.getElementById("audioPlayer");
+            ap.src = audioBlobUrlActual;
+            ap.load();
+            ap.play().catch(() => { /* si el navegador bloquea autoplay, no pasa nada */ });
+
+            $("#lblAudioInfo").text("Audio cargado.");
+        }
+
+        async function descargarAudio(id) {
+            $("#lblAudioInfo").text("Preparando descarga...");
+
+            const r = await fetch(`/AnalisisVapi/ObtenerAudio?idLlamada=${id}`, { method: "GET" });
+            if (!r.ok) {
+                $("#lblAudioInfo").text("");
+                Swal.fire("Información", "No hay audio para descargar.", "info");
+                return;
+            }
+
+            const blob = await r.blob();
+
+            let filename = "";
+            const cd = r.headers.get("content-disposition") || "";
+            const m = /filename\*=UTF-8''([^;]+)|filename="?([^"]+)"?/i.exec(cd);
+            if (m) filename = decodeURIComponent(m[1] || m[2] || "");
+
+            if (!filename) filename = `audio_llamada_${id}.wav`;
+
+            const urlObj = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = urlObj;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(urlObj), 1500);
+
+            $("#lblAudioInfo").text("");
+        }
+
+        function formatearFechaHora(valor) {
+            try {
+                if (typeof moment !== "undefined") {
+                    const m = moment(valor);
+                    if (m.isValid()) return m.format("DD/MM/YYYY HH:mm");
+                }
+            } catch { }
+            return String(valor);
+        }
+
+        function escapeHtml(s) {
+            return String(s)
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+        }
+    </script>
+}

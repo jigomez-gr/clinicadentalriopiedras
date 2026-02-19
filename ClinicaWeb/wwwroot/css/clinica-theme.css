@@ -1,0 +1,195 @@
+﻿:root {
+    --brand-blue: #0b5ed7;
+    --brand-blue-dark: #084298;
+    --brand-green: #198754;
+    --brand-red: #dc3545;
+}
+
+/* Top bar */
+.sb-topnav.navbar {
+    background: var(--brand-blue) !important;
+}
+
+/* Sidebar: mismo azul que arriba */
+.sb-sidenav.sb-sidenav-dark {
+    background: var(--brand-blue) !important;
+}
+
+/* Links y textos sidebar en blanco */
+.sb-sidenav .sb-sidenav-menu-heading,
+.sb-sidenav .nav-link,
+.sb-sidenav .sb-nav-link-icon,
+.sb-sidenav .sb-sidenav-footer,
+.sb-sidenav-footer {
+    color: #fff !important;
+}
+
+    .sb-sidenav .nav-link:hover {
+        background: rgba(255,255,255,.12) !important;
+        color: #fff !important;
+    }
+
+/* Cards: cabeceras en azul y texto blanco */
+.card-header {
+    background: var(--brand-blue) !important;
+    color: #fff !important;
+}
+
+/* Botón primario (guardar, etc) en azul */
+.btn-primary {
+    background: var(--brand-blue) !important;
+    border-color: var(--brand-blue) !important;
+}
+
+    .btn-primary:hover,
+    .btn-primary:focus {
+        background: var(--brand-blue-dark) !important;
+        border-color: var(--brand-blue-dark) !important;
+    }
+
+/* Mensajes de formularios: verde y rojo */
+.text-success, .valid-feedback {
+    color: var(--brand-green) !important;
+}
+
+.text-danger, .invalid-feedback {
+    color: var(--brand-red) !important;
+}
+
+.alert-success {
+    border-color: var(--brand-green) !important;
+}
+
+.alert-danger {
+    border-color: var(--brand-red) !important;
+}
+
+/* Focus inputs */
+.form-control:focus,
+.form-select:focus {
+    border-color: rgba(11,94,215,.45) !important;
+    box-shadow: 0 0 0 .2rem rgba(11,94,215,.15) !important;
+}
+/* =========================
+   MODALES: cabecera azul
+   ========================= */
+.modal-header {
+    background: var(--brand-blue) !important;
+    color: #fff !important;
+    border-bottom: 1px solid rgba(255,255,255,.15) !important;
+}
+
+    .modal-header .modal-title {
+        color: #fff !important;
+    }
+
+    .modal-header .btn-close {
+        filter: invert(1) grayscale(100%);
+        opacity: .9;
+    }
+
+        .modal-header .btn-close:hover {
+            opacity: 1;
+        }
+
+/* Si usas cards dentro de modales o “cabeceras” de formularios */
+.modal-content .card-header,
+.form-header,
+.form-title-bar {
+    background: var(--brand-blue) !important;
+    color: #fff !important;
+}
+
+/* =========================
+   BOTONES “NEGROS” -> VERDE
+   (Bootstrap: btn-dark / btn-secondary)
+   ========================= */
+.btn-dark,
+.btn-secondary {
+    background: var(--brand-green) !important;
+    border-color: var(--brand-green) !important;
+    color: #fff !important;
+}
+
+    .btn-dark:hover,
+    .btn-secondary:hover,
+    .btn-dark:focus,
+    .btn-secondary:focus {
+        filter: brightness(.92);
+        color: #fff !important;
+    }
+
+/* Si algunos botones “negros” vienen por outline */
+.btn-outline-dark,
+.btn-outline-secondary {
+    border-color: var(--brand-green) !important;
+    color: var(--brand-green) !important;
+}
+
+    .btn-outline-dark:hover,
+    .btn-outline-secondary:hover {
+        background: var(--brand-green) !important;
+        color: #fff !important;
+    }
+/* =========================================
+   TITULO PRINCIPAL DE PÁGINA (h2.mt-4.mb-4)
+   Verde + texto blanco, sin afectar otros h2
+   ========================================= */
+.container-fluid > h2.mt-4.mb-4 {
+    background: var(--brand-green) !important; /* antes var(--brand-blue) */
+    color: #fff !important;
+    padding: .75rem 1rem;
+    border-radius: .5rem;
+    margin-top: 1rem !important;
+}
+
+    /* si hubiera links dentro del título */
+    .container-fluid > h2.mt-4.mb-4 a {
+        color: #fff !important;
+        text-decoration: underline;
+    }
+/* ============================
+   MODALES: botones
+   - Guardar (btn-primary) -> ROJO
+   - Cerrar (btn-secondary) -> AZUL
+   ============================ */
+
+/* Guardar cambios / Aceptar: normalmente es btn-primary */
+.modal .modal-footer .btn.btn-primary {
+    background: #dc3545 !important; /* rojo */
+    border-color: #dc3545 !important;
+    color: #fff !important;
+}
+
+    .modal .modal-footer .btn.btn-primary:hover {
+        filter: brightness(0.95);
+    }
+
+/* Cerrar: normalmente es btn-secondary */
+.modal .modal-footer .btn.btn-secondary {
+    background: var(--brand-blue) !important; /* azul */
+    border-color: var(--brand-blue) !important;
+    color: #fff !important;
+}
+
+.modal .modal-footer .btn.btn-secondary:hover {
+        filter: brightness(0.95);
+    }
+
+.clinic-top-logo img {
+    height: 80px; /* ajusta a 24/28/32 */
+    width: auto;
+    border-radius: 10px;
+}
+
+.clinic-top-logo {
+    margin-top: 16px; /* prueba 4px / 6px / 8px */
+}
+.sb-topnav.navbar {
+    align-items: flex-start; /* o center si lo prefieres */
+}
+
+.clinic-top-logo {
+    margin-top: 6px;
+}
+

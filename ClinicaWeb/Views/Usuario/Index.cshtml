@@ -1,0 +1,569 @@
+﻿
+<h2 class="mt-4 mb-4">Gestión de usuarios</h2>
+
+<div class="row">
+    <div class="col-sm-12">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-users me-1"></i>
+                    Lista de usuarios
+                </div>
+
+                <div class="d-flex align-items-center gap-3">
+                    <div>
+                        <label for="cboFiltroRol" class="form-label mb-0">Filtrar por rol</label>
+                        <select id="cboFiltroRol" class="form-select form-select-sm">
+                            <option value="">Todos</option>
+                            <option value="Administrador">Administrador</option>
+                            <option value="Doctor">Doctor</option>
+                            <option value="Paciente">Paciente</option>
+                        </select>
+                    </div>
+
+                    <button type="button" class="btn btn-success btn-sm" id="btnNuevo">
+                        <i class="fas fa-plus me-1"></i> Nuevo usuario
+                    </button>
+                </div>
+                <div class="card-header d-flex align-items-center">
+                   <button type="button"
+                            class="btn btn-success btn-sm ms-auto"
+                            onclick="openHelpVideo('Doctor_Horario.mp4')"
+                            data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-citas"
+                            title="Ayuda: abre el vídeo de explicación (wwwroot/helps/Doctor_Horario.mp4).">
+                        <i class="fa fa-circle-question"></i> Ayuda
+                    </button>
+                </div>
+
+            </div>
+
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="display table table-striped table-bordered table-hover nowrap"
+                           id="tbData"
+                           cellspacing="0"
+                           style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Nro Documento</th>
+                                <th>Nombres</th>
+                                <th>Apellidos</th>
+                                <th>Correo</th>
+                                <th>Movil</th>
+                                <th>Rol</th>
+                                <th>Fecha Creación</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @* Se rellena por DataTables *@
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@* MODAL ALTA / EDICIÓN DE USUARIO *@
+<div class="modal fade" id="mdData"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false"
+     tabindex="-1"
+     aria-labelledby="mdDataLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="mdDataLabel">Usuario</h5>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="row g-2 mb-2">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Nro Documento</label>
+                        <input type="text"
+                               class="form-control"
+                               id="txtNroDocumento"
+                               autocomplete="off" />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Nombres</label>
+                        <input type="text"
+                               class="form-control"
+                               id="txtNombres"
+                               autocomplete="off" />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Apellidos</label>
+                        <input type="text"
+                               class="form-control"
+                               id="txtApellidos"
+                               autocomplete="off" />
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-2">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Correo</label>
+                        <input type="email"
+                               class="form-control"
+                               id="txtCorreo"
+                               autocomplete="off" />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Clave</label>
+                        <input type="password"
+                               class="form-control"
+                               id="txtClave"
+                               autocomplete="off" />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Móvil</label>
+                        <input type="text"
+                               class="form-control"
+                               id="txtMovil"
+                               autocomplete="off" />
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-2">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Rol</label>
+                        <select class="form-select" id="cboRol">
+                            <option value="">-- Seleccione --</option>
+                            <option value="1">Administrador</option>
+                            <option value="2">Doctor</option>
+                            <option value="3">Paciente</option>
+                        </select>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button"
+                        class="btn btn-outline-success me-auto"
+                        id="btnNuevaCitaPaciente"
+                        style="display:none;">
+                    Nueva cita del paciente
+                </button>
+
+                <button type="button"
+                        class="btn btn-outline-primary me-auto"
+                        id="btnAgendaDoctor"
+                        style="display:none;">
+                    Calendario horarios y citas
+                </button>
+
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Cerrar
+                </button>
+                <button type="button"
+                        class="btn btn-primary"
+                        id="btnGuardar">
+                    Guardar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/datatables2/js/moment.min.js"></script>
+    <script src="~/lib/datatables2/js/dataTables.js"></script>
+    <script src="~/lib/select2/js/select2.min.js"></script>
+
+    <script>
+                  (function () {
+          "use strict";
+
+          // ========= HELP VIDEO (simple) =========
+          window.openHelpVideo = function (fileName) {
+            const w = 900, h = 520;
+            const left = Math.max(0, (screen.width - w) / 2);
+            const top = Math.max(0, (screen.height - h) / 2);
+
+            const url = "/helps/" + encodeURIComponent(fileName);
+
+            window.open(
+              url,
+              "helpVideo",
+              `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no`
+            );
+          };
+        })();
+        // ===== Usuario/Index: DataTable + Modal =====
+        // Nota: en modo desarrollo (BrowserLink / Hot Reload) puede ejecutarse el JS más de una vez.
+        // Este "guard" evita dobles inicializaciones que suelen duplicar cabeceras o romper la tabla.
+        if (window.__usuariosIndexInit) {
+            console.log("Usuarios - ya inicializado, evitando doble ejecución");
+        } else {
+            window.__usuariosIndexInit = true;
+
+            let tablaData;
+            let idEditar = 0;
+            let idRolActual = 0; // 1=Admin,2=Doctor,3=Paciente
+
+            const controlador = "Usuario";
+            const modal = "mdData";
+            const preguntaEliminar = "Desea eliminar al usuario";
+            const confirmaEliminar = "El usuario fue eliminado.";
+            const confirmaRegistro = "Usuario registrado!";
+
+            // ===== Helpers Bootstrap Modal (BS5/BS4) =====
+            function mostrarModal(idModal) {
+                const el = document.getElementById(idModal);
+                if (!el) return;
+
+                // Bootstrap 5 (sin jQuery modal)
+                if (window.bootstrap?.Modal) {
+                    window.bootstrap.Modal.getOrCreateInstance(el).show();
+                    return;
+                }
+
+                // Bootstrap 4 (con jQuery modal)
+                if (window.jQuery) {
+                    $('#' + idModal).modal('show');
+                    return;
+                }
+
+                console.error("No hay Bootstrap Modal ni jQuery cargados.");
+            }
+
+            function ocultarModal(idModal) {
+                const el = document.getElementById(idModal);
+                if (!el) return;
+
+                if (window.bootstrap?.Modal) {
+                    window.bootstrap.Modal.getOrCreateInstance(el).hide();
+                    return;
+                }
+
+                if (window.jQuery) {
+                    $('#' + idModal).modal('hide');
+                    return;
+                }
+
+                console.error("No hay Bootstrap Modal ni jQuery cargados.");
+            }
+
+
+            let _doctoresCache = null;
+
+            async function obtenerIdDoctorPorDocumento(numeroDocumento) {
+                const num = (numeroDocumento || "").trim();
+                if (!num) return 0;
+
+                try {
+                    if (!_doctoresCache) {
+                        const r = await fetch("/Doctor/Lista");
+                        const j = await r.json();
+                        _doctoresCache = (j.data || []);
+                    }
+
+                    const doc = _doctoresCache.find(d => {
+                        const docNum = ((d.numeroDocumentoIdentidad ?? d.NumeroDocumentoIdentidad ?? "") + "").trim().toLowerCase();
+                        return docNum === num.toLowerCase();
+                    });
+
+                    return doc ? (doc.idDoctor ?? doc.IdDoctor ?? 0) : 0;
+                } catch (e) {
+                    console.error("No se pudo obtener lista de doctores", e);
+                    return 0;
+                }
+            }
+
+            // Devuelve la data de la fila aunque esté en modo child (responsive)
+            function obtenerDataFilaDesdeBoton(btn) {
+                const $tr = $(btn).closest('tr');
+                const $filaReal = $tr.hasClass('child') ? $tr.prev() : $tr;
+                return tablaData.row($filaReal).data();
+            }
+
+            function actualizarVisibilidadBotones() {
+                // Paciente -> botón "Nueva cita del paciente"
+                if (idRolActual === 3) {
+                    $("#btnNuevaCitaPaciente").show();
+                } else {
+                    $("#btnNuevaCitaPaciente").hide();
+                }
+
+                // Doctor -> botón "Calendario horarios y citas"
+                if (idRolActual === 2) {
+                    $("#btnAgendaDoctor").show();
+                } else {
+                    $("#btnAgendaDoctor").hide();
+                }
+            }
+
+            document.addEventListener("DOMContentLoaded", function () {
+
+                console.log("Usuarios - inicializando DataTable");
+
+                // IMPORTANTE:
+                // - No usar scrollX junto con table-responsive si te duplica cabeceras.
+                // - No repetir "title" en columns si ya existe thead en HTML.
+                // - destroy/retrieve ayudan a que no se rompa con recargas parciales.
+                tablaData = $('#tbData').DataTable({
+                    responsive: true,
+                    autoWidth: false,
+                    destroy: true,
+                    retrieve: true,
+                    ajax: {
+                        url: `/${controlador}/Lista`,
+                        type: "GET",
+                        datatype: "json"
+                    },
+                    columns: [
+                        { data: "numeroDocumentoIdentidad", width: "150px" },
+                        { data: "nombre" },
+                        { data: "apellido" },
+                        { data: "correo" },
+                        {
+                            data: function (row) {
+                                return row.movil ?? row.Movil ?? row.telefono ?? row.Telefono ?? "";
+                            }
+                        },
+                        {
+                            data: function (row) {
+                                const rol = row.rolUsuario ?? row.RolUsuario;
+                                if (!rol) return "";
+                                return rol.nombre ?? rol.Nombre ?? "";
+                            }
+                        },
+                        { data: "fechaCreacion" },
+                        {
+                            data: null,
+                            width: "130px",
+                            orderable: false,
+                            searchable: false,
+                            render: function () {
+                                return `
+                                    <div class="btn-group dropstart">
+                                        <button type="button"
+                                                class="btn btn-secondary btn-sm dropdown-toggle"
+                                                data-bs-toggle="dropdown"
+                                                aria-expanded="false">
+                                            Acción
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><button type="button" class="dropdown-item btn-editar">Editar</button></li>
+                                            <li><button type="button" class="dropdown-item btn-eliminar">Eliminar</button></li>
+                                        </ul>
+                                    </div>`;
+                            }
+                        }
+                    ],
+                    language: {
+                        url: "https://cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json"
+                    }
+                });
+
+                // Filtro de rol (columna 5: "Rol")
+                $('#cboFiltroRol').off('change').on('change', function () {
+                    const valor = $(this).val();
+                    if (!valor) {
+                        tablaData.column(5).search('').draw();
+                    } else {
+                        tablaData.column(5).search('^' + valor + '$', true, false).draw();
+                    }
+                });
+
+                // Cambio de rol en el combo del modal → botones
+                $("#cboRol").off("change").on("change", function () {
+                    idRolActual = parseInt($(this).val() || "0", 10);
+                    actualizarVisibilidadBotones();
+                });
+
+                // Botón Nueva cita del paciente
+                $("#btnNuevaCitaPaciente").off("click").on("click", function () {
+                    if (!idEditar || idEditar === 0) {
+                        Swal.fire({ title: "Aviso", text: "Primero guarda el usuario antes de crear una cita.", icon: "info" });
+                        return;
+                    }
+                    window.location.href = `/Citas/NuevaCita?idUsuario=${idEditar}`;
+                });
+
+                // Botón Calendario horarios y citas (solo Doctor en modal de Usuario)
+                $("#btnAgendaDoctor").off("click").on("click", async function () {
+                    const numDoc = ($("#txtNroDocumento").val() || "").trim();
+                    const idDoctor = await obtenerIdDoctorPorDocumento(numDoc);
+
+                    if (!idDoctor || idDoctor <= 0) {
+                        Swal.fire({
+                            title: "Aviso",
+                            text: "No se pudo determinar el IdDoctor para este usuario (comprueba que existe en la tabla Doctor).",
+                            icon: "warning"
+                        });
+                        return;
+                    }
+
+                    window.location.href = "/Citas/Detalle_Horario_Citas?idDoctor=" + idDoctor;
+                });
+
+                // --- EDITAR ---
+                $("#tbData tbody").on("click", ".btn-editar", function () {
+                    const data = obtenerDataFilaDesdeBoton(this);
+                    if (!data) return;
+
+                    idEditar = data.idUsuario ?? data.IdUsuario ?? 0;
+
+                    $("#txtNroDocumento").val(data.numeroDocumentoIdentidad ?? data.NumeroDocumentoIdentidad ?? "");
+                    $("#txtNombres").val(data.nombre ?? data.Nombre ?? "");
+                    $("#txtApellidos").val(data.apellido ?? data.Apellido ?? "");
+                    $("#txtCorreo").val(data.correo ?? data.Correo ?? "");
+                    $("#txtClave").val(data.clave ?? data.Clave ?? "");
+                    $("#txtMovil").val(data.movil ?? data.Movil ?? data.telefono ?? data.Telefono ?? "");
+
+                    const rol = data.rolUsuario ?? data.RolUsuario;
+                    const idRol = rol?.idRolUsuario ?? rol?.IdRolUsuario ?? 0;
+                    idRolActual = idRol || 0;
+
+                    $("#cboRol").val(idRolActual ? idRolActual.toString() : "");
+                    actualizarVisibilidadBotones();
+
+                    mostrarModal(modal);
+                });
+
+                // --- NUEVO ---
+                $("#btnNuevo").off("click").on("click", function () {
+                    idEditar = 0;
+
+                    $("#txtNroDocumento").val("");
+                    $("#txtNombres").val("");
+                    $("#txtApellidos").val("");
+                    $("#txtCorreo").val("");
+                    $("#txtClave").val("");
+                    $("#txtMovil").val("");
+
+                    // Por defecto: Paciente
+                    idRolActual = 3;
+                    $("#cboRol").val("3");
+                    actualizarVisibilidadBotones();
+
+                    mostrarModal(modal);
+                });
+
+                // --- ELIMINAR ---
+                $("#tbData tbody").on("click", ".btn-eliminar", function () {
+                    const data = obtenerDataFilaDesdeBoton(this);
+                    if (!data) return;
+
+                    Swal.fire({
+                        text: `${preguntaEliminar} ${(data.nombre ?? data.Nombre ?? "")} ${(data.apellido ?? data.Apellido ?? "")}?`,
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#3085d6",
+                        cancelButtonColor: "#d33",
+                        confirmButtonText: "Si, continuar",
+                        cancelButtonText: "No, volver"
+                    }).then((result) => {
+                        if (!result.isConfirmed) return;
+
+                        const id = data.idUsuario ?? data.IdUsuario;
+
+                        fetch(`/${controlador}/Eliminar?Id=${id}`, {
+                            method: "DELETE",
+                            headers: { 'Content-Type': 'application/json;charset=utf-8' }
+                        })
+                            .then(response => response.ok ? response.json() : Promise.reject(response))
+                            .then(responseJson => {
+                                if (responseJson.data == 1) {
+                                    Swal.fire({ title: "Eliminado!", text: confirmaEliminar, icon: "success" });
+                                    tablaData.ajax.reload();
+                                } else {
+                                    Swal.fire({ title: "Error!", text: "No se pudo eliminar.", icon: "warning" });
+                                }
+                            })
+                            .catch(() => Swal.fire({ title: "Error!", text: "No se pudo eliminar.", icon: "warning" }));
+                    });
+                });
+
+                // --- GUARDAR (alta / edición) ---
+                $("#btnGuardar").off("click").on("click", function () {
+
+                    if ($("#txtNroDocumento").val().trim() == "" ||
+                        $("#txtNombres").val().trim() == "" ||
+                        $("#txtApellidos").val().trim() == "" ||
+                        $("#txtCorreo").val().trim() == "" ||
+                        $("#txtClave").val().trim() == "" ||
+                        $("#txtMovil").val().trim() == "") {
+
+                        Swal.fire({ title: "Error!", text: "Falta completar datos.", icon: "warning" });
+                        return;
+                    }
+
+                    const idRolSeleccionado = parseInt($("#cboRol").val() || "0", 10);
+                    if (!idRolSeleccionado) {
+                        Swal.fire({ title: "Error!", text: "Debe seleccionar un rol.", icon: "warning" });
+                        return;
+                    }
+
+                    const objeto = {
+                        IdUsuario: idEditar,
+                        NumeroDocumentoIdentidad: $("#txtNroDocumento").val().trim(),
+                        Nombre: $("#txtNombres").val().trim(),
+                        Apellido: $("#txtApellidos").val().trim(),
+                        Correo: $("#txtCorreo").val().trim(),
+                        Clave: $("#txtClave").val().trim(),
+                        Movil: $("#txtMovil").val().trim(),
+                        RolUsuario: { IdRolUsuario: idRolSeleccionado }
+                    };
+
+                    if (idEditar != 0) {
+                        // EDITAR
+                        fetch(`/${controlador}/Editar`, {
+                            method: "PUT",
+                            headers: { 'Content-Type': 'application/json;charset=utf-8' },
+                            body: JSON.stringify(objeto)
+                        })
+                            .then(r => r.ok ? r.json() : Promise.reject(r))
+                            .then(j => {
+                                if (j.data == "") {
+                                    idEditar = 0;
+                                    Swal.fire({ text: "Se guardaron los cambios!", icon: "success" });
+                                    ocultarModal(modal);
+                                    tablaData.ajax.reload();
+                                } else {
+                                    Swal.fire({ title: "Error!", text: j.data, icon: "warning" });
+                                }
+                            })
+                            .catch(() => Swal.fire({ title: "Error!", text: "No se pudo editar.", icon: "warning" }));
+                    } else {
+                        // NUEVO
+                        fetch(`/${controlador}/Guardar`, {
+                            method: "POST",
+                            headers: { 'Content-Type': 'application/json;charset=utf-8' },
+                            body: JSON.stringify(objeto)
+                        })
+                            .then(r => r.ok ? r.json() : Promise.reject(r))
+                            .then(j => {
+                                if (j.data == "") {
+                                    Swal.fire({ text: confirmaRegistro, icon: "success" });
+                                    ocultarModal(modal);
+                                    tablaData.ajax.reload();
+                                } else {
+                                    Swal.fire({ title: "Error!", text: j.data, icon: "warning" });
+                                }
+                            })
+                            .catch(() => Swal.fire({ title: "Error!", text: "No se pudo registrar.", icon: "warning" }));
+                    }
+                });
+
+                // Estado inicial botones
+                actualizarVisibilidadBotones();
+            });
+        }
+    </script>
+}

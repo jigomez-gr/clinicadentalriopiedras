@@ -1,0 +1,471 @@
+ El volumen de la unidad C es Acer
+ El n£mero de serie del volumen es: 1AA2-CAAE
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot
+
+14/11/2025  19:07    <DIR>          .
+21/11/2025  10:06    <DIR>          ..
+14/11/2025  19:07    <DIR>          css
+13/11/2025  13:46             5.430 favicon.ico
+15/11/2025  06:26    <DIR>          images
+14/11/2025  19:07    <DIR>          js
+14/11/2025  19:07    <DIR>          lib
+14/11/2025  19:07    <DIR>          Views
+               1 archivos          5.430 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\css
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+13/11/2025  13:46           250.226 styles.css
+               1 archivos        250.226 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\images
+
+15/11/2025  06:26    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+14/11/2025  10:27            96.216 clinica_rios_rosas.jpg
+15/11/2025  06:26             4.498 logo.jpg
+               2 archivos        100.714 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\js
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+13/11/2025  13:46               976 scripts.js
+               1 archivos            976 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+14/11/2025  19:07    <DIR>          bootstrap
+14/11/2025  19:07    <DIR>          bootstrap-datepicker
+14/11/2025  19:07    <DIR>          datatables2
+14/11/2025  19:07    <DIR>          fontawesome
+14/11/2025  19:07    <DIR>          jquery
+14/11/2025  19:07    <DIR>          jquery-ui
+14/11/2025  19:07    <DIR>          jquery-validation
+14/11/2025  19:07    <DIR>          jquery-validation-unobtrusive
+14/11/2025  19:07    <DIR>          loadingoverlay
+14/11/2025  19:07    <DIR>          moment
+14/11/2025  19:07    <DIR>          select2
+14/11/2025  19:07    <DIR>          sweetAlert2
+               0 archivos              0 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib\bootstrap
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+14/11/2025  19:07    <DIR>          dist
+13/11/2025  13:46             1.131 LICENSE
+               1 archivos          1.131 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib\bootstrap\dist
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+14/11/2025  19:07    <DIR>          css
+14/11/2025  19:07    <DIR>          js
+               0 archivos              0 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib\bootstrap\dist\css
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+13/11/2025  13:46            70.538 bootstrap-grid.css
+13/11/2025  13:46           196.535 bootstrap-grid.css.map
+13/11/2025  13:46            51.319 bootstrap-grid.min.css
+13/11/2025  13:46           117.439 bootstrap-grid.min.css.map
+13/11/2025  13:46            70.612 bootstrap-grid.rtl.css
+13/11/2025  13:46           196.539 bootstrap-grid.rtl.css.map
+13/11/2025  13:46            51.394 bootstrap-grid.rtl.min.css
+13/11/2025  13:46           117.516 bootstrap-grid.rtl.min.css.map
+13/11/2025  13:46             5.850 bootstrap-reboot.css
+13/11/2025  13:46           105.138 bootstrap-reboot.css.map
+13/11/2025  13:46             4.646 bootstrap-reboot.min.css
+13/11/2025  13:46            35.330 bootstrap-reboot.min.css.map
+13/11/2025  13:46             5.827 bootstrap-reboot.rtl.css
+13/11/2025  13:46           105.151 bootstrap-reboot.rtl.css.map
+13/11/2025  13:46             4.718 bootstrap-reboot.rtl.min.css
+13/11/2025  13:46            41.570 bootstrap-reboot.rtl.min.css.map
+13/11/2025  13:46            71.584 bootstrap-utilities.css
+13/11/2025  13:46           192.271 bootstrap-utilities.css.map
+13/11/2025  13:46            53.479 bootstrap-utilities.min.css
+13/11/2025  13:46           111.875 bootstrap-utilities.min.css.map
+13/11/2025  13:46            71.451 bootstrap-utilities.rtl.css
+13/11/2025  13:46           192.214 bootstrap-utilities.rtl.css.map
+13/11/2025  13:46            53.407 bootstrap-utilities.rtl.min.css
+13/11/2025  13:46           111.710 bootstrap-utilities.rtl.min.css.map
+13/11/2025  13:46           204.136 bootstrap.css
+13/11/2025  13:46           536.547 bootstrap.css.map
+13/11/2025  13:46           162.720 bootstrap.min.css
+13/11/2025  13:46           449.111 bootstrap.min.css.map
+13/11/2025  13:46           203.803 bootstrap.rtl.css
+13/11/2025  13:46           536.461 bootstrap.rtl.css.map
+13/11/2025  13:46           162.825 bootstrap.rtl.min.css
+13/11/2025  13:46           661.035 bootstrap.rtl.min.css.map
+              32 archivos      4.954.751 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib\bootstrap\dist\js
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+13/11/2025  13:46           208.492 bootstrap.bundle.js
+13/11/2025  13:46           425.643 bootstrap.bundle.js.map
+13/11/2025  13:46            78.468 bootstrap.bundle.min.js
+13/11/2025  13:46           327.261 bootstrap.bundle.min.js.map
+13/11/2025  13:46           139.019 bootstrap.esm.js
+13/11/2025  13:46           288.320 bootstrap.esm.js.map
+13/11/2025  13:46            72.016 bootstrap.esm.min.js
+13/11/2025  13:46           222.508 bootstrap.esm.min.js.map
+13/11/2025  13:46           148.168 bootstrap.js
+13/11/2025  13:46           289.522 bootstrap.js.map
+13/11/2025  13:46            59.511 bootstrap.min.js
+13/11/2025  13:46           217.145 bootstrap.min.js.map
+              12 archivos      2.476.073 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib\bootstrap-datepicker
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+14/11/2025  19:07    <DIR>          css
+14/11/2025  19:07    <DIR>          js
+14/11/2025  19:07    <DIR>          locales
+               0 archivos              0 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib\bootstrap-datepicker\css
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+13/11/2025  13:46            17.190 bootstrap-datepicker.css
+13/11/2025  13:46            18.548 bootstrap-datepicker.css.map
+13/11/2025  13:46            15.731 bootstrap-datepicker.min.css
+13/11/2025  13:46            18.056 bootstrap-datepicker.standalone.css
+13/11/2025  13:46            20.785 bootstrap-datepicker.standalone.css.map
+13/11/2025  13:46            16.452 bootstrap-datepicker.standalone.min.css
+13/11/2025  13:46            22.835 bootstrap-datepicker3.css
+13/11/2025  13:46            23.849 bootstrap-datepicker3.css.map
+13/11/2025  13:46            21.100 bootstrap-datepicker3.min.css
+13/11/2025  13:46            23.600 bootstrap-datepicker3.standalone.css
+13/11/2025  13:46            25.703 bootstrap-datepicker3.standalone.css.map
+13/11/2025  13:46            21.734 bootstrap-datepicker3.standalone.min.css
+              12 archivos        245.583 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib\bootstrap-datepicker\js
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+13/11/2025  13:46            57.898 bootstrap-datepicker.js
+13/11/2025  13:46            33.693 bootstrap-datepicker.min.js
+               2 archivos         91.591 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib\bootstrap-datepicker\locales
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+13/11/2025  13:46               636 bootstrap-datepicker-en-CA.min.js
+13/11/2025  13:46               704 bootstrap-datepicker.ar-tn.min.js
+13/11/2025  13:46               714 bootstrap-datepicker.ar.min.js
+13/11/2025  13:46               531 bootstrap-datepicker.az.min.js
+13/11/2025  13:46               615 bootstrap-datepicker.bg.min.js
+13/11/2025  13:46               562 bootstrap-datepicker.bm.min.js
+13/11/2025  13:46             1.210 bootstrap-datepicker.bn.min.js
+13/11/2025  13:46               510 bootstrap-datepicker.br.min.js
+13/11/2025  13:46               475 bootstrap-datepicker.bs.min.js
+13/11/2025  13:46               513 bootstrap-datepicker.ca.min.js
+13/11/2025  13:46               536 bootstrap-datepicker.cs.min.js
+13/11/2025  13:46               433 bootstrap-datepicker.cy.min.js
+13/11/2025  13:46               514 bootstrap-datepicker.da.min.js
+13/11/2025  13:46               517 bootstrap-datepicker.de.min.js
+13/11/2025  13:46               764 bootstrap-datepicker.el.min.js
+13/11/2025  13:46               517 bootstrap-datepicker.en-AU.min.js
+13/11/2025  13:46               518 bootstrap-datepicker.en-CA.min.js
+13/11/2025  13:46               518 bootstrap-datepicker.en-GB.min.js
+13/11/2025  13:46               518 bootstrap-datepicker.en-IE.min.js
+13/11/2025  13:46               517 bootstrap-datepicker.en-NZ.min.js
+13/11/2025  13:46               517 bootstrap-datepicker.en-ZA.min.js
+13/11/2025  13:46               515 bootstrap-datepicker.eo.min.js
+13/11/2025  13:46               513 bootstrap-datepicker.es.min.js
+13/11/2025  13:46               537 bootstrap-datepicker.et.min.js
+13/11/2025  13:46               528 bootstrap-datepicker.eu.min.js
+13/11/2025  13:46               670 bootstrap-datepicker.fa.min.js
+13/11/2025  13:46               528 bootstrap-datepicker.fi.min.js
+13/11/2025  13:46               488 bootstrap-datepicker.fo.min.js
+13/11/2025  13:46               512 bootstrap-datepicker.fr-CH.min.js
+13/11/2025  13:46               536 bootstrap-datepicker.fr.min.js
+13/11/2025  13:46               489 bootstrap-datepicker.gl.min.js
+13/11/2025  13:46               563 bootstrap-datepicker.he.min.js
+13/11/2025  13:46               944 bootstrap-datepicker.hi.min.js
+13/11/2025  13:46               462 bootstrap-datepicker.hr.min.js
+13/11/2025  13:46               541 bootstrap-datepicker.hu.min.js
+13/11/2025  13:46               757 bootstrap-datepicker.hy.min.js
+13/11/2025  13:46               453 bootstrap-datepicker.id.min.js
+13/11/2025  13:46               496 bootstrap-datepicker.is.min.js
+13/11/2025  13:46               506 bootstrap-datepicker.it-CH.min.js
+13/11/2025  13:46               525 bootstrap-datepicker.it.min.js
+13/11/2025  13:46               502 bootstrap-datepicker.ja.min.js
+13/11/2025  13:46               970 bootstrap-datepicker.ka.min.js
+13/11/2025  13:46             1.076 bootstrap-datepicker.kh.min.js
+13/11/2025  13:46               649 bootstrap-datepicker.kk.min.js
+13/11/2025  13:46               945 bootstrap-datepicker.km.min.js
+13/11/2025  13:46               532 bootstrap-datepicker.ko.min.js
+13/11/2025  13:46               575 bootstrap-datepicker.kr.min.js
+13/11/2025  13:46               565 bootstrap-datepicker.lt.min.js
+13/11/2025  13:46               526 bootstrap-datepicker.lv.min.js
+13/11/2025  13:46               493 bootstrap-datepicker.me.min.js
+13/11/2025  13:46               657 bootstrap-datepicker.mk.min.js
+13/11/2025  13:46               638 bootstrap-datepicker.mn.min.js
+13/11/2025  13:46               448 bootstrap-datepicker.ms.min.js
+13/11/2025  13:46               522 bootstrap-datepicker.nl-BE.min.js
+13/11/2025  13:46               513 bootstrap-datepicker.nl.min.js
+13/11/2025  13:46               515 bootstrap-datepicker.no.min.js
+13/11/2025  13:46               515 bootstrap-datepicker.oc.min.js
+13/11/2025  13:46               552 bootstrap-datepicker.pl.min.js
+13/11/2025  13:46               504 bootstrap-datepicker.pt-BR.min.js
+13/11/2025  13:46               498 bootstrap-datepicker.pt.min.js
+13/11/2025  13:46               505 bootstrap-datepicker.ro.min.js
+13/11/2025  13:46               662 bootstrap-datepicker.rs-latin.min.js
+13/11/2025  13:46               817 bootstrap-datepicker.rs.min.js
+13/11/2025  13:46               731 bootstrap-datepicker.ru.min.js
+13/11/2025  13:46               988 bootstrap-datepicker.si.min.js
+13/11/2025  13:46               497 bootstrap-datepicker.sk.min.js
+13/11/2025  13:46               455 bootstrap-datepicker.sl.min.js
+13/11/2025  13:46               518 bootstrap-datepicker.sq.min.js
+13/11/2025  13:46               478 bootstrap-datepicker.sr-latin.min.js
+13/11/2025  13:46               651 bootstrap-datepicker.sr.min.js
+13/11/2025  13:46               492 bootstrap-datepicker.sv.min.js
+13/11/2025  13:46               431 bootstrap-datepicker.sw.min.js
+13/11/2025  13:46               934 bootstrap-datepicker.ta.min.js
+13/11/2025  13:46               700 bootstrap-datepicker.tg.min.js
+13/11/2025  13:46               833 bootstrap-datepicker.th.min.js
+13/11/2025  13:46               530 bootstrap-datepicker.tk.min.js
+13/11/2025  13:46               495 bootstrap-datepicker.tr.min.js
+13/11/2025  13:46               722 bootstrap-datepicker.uk.min.js
+13/11/2025  13:46               703 bootstrap-datepicker.uz-cyrl.min.js
+13/11/2025  13:46               516 bootstrap-datepicker.uz-latn.min.js
+13/11/2025  13:46               551 bootstrap-datepicker.vi.min.js
+13/11/2025  13:46               613 bootstrap-datepicker.zh-CN.min.js
+13/11/2025  13:46               566 bootstrap-datepicker.zh-TW.min.js
+              83 archivos         49.485 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib\datatables2
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+14/11/2025  19:07    <DIR>          css
+14/11/2025  19:07    <DIR>          js
+               0 archivos              0 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib\datatables2\css
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+13/11/2025  13:46            33.128 dataTables.dataTables.css
+               1 archivos         33.128 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib\datatables2\js
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+13/11/2025  13:46           372.316 dataTables.js
+13/11/2025  13:46            69.443 moment.min.js
+               2 archivos        441.759 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib\fontawesome
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+13/11/2025  13:46         1.494.268 all.js
+               1 archivos      1.494.268 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib\jquery
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+14/11/2025  19:07    <DIR>          dist
+13/11/2025  13:46             1.097 LICENSE.txt
+               1 archivos          1.097 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib\jquery\dist
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+13/11/2025  13:46           288.580 jquery.js
+13/11/2025  13:46            89.501 jquery.min.js
+13/11/2025  13:46           137.972 jquery.min.map
+               3 archivos        516.053 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib\jquery-ui
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+14/11/2025  19:07    <DIR>          datePicker
+14/11/2025  19:07    <DIR>          images
+13/11/2025  13:46            41.233 jquery-ui.css
+13/11/2025  13:46           530.956 jquery-ui.js
+               2 archivos        572.189 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib\jquery-ui\datePicker
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+14/11/2025  19:07    <DIR>          language
+               0 archivos              0 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib\jquery-ui\datePicker\language
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+13/11/2025  13:46             1.193 datepicker-es.js
+               1 archivos          1.193 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib\jquery-ui\images
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+13/11/2025  13:46             7.126 ui-icons_444444_256x240.png
+13/11/2025  13:46             7.110 ui-icons_555555_256x240.png
+13/11/2025  13:46             4.654 ui-icons_777620_256x240.png
+13/11/2025  13:46             7.147 ui-icons_777777_256x240.png
+13/11/2025  13:46             4.654 ui-icons_cc0000_256x240.png
+13/11/2025  13:46             6.523 ui-icons_ffffff_256x240.png
+               6 archivos         37.214 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib\jquery-validation
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+14/11/2025  19:07    <DIR>          dist
+13/11/2025  13:46             1.095 LICENSE.md
+               1 archivos          1.095 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib\jquery-validation\dist
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+13/11/2025  13:46            51.466 additional-methods.js
+13/11/2025  13:46            22.174 additional-methods.min.js
+13/11/2025  13:46            51.171 jquery.validate.js
+13/11/2025  13:46            24.601 jquery.validate.min.js
+               4 archivos        149.412 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib\jquery-validation-unobtrusive
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+13/11/2025  13:46            19.385 jquery.validate.unobtrusive.js
+13/11/2025  13:46             5.824 jquery.validate.unobtrusive.min.js
+13/11/2025  13:46             1.116 LICENSE.txt
+               3 archivos         26.325 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib\loadingoverlay
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+13/11/2025  13:46            13.446 loadingoverlay.min.js
+               1 archivos         13.446 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib\moment
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+13/11/2025  13:46            70.107 moment.min.js
+               1 archivos         70.107 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib\select2
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+14/11/2025  19:07    <DIR>          css
+14/11/2025  19:07    <DIR>          js
+               0 archivos              0 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib\select2\css
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+13/11/2025  13:46            35.020 select2-bootstrap-5-theme.min.css
+13/11/2025  13:46            20.460 select2.min.css
+               2 archivos         55.480 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib\select2\js
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+13/11/2025  13:46            83.307 select2.min.js
+               1 archivos         83.307 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib\sweetAlert2
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+14/11/2025  19:07    <DIR>          js
+               0 archivos              0 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\lib\sweetAlert2\js
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+13/11/2025  13:46            83.774 sweetalert2.js
+               1 archivos         83.774 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\Views
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+14/11/2025  19:07    <DIR>          Citas
+14/11/2025  19:07    <DIR>          Doctor
+14/11/2025  19:07    <DIR>          DoctorHorario
+14/11/2025  19:07    <DIR>          Especialidad
+14/11/2025  19:07    <DIR>          HistorialCita
+14/11/2025  19:07    <DIR>          Usuario
+               0 archivos              0 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\Views\Citas
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+13/11/2025  13:46             3.027 Cita.js
+13/11/2025  13:46             3.855 CitasAsignadas.js
+13/11/2025  13:46            12.229 NuevaCita.js
+               3 archivos         19.111 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\Views\Doctor
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+13/11/2025  13:46             8.364 Doctor.js
+               1 archivos          8.364 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\Views\DoctorHorario
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+13/11/2025  13:46            10.133 DoctorHorario.js
+               1 archivos         10.133 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\Views\Especialidad
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+13/11/2025  13:46             5.934 Especialidad.js
+               1 archivos          5.934 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\Views\HistorialCita
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+13/11/2025  13:46             1.683 HistorialCita.js
+               1 archivos          1.683 bytes
+
+ Directorio de C:\tmp\hotel1\116_SistemaClinica_Net8_ADO.NET_NCapas-main\116_SistemaClinica_Net8_ADO.NET_NCapas-main\SistemaClinica\ClinicaWeb\wwwroot\Views\Usuario
+
+14/11/2025  19:07    <DIR>          .
+14/11/2025  19:07    <DIR>          ..
+13/11/2025  13:46             6.861 Usuario.js
+               1 archivos          6.861 bytes
+
+     Total de archivos en la lista:
+             186 archivos     11.807.893 bytes
+             119 dirs  1.368.330.641.408 bytes libres

@@ -1,0 +1,608 @@
+﻿@{
+    ViewData["Title"] = "Citas asignadas";
+}
+
+@section Estilos {
+    <link href="~/lib/select2/css/select2.min.css" rel="stylesheet" />
+    <link href="~/lib/select2/css/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+}
+
+<div class="container-fluid px-2 px-md-4">
+
+    <h2 class="mt-4 mb-4 d-flex align-items-center">
+        <span>Citas asignadas</span>
+
+        <button type="button"
+                class="btn btn-sm ms-auto"
+                style="background-color:#ff8c00;color:#fff;border-color:#ff8c00;"
+                onclick="openHelpVideo('Doctor_Horario.mp4')"
+                data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-citas"
+                title="Ayuda: abre el vídeo de explicación (wwwroot/helps/Doctor_Horario.mp4).">
+            <i class="fa fa-circle-question me-1"></i> Ayuda
+        </button>
+    </h2>
+    <style>
+        /* Tooltips claros (fondo blanco, texto negro) */
+        .tooltip-light {
+            --bs-tooltip-bg: #fff;
+            --bs-tooltip-color: #000;
+            --bs-tooltip-opacity: 1;
+        }
+
+            .tooltip-light .tooltip-inner {
+                border: 1px solid rgba(0,0,0,.15);
+            }
+    </style>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <div class="row g-2 align-items-center">
+                <div class="col-12 col-md-4">
+                    <label class="form-label" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-light" title="IdEstadoCita - 1 Pendiente, 2 Atendido, 3 Anulado, 4 Provisional.">Filtrar por estado</label>
+                    <select class="form-select" id="cboEstadoCita">
+                        <option value="1" selected>Pendiente</option>
+                        <option value="2">Atendido</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="tbData" class="table table-striped table-bordered table-hover w-100 align-middle" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th><span data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-light" title="Fecha Cita">Fecha Cita</span></th>
+                            <th><span data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-light" title="Hora de la Cita">Hora Cita</span></th>
+                            <th><span data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-light" title="Nombre del paciente">Paciente</span></th>
+                            <th><span data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-light" title="IdEstadoCita - 1 Pendiente, 2 Atendido, 3 Anulado, 4 Provisional.">Estado</span></th>
+                            <th><span data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-light" title="Acciones sobre la cita (indicaciones y documentos).">Acciones</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @* Se rellena vía DataTables *@
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Modal para ver y actualizar la cita *@
+<div class="modal fade" id="mdData" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="mdDataLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mdDataLabel">Resumen de la cita</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body">
+
+                @* Datos básicos *@
+                <div class="row g-2 mb-2">
+                    <div class="col-12">
+                        <label class="form-label">Paciente</label>
+                        <input type="text" class="form-control" id="txtPaciente" autocomplete="off" disabled data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-light" title="Datos identificativos del paciente (IdUsuario).">
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-2">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Fecha cita</label>
+                        <input type="text" class="form-control" id="txtFechaCitaResumen" autocomplete="off" disabled />
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Hora cita</label>
+                        <input type="text" class="form-control" id="txtHoraCitaResumen" autocomplete="off" disabled />
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-2">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Origen de la cita</label>
+                        <input type="text" class="form-control" id="txtOrigenCita" autocomplete="off" disabled />
+                    </div>
+                </div>
+
+                <hr />
+
+                @* Información del paciente *@
+                <div class="row g-2 mb-2">
+                    <div class="col-12">
+                        <label class="form-label">Motivo indicado por el paciente</label>
+                        <textarea class="form-control" id="txtRazonCitaUsr" rows="3" readonly></textarea>
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-12">
+                        <label class="form-label d-block">Documento aportado por el paciente</label>
+                        <button type="button"
+                                id="btnVerDocPaciente"
+                                class="btn btn-outline-secondary btn-sm"
+                                disabled data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-light" title="DocumentoCitaUsr/contenttype - documento opcional aportado por el paciente (puede ser ZIP).">
+                            Ver documento del paciente
+                        </button>
+                        <div class="mt-1">
+                            <small id="lblDocPacienteSin" class="text-muted d-none">
+                                El paciente no adjuntó ningún documento.
+                            </small>
+                            <small id="lblDocPacienteCon" class="text-success d-none">
+                                ✔ Documento del paciente disponible.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <hr />
+
+                <div class="alert alert-primary" role="alert">
+                    Escriba las indicaciones para el paciente y, si lo desea, adjunte un informe o documento del doctor.
+                </div>
+
+                @* Indicaciones y documento del doctor *@
+                <div class="row g-2 mb-3">
+                    <div class="col-12">
+                        <label class="form-label">Indicaciones del doctor</label>
+                        <textarea class="form-control" id="txtIndicaciones" rows="3" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-light" title="Indicaciones - texto del doctor indicando diagnóstico y recomendaciones."></textarea>
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-2">
+                    <div class="col-12">
+                        <label class="form-label d-block">Documento del doctor</label>
+                        <button type="button"
+                                id="btnVerDocDoctor"
+                                class="btn btn-outline-secondary btn-sm"
+                                disabled data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-light" title="DocIndicacionesDoctor/contenttype_doctor - documento opcional aportado por el doctor.">
+                            Ver documento del doctor
+                        </button>
+                        <div class="mt-1">
+                            <small id="lblDocDoctorSin" class="text-muted d-none">
+                                No hay documento registrado del doctor para esta cita.
+                            </small>
+                            <small id="lblDocDoctorCon" class="text-success d-none">
+                                ✔ Documento del doctor disponible.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-2">
+                    <div class="col-12">
+                        <label class="form-label">Adjuntar / actualizar documento del doctor</label>
+                        <input type="file"
+                               class="form-control"
+                               id="fileDocDoctor"
+                               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-light" title="DocIndicacionesDoctor/contenttype_doctor - documento opcional aportado por el doctor.">
+                        <small class="text-muted">
+                            Este archivo se guardará como DocIndicacionesDoctor junto con su tipo de contenido.
+                        </small>
+                    </div>
+                </div>
+
+            </div> @* modal-body *@
+
+            <div class="modal-footer d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-light" title="Cerrar la pantalla y volver al menú general">Cerrar</button>
+                <button type="button" class="btn btn-primary" id="btnTerminarCita" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-light" title="Reflejar los cambios realizados en la Base de Datos y en relacion al datatable">Guardar / marcar como atendida</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/select2/js/select2.min.js"></script>
+
+    <script>
+
+               (function () {
+          "use strict";
+
+          // ========= HELP VIDEO (simple) =========
+          window.openHelpVideo = function (fileName) {
+            const w = 900, h = 520;
+            const left = Math.max(0, (screen.width - w) / 2);
+            const top = Math.max(0, (screen.height - h) / 2);
+
+            const url = "/helps/" + encodeURIComponent(fileName);
+
+            window.open(
+              url,
+              "helpVideo",
+              `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no`
+            );
+          };
+        })();
+            // ---------------------------
+            // Tooltips Bootstrap 5 (claro)
+            // ---------------------------
+            function initTooltips(scope) {
+                const root = scope || document;
+                const triggers = root.querySelectorAll('[data-bs-toggle="tooltip"]');
+                triggers.forEach(el => {
+                    // Evitar duplicados
+                    const inst = bootstrap.Tooltip.getInstance(el);
+                    if (inst) return;
+                    new bootstrap.Tooltip(el);
+                });
+            }
+
+            function hideAllTooltips() {
+                try {
+                    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+                        const inst = bootstrap.Tooltip.getInstance(el);
+                        if (inst) inst.hide();
+                    });
+                    document.querySelectorAll('.tooltip').forEach(t => t.remove());
+                } catch (e) { /* noop */ }
+            }
+
+        (function () {
+
+                    let tablaData;
+                    let idCitaSeleccionada = 0;
+                    const controlador = "Doctor";
+                    const modal = "mdData";
+
+                    // Documento del paciente
+                    let docPacienteBase64 = null;
+                    let docPacienteContentType = null;
+
+                    // Documento del doctor
+                    let docDoctorBase64 = null;
+                    let docDoctorContentType = null;
+
+                    $(document).ready(function () {
+                initTooltips();
+                        tablaData = $('#tbData').DataTable({
+                        processing: true,
+                        serverSide: true,
+                        searchDelay: 500,
+                        responsive: true,
+                        autoWidth: false,
+                        scrollX: !window.matchMedia('(max-width: 576px)').matches,
+
+                        ajax: {
+                            url: '/' + controlador + '/ListaCitasAsignadasServerSide',
+                            type: 'POST',
+                            dataType: 'json',
+                            data: function (d) {
+                                // tu combo en la vista se llama cboEstadoCita (no cboEstadoAsignadas)
+                                d.idEstadoCita = parseInt($('#cboEstadoCita').val() || '1');
+                                return d;
+                            },
+                            error: function (xhr, status, err) {
+                                console.error('AJAX error:', status, err, xhr.responseText);
+                            }
+                        },
+                            columns: [
+                                { data: "fechaCitaOrden", visible: false },
+                                { title: "Fecha Cita", data: "fechaCita", width: "150px" },
+                                { title: "Hora Cita", data: "horaCita", width: "150px" },
+                                {
+                                    title: "Paciente",
+                                    data: "usuario",
+                                    render: function (data, type, row) {
+                                        return (data?.nombre || "") + " " + (data?.apellido || "");
+                                    }
+                                },
+                                {
+                                    title: "Estado",
+                                    data: "estadoCita",
+                                    render: function (data, type, row) {
+                                        if (!data || !data.nombre) return "";
+                                        return data.nombre === "Pendiente"
+                                            ? '<span class="badge bg-primary">' + data.nombre + '</span>'
+                                            : '<span class="badge bg-success">' + data.nombre + '</span>';
+                                    }
+                                },
+                                {
+                                    title: "",
+                                    data: "idCita",
+                                    width: "100px",
+                                    render: function (data, type, row) {
+                                        return '<button type="button" class="btn btn-sm btn-outline-warning me-1 btn-indicaciones" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-light" title="Despliega el modal con el detalle completo de los datos de la cita">Indicaciones</button>';
+                                    }
+                                }
+                            ],
+                    initComplete: function () {
+                        initTooltips(document.getElementById("tbData"));
+                    },
+                    drawCallback: function () {
+                        initTooltips(document.getElementById("tbData"));
+                    },
+                    order: [[0, "desc"], [2, "asc"]], // 0=FechaCitaOrden, 2=HoraCita (porque 1 es FechaCita)
+
+                            language: {
+                                url: "https://cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json"
+                            }
+                        });
+
+                        // Cambio de estado (Pendiente / Atendido) - serverSide: solo recargar
+                        $("#cboEstadoCita").on("change", function () {
+                            tablaData.ajax.reload();
+                        });
+
+                        // Click en "Indicaciones"
+                        $("#tbData tbody").on("click", ".btn-indicaciones", function () {
+                            const filaSeleccionada = $(this).closest('tr');
+                            const data = tablaData.row(filaSeleccionada).data();
+                            console.log("Cita seleccionada:", data);
+
+                            idCitaSeleccionada = data.idCita;
+
+                            // Cabecera
+                            $("#txtPaciente").val(((data.usuario?.nombre) || "") + " " + ((data.usuario?.apellido) || ""));
+                            $("#txtFechaCitaResumen").val(data.fechaCita || "");
+                            $("#txtHoraCitaResumen").val(data.horaCita || "");
+
+                            // Origen
+                            $("#txtOrigenCita").val(data.origenCita || "");
+
+                            // Motivo del paciente
+                            $("#txtRazonCitaUsr").val(data.razonCitaUsr || "");
+
+                            // Indicaciones actuales
+                            $("#txtIndicaciones").val(data.indicaciones || "");
+
+                            // ---------- Documento del PACIENTE ----------
+                            const tieneDocPaciente = !!data.documentoCitaUsr && data.documentoCitaUsr.length > 0;
+
+                            if (tieneDocPaciente) {
+                                console.log("Paciente tiene documento");
+                                docPacienteBase64 = data.documentoCitaUsr;
+                                docPacienteContentType = data.contentType || "application/octet-stream";
+
+                                $("#btnVerDocPaciente")
+                                    .prop("disabled", false)
+                                    .removeClass("btn-outline-secondary")
+                                    .addClass("btn-outline-success");
+
+                                $("#lblDocPacienteSin").addClass("d-none");
+                                $("#lblDocPacienteCon").removeClass("d-none");
+                            } else {
+                                console.log("Paciente SIN documento");
+                                docPacienteBase64 = null;
+                                docPacienteContentType = null;
+
+                                $("#btnVerDocPaciente")
+                                    .prop("disabled", true)
+                                    .removeClass("btn-outline-success")
+                                    .addClass("btn-outline-secondary");
+
+                                $("#lblDocPacienteSin").removeClass("d-none");
+                                $("#lblDocPacienteCon").addClass("d-none");
+                            }
+
+                            // ---------- Documento del DOCTOR ----------
+                            const tieneDocDoctor = !!data.docIndicacionesDoctor && data.docIndicacionesDoctor.length > 0;
+
+                            if (tieneDocDoctor) {
+                                console.log("Doctor tiene documento", data.contentTypeDoctor);
+                                docDoctorBase64 = data.docIndicacionesDoctor;
+                                docDoctorContentType = data.contentTypeDoctor || "application/octet-stream";
+
+                                $("#btnVerDocDoctor")
+                                    .prop("disabled", false)
+                                    .removeClass("btn-outline-secondary")
+                                    .addClass("btn-outline-success");
+
+                                $("#lblDocDoctorSin").addClass("d-none");
+                                $("#lblDocDoctorCon").removeClass("d-none");
+                            } else {
+                                console.log("Doctor SIN documento");
+                                docDoctorBase64 = null;
+                                docDoctorContentType = null;
+
+                                $("#btnVerDocDoctor")
+                                    .prop("disabled", true)
+                                    .removeClass("btn-outline-success")
+                                    .addClass("btn-outline-secondary");
+
+                                $("#lblDocDoctorSin").removeClass("d-none");
+                                $("#lblDocDoctorCon").addClass("d-none");
+                            }
+
+                            // Limpiar input de fichero
+                            $("#fileDocDoctor").val("");
+
+                            // Estado de la cita
+                            const esAtendido = data.estadoCita?.nombre === "Atendido";
+
+                            // Ahora SIEMPRE permitimos editar indicaciones y documento
+                            $("#txtIndicaciones").prop("disabled", false);
+                            $("#btnTerminarCita").prop("disabled", false);
+                            $("#fileDocDoctor").prop("disabled", false);
+
+                            // Ajustamos mensaje según estado
+                            if (esAtendido) {
+                                $(".alert-primary")
+                                    .text("La cita ya está ATENDIDA, pero puede actualizar las indicaciones y el documento del doctor si lo considera necesario.")
+                                    .show();
+                            } else {
+                                $(".alert-primary")
+                                    .text("Escriba las indicaciones para el paciente y, si lo desea, adjunte un informe o documento del doctor.")
+                                    .show();
+                            }
+
+                            $("#" + modal).modal("show");
+                            $("#txtIndicaciones").trigger("focus");
+                        });
+
+                        // Ver documento del PACIENTE
+                        $("#btnVerDocPaciente").on("click", function () {
+                            if (!docPacienteBase64) {
+                                Swal.fire({
+                                    title: "Información",
+                                    text: "El paciente no adjuntó ningún documento.",
+                                    icon: "info"
+                                });
+                                return;
+                            }
+
+                            try {
+                                const byteCharacters = atob(docPacienteBase64);
+                                const byteNumbers = new Array(byteCharacters.length);
+                                for (let i = 0; i < byteCharacters.length; i++) {
+                                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                                }
+                                const byteArray = new Uint8Array(byteNumbers);
+                                const blob = new Blob([byteArray], { type: docPacienteContentType || "application/octet-stream" });
+                                const url = URL.createObjectURL(blob);
+                                window.open(url, "_blank");
+                            } catch (e) {
+                                console.error(e);
+                                Swal.fire({
+                                    title: "Error",
+                                    text: "No se pudo mostrar el documento del paciente.",
+                                    icon: "error"
+                                });
+                            }
+                        });
+
+                        // Ver documento del DOCTOR
+                        $("#btnVerDocDoctor").on("click", function () {
+                            if (!docDoctorBase64) {
+                                Swal.fire({
+                                    title: "Información",
+                                    text: "No hay documento del doctor para esta cita.",
+                                    icon: "info"
+                                });
+                                return;
+                            }
+
+                            try {
+                                const byteCharacters = atob(docDoctorBase64);
+                                const byteNumbers = new Array(byteCharacters.length);
+                                for (let i = 0; i < byteCharacters.length; i++) {
+                                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                                }
+                                const byteArray = new Uint8Array(byteNumbers);
+                                const blob = new Blob([byteArray], { type: docDoctorContentType || "application/octet-stream" });
+                                const url = URL.createObjectURL(blob);
+                                window.open(url, "_blank");
+                            } catch (e) {
+                                console.error(e);
+                                Swal.fire({
+                                    title: "Error",
+                                    text: "No se pudo mostrar el documento del doctor.",
+                                    icon: "error"
+                                });
+                            }
+                        });
+
+                        // Marcar cita como atendida + opcionalmente guardar documento del doctor
+                        $("#btnTerminarCita").on("click", function () {
+
+                            if ($("#txtIndicaciones").val().trim() === "") {
+                                Swal.fire({
+                                    title: "Importante",
+                                    text: "Debe ingresar las indicaciones.",
+                                    icon: "warning"
+                                });
+                                return;
+                            }
+
+                            const objeto = {
+                                IdCita: idCitaSeleccionada,
+                                EstadoCita: { IdEstadoCita: 2 }, // Siempre dejamos en "Atendido"
+                                Indicaciones: $("#txtIndicaciones").val().trim()
+                            };
+
+                            // 1) Cambiar estado e indicaciones
+                            fetch("/" + controlador + "/CambiarEstado", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json;charset=utf-8" },
+                                body: JSON.stringify(objeto)
+                            }).then(response => {
+                                return response.ok ? response.json() : Promise.reject(response);
+                            }).then(responseJson => {
+
+                                if (responseJson.data === "") {
+
+                                    // 2) Subir documento del doctor, si hay fichero
+                                    const file = document.getElementById("fileDocDoctor").files[0];
+
+                                    if (file) {
+                                        const reader = new FileReader();
+                                        reader.onload = function (e) {
+                                            const base64 = e.target.result.split(",")[1];
+
+                                            const objetoDoc = {
+                                                IdCita: idCitaSeleccionada,
+                                                DocIndicacionesDoctor: base64,
+                                                ContentTypeDoctor: file.type
+                                            };
+
+                                            fetch("/" + controlador + "/GuardarDocumentoDoctor", {
+                                                method: "POST",
+                                                headers: { "Content-Type": "application/json;charset=utf-8" },
+                                                body: JSON.stringify(objetoDoc)
+                                            }).then(r => {
+                                                return r.ok ? r.json() : Promise.reject(r);
+                                            }).then(rJson => {
+                                                if (rJson.data && rJson.data !== "") {
+                                                    Swal.fire({
+                                                        title: "Aviso",
+                                                        text: "La cita se marcó como atendida, pero el documento del doctor devolvió: " + rJson.data,
+                                                        icon: "warning"
+                                                    });
+                                                } else {
+                                                    Swal.fire({
+                                                        title: "Listo!",
+                                                        text: "La cita fue marcada como ATENDIDO y se guardó el documento del doctor.",
+                                                        icon: "success"
+                                                    });
+                                                }
+                                                $("#" + modal).modal("hide");
+                                                tablaData.ajax.reload();
+                                            }).catch(error => {
+                                                console.error(error);
+                                                Swal.fire({
+                                                    title: "Aviso",
+                                                    text: "La cita se marcó como atendida, pero el documento del doctor no se pudo guardar.",
+                                                    icon: "warning"
+                                                });
+                                                $("#" + modal).modal("hide");
+                                                tablaData.ajax.reload();
+                                            });
+                                        };
+
+                                        reader.readAsDataURL(file);
+                                    } else {
+                                        Swal.fire({
+                                            title: "Listo!",
+                                            text: "La cita fue marcada como ATENDIDO.",
+                                            icon: "success"
+                                        });
+                                        $("#" + modal).modal("hide");
+                                        tablaData.ajax.reload();
+                                    }
+
+                                } else {
+                                    Swal.fire({
+                                        title: "Error!",
+                                        text: responseJson.data,
+                                        icon: "warning"
+                                    });
+                                }
+                            }).catch(error => {
+                                console.error(error);
+                                Swal.fire({
+                                    title: "Error!",
+                                    text: "No se pudo registrar.",
+                                    icon: "warning"
+                                });
+                            });
+
+                        });
+
+                    });
+
+                })();
+    </script>
+}

@@ -1,0 +1,370 @@
+﻿@{
+    ViewData["Title"] = "Zadarma - SMS enviados";
+}
+
+@section Styles {
+    <link href="/lib/datatables2/css/dataTables.dataTables.css" rel="stylesheet" />
+}
+
+<h2 class="mt-4 mb-4">Zadarma - SMS enviados</h2>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+           <div class="card-header d-flex align-items-center">
+                <i class="fas fa-sms me-1"></i>
+                <span> Respuestas Zadarma (solo consulta)</span>
+
+                <button type="button"
+                        class="btn btn-success btn-sm ms-auto"
+                        onclick="openHelpVideo('Doctor_Horario.mp4')"
+                        data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-citas"
+                        title="Ayuda: abre el vídeo de explicación (wwwroot/helps/Doctor_Horario.mp4).">
+                    <i class="fa fa-circle-question"></i> Ayuda
+                </button>
+            </div>
+
+
+
+
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="display table table-striped table-bordered table-hover nowrap"
+                           id="tbSms"
+                           cellspacing="0"
+                           style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>ID</th>
+                                <th>CallerId</th>
+                                <th>Número destino</th>
+                                <th>Mensaje</th>
+                                <th>Coste</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <small class="text-muted d-block mt-2">
+                    * Tabla de solo consulta. El detalle completo está en el modal.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DETALLE -->
+<div class="modal fade" id="mdDetalleSms"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false"
+     tabindex="-1"
+     aria-labelledby="mdDetalleSmsLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <div class="modal-header" style="background: var(--brand-blue); color:#fff;">
+                <h5 class="modal-title" id="mdDetalleSmsLabel">Detalle SMS</h5>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="hdIdRespuestaSms" />
+
+                <div class="row g-2 mb-2">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Fecha registro</label>
+                        <input class="form-control" id="txtFechaRegistro" readonly />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">HTTP Status</label>
+                        <input class="form-control" id="txtHttpStatusCode" readonly />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Status</label>
+                        <input class="form-control" id="txtStatus" readonly />
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-2">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Messages</label>
+                        <input class="form-control" id="txtMessages" readonly />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Cost total</label>
+                        <input class="form-control" id="txtCostTotal" readonly />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Currency</label>
+                        <input class="form-control" id="txtCurrency" readonly />
+                    </div>
+                </div>
+
+                <hr />
+
+                <div class="row g-2 mb-2">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">CallerId</label>
+                        <input class="form-control" id="txtCallerId" readonly />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Número destino</label>
+                        <input class="form-control" id="txtNumeroDestino" readonly />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Parts</label>
+                        <input class="form-control" id="txtParts" readonly />
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-2">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Cost</label>
+                        <input class="form-control" id="txtCost" readonly />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Cost min</label>
+                        <input class="form-control" id="txtCostMin" readonly />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Cost max</label>
+                        <input class="form-control" id="txtCostMax" readonly />
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-2">
+                    <div class="col-12">
+                        <label class="form-label">Mensaje</label>
+                        <textarea class="form-control" id="txtMensaje" rows="4" readonly></textarea>
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-2">
+                    <div class="col-12">
+                        <label class="form-label">Denied numbers</label>
+                        <textarea class="form-control" id="txtDeniedNumbers" rows="2" readonly></textarea>
+                    </div>
+                </div>
+
+                <hr />
+
+                <div class="alert alert-info mb-2">
+                    Puedes descargar el JSON crudo tal cual se guardó en base de datos.
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap">
+                    <button id="btnDescargarJson" type="button" class="btn btn-warning">
+                        Descargar JSON
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        Cerrar
+                    </button>
+                </div>
+
+                <small id="lblJsonInfo" class="text-muted d-block mt-2"></small>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="/lib/datatables2/js/moment.min.js"></script>
+    <script src="/lib/datatables2/js/dataTables.js"></script>
+
+    <script>
+          (function () {
+          "use strict";
+
+          // ========= HELP VIDEO (simple) =========
+          window.openHelpVideo = function (fileName) {
+            const w = 900, h = 520;
+            const left = Math.max(0, (screen.width - w) / 2);
+            const top = Math.max(0, (screen.height - h) / 2);
+
+            const url = "/helps/" + encodeURIComponent(fileName);
+
+            window.open(
+              url,
+              "helpVideo",
+              `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no`
+            );
+          };
+        })();
+        let tablaSms = null;
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+            if (!window.jQuery) {
+                console.error("jQuery NO está cargado (Layout).");
+                return;
+            }
+            if (!jQuery.fn || !jQuery.fn.DataTable) {
+                console.error("DataTables NO está cargado. Revisa rutas /lib/datatables2/js/dataTables.js");
+                return;
+            }
+
+            tablaSms = $("#tbSms").DataTable({
+                responsive: false,
+                scrollX: true,
+                autoWidth: false,
+                ajax: {
+                    url: "/ZadarmaSmsRespuesta/Lista",
+                    type: "GET",
+                    datatype: "json"
+                },
+                columns: [
+                    {
+                        title: "Fecha",
+                        data: "fechaRegistro",
+                        width: "170px",
+                        render: function (data) { return data ? formatearFechaHora(data) : ""; }
+                    },
+                    { title: "ID", data: "idRespuestaSms", width: "80px" },
+                    { title: "CallerId", data: "callerId", width: "140px", defaultContent: "" },
+                    { title: "Número destino", data: "numeroDestino", width: "150px", defaultContent: "" },
+                    {
+                        title: "Mensaje",
+                        data: "mensaje",
+                        render: function (data) {
+                            if (!data) return "";
+                            const txt = String(data);
+                            const shortTxt = txt.length > 60 ? (txt.substring(0, 60) + "…") : txt;
+                            return `<span title="${escapeHtml(txt)}">${escapeHtml(shortTxt)}</span>`;
+                        }
+                    },
+                    {
+                        title: "Coste",
+                        data: "cost",
+                        width: "90px",
+                        className: "text-end",
+                        render: function (data) {
+                            if (data === null || data === undefined || data === "") return "";
+                            const n = Number(data);
+                            if (isNaN(n)) return escapeHtml(String(data));
+                            return n.toFixed(4);
+                        }
+                    },
+                    {
+                        title: "Acciones",
+                        data: null,
+                        orderable: false,
+                        width: "140px",
+                        render: function () {
+                            return `
+                                <button type="button" class="btn btn-sm btn-outline-primary btn-detalle">
+                                    Detalle
+                                </button>
+                            `;
+                        }
+                    }
+                ],
+                language: {
+                    url: "https://cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json"
+                },
+                drawCallback: function () {
+                    setTimeout(() => {
+                        try { tablaSms.columns.adjust(); } catch (e) { }
+                    }, 50);
+                }
+            });
+
+            // Detalle SIEMPRE
+            $("#tbSms tbody").on("click", ".btn-detalle", function () {
+                const row = tablaSms.row($(this).closest("tr")).data();
+                if (!row) return;
+                abrirModalDetalle(row);
+            });
+
+            // Descargar JSON (desde endpoint)
+            $("#btnDescargarJson").on("click", async function () {
+                const id = parseInt($("#hdIdRespuestaSms").val() || "0", 10);
+                if (!id) return;
+
+                const url = `/ZadarmaSmsRespuesta/DescargarJson?idRespuestaSms=${id}`;
+                const r = await fetch(url, { method: "GET" });
+
+                if (!r.ok) {
+                    Swal.fire("Información", "No hay JSON guardado para este registro.", "info");
+                    return;
+                }
+
+                const blob = await r.blob();
+
+                // filename por header
+                let filename = "";
+                const cd = r.headers.get("content-disposition") || "";
+                const m = /filename\*=UTF-8''([^;]+)|filename="?([^"]+)"?/i.exec(cd);
+                if (m) filename = decodeURIComponent(m[1] || m[2] || "");
+                if (!filename) filename = `zadarma_sms_${id}.json`;
+
+                const urlObj = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = urlObj;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                setTimeout(() => URL.revokeObjectURL(urlObj), 1500);
+            });
+
+            $("#mdDetalleSms").on("hidden.bs.modal", function () {
+                $("#lblJsonInfo").text("");
+            });
+        });
+
+        function abrirModalDetalle(row) {
+            $("#hdIdRespuestaSms").val(row.idRespuestaSms || 0);
+
+            $("#txtFechaRegistro").val(row.fechaRegistro ? formatearFechaHora(row.fechaRegistro) : "");
+            $("#txtHttpStatusCode").val(row.httpStatusCode ?? "");
+            $("#txtStatus").val(row.status ?? "");
+            $("#txtMessages").val(row.messages ?? "");
+            $("#txtCostTotal").val(row.costTotal != null ? Number(row.costTotal).toFixed(4) : "");
+            $("#txtCurrency").val(row.currency ?? "");
+
+            $("#txtCallerId").val(row.callerId ?? "");
+            $("#txtNumeroDestino").val(row.numeroDestino ?? "");
+            $("#txtParts").val(row.parts ?? "");
+
+            $("#txtCost").val(row.cost != null ? Number(row.cost).toFixed(4) : "");
+            $("#txtCostMin").val(row.costMin != null ? Number(row.costMin).toFixed(4) : "");
+            $("#txtCostMax").val(row.costMax != null ? Number(row.costMax).toFixed(4) : "");
+
+            $("#txtMensaje").val(row.mensaje ?? "");
+            $("#txtDeniedNumbers").val(row.deniedNumbers ?? "");
+
+            const tieneJson = !!row.rawJsonRespuesta;
+            $("#lblJsonInfo").text(tieneJson ? "JSON guardado: puedes descargarlo." : "Puede que no exista JSON guardado (te avisará al descargar).");
+
+            const modal = new bootstrap.Modal(document.getElementById("mdDetalleSms"));
+            modal.show();
+        }
+
+        function formatearFechaHora(valor) {
+            try {
+                if (typeof moment !== "undefined") {
+                    const m = moment(valor);
+                    if (m.isValid()) return m.format("DD/MM/YYYY HH:mm");
+                }
+            } catch { }
+            return String(valor);
+        }
+
+        function escapeHtml(s) {
+            return String(s)
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+        }
+    </script>
+}

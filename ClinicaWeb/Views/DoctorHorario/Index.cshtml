@@ -1,0 +1,328 @@
+﻿@{
+    ViewData["Title"] = "Horarios de doctores";
+}
+
+@section Styles {
+    <style>
+        /* Tooltips blancos con letra negra (Bootstrap 5) */
+        .tooltip-dh {
+            --bs-tooltip-bg: #fff;
+            --bs-tooltip-color: #000;
+            --bs-tooltip-opacity: 1;
+        }
+
+            .tooltip-dh .tooltip-inner {
+                border: 1px solid rgba(0,0,0,.15);
+            }
+
+            .tooltip-dh .tooltip-arrow::before {
+                border-top-color: #fff !important;
+                border-bottom-color: #fff !important;
+            }
+
+        /* Tabla responsive */
+        table.dataTable td, table.dataTable th {
+            white-space: normal !important;
+        }
+
+        /* Select2 dentro de modal (evita que el desplegable quede detrás) */
+        #mdData .select2-container, #mdCalcom .select2-container {
+            width: 100% !important;
+        }
+
+        #mdData .select2-dropdown, #mdCalcom .select2-dropdown {
+            z-index: 1065 !important; /* > modal (1055) */
+        }
+    </style>
+}
+
+<div class="container-fluid px-4">
+
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+        <div>
+            <h2 class="mt-4 mb-1">Horarios de doctores</h2>
+            <div class="text-muted">Gestione los horarios mensuales y sus slots de citas.</div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 pt-4">
+
+            <a class="btn btn-success"
+               href="@Url.Action("Detalle_Horario_Citas", "Citas")"
+               data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-dh"
+               title="Consulta Agendas Horarios y Citas">
+                <i class="fa fa-calendar-days me-1"></i> Consulta Agendas Horarios y Citas
+            </a>
+
+            <button type="button"
+                    class="btn btn-primary"
+                    id="btnNuevo"
+                    data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-dh"
+                    title="Crear un nuevo cuadrante de horarios para un doctor">
+                <i class="fa fa-plus-circle me-1"></i> Nuevo Horario
+            </button>
+
+          
+            <button type="button"
+                    class="btn btn-info text-white"
+                    id="btnCalcom"
+                    data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-dh"
+                    title="Horario Calcom: Sincroniza disponibilidad y citas con la plataforma externa Cal.com">
+                <i class="fa fa-sync me-1"></i> Horario Calcom
+            </button>
+          
+
+            <button type="button"
+                    class="btn btn-outline-secondary"
+                    onclick="openHelpVideo('Doctor_Horario.mp4')"
+                    data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-dh"
+                    title="Ayuda técnica">
+                <i class="fa fa-circle-question me-1"></i> Ayuda
+            </button>
+
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <i class="fas fa-table me-1"></i>
+            Lista de horarios configurados
+        </div>
+
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="display table table-striped table-bordered table-hover nowrap"
+                       id="tbData"
+                       cellspacing="0"
+                       style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Doctor</th>
+                            <th>Mes</th>
+                            <th>Horario mañana</th>
+                            <th>Horario tarde</th>
+                            <th style="width:100px">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+/* Comienzo Cambio: Modal Sincro Calcom */
+<div class="modal fade" id="mdCalcom" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title"><i class="fa fa-sync me-2"></i>Sincronización Externa Cal.com</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label fw-bold">Seleccione Doctor</label>
+                        <select class="form-select" id="cboDoctorCalcom">
+                            <option value="">-- Seleccione un doctor --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Mes</label>
+                        <select class="form-select" id="cboMesCalcom">
+                            <option value="01">01 - Enero</option>
+                            <option value="02">02 - Febrero</option>
+                            <option value="03">03 - Marzo</option>
+                            <option value="04">04 - Abril</option>
+                            <option value="05">05 - Mayo</option>
+                            <option value="06">06 - Junio</option>
+                            <option value="07">07 - Julio</option>
+                            <option value="08">08 - Agosto</option>
+                            <option value="09">09 - Septiembre</option>
+                            <option value="10">10 - Octubre</option>
+                            <option value="11">11 - Noviembre</option>
+                            <option value="12">12 - Diciembre</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Año</label>
+                        <input type="number" class="form-control" id="txtAnioCalcom" value="@DateTime.Now.Year" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-info text-white" id="btnEjecutarCalcom">
+                    <i class="fa fa-rocket me-1"></i> Lanzar Proceso
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+/* Final Cambio */
+
+<div class="modal fade" id="mdData" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="mdDataLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="mdDataLabel">Configurar Nuevo Horario</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Doctor</label>
+                        <select class="form-select" id="cboDoctor">
+                            <option value="">-- Seleccione doctor --</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Mes de aplicación</label>
+                        <select class="form-select" id="cboMes">
+                            <option value="">-- Seleccione mes --</option>
+                            <option value="1">Enero</option>
+                            <option value="2">Febrero</option>
+                            <option value="3">Marzo</option>
+                            <option value="4">Abril</option>
+                            <option value="5">Mayo</option>
+                            <option value="6">Junio</option>
+                            <option value="7">Julio</option>
+                            <option value="8">Agosto</option>
+                            <option value="9">Septiembre</option>
+                            <option value="10">Octubre</option>
+                            <option value="11">Noviembre</option>
+                            <option value="12">Diciembre</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12"><hr /></div>
+
+                    <div class="col-12 col-lg-6">
+                        <div class="p-3 border rounded bg-light">
+                            <h6 class="mb-3 border-bottom pb-2 text-success">Turno Mañana (AM)</h6>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <label class="form-label small">Inicio AM</label>
+                                    <input type="time" id="txtHoraInicioAM" class="form-control">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small">Hora Fin</label>
+                                    <input type="time" id="txtHoraFinAM" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-6">
+                        <div class="p-3 border rounded bg-light">
+                            <h6 class="mb-3 border-bottom pb-2 text-primary">Turno Tarde (PM)</h6>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <label class="form-label small">Inicio PM</label>
+                                    <input type="time" id="txtHoraInicioPM" class="form-control">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small">Fin PM</label>
+                                    <input type="time" id="txtHoraFinPM" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Fechas (dd/MM/yyyy)</label>
+                        <textarea class="form-control" id="txtFechas" rows="4" placeholder="01/02/2026, 02/02/2026..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardar"
+                        data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-dh"
+                        title="Guardar: refleja los datos en la base de datos y actualiza la tabla.">
+                    Guardar Horario
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="mdAyuda" tabindex="-1" aria-labelledby="mdAyudaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mdAyudaLabel">Ayuda</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="ratio ratio-16x9">
+                    <iframe id="frameAyuda" src="about:blank" title="Ayuda" allowfullscreen></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/sweetAlert2/js/sweetalert2.js"></script>
+    <script src="~/lib/loadingoverlay/loadingoverlay.min.js"></script>
+    <script src="~/lib/select2/js/select2.min.js"></script>
+
+    <script src="~/views/doctorhorario/doctorhorario.js?v=20260108_1"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Inicializar tooltips para los botones de la vista
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+
+            /* Lógica Calcom */
+            $("#btnCalcom").click(function() {
+                // Reutilizamos los doctores cargados por el JS externo en el combo original
+                $("#cboDoctorCalcom").html($("#cboDoctor").html());
+
+                if ($.fn.select2) {
+                    $("#cboDoctorCalcom").select2({
+                        theme: "bootstrap-5",
+                        dropdownParent: $("#mdCalcom")
+                    });
+                }
+                $("#mdCalcom").modal("show");
+            });
+
+            $("#btnEjecutarCalcom").click(function() {
+                const idDoc = $("#cboDoctorCalcom").val();
+                const mes = $("#cboMesCalcom").val();
+                const anio = $("#txtAnioCalcom").val();
+
+                if (!idDoc) {
+                    Swal.fire("Atención", "Debe seleccionar un doctor", "warning");
+                    return;
+                }
+
+                $.LoadingOverlay("show");
+
+                $.post("/DoctorHorario/LanzarSincroCalcom", { idDoctor: idDoc, mes: mes, anio: anio }, function(res) {
+                    $.LoadingOverlay("hide");
+                    if (res.esExitoso) {
+                        Swal.fire("Encolado", res.mensaje + " (ID Acción: " + res.id + ")", "success");
+                        $("#mdCalcom").modal("hide");
+                    } else {
+                        Swal.fire("Error", res.mensaje, "error");
+                    }
+                }).fail(function() {
+                    $.LoadingOverlay("hide");
+                    Swal.fire("Error", "Error en la comunicación con el servidor", "error");
+                });
+            });
+
+            // Re-mapeo opcional si el modal de ayuda requiere lógica adicional en la vista
+            window.openHelpVideoAction = function(video) {
+                $("#frameAyuda").attr("src", "/helps/" + video);
+                $("#mdAyuda").modal("show");
+            };
+        });
+    </script>
+}

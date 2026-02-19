@@ -1,0 +1,586 @@
+﻿@{
+    ViewData["Title"] = "Mis Citas";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+        
+    <link href="~/lib/jquery-ui/jquery-ui.css" rel="stylesheet" />
+    <style>
+        /* Pattern from NuevaCita: Force calendar on top of Bootstrap Modal */
+        #ui-datepicker-div {
+            z-index: 999999 !important;
+        }
+
+        /* Interactive slots style */
+        .slot-btn-pac {
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-radius: 0.375rem;
+            padding: 8px;
+            text-align: center;
+            transition: all 0.2s;
+            background: #fff;
+            min-width: 65px;
+        }
+
+            .slot-btn-pac:hover {
+                background: #f8f9fa;
+                border-color: #0d6efd;
+            }
+
+            .slot-btn-pac.selected {
+                background: #0d6efd !important;
+                color: #fff !important;
+            }
+       
+
+        /* Tooltips blancos con letra negra (Bootstrap 5) */
+        .tooltip-citas {
+            --bs-tooltip-bg: #fff;
+            --bs-tooltip-color: #000;
+            --bs-tooltip-opacity: 1;
+        }
+
+            .tooltip-citas .tooltip-inner {
+                border: 1px solid rgba(0,0,0,.15);
+            }
+
+            .tooltip-citas .tooltip-arrow::before {
+                border-top-color: #fff !important;
+                border-bottom-color: #fff !important;
+            }
+
+        /* Tabla: permitir wrap en móvil */
+        table.dataTable td, table.dataTable th {
+            white-space: normal !important;
+        }
+
+        /* Acciones en tabla: que envuelvan */
+        .dt-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .25rem;
+            align-items: center;
+        }
+
+            .dt-actions .btn,
+            .dt-actions .form-select {
+                margin: 0 !important;
+            }
+
+        /* Modal: un poco más compacto para que quepan botones en móvil */
+        .cita-modal-compact .modal-body {
+            padding: .75rem;
+        }
+
+        .cita-modal-compact .form-label {
+            margin-bottom: .25rem;
+        }
+
+        .cita-modal-compact .form-control,
+        .cita-modal-compact textarea,
+        .cita-modal-compact .form-select {
+            padding: .25rem .5rem;
+            font-size: .95rem;
+        }
+
+        .cita-modal-compact .btn {
+            padding: .25rem .5rem;
+        }
+    </style>
+}
+
+<h2 class="mt-4 mb-4 d-flex align-items-center">
+    <span>Mis Citas</span>
+
+    <button type="button"
+            class="btn btn-sm ms-auto"
+            style="background-color:#ff8c00;color:#fff;border-color:#ff8c00;"
+            onclick="openHelpVideo('Doctor_Horario.mp4')"
+            data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-citas"
+            title="Ayuda: abre el vídeo de explicación (wwwroot/helps/Doctor_Horario.mp4).">
+        <i class="fa fa-circle-question me-1"></i> Ayuda
+    </button>
+</h2>
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-chart-bar me-1"></i>
+                Lista de citas
+            </div>
+
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <a class="btn btn-success w-100 w-sm-auto"
+                           href="@Url.Action("NuevaCita", "Citas")"
+                           data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-citas"
+                           title="Crear una nueva cita">
+                            Nueva Cita
+                        </a>
+                    </div>
+                </div>
+
+                <hr />
+
+                <div class="table-responsive">
+                    <table class="display table table-striped table-bordered table-hover nowrap"
+                           id="tbData"
+                           cellspacing="0"
+                           style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Fecha Cita</th>
+                                <th>Hora Cita</th>
+                                <th>Especialidad</th>
+                                <th>Doctor</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="mdData"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false"
+     tabindex="-1"
+     aria-labelledby="mdDataLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content cita-modal-compact">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="mdDataLabel">Detalle de la cita</h5>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Cerrar"
+                        data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-citas"
+                        title="Cerrar la pantalla y volver al menú general"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="row g-2 mb-2">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Fecha cita</label>
+                        <input type="text" class="form-control" id="txtFechaCitaResumen" disabled />
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Hora cita</label>
+                        <input type="text" class="form-control" id="txtHoraCitaResumen" disabled />
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Origen cita</label>
+                        <input type="text" class="form-control" id="txtOrigenCita" disabled />
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-2">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Especialidad</label>
+                        <input type="text" class="form-control" id="txtEspecialidad" disabled />
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Doctor</label>
+                        <input type="text" class="form-control" id="txtDoctor" disabled />
+                    </div>
+                </div>
+
+                <hr />
+
+                <div class="row g-2 mb-3">
+                    <div class="col-12">
+                        <label class="form-label">Motivo de la cita (editable por usted)</label>
+                        <textarea class="form-control" id="txtRazonCitaUsr" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-12">
+                        <label class="form-label d-block">Documento aportado por usted</label>
+                        <button type="button" id="btnVerDocPaciente" class="btn btn-outline-secondary btn-sm" disabled>Ver mi documento</button>
+                        <div class="mt-1">
+                            <small id="lblHayDocPaciente" class="form-text text-success d-none">✔ Hay un documento.</small>
+                            <small id="lblSinDocPaciente" class="form-text text-muted">No hay documento.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-12">
+                        <label class="form-label">Actualizar documento</label>
+                        <input type="file" class="form-control" id="fileDocPaciente" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" />
+                    </div>
+                </div>
+
+                <hr />
+
+                <div class="alert alert-info" role="alert">Indicaciones del doctor para esta cita.</div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-12">
+                        <label class="form-label">Indicaciones del doctor</label>
+                        <textarea class="form-control" id="txtIndicacionesDoctor" rows="3" readonly></textarea>
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-2">
+                    <div class="col-12">
+                        <button type="button" id="btnVerDocDoctor" class="btn btn-outline-secondary btn-sm" disabled>Ver documento del doctor</button>
+                        <div class="mt-1">
+                            <small id="lblHayDocDoctor" class="form-text text-success d-none">✔ Hay un documento del doctor.</small>
+                            <small id="lblSinDocDoctor" class="form-text text-muted">No hay documento del doctor.</small>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarPaciente">Guardar cambios</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="mdReproPaciente" tabindex="-1" aria-hidden="true" data-bs-focus="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-calendar-event me-2"></i>Reprogramar Cita</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalReproBody">
+                <input type="hidden" id="reproIdCita" />
+                <div class="mb-3">
+                    <label class="form-label fw-bold">1. Seleccione Fecha Nueva</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                        <input type="text" id="reproFechaPac" class="form-control" readonly style="background: #fff; cursor: pointer;" placeholder=\"Elegir fecha...\" />
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">2. Seleccione Horario</label>
+                    <div class="border rounded p-3 bg-light">
+                        <div class="mb-2"><small class=\"text-secondary fw-bold text-uppercase\">Mañana</small></div>
+                        <div id="containerSlotsAM" class="d-flex flex-wrap gap-2 mb-3"></div>
+                        <div class="mb-2"><small class=\"text-secondary fw-bold text-uppercase\">Tarde</small></div>
+                        <div id="containerSlotsPM" class="d-flex flex-wrap gap-2"></div>
+                    </div>
+                    <input type="hidden" id="reproHoraPac" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">3. Motivo (opcional)</label>
+                    <textarea id="reproMotivoPac" class="form-control" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss=\"modal\">Cerrar</button>
+                <button type="button" id="btnConfirmarReproPac" class="btn btn-primary">Confirmar Cambio</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+       
+    <script src="~/lib/moment/moment.min.js"></script>
+    <script src="~/lib/jquery-ui/jquery-ui.js"></script>
+    <script src="~/lib/jquery-ui/datepicker/language/datepicker-es.js"></script>
+       
+
+    <script>
+        (function () {
+          "use strict";
+          window.openHelpVideo = function (fileName) {
+            const w = 900, h = 520;
+            const left = Math.max(0, (screen.width - w) / 2);
+            const top = Math.max(0, (screen.height - h) / 2);
+            const url = "/helps/" + encodeURIComponent(fileName);
+            window.open(url, "helpVideo", `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no`);
+          };
+        })();
+
+        function initTooltips(scope) {
+            try {
+                const root = scope || document;
+                const els = root.querySelectorAll('[data-bs-toggle="tooltip"]');
+                els.forEach(el => {
+                    const inst = bootstrap.Tooltip.getInstance(el);
+                    if (inst) inst.dispose();
+                    new bootstrap.Tooltip(el);
+                });
+            } catch (e) { }
+        }
+
+        function clearTooltips() {
+            try {
+                document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+                    const inst = bootstrap.Tooltip.getInstance(el);
+                    if (inst) inst.hide();
+                });
+                document.querySelectorAll(".tooltip").forEach(t => t.remove());
+            } catch (e) { }
+        }
+
+        let tablaData;
+        let idEditar = 0;
+        const controlador = "Citas";
+        const modal = "mdData";
+        const preguntaEliminar = "Desea cancelar su cita?";
+        const confirmaEliminar = "Su cita fue cancela.";
+
+        let docPacienteBase64 = null, docPacienteContentType = null;
+        let docDoctorBase64 = null, docDoctorContentType = null;
+
+        const esAdmin = false;
+       
+        let modalReproObj;
+       
+
+        document.addEventListener("DOMContentLoaded", function () {
+            initTooltips(document);
+
+            
+            modalReproObj = new bootstrap.Modal(document.getElementById('mdReproPaciente'));
+            $.datepicker.setDefaults($.datepicker.regional['es']);
+
+            $("#reproFechaPac").datepicker({
+                dateFormat: "dd/mm/yy",
+                minDate: 0,
+                beforeShow: function(input, inst) {
+                    setTimeout(function() {
+                        $('#ui-datepicker-div').css('z-index', 999999);
+                    }, 0);
+                },
+                onSelect: function (dateText) {
+                    fetchSlots(dateText);
+                }
+            });
+           
+
+            tablaData = $('#tbData').DataTable({
+                autoWidth: false,
+                responsive: true,
+                ajax: {
+                    url: `/${controlador}/ListaCitasPendiente`,
+                    type: "GET",
+                    datatype: "json"
+                },
+                columns: [
+                    { title: "Fecha Cita", data: "fechaCita", width: "150px" },
+                    { title: "Hora Cita", data: "horaCita", width: "120px" },
+                    { title: "Especialidad", data: "especialidad", render: (d) => d ? d.nombre : "" },
+                    { title: "Doctor", data: "doctor", render: (d) => d ? `${d.nombres} ${d.apellidos}`.trim() : "" },
+                    {
+                        title: "Acciones", data: null, orderable: false, width: "260px",
+                        render: function (data, type, row) {
+                            let html = `<div class=\"dt-actions\">
+                                <button type=\"button\" class=\"btn btn-sm btn-outline-primary btn-detalle\">Indicaciones</button>
+                                
+                                <button type=\"button\" class=\"btn btn-sm btn-outline-primary\" onclick=\"abrirModalRepro(${row.idCita})\">Reprogramar</button>
+                              
+                                <button type=\"button\" class=\"btn btn-sm btn-outline-danger btn-cancelar\">Cancelar</button>
+                            </div>`;
+                            return html;
+                        }
+                    }
+                ],
+                language: { url: "https://cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json" },
+                drawCallback: function () { initTooltips(document.getElementById('tbData')); }
+            });
+        });
+
+      
+        async function abrirModalRepro(idCita) {
+            $("#reproIdCita").val(idCita);
+            $("#reproFechaPac").val("");
+            $("#reproHoraPac").val("");
+            $("#containerSlotsAM, #containerSlotsPM").html('<span class=\"text-muted small\">Seleccione fecha...</span>');
+            modalReproObj.show();
+        }
+
+        async function fetchSlots(fecha) {
+            const id = $("#reproIdCita").val();
+            $("#containerSlotsAM, #containerSlotsPM").html('<div class=\"spinner-border spinner-border-sm text-primary\"></div>');
+            try {
+                const response = await fetch(`/Citas/GetSlotsLibres?idCitaVieja=${id}&fecha=${fecha}`);
+                const data = await response.json();
+                let htmlAM = "", htmlPM = "";
+                data.forEach(s => {
+                    const btn = `<div class=\"slot-btn-pac\" onclick=\"selectTime('${s.hora}', this)\">${s.hora}</div>`;
+                    if(s.turno === "AM") htmlAM += btn; else htmlPM += btn;
+                });
+                $("#containerSlotsAM").html(htmlAM || '<small class=\"text-muted\">Sin turnos AM</small>');
+                $("#containerSlotsPM").html(htmlPM || '<small class=\"text-muted\">Sin turnos PM</small>');
+            } catch (e) { Swal.fire("Error", "No se pudo cargar la disponibilidad.", "error"); }
+        }
+
+        function selectTime(hora, el) {
+            $(".slot-btn-pac").removeClass("selected text-white bg-primary");
+            $(el).addClass("selected text-white bg-primary");
+            $("#reproHoraPac").val(hora);
+        }
+
+        $("#btnConfirmarReproPac").on("click", async function () {
+            const id = $("#reproIdCita").val();
+            const f = $("#reproFechaPac").val();
+            const h = $("#reproHoraPac").val();
+            if (!f || !h) { Swal.fire("Aviso", "Seleccione fecha y hora.", "warning"); return; }
+
+            Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            try {
+                const res = await fetch("/Citas/ReprogramarCita", {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ idCitaVieja: parseInt(id), nuevaFecha: f, nuevaHora: h, motivo: $("#reproMotivoPac").val() })
+                });
+                const result = await res.json();
+                if (result.ok) { iniciarPollingPaciente(result.idAccion); }
+                else { Swal.fire("Aviso", result.data, "warning"); }
+            } catch (e) { Swal.fire("Error", "Error de comunicación.", "error"); }
+        });
+
+        function iniciarPollingPaciente(idAccion) {
+            let intentos = 0;
+            const bucle = setInterval(async () => {
+                intentos++;
+                try {
+                    const r = await fetch(`/Citas/ConsultarEstadoAccion?id=${idAccion}`);
+                    const res = await r.json();
+                    const status = (res.status || res.Status || "").toUpperCase();
+                    if (status === 'S') {
+                        clearInterval(bucle);
+                        modalReproObj.hide();
+                        Swal.fire("¡Éxito!", "Cita reprogramada.", "success").then(() => location.reload());
+                    } else if (status === 'Z' || intentos > 15) {
+                        clearInterval(bucle);
+                        Swal.fire("Información", "La solicitud está en proceso. Recibirá un aviso pronto.", "info").then(() => location.reload());
+                    }
+                } catch (e) { }
+                if (intentos > 20) clearInterval(bucle);
+            }, 3000);
+        }
+        
+
+        $("#tbData tbody").on("click", ".btn-cancelar", function () {
+            const fila = $(this).closest("tr");
+            const data = tablaData.row(fila).data();
+            Swal.fire({ text: preguntaEliminar, icon: "warning", showCancelButton: true }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/${controlador}/Cancelar?Id=${data.idCita}`, { method: "DELETE" })
+                        .then(r => r.json()).then(resp => {
+                            if (resp.data === "") { Swal.fire("Listo!", "Cita cancelada.", "success"); tablaData.ajax.reload(); }
+                        });
+                }
+            });
+        });
+
+        $("#tbData tbody").on("click", ".btn-detalle", function () {
+            clearTooltips();
+            const fila = $(this).closest("tr");
+            const data = tablaData.row(fila).data();
+            idEditar = data.idCita;
+
+            $("#txtFechaCitaResumen").val(data.fechaCita);
+            $("#txtHoraCitaResumen").val(data.horaCita);
+            $("#txtOrigenCita").val(data.origenCita);
+            $("#txtEspecialidad").val(data.especialidad ? data.especialidad.nombre : "");
+            $("#txtDoctor").val(`${data.doctor.nombres} ${data.doctor.apellidos}`.trim());
+            $("#txtRazonCitaUsr").val(data.razonCitaUsr);
+            $("#txtIndicacionesDoctor").val(data.indicaciones);
+
+            if (data.documentoCitaUsr) {
+                docPacienteBase64 = data.documentoCitaUsr;
+                docPacienteContentType = data.contentType || "application/octet-stream";
+                $("#btnVerDocPaciente").prop("disabled", false);
+                $("#lblHayDocPaciente").removeClass("d-none");
+                $("#lblSinDocPaciente").addClass("d-none");
+            } else {
+                docPacienteBase64 = null;
+                $("#btnVerDocPaciente").prop("disabled", true);
+                $("#lblHayDocPaciente").addClass("d-none");
+                $("#lblSinDocPaciente").removeClass("d-none");
+            }
+
+            if (data.docIndicacionesDoctor) {
+                docDoctorBase64 = data.docIndicacionesDoctor;
+                docDoctorContentType = data.contentTypeDoctor || "application/octet-stream";
+                $("#btnVerDocDoctor").prop("disabled", false);
+                $("#lblHayDocDoctor").removeClass("d-none");
+                $("#lblSinDocDoctor").addClass("d-none");
+            } else {
+                docDoctorBase64 = null;
+                $("#btnVerDocDoctor").prop("disabled", true);
+                $("#lblHayDocDoctor").addClass("d-none");
+                $("#lblSinDocDoctor").removeClass("d-none");
+            }
+
+            $(`#${modal}`).modal("show");
+        });
+
+        $("#btnVerDocPaciente").on("click", function () { abrirDocumento(docPacienteBase64, docPacienteContentType); });
+        $("#btnVerDocDoctor").on("click", function () { abrirDocumento(docDoctorBase64, docDoctorContentType); });
+
+        $("#btnGuardarPaciente").on("click", async function () {
+            const inputFile = document.getElementById("fileDocPaciente");
+            const file = inputFile.files.length > 0 ? inputFile.files[0] : null;
+            let documentoBase64 = null, contentType = null;
+
+            if (file) {
+                const dataUrl = await fileToBase64(file);
+                documentoBase64 = dataUrl.split(',')[1];
+                contentType = file.type;
+            }
+
+            const payload = {
+                idCita: idEditar,
+                razonCitaUsr: $("#txtRazonCitaUsr").val(),
+                documentoBase64: documentoBase64,
+                contentType: contentType
+            };
+
+            $("#mdData").LoadingOverlay("show");
+            fetch(`/${controlador}/ActualizarMotivoPaciente`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            }).then(() => {
+                $("#mdData").LoadingOverlay("hide");
+                $(`#${modal}`).modal("hide");
+                tablaData.ajax.reload();
+            });
+        });
+
+        function abrirDocumento(base64, contentType) {
+            const byteCharacters = atob(base64);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) byteNumbers[i] = byteCharacters.charCodeAt(i);
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: contentType });
+            window.open(URL.createObjectURL(blob), "_blank");
+        }
+
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.readAsDataURL(file);
+            });
+        }
+    </script>
+}

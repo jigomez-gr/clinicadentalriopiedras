@@ -1,0 +1,211 @@
+﻿@{
+    // PATCH: Esto permite cargar automáticamente el CSS aislado del proyecto:
+    // /<AssemblyName>.styles.css (por ejemplo /ClinicaWeb.styles.css)
+    var asmName = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name
+                  ?? System.Reflection.Assembly.GetExecutingAssembly().GetName().Name;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <title>Clinica - Net8</title>
+
+    <!-- CSS base del template -->
+    <link href="~/css/styles.css" rel="stylesheet" asp-append-version="true" />
+
+    <!-- PATCH: tu tema (azul unificado + mensajes verde/rojo) -->
+    <link href="~/css/clinica-theme.css" rel="stylesheet" asp-append-version="true" />
+  
+    <!-- Si alguna vista define sección Styles/Estilos, no rompe -->
+    @RenderSection("Styles", required: false)
+    @RenderSection("Estilos", required: false)
+
+    <script src="~/lib/fontawesome/all.js"></script>
+</head>
+
+<body class="sb-nav-fixed">
+   
+
+    <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
+        <a class="clinic-top-logo" href="/Home/Index" title="Clínica">
+            <img src="~/images/logo.jpg" alt="Logo" />
+        </a>
+
+        <!-- Sidebar Toggle-->
+        <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Navbar Search-->
+        <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0"></form>
+
+        <!-- Navbar-->
+        <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-user fa-fw"></i>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                    <li><a class="dropdown-item" href="#!">@User.Identity?.Name</a></li>
+                    <li><hr class="dropdown-divider" /></li>
+                    <li><a class="dropdown-item" href="/Home/Salir">Salir</a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+
+    <div id="layoutSidenav">
+        <div id="layoutSidenav_nav">
+            <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
+                <div class="sb-sidenav-menu">
+                    <div class="nav">
+                        <a class="nav-link" href="/Home/Index">
+                            <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                            Dashboard
+                        </a>
+
+                        <div class="sb-sidenav-menu-heading">Gestion</div>
+
+                        @if (User.IsInRole("Administrador"))
+                        {
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">
+                                <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                                Dashboard
+                            </a>
+                        }
+
+                        @if (User.IsInRole("Administrador"))
+                        {
+                            <a class="nav-link" asp-controller="Usuario" asp-action="Index">
+                                <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
+                                Usuario
+                            </a>
+                            <a class="nav-link" asp-controller="Especialidad" asp-action="Index">
+                                <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
+                                Especialidad
+                            </a>
+                            <a class="nav-link" asp-controller="Doctor" asp-action="Index">
+                                <div class="sb-nav-link-icon"><i class="fa-solid fa-user-doctor"></i></div>
+                                Doctor
+                            </a>
+                            <a class="nav-link" asp-controller="DoctorHorario" asp-action="Index">
+                                <div class="sb-nav-link-icon"><i class="fa-solid fa-user-doctor"></i></div>
+                                Horarios de Doctores
+                            </a>
+                            <a class="nav-link" asp-controller="Gestion" asp-action="Index">
+                                <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
+                                Gestión de Citas
+                            </a>
+                            <a class="nav-link" href="/AnalisisVapi/Index">
+                                <div class="sb-nav-link-icon"><i class="fas fa-chart-bar"></i></div>
+                                Análisis VAPI
+                            </a>
+
+                            <a class="nav-link" href="/ZadarmaSmsRespuesta/Index">
+                                <div class="sb-nav-link-icon"><i class="fas fa-chart-bar"></i></div>
+                                Análisis SMS Zadarma
+                            </a>
+
+                        }
+                        @if (User.IsInRole("Paciente"))
+                        {
+                            <a class="nav-link" asp-controller="Citas" asp-action="Index">
+                                <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
+                                Mis Citas
+                            </a>
+                            <a class="nav-link" asp-controller="HistorialCitas" asp-action="Index">
+                                <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
+                                Historial Citas
+                            </a>
+                        }
+
+                        @if (User.IsInRole("Doctor"))
+                        {
+                            <a class="nav-link" asp-controller="Usuario" asp-action="Index2">
+                                <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
+                                Usuario
+                            </a>
+
+                            <a class="nav-link" asp-controller="Citas" asp-action="CitasAsignadas">
+                                <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
+                                Citas
+                            </a>
+                            <a class="nav-link" asp-controller="Citas" asp-action="Detalle_Horario_Citas">
+                                <div class="fa-stethoscope "><i class="fas fa-table"></i></div>
+                                Calendario Horarios y Citas
+                            </a>
+
+                        }
+
+
+                    </div>
+                </div>
+
+                <div class="sb-sidenav-footer">
+                    <div class="small">Logged in as:</div>
+                    Start Bootstrap
+                </div>
+            </nav>
+        </div>
+
+        <div id="layoutSidenav_content">
+            <main>
+                <div class="container-fluid px-4">
+                    @RenderBody()
+                </div>
+            </main>
+
+            <footer class="py-4 bg-light mt-auto">
+                <div class="container-fluid px-4">
+                    <div class="d-flex align-items-center justify-content-between small">
+                        <div class="text-muted"> 2026 </div>
+                        <div>
+                            <a href="#">Privacy Policy</a>
+                            &middot;
+                            <a href="#">Terms &amp; Conditions</a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+   
+    <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+
+    
+    <script>
+        // Polyfill: soporte de $(...).modal(...) para Bootstrap 5 (evita errores en vistas antiguas)
+        (function () {
+            if (!window.jQuery || window.jQuery.fn.modal || !window.bootstrap || !window.bootstrap.Modal) return;
+
+            window.jQuery.fn.modal = function (action) {
+                return this.each(function () {
+                    const instance = window.bootstrap.Modal.getOrCreateInstance(this);
+                    if (action === "show") instance.show();
+                    else if (action === "hide") instance.hide();
+                    else if (action === "toggle") instance.toggle();
+                });
+            };
+        })();
+    </script>
+
+    <script src="~/js/scripts.js"></script>
+    <script src="~/lib/sweetAlert2/js/sweetalert2.js"></script>
+    <script src="~/lib/loadingoverlay/loadingoverlay.min.js"></script>
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>
