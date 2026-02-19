@@ -1,0 +1,17 @@
+# Archivos de configuración de Visual Studio
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Carpetas de compilación (Basura que no debe ir a Linux)
+bin/
+obj/
+publish/
+
+# Archivos temporales del sistema
+Thumbs.db
+ehthumbs.db
+Desktop.ini
