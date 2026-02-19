@@ -212,7 +212,25 @@
     <script src="https://cdn.jsdelivr.net/npm/gasparesganga-jquery-loading-overlay@2.1.7/dist/loadingoverlay.min.js"></script>
 
     <script src="/js/scripts.js"></script>
-
+    <script>
+        /* comienzo cambio 9898 */
+        // Configuración global para todos los Datepickers del programa
+        if ($.datepicker) {
+            $.datepicker.setDefaults({
+                dateFormat: 'dd/mm/yy', // Fuerza el formato día/mes/año en toda la web
+                dayNames: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+                dayNamesMin: ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá'],
+                monthNames: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+                monthNamesShort: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+                firstDay: 1, // La semana empieza en Lunes
+                isRTL: false,
+                showMonthAfterYear: false,
+                yearSuffix: ''
+            });
+            console.log("Datepicker global configurado en dd/mm/yy");
+        }
+        /* final cambio 9898 */
+    </script>
     @RenderSection("Scripts", required: false)
 </body>
 </html>
