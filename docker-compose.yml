@@ -1,0 +1,28 @@
+services:
+  clinica-app:
+    build:
+      context: https://github.com/jigomez-gr/clinicadentalriopiedras.git#main
+      dockerfile: Dockerfile
+    container_name: clinica-dental-container
+    restart: always
+    ports:
+      - "5001:4431"
+    environment:
+      - ASPNETCORE_URLS=http://0.0.0.0:4431
+      - TZ=Europe/Madrid
+      - ConnectionStrings__CadenaSQL=Host=172.17.0.1;Port=5433;Database=dbclinica;Username=postgres;Password=W39xlpS9;Pooling=true;Maximum Pool Size=20;Minimum Pool Size=0;Timeout=15
+      # Esto ayuda a que el sistema reconozca las llaves de seguridad
+      - ASPNETCORE_DataProtection__ApplicationDiscriminator=ClinicaDentalRiopiedras
+    volumes:
+      # LA DOBLE LLAVE (Persistencia de seguridad)
+      - /var/lib/clinicadental/dataprotection:/root/.aspnet/DataProtection-Keys
+      # Tu ruta de archivos externos/ejecutables
+      - /us2/dbclinica/exe:/us2/dbclinica/exe
+    networks:
+      - dokploy-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  dokploy-network:
+    external: true
