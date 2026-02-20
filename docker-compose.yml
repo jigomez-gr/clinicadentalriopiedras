@@ -6,7 +6,7 @@ services:
     container_name: clinica-dental-container
     restart: always
     ports:
-      - "5001:4431"
+      - "4431:4431"
     environment:
       - ASPNETCORE_URLS=http://0.0.0.0:4431
       - TZ=Europe/Madrid
