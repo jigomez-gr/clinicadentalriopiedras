@@ -3,10 +3,26 @@ using ClinicaData.Contrato;
 using ClinicaData.Implementacion;
 using ClinicaData.Repositorio;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// --- BLOQUE DE RED PARA VPS (DOKPLOY) ---
+// Si detecta que está en el servidor (Production), fuerza el puerto 4431
+// Si estás en local (Development), usará el puerto de Visual Studio (IIS Express/Kestrel)
+if (!builder.Environment.IsDevelopment())
+{
+    builder.WebHost.UseUrls("http://*:4431");
+}
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+// ----------------------------------------
+
 builder.Services.AddControllersWithViews();
 
 builder.Services.Configure<ConnectionStrings>(builder.Configuration.GetSection("ConnectionStrings"));
@@ -28,16 +44,17 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+app.UseForwardedHeaders();
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
 }
-app.UseStaticFiles();
 
+app.UseStaticFiles();
 app.UseRouting();
 
-app.UseAuthorization();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
