@@ -896,7 +896,7 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 await using var conexion = new NpgsqlConnection(con.CadenaSQL);
                 await conexion.OpenAsync();
 
-                // SQL CORREGIDO: Se cambia iddoctorhorariodetallecalcom por idhorariodetallecalcom
+                // SQL CORREGIDO: Se eliminó el error de sintaxis en el JOIN (dh = dhd... -> dh.iddoctorhorario = dhd.iddoctorhorario)
                 string sql = @"SELECT dhd.iddoctorhorariodetalle, dhd.turnohora, dhd.turno, dhd.idhorariodetallecalcom
                        FROM public.doctorhorariodetalle dhd
                        JOIN public.doctorhorario dh ON dhd.iddoctorhorario = dh.iddoctorhorario
@@ -906,9 +906,16 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 using var cmd = new NpgsqlCommand(sql, conexion);
                 cmd.Parameters.AddWithValue("idD", idDoctor);
 
-                // --- SOLUCIÓN AL FORMATO DE FECHA ---
+                // --- SOLUCIÓN AL FORMATO DE FECHA (MULTI-ENTORNO) ---
                 DateTime fParsed;
-                string[] formatosSoportados = { "dd/MM/yyyy", "yyyy-MM-dd", "d/M/yyyy", "yyyy-M-d" };
+                string[] formatosSoportados = {
+            "dd-MM-yyyy",
+            "dd/MM/yyyy",
+            "yyyy-MM-dd",
+            "d-M-yyyy",
+            "d/M/yyyy",
+            "yyyy-M-d"
+        };
 
                 if (!DateTime.TryParseExact(fecha, formatosSoportados, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out fParsed))
                 {
@@ -925,19 +932,17 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                         IdDoctorHorarioDetalle = dr.GetInt32(0),
                         TurnoHora = dr.GetTimeSpan(1).ToString(@"hh\:mm"),
                         Turno = dr.IsDBNull(2) ? "" : dr.GetString(2).Trim().ToUpper(),
-                        // CORRECCIÓN: Mapeo al nombre correcto de la columna (índice 3)
                         IdDoctorHorarioDetalleCalcom = dr.IsDBNull(3) ? 0 : Convert.ToInt32(dr.GetValue(3))
                     });
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error en ObtenerSlotsLibres: " + ex.Message);
-                // Opcional: throw; para ver el error en el navegador si estás en desarrollo
+                Console.WriteLine("Error crítico en ObtenerSlotsLibres: " + ex.Message);
+                throw;
             }
             return lista;
-        }        /* final cambio */
-        /* comienzo cambio */
+        }
         public async Task<(bool ok, string msg, int idAccion)> EncolarCancelacion(int idCita, string motivo, string documentoEjecutor)
         {
             try
