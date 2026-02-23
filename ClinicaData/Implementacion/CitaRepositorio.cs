@@ -888,7 +888,6 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
             var res = await cmd.ExecuteScalarAsync();
             return res != null ? Convert.ToInt32(res) : 0;
         }
-
         public async Task<List<DoctorHorarioDetalle>> ObtenerSlotsLibres(int idDoctor, string fecha)
         {
             List<DoctorHorarioDetalle> lista = new();
@@ -897,8 +896,8 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 await using var conexion = new NpgsqlConnection(con.CadenaSQL);
                 await conexion.OpenAsync();
 
-                // SQL corregido
-                string sql = @"SELECT dhd.iddoctorhorariodetalle, dhd.turnohora, dhd.turno ,  dhd.iddoctorhorariodetallecalcom
+                // SQL CORREGIDO: Se cambia iddoctorhorariodetallecalcom por idhorariodetallecalcom
+                string sql = @"SELECT dhd.iddoctorhorariodetalle, dhd.turnohora, dhd.turno, dhd.idhorariodetallecalcom
                        FROM public.doctorhorariodetalle dhd
                        JOIN public.doctorhorario dh ON dhd.iddoctorhorario = dh.iddoctorhorario
                        WHERE dh.iddoctor = @idD AND dhd.fecha = @f AND dhd.reservado = false
@@ -907,8 +906,15 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 using var cmd = new NpgsqlCommand(sql, conexion);
                 cmd.Parameters.AddWithValue("idD", idDoctor);
 
-                // CORRECCIÓN: 'yyyy' en minúsculas para evitar error de parsing
-                DateTime fParsed = DateTime.ParseExact(fecha, "dd/MM/yyyy", null);
+                // --- SOLUCIÓN AL FORMATO DE FECHA ---
+                DateTime fParsed;
+                string[] formatosSoportados = { "dd/MM/yyyy", "yyyy-MM-dd", "d/M/yyyy", "yyyy-M-d" };
+
+                if (!DateTime.TryParseExact(fecha, formatosSoportados, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out fParsed))
+                {
+                    fParsed = DateTime.Parse(fecha);
+                }
+
                 cmd.Parameters.Add(new NpgsqlParameter("f", NpgsqlTypes.NpgsqlDbType.Date) { Value = fParsed });
 
                 using var dr = await cmd.ExecuteReaderAsync();
@@ -917,24 +923,20 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                     lista.Add(new DoctorHorarioDetalle
                     {
                         IdDoctorHorarioDetalle = dr.GetInt32(0),
-                     
-                        // Aseguramos formato hh:mm
                         TurnoHora = dr.GetTimeSpan(1).ToString(@"hh\:mm"),
-                        // Leemos AM/PM y limpiamos espacios si los hay
                         Turno = dr.IsDBNull(2) ? "" : dr.GetString(2).Trim().ToUpper(),
-                        IdDoctorHorarioDetalleCalcom = dr.GetInt32(3)
-
+                        // CORRECCIÓN: Mapeo al nombre correcto de la columna (índice 3)
+                        IdDoctorHorarioDetalleCalcom = dr.IsDBNull(3) ? 0 : Convert.ToInt32(dr.GetValue(3))
                     });
                 }
             }
             catch (Exception ex)
             {
-                // Loguea el error aquí si tienes logger
                 Console.WriteLine("Error en ObtenerSlotsLibres: " + ex.Message);
+                // Opcional: throw; para ver el error en el navegador si estás en desarrollo
             }
             return lista;
-        }
-        /* final cambio */
+        }        /* final cambio */
         /* comienzo cambio */
         public async Task<(bool ok, string msg, int idAccion)> EncolarCancelacion(int idCita, string motivo, string documentoEjecutor)
         {

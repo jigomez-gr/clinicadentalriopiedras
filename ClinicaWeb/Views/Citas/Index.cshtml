@@ -115,6 +115,7 @@
                 <div class="row g-2 mb-2">
                     <div class="col-12 col-md-4"><label class="form-label">Fecha cita</label><input type="text" class="form-control" id="txtFechaCitaResumen" disabled /></div>
                     <div class="col-12 col-md-4"><label class="form-label">Hora cita</label><input type="text" class="form-control" id="txtHoraCitaResumen" disabled /></div>
+                    
                     <div class="col-12 col-md-4"><label class="form-label">Origen</label><input type="text" class="form-control" id="txtOrigenCita" disabled /></div>
                 </div>
                 <hr />
@@ -138,7 +139,6 @@
         </div>
     </div>
 </div>
-
 <div class="modal fade" id="mdReproPaciente" tabindex="-1" aria-hidden="true" data-bs-focus="false">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content shadow-lg">
@@ -147,35 +147,63 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <input type="hidden" id="reproIdCita">
-                <div class="row g-2 mb-3">
-                    <div class="col-8">
+                <input type="hidden" id="reproIdCita" value="0">
+
+                <div class="row g-3 mb-3">
+                    <div class="col-7">
                         <label class="form-label fw-bold text-success">1. Nueva Fecha</label>
-                        <input type="text" id="reproFechaPac" class="form-control" readonly style="background:#fff; cursor:pointer;" placeholder="Elegir día...">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white"><i class="bi bi-calendar-event text-success"></i></span>
+                            <input type="text" id="reproFechaPac" class="form-control" readonly
+                                   style="background:#fff; cursor:pointer;" placeholder="Elegir día...">
+                        </div>
                     </div>
-                    <div class="col-4">
+
+                    <div class="col-5">
                         <label class="form-label fw-bold text-success">Hora</label>
-                        <input type="text" id="reproHoraPac" class="form-control text-center fw-bold bg-light" readonly placeholder="--:--" style="border: 2px solid #198754; color: #198754;">
+                        <select id="reproHoraPac" class="form-select text-center fw-bold"
+                                style="border: 2px solid #198754; color: #198754;">
+                            <option value="">--:--</option>
+                        </select>
                     </div>
                 </div>
+
                 <div class="mb-3">
                     <label class="form-label fw-bold text-success">2. Horarios Disponibles</label>
-                    <div class="border rounded p-2 bg-light">
-                        <small class="text-muted fw-bold">TURNO MAÑANA</small>
-                        <div id="containerSlotsAM" class="d-flex flex-wrap gap-2 mb-2 mt-1"></div>
-                        <hr class="my-1">
-                        <small class="text-muted fw-bold">TURNO TARDE</small>
-                        <div id="containerSlotsPM" class="d-flex flex-wrap gap-2 mt-1"></div>
+                    <div class="border rounded p-3 bg-light">
+                        <div class="mb-2">
+                            <small class="text-muted fw-bold text-uppercase" style="font-size: 0.75rem;">
+                                <i class="bi bi-brightness-high me-1"></i>Turno Mañana
+                            </small>
+                            <div id="containerSlotsAM" class="d-flex flex-wrap gap-2 mt-1" style="min-height:30px;">
+                                <small class="text-muted italic">Seleccione una fecha...</small>
+                            </div>
+                        </div>
+
+                        <hr class="my-2">
+
+                        <div>
+                            <small class="text-muted fw-bold text-uppercase" style="font-size: 0.75rem;">
+                                <i class="bi bi-moon-stars me-1"></i>Turno Tarde
+                            </small>
+                            <div id="containerSlotsPM" class="d-flex flex-wrap gap-2 mt-1" style="min-height:30px;">
+                            </div>
+                        </div>
                     </div>
                 </div>
+
                 <div class="mb-3">
                     <label class="form-label fw-bold text-success">3. Motivo del cambio (Obligatorio)</label>
-                    <textarea id="reproMotivoPac" class="form-control" rows="2" placeholder="Escriba aquí por qué cambia la cita..."></textarea>
+                    <textarea id="reproMotivoPac" class="form-control" rows="2"
+                              placeholder="Escriba aquí por qué cambia la cita..."></textarea>
                 </div>
             </div>
+
             <div class="modal-footer bg-light border-0">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" id="btnConfirmarReproPac" class="btn btn-success px-4">Confirmar Cambio</button>
+                <button type="button" id="btnConfirmarReproPac" class="btn btn-success px-4 shadow-sm">
+                    <i class="bi bi-check-circle me-1"></i>Confirmar Cambio
+                </button>
             </div>
         </div>
     </div>
@@ -205,19 +233,20 @@
         document.addEventListener("DOMContentLoaded", function () {
             modalReproObj = new bootstrap.Modal(document.getElementById('mdReproPaciente'));
             $.datepicker.setDefaults($.datepicker.regional['es']);
-
-            /* comienzo cambio: Inicialización Calendario */
-            $("#reproFechaPac").datepicker({
-                dateFormat: "dd/mm/yy",
-                minDate: 0,
-                beforeShow: function(input, inst) {
-                    setTimeout(() => { $('#ui-datepicker-div').css('z-index', 999999); }, 0);
-                },
-                onSelect: function (dateText) {
-                    $("#reproHoraPac").val("");
-                    fetchSlots(dateText);
-                }
-            });
+        $("#reproFechaPac").datepicker({
+            dateFormat: "dd-mm-yy", // Devuelve dd-mm-yyyy para que sea común en tu app
+            minDate: 0,
+            beforeShow: function(input, inst) {
+                // Esto es para que el calendario salga POR ENCIMA del modal
+                setTimeout(() => { $('#ui-datepicker-div').css('z-index', 999999); }, 0);
+            },
+            onSelect: function (dateText) {
+                // Limpiamos la hora vieja al cambiar de fecha
+                $("#reproHoraPac").val("");
+                // Llamamos a la carga de slots
+                fetchSlots(dateText);
+            }
+        });
 
             tablaData = $('#tbData').DataTable({
                 ajax: { url: `/${controlador}/ListaCitasPendiente`, type: "GET", datatype: "json" },
@@ -247,48 +276,115 @@
             });
             // final cambio
         });
-        /* comienzo cambio: Funciones Reprogramación Corregida */
-        async function fetchSlots(fecha) {
-            // 1. Usamos el ID correcto del input del modal del paciente
-            const idCita = $("#reproIdCitaPac").val();
+                     async function fetchSlots(fecha) {
+            const idCita = $("#reproIdCita").val();
+            const $selectHora = $("#reproHoraPac");
 
-            if (!idCita || idCita == "0") {
-                console.error("Error: No hay ID de cita seleccionada");
-                return;
-            }
-
+            // Limpiamos todo antes de empezar
+            $selectHora.empty().append('<option value="">--:--</option>');
             $("#containerSlotsAM, #containerSlotsPM").html('<div class="spinner-border spinner-border-sm text-success"></div>');
 
             try {
-                // 2. Corregimos el nombre del parámetro a 'idCita' (o como lo espere tu C#)
-                // Usamos ruta relativa para que funcione igual en Local que en VPS
-                const url = `/Citas/GetSlotsLibres?idCita=${idCita}&fecha=${encodeURIComponent(fecha)}`;
-
-                const r = await fetch(url);
-                if (!r.ok) throw new Error("Error en servidor");
-
+                const r = await fetch(`/Citas/GetSlotsLibres?idCitaVieja=${idCita}&fecha=${encodeURIComponent(fecha)}`);
                 const data = await r.json();
+
                 let am = "", pm = "";
 
-                data.forEach(s => {
-                    // Soportamos mayúsculas/minúsculas del JSON
-                    const h = s.turnoHora || s.TurnoHora || "";
-                    // Si el JSON no trae 'Turno', lo calculamos por la hora (antes de las 14:00 es AM)
-                    const horaNum = parseInt(h.split(':')[0]);
+                if (!data || data.length === 0) {
+                    $("#containerSlotsAM").html('<small class="text-danger">Sin turnos</small>');
+                    $("#containerSlotsPM").empty();
+                    return;
+                }
 
+                data.forEach(s => {
+                    const h = s.turnoHora || s.TurnoHora || "";
                     if (h) {
-                        const btn = `<div class="slot-btn-pac" data-hora="${h}">${h}</div>`;
+                        // AGREGAMOS AL SELECT
+                        $selectHora.append(`<option value="${h}">${h}</option>`);
+
+                        // CREAMOS EL BOTÓN CON LA FUNCIÓN ACTUALIZADA
+                        const btn = `<div class="slot-btn-pac" onclick="llenarHoraFinal('${h}', this)">${h}</div>`;
+                        const horaNum = parseInt(h.split(':')[0]);
                         if (horaNum < 14) am += btn; else pm += btn;
                     }
                 });
 
-                $("#containerSlotsAM").html(am || '<small class="text-muted">Sin turnos</small>');
-                $("#containerSlotsPM").html(pm || '<small class="text-muted">Sin turnos</small>');
+                $("#containerSlotsAM").html(am);
+                $("#containerSlotsPM").html(pm);
 
             } catch (e) {
-                console.error("Error fetchSlots:", e);
-                $("#containerSlotsAM").html('<span class="text-danger">Error de carga</span>');
+                $("#containerSlotsAM").html('<span class="text-danger">Error</span>');
             }
+        }
+
+        // ESTA ES LA FUNCIÓN QUE REALMENTE ESCRIBE EL DATO
+        function llenarHoraFinal(hora, elemento) {
+            // 1. Quitar clases a los demás botones
+            $(".slot-btn-pac").removeClass("selected active-slot bg-success text-white");
+
+            // 2. Resaltar el botón pulsado
+            $(elemento).addClass("selected active-slot bg-success text-white");
+
+            // 3. METER EL DATO EN EL SELECT (Forzando el valor)
+            $("#reproHoraPac").val(hora);
+
+            console.log("Dato metido en reproHoraPac: " + $("#reproHoraPac").val());
+        }
+                /* Nueva función independiente para no tocar la anterior */
+        async function fetchSlotsPaciente(fechaSeleccionada) {
+            // 1. Forzamos la búsqueda en el ID que usa el modal del paciente
+            const idCita = $("#reproIdCita").val() || $("#reproIdCitaPac").val();
+
+            console.log("Intentando buscar slots para Cita ID:", idCita, "en fecha:", fechaSeleccionada);
+
+            if (!idCita || idCita == "0") {
+                alert("Error: No se pudo detectar el ID de la cita. Cierre el modal y vuelva a intentarlo.");
+                return;
+            }
+
+            // Limpiamos y ponemos el spinner
+            $("#containerSlotsAM, #containerSlotsPM").html('<div class="spinner-border spinner-border-sm text-success"></div>');
+
+            try {
+                // Llamada al controlador con el nombre de parámetro idCitaVieja
+                const resp = await fetch(`/Citas/GetSlotsLibres?idCitaVieja=${idCita}&fecha=${encodeURIComponent(fechaSeleccionada)}`);
+                const slots = await resp.json();
+
+                let htmlAM = "", htmlPM = "";
+
+                if (slots.length === 0) {
+                    $("#containerSlotsAM").html('<small class="text-muted">Sin turnos disponibles</small>');
+                    $("#containerSlotsPM").html("");
+                    return;
+                }
+
+                slots.forEach(s => {
+                    const hora = s.turnoHora || s.TurnoHora || "";
+                    if (hora) {
+                        // Creamos el botón con la clase que ya tienes configurada
+                        const btn = `<div class="slot-btn-pac" onclick="seleccionarHoraNueva('${hora}', this)">${hora}</div>`;
+
+                        // Separación simple: antes de las 14h es AM
+                        const hNum = parseInt(hora.split(':')[0]);
+                        if (hNum < 14) htmlAM += btn; else htmlPM += btn;
+                    }
+                });
+
+                $("#containerSlotsAM").html(htmlAM || '<small class="text-muted">Sin turnos</small>');
+                $("#containerSlotsPM").html(htmlPM || '<small class="text-muted">Sin turnos</small>');
+
+            } catch (error) {
+                console.error("Error en fetchSlotsPaciente:", error);
+                $("#containerSlotsAM").html('<span class="text-danger">Error de conexión</span>');
+            }
+        }
+
+        // Función auxiliar para que el clic funcione
+        function seleccionarHoraNueva(hora, elemento) {
+            $(".slot-btn-pac").removeClass("selected active-slot");
+            $(elemento).addClass("selected active-slot");
+            $("#reproHoraPac").val(hora); // Ponemos la hora en el input invisible o visible
+            console.log("Hora seleccionada:", hora);
         }
         async function abrirModalRepro(idCita) {
             $("#reproIdCita").val(idCita);
@@ -386,5 +482,6 @@
                 if (r.isConfirmed) fetch(`/Citas/Cancelar?Id=${data.idCita}`, { method: "DELETE" }).then(() => tablaData.ajax.reload());
             });
         });
+
     </script>
 }
