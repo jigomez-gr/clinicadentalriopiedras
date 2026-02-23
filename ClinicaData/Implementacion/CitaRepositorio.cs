@@ -1218,6 +1218,6 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 }
             }
         }
-        /* fin implementacion cita calcom */
+        /* fin implementacion cita calcom FUERZO RECOMPILACION */
     }
 }
