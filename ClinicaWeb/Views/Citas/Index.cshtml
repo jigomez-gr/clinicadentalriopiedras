@@ -247,27 +247,49 @@
             });
             // final cambio
         });
-
-        /* comienzo cambio: Funciones Reprogramación */
+        /* comienzo cambio: Funciones Reprogramación Corregida */
         async function fetchSlots(fecha) {
+            // 1. Usamos el ID correcto del input del modal del paciente
+            const idCita = $("#reproIdCitaPac").val();
+
+            if (!idCita || idCita == "0") {
+                console.error("Error: No hay ID de cita seleccionada");
+                return;
+            }
+
             $("#containerSlotsAM, #containerSlotsPM").html('<div class="spinner-border spinner-border-sm text-success"></div>');
+
             try {
-                const r = await fetch(`/Citas/GetSlotsLibres?idCitaVieja=${$("#reproIdCita").val()}&fecha=${encodeURIComponent(fecha)}`);
+                // 2. Corregimos el nombre del parámetro a 'idCita' (o como lo espere tu C#)
+                // Usamos ruta relativa para que funcione igual en Local que en VPS
+                const url = `/Citas/GetSlotsLibres?idCita=${idCita}&fecha=${encodeURIComponent(fecha)}`;
+
+                const r = await fetch(url);
+                if (!r.ok) throw new Error("Error en servidor");
+
                 const data = await r.json();
                 let am = "", pm = "";
+
                 data.forEach(s => {
+                    // Soportamos mayúsculas/minúsculas del JSON
                     const h = s.turnoHora || s.TurnoHora || "";
-                    const t = (s.turno || s.Turno || "").toUpperCase();
+                    // Si el JSON no trae 'Turno', lo calculamos por la hora (antes de las 14:00 es AM)
+                    const horaNum = parseInt(h.split(':')[0]);
+
                     if (h) {
                         const btn = `<div class="slot-btn-pac" data-hora="${h}">${h}</div>`;
-                        if (t === "AM" || parseInt(h.split(':')[0]) < 14) am += btn; else pm += btn;
+                        if (horaNum < 14) am += btn; else pm += btn;
                     }
                 });
+
                 $("#containerSlotsAM").html(am || '<small class="text-muted">Sin turnos</small>');
                 $("#containerSlotsPM").html(pm || '<small class="text-muted">Sin turnos</small>');
-            } catch (e) { $("#containerSlotsAM").html('<span class="text-danger">Error de carga</span>'); }
-        }
 
+            } catch (e) {
+                console.error("Error fetchSlots:", e);
+                $("#containerSlotsAM").html('<span class="text-danger">Error de carga</span>');
+            }
+        }
         async function abrirModalRepro(idCita) {
             $("#reproIdCita").val(idCita);
             $("#reproFechaPac, #reproHoraPac, #reproMotivoPac").val("");
