@@ -800,7 +800,7 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
             ) VALUES (
                 'calrepro', @idV, @movilP, @fStr, @h, @mot,
                 'Host=localhost;Port=5432;Database=dbclinica;Username=postgres;Password=W39xlpS9',
-                'Host=evolutionapi.n8njigretera.cloud;Port=5432;Database=evolution;Username=postgresql;Password=nnclxgjwswuh94ra',
+                'Host=72.60.89.227;Port=5433;Database=dbclinica;Username=postgres;Password=W39xlpS9;Pooling=true;Maximum Pool Size=20;Minimum Pool Size=0;Timeout=30',
                 'C:\tmp\rios_rosas\c#\regresion\calrepro\publish\win\calrepro.exe',
                 '/us2/dbclinica/exe/calreprovps', 'N', 0
             ) RETURNING idaccionescomplementarias";
@@ -984,7 +984,7 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
             ) VALUES (
                 'cacancel', @idV, @movilP, @mot,
                 'Host=localhost;Port=5432;Database=dbclinica;Username=postgres;Password=W39xlpS9',
-                'Host=evolutionapi.n8njigretera.cloud;Port=5432;Database=evolution;Username=postgresql;Password=nnclxgjwswuh94ra',
+                'Host=72.60.89.227;Port=5433;Database=dbclinica;Username=postgres;Password=W39xlpS9;Pooling=true;Maximum Pool Size=20;Minimum Pool Size=0;Timeout=30',
                 'C:\tmp\rios_rosas\c#\regresion\cacancel\publish\win\cacancel.exe',
                 '/us2/dbclinica/exe/cacancelvps', 'N', 0
             ) RETURNING idaccionescomplementarias";
@@ -1101,7 +1101,7 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
               VALUES 
               ('chkcitacalcom', @idCita, @refresh, 'N', 0, NOW(),
                'Host=localhost;Port=5432;Database=dbclinica;Username=postgres;Password=W39xlpS9',
-               'Host=evolutionapi.n8njigretera.cloud;Port=5432;Database=evolution;Username=postgresql;Password=nnclxgjwswuh94ra',
+               'Host=72.60.89.227;Port=5433;Database=dbclinica;Username=postgres;Password=W39xlpS9;Pooling=true;Maximum Pool Size=20;Minimum Pool Size=0;Timeout=30',
                'C:\tmp\rios_rosas\c#\regresion\chkcitacalcom\bin\Release\net8.0\chkcitacalcom.exe',
                '/us2/dbclinica/exe/chkcitacalcomvps'
                 ) 
