@@ -481,7 +481,7 @@
                         Swal.fire("Información", "La solicitud está en proceso. Recibirá un aviso pronto.", "info").then(() => location.reload());
                     }
                 } catch (e) { }
-                if (intentos > 20) clearInterval(bucle);
+                if (intentos > 30) clearInterval(bucle);
             }, 3000);
         }
         

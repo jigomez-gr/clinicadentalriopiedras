@@ -1040,7 +1040,7 @@
                     console.error("Error consultando estado:", err);
                 }
 
-                if (intentos > 20) {
+                if (intentos > 30) {
                     clearInterval(intervalo);
                     Swal.fire("Sincronización lenta", "El proceso sigue en curso, refresque manualmente en unos segundos.", "info");
                 }

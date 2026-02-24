@@ -802,7 +802,7 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 'Host=localhost;Port=5432;Database=dbclinica;Username=postgres;Password=W39xlpS9',
                 'Host=72.60.89.227;Port=5433;Database=dbclinica;Username=postgres;Password=W39xlpS9;Pooling=true;Maximum Pool Size=20;Minimum Pool Size=0;Timeout=30',
                 'C:\tmp\rios_rosas\c#\regresion\calrepro\publish\win\calrepro.exe',
-                '/us2/dbclinica/exe/calreprovps', 'N', 0
+                '/us2/dbclinica/exe/calrepro', 'N', 0
             ) RETURNING idaccionescomplementarias";
 
                 int idAccionGenerada = 0;
