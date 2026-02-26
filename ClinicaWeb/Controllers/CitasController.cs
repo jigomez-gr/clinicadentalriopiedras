@@ -1245,7 +1245,7 @@ LIMIT 1;
             public string Motivo { get; set; }
         }
         [HttpPost]
-        [Authorize(Roles = "Doctor,Administrador")]
+        [Authorize(Roles = "Paciente,Doctor,Administrador")]
         public async Task<JsonResult> CancelarCitaAgenda(int idCita, string motivo)
         {
             var resultado = await _repositorioCita.CancelarDesdeAgenda(idCita, motivo);

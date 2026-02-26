@@ -65,6 +65,18 @@
         .cita-modal-compact .modal-body {
             padding: .75rem;
         }
+        /* Estilo para el mensaje de carga de DataTable */
+        .dataTables_processing {
+            background-color: #ffcccc !important; /* Fondo rojizo suave */
+            color: #d9534f !important; /* Texto rojo fuerte */
+            font-weight: bold !important;
+            font-size: 1.2rem !important;
+            border: 2px solid #d9534f !important;
+            z-index: 9999 !important;
+            top: 50% !important;
+            height: auto !important;
+            padding: 20px !important;
+        }
     </style>
         /* final cambio */
 }
@@ -135,6 +147,34 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                 <button type="button" class="btn btn-primary" id="btnGuardarPaciente">Guardar cambios</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="mdCancelarPaciente" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-trash me-2"></i>Cancelar mi Cita</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="cancelarIdCitaPac" value="0">
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-danger">Motivo de la cancelación (Obligatorio):</label>
+                    <textarea id="cancelarMotivoPac" class="form-control border-danger" rows="3"
+                              placeholder="Indique brevemente el motivo..."></textarea>
+                </div>
+                <div class="alert alert-warning small py-2">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    Esta acción es irreversible y liberará su turno inmediatamente.
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" id="btnConfirmarCancelPac" class="btn btn-danger px-4">
+                    Confirmar Cancelación
+                </button>
             </div>
         </div>
     </div>
@@ -489,12 +529,63 @@
             $("#fileDocPaciente").val("");
         }
 
+
+        // 1. Reemplazar el detector de clics antiguo
         $("#tbData tbody").on("click", ".btn-cancelar", function () {
             const data = tablaData.row($(this).closest("tr")).data();
-            Swal.fire({ text: "¿Cancelar cita?", icon: "warning", showCancelButton: true }).then((r) => {
-                if (r.isConfirmed) fetch(`/Citas/Cancelar?Id=${data.idCita}`, { method: "DELETE" }).then(() => tablaData.ajax.reload());
-            });
+            $("#cancelarIdCitaPac").val(data.idCita);
+            $("#cancelarMotivoPac").val("");
+            new bootstrap.Modal(document.getElementById('mdCancelarPaciente')).show();
         });
+
+        // 2. Evento para confirmar la cancelación
+        $("#btnConfirmarCancelPac").on("click", async function () {
+            const idCita = $("#cancelarIdCitaPac").val();
+            const motivo = $("#cancelarMotivoPac").val().trim();
+
+            if (!motivo) {
+                Swal.fire("Atención", "Debe indicar un motivo para cancelar.", "warning");
+                return;
+            }
+
+            Swal.fire({ title: 'Procesando...', didOpen: () => Swal.showLoading() });
+
+            try {
+                // Usamos el mismo endpoint que el doctor para asegurar la lógica de orquestación
+                const response = await fetch(`/Citas/CancelarCitaAgenda?idCita=${idCita}&motivo=${encodeURIComponent(motivo)}`, {
+                    method: "POST"
+                });
+                const result = await response.json();
+
+                if (result.ok) {
+                    Swal.fire("", result.mensaje || "La cancelación de la cita se ha realizado correctamente.", "success");
+                  
+                }
+            } catch (error) {
+                Swal.fire("Error", "Fallo de comunicación con el servidor.", "error");
+            }
+        });
+
+        // Reutilizamos la lógica de polling para actualizar la tabla tras el éxito
+        function iniciarPollingCancelacion(idAccion) {
+            let intentos = 0;
+            const intervalo = setInterval(async () => {
+                intentos++;
+                try {
+                    const check = await fetch(`/Citas/ConsultarEstadoAccion?id=${idAccion}`);
+                    const res = await check.json();
+                    const estado = (res.status || "").trim().toUpperCase();
+
+                    if (estado === 'S') {
+                        clearInterval(intervalo);
+                        Swal.fire("Éxito", "Cita cancelada correctamente.", "success").then(() => tablaData.ajax.reload());
+                    } else if (estado === 'Z' || intentos > 15) {
+                        clearInterval(intervalo);
+                        Swal.fire("Info", "El proceso está terminando.", "info").then(() => tablaData.ajax.reload());
+                    }
+                } catch (err) { console.error(err); }
+            }, 3000);
+        }
 
     </script>
 }
