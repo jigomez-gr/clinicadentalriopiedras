@@ -90,6 +90,18 @@
         .cita-modal-compact .btn {
             padding: .25rem .5rem;
         }
+        /* Estilo para el mensaje de carga de DataTable */
+        .dataTables_processing {
+            background-color: #ffcccc !important; /* Fondo rojizo suave */
+            color: #d9534f !important; /* Texto rojo fuerte */
+            font-weight: bold !important;
+            font-size: 1.2rem !important;
+            border: 2px solid #d9534f !important;
+            z-index: 9999 !important;
+            top: 50% !important;
+            height: auto !important;
+            padding: 20px !important;
+        }
     </style>
 }
 
@@ -383,6 +395,8 @@
            
 
             tablaData = $('#tbData').DataTable({
+                 "processing": true, // <--- AÑADIR ESTA LÍNEA AQUÍ
+                 "serverSide": false, // O true según tu configuración actual
                 autoWidth: false,
                 responsive: true,
                 ajax: {

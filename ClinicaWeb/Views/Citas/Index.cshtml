@@ -282,6 +282,8 @@
         });
 
             tablaData = $('#tbData').DataTable({
+                 "processing": true, // <--- AÑADIR ESTA LÍNEA AQUÍ
+                 "serverSide": false, // O true según tu configuración actual
                 ajax: { url: `/${controlador}/ListaCitasPendiente`, type: "GET", datatype: "json" },
                 columns: [
                     { data: "fechaCita" }, { data: "horaCita" },
