@@ -2,6 +2,84 @@
     ViewData["Title"] = "Doctores";
 }
 
+@section Styles {
+
+
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <style>
+        #ui-datepicker-div {
+            z-index: 999999 !important;
+        }
+
+        .slot-btn-pac {
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-radius: 0.375rem;
+            padding: 10px;
+            text-align: center;
+            background: #fff;
+            min-width: 80px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+            .slot-btn-pac:hover {
+                background: #f8f9fa;
+                border-color: #198754;
+            }
+
+            .slot-btn-pac.active-slot {
+                background-color: #198754 !important;
+                color: #fff !important;
+                border-color: #198754 !important;
+            }
+
+        .btn-repro-verde {
+            color: #198754 !important;
+            border: 1px solid #198754 !important;
+            background-color: transparent !important;
+        }
+
+            .btn-repro-verde:hover {
+                background-color: #198754 !important;
+                color: white !important;
+            }
+
+        .tooltip-citas {
+            --bs-tooltip-bg: #fff;
+            --bs-tooltip-color: #000;
+        }
+
+        table.dataTable td, table.dataTable th {
+            white-space: normal !important;
+        }
+
+        .dt-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .25rem;
+            align-items: center;
+        }
+
+        .cita-modal-compact .modal-body {
+            padding: .75rem;
+        }
+        /* Estilo para el mensaje de carga de DataTable */
+        .dataTables_processing {
+            background-color: #ffcccc !important; /* Fondo rojizo suave */
+            color: #d9534f !important; /* Texto rojo fuerte */
+            font-weight: bold !important;
+            font-size: 1.2rem !important;
+            border: 2px solid #d9534f !important;
+            z-index: 9999 !important;
+            top: 50% !important;
+            height: auto !important;
+            padding: 20px !important;
+        }
+    </style>
+            /* final cambio */
+}
+
 <div class="row">
     <div class="col-sm-12">
         <div class="card mb-4">

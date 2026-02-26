@@ -16,7 +16,7 @@
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
     @* cambio 99 fin *@
-        /* Estilo para el mensaje de carga de DataTable */
+       
     .dataTables_processing {
         background-color: #ffcccc !important; /* Fondo rojizo suave */
         color: #d9534f !important;           /* Texto rojo fuerte */
@@ -426,6 +426,8 @@
             }
 
             tablaHistorial = $("#tbCita").DataTable({
+                 "processing": true, // <--- AÑADIR ESTA LÍNEA AQUÍ
+                 "serverSide": false, // O true según tu configuración actual
                 responsive: true,
                 scrollX: true,
                 ajax: {

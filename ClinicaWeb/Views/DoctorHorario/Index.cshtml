@@ -18,6 +18,7 @@
             .tooltip-dh .tooltip-arrow::before {
                 border-top-color: #fff !important;
                 border-bottom-color: #fff !important;
+
             }
 
         /* Tabla responsive */
@@ -33,6 +34,19 @@
         #mdData .select2-dropdown, #mdCalcom .select2-dropdown {
             z-index: 1065 !important; /* > modal (1055) */
         }
+        /* Estilo para el mensaje de carga de DataTable */
+        .dataTables_processing {
+            background-color: #ffcccc !important; /* Fondo rojizo suave */
+            color: #d9534f !important; /* Texto rojo fuerte */
+            font-weight: bold !important;
+            font-size: 1.2rem !important;
+            border: 2px solid #d9534f !important;
+            z-index: 9999 !important;
+            top: 50% !important;
+            height: auto !important;
+            padding: 20px !important;
+        }
+
     </style>
 }
 
@@ -111,7 +125,7 @@
     </div>
 </div>
 
-/* Comienzo Cambio: Modal Sincro Calcom */
+
 <div class="modal fade" id="mdCalcom" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -159,7 +173,7 @@
         </div>
     </div>
 </div>
-/* Final Cambio */
+
 
 <div class="modal fade" id="mdData" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="mdDataLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">

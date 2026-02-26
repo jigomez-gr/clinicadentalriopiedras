@@ -1,4 +1,25 @@
-﻿
+﻿@section Estilos {
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+    <style>
+        .dataTables_processing {
+            background-color: #ffcccc !important; /* Fondo rojizo suave */
+            color: #d9534f !important; /* Texto rojo fuerte */
+            font-weight: bold !important;
+            font-size: 1.2rem !important;
+            border: 2px solid #d9534f !important;
+            z-index: 9999 !important;
+            top: 50% !important;
+            height: auto !important;
+            padding: 20px !important;
+        }
+    </style>
+
+}
+
 <h2 class="mt-4 mb-4">Gestión de usuarios</h2>
 
 <div class="row">
@@ -323,6 +344,7 @@
                 // - No repetir "title" en columns si ya existe thead en HTML.
                 // - destroy/retrieve ayudan a que no se rompa con recargas parciales.
                 tablaData = $('#tbData').DataTable({
+                    processing: true,
                     responsive: true,
                     autoWidth: false,
                     destroy: true,

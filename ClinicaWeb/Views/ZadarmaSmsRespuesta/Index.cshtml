@@ -6,6 +6,21 @@
     @* cambio 99 comzo *@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css" />
     @* cambio 99 fin *@
+    <style>
+        .dataTables_processing {
+            background-color: #ffcccc !important; /* Fondo rojizo suave */
+            color: #d9534f !important; /* Texto rojo fuerte */
+            font-weight: bold !important;
+            font-size: 1.2rem !important;
+            border: 2px solid #d9534f !important;
+            z-index: 9999 !important;
+            top: 50% !important;
+            height: auto !important;
+            padding: 20px !important;
+        }
+    </style>
+
+
 }
 
 <h2 class="mt-4 mb-4">Zadarma - SMS enviados</h2>
@@ -217,7 +232,8 @@
             }
 
             tablaSms = $("#tbSms").DataTable({
-                responsive: false,
+                processing: true,
+                responsive: true,
                 scrollX: true,
                 autoWidth: false,
                 ajax: {

@@ -734,7 +734,7 @@ DO UPDATE SET
                     'Host=localhost;Port=5432;Database=dbclinica;Username=postgres;Password=W39xlpS9',
                     'Host=72.60.89.227;Port=5433;Database=dbclinica;Username=postgres;Password=W39xlpS9;Pooling=true;Maximum Pool Size=20;Minimum Pool Size=0;Timeout=30',
                     'C:\tmp\rios_rosas\c#\regresion\sincroidcalcom\bin\Release\net8.0\sincroidcalcom.exe',
-                    '/us2/dbclinica/exe/sincroidcalcomvps'
+                    '/us2/dbclinica/exe/sincroidcalcom'
                     ) 
                    RETURNING idaccionescomplementarias;";
 
