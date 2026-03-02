@@ -1,4 +1,5 @@
-﻿let tablaData;
+﻿/* Especialidad.js completo */
+let tablaData;
 let idEditar = 0;
 const controlador = "Especialidad";
 const modal = "mdData";
@@ -8,8 +9,10 @@ const confirmaRegistro = "Especialidad registrada!";
 
 document.addEventListener("DOMContentLoaded", function (event) {
 
+    /* cambio datatable comzo */
     tablaData = $('#tbData').DataTable({
-        responsive: true,
+        // Se desactiva responsive:true para evitar conflictos con scrollX y la columna sticky móvil
+        responsive: false,
         scrollX: true,
         "ajax": {
             "url": `/${controlador}/Lista`,
@@ -17,25 +20,35 @@ document.addEventListener("DOMContentLoaded", function (event) {
             "datatype": "json"
         },
         "columns": [
-            { title: "Nombre", "data": "nombre" },
-            { title: "Fecha Creacion", "data": "fechaCreacion" },
             {
-                title: "", "data": "idEspecialidad", width: "100px", render: function (data, type, row) {
-                    return `<div class="btn-group dropstart">
-                        <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                            Acción
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><button class="dropdown-item btn-editar">Editar</button></li>
-                            <li><button class="dropdown-item btn-eliminar">Eliminar</button></li>
-                        </ul>`
+                // Nueva columna de Acciones (primera posición) para coincidir con el <thead> del Index
+                title: "Acciones",
+                "data": "idEspecialidad",
+                width: "100px",
+                orderable: false,
+                render: function (data, type, row) {
+                    return `<div class="acciones-container">
+                                <button type="button" class="btn btn-primary btn-circle btn-editar" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button" class="btn btn-danger btn-circle btn-eliminar" title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>`;
                 }
-            }
+            },
+            { title: "Nombre", "data": "nombre" },
+            { title: "Fecha Creacion", "data": "fechaCreacion" }
         ],
         language: {
             url: "https://cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json"
         },
+        // Forzar ajuste de columnas al redibujar (importante para scrollX)
+        drawCallback: function () {
+            this.api().columns.adjust();
+        }
     });
+    /* cambio datatable fin */
 
 });
 
@@ -47,7 +60,7 @@ $("#tbData tbody").on("click", ".btn-editar", function () {
     idEditar = data.idEspecialidad;
     $("#txtNombre").val(data.nombre);
     $(`#${modal}`).modal('show');
-})  
+})
 
 
 $("#btnNuevo").on("click", function () {

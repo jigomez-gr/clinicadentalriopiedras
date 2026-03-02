@@ -1,15 +1,47 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@* Index.cshtml - Especialidades *@
 @section Estilos {
-  
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css" />
+    @* cambio datatable comzo *@
+    @* Se cambia la referencia a bootstrap5 para corregir el estilo de la paginación *@
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" />
 
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap4.min.css" />
     <style>
+        .acciones-container {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-circle {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 14px;
+            line-height: 32px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        #tbData {
+            border-collapse: collapse !important;
+        }
+
+        @@media (max-width: 768px) {
+            #tbData thead th:first-child,
+            #tbData tbody td:first-child {
+                position: sticky;
+                left: 0;
+                background-color: #f8f9fa !important;
+                z-index: 5;
+                border-right: 2px solid #dee2e6;
+            }
+        }
+        /* cambio datatable fin */
+
         .dataTables_processing {
-            background-color: #ffcccc !important; /* Fondo rojizo suave */
-            color: #d9534f !important; /* Texto rojo fuerte */
+            background-color: #ffcccc !important;
+            color: #d9534f !important;
             font-weight: bold !important;
             font-size: 1.2rem !important;
             border: 2px solid #d9534f !important;
@@ -19,8 +51,8 @@
             padding: 20px !important;
         }
     </style>
-
 }
+
 <h2 class="mt-4 mb-4">Especialidades</h2>
 
 <div class="row">
@@ -29,33 +61,31 @@
             <div class="card-header d-flex align-items-center">
                 <i class="fas fa-chart-bar me-1"></i>
                 <span> Lista de Especialidades</span>
-
-                <button type="button"
-                        class="btn btn-success btn-sm ms-auto"
-                        onclick="openHelpVideo('Doctor_Horario.mp4')"
-                        data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-citas"
-                        title="Ayuda: abre el vídeo de explicación (wwwroot/helps/Doctor_Horario.mp4).">
+                <button type="button" class="btn btn-success btn-sm ms-auto" onclick="openHelpVideo('Doctor_Horario.mp4')">
                     <i class="fa fa-circle-question"></i> Ayuda
                 </button>
             </div>
 
             <div class="card-body">
-                <div class="row">
+                <div class="row mb-3">
                     <div class="col-sm-3">
                         <button class="btn btn-outline-success" id="btnNuevo">Nueva Especialidad</button>
                     </div>
                 </div>
                 <hr />
-                <div class="row">
-                    <div class="col-sm-12">
-                        <table class="display" id="tbData" cellspacing="0" style="width:100%">
-                            <tbody></tbody>
-                        </table>
-                    </div>
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered table-hover nowrap display" id="tbData" cellspacing="0" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Acciones</th>
+                                <th>Nombre</th>
+                                <th>Fecha Creacion</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
                 </div>
-               
             </div>
-            
         </div>
     </div>
 </div>
@@ -85,30 +115,127 @@
 
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
-
     <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
 
-   
-    @* cambio 100 *@
-    <script src="/Views/Especialidad/Especialidad.js"></script>
     <script>
-            (function () {
+        (function () {
             "use strict";
 
-            // ========= HELP VIDEO (simple) =========
             window.openHelpVideo = function (fileName) {
                 const w = 900, h = 520;
                 const left = Math.max(0, (screen.width - w) / 2);
                 const top = Math.max(0, (screen.height - h) / 2);
-
                 const url = "/helps/" + encodeURIComponent(fileName);
-
-                window.open(
-                    url,
-                    "helpVideo",
-                    `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no`
-                );
+                window.open(url, "helpVideo", `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no`);
             };
+
+            let tablaData;
+            let idEditar = 0;
+            const controlador = "Especialidad";
+            const modal = "mdData";
+
+            $(document).ready(function () {
+                /* cambio datatable comzo */
+                tablaData = $('#tbData').DataTable({
+                    processing: true,
+                    responsive: false,
+                    scrollX: true,
+                    ajax: {
+                        url: `/${controlador}/Lista`,
+                        type: "GET",
+                        datatype: "json"
+                    },
+                    columns: [
+                        {
+                            data: "idEspecialidad",
+                            width: "100px",
+                            orderable: false,
+                            render: function (data, type, row) {
+                                return `<div class="acciones-container">
+                                            <button type="button" class="btn btn-primary btn-circle btn-editar" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-danger btn-circle btn-eliminar" title="Eliminar">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>`;
+                            }
+                        },
+                        { data: "nombre" },
+                        { data: "fechaCreacion" }
+                    ],
+                    language: {
+                        url: "https://cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json"
+                    }
+                });
+                /* cambio datatable fin */
+
+                $("#btnNuevo").on("click", function () {
+                    idEditar = 0;
+                    $("#txtNombre").val("");
+                    $(`#${modal}`).modal('show');
+                });
+
+                $("#tbData tbody").on("click", ".btn-editar", function () {
+                    const data = tablaData.row($(this).closest('tr')).data();
+                    idEditar = data.idEspecialidad;
+                    $("#txtNombre").val(data.nombre);
+                    $(`#${modal}`).modal('show');
+                });
+
+                $("#tbData tbody").on("click", ".btn-eliminar", function () {
+                    const data = tablaData.row($(this).closest('tr')).data();
+                    Swal.fire({
+                        text: `¿Desea eliminar la especialidad ${data.nombre}?`,
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonText: "Sí, continuar",
+                        cancelButtonText: "No, volver"
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            fetch(`/${controlador}/Eliminar?Id=${data.idEspecialidad}`, { method: "DELETE" })
+                            .then(r => r.ok ? r.json() : Promise.reject(r))
+                            .then(rj => {
+                                if (rj.data == 1) {
+                                    Swal.fire("Eliminado!", "La especialidad fue eliminada.", "success");
+                                    tablaData.ajax.reload();
+                                } else {
+                                    Swal.fire("Error!", "No se pudo eliminar.", "warning");
+                                }
+                            }).catch(() => Swal.fire("Error!", "Error de comunicación.", "error"));
+                        }
+                    });
+                });
+
+                $("#btnGuardar").on("click", function () {
+                    const nombre = $("#txtNombre").val().trim();
+                    if (nombre === "") {
+                        Swal.fire("Error!", "Debe ingresar el nombre.", "warning");
+                        return;
+                    }
+
+                    const objeto = { IdEspecialidad: idEditar, Nombre: nombre };
+                    const url = idEditar !== 0 ? `/${controlador}/Editar` : `/${controlador}/Guardar`;
+                    const method = idEditar !== 0 ? "PUT" : "POST";
+
+                    fetch(url, {
+                        method: method,
+                        headers: { 'Content-Type': 'application/json;charset=utf-8' },
+                        body: JSON.stringify(objeto)
+                    })
+                    .then(r => r.ok ? r.json() : Promise.reject(r))
+                    .then(rj => {
+                        if (rj.data === "") {
+                            Swal.fire("Éxito", "Operación realizada correctamente.", "success");
+                            $(`#${modal}`).modal('hide');
+                            tablaData.ajax.reload();
+                        } else {
+                            Swal.fire("Error!", rj.data, "warning");
+                        }
+                    }).catch(() => Swal.fire("Error!", "Error al procesar la solicitud.", "error"));
+                });
+            });
         })();
     </script>
 }

@@ -5,14 +5,46 @@
 
 @section Estilos {
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css" />
-
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
-
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+
     <style>
+        
+        .acciones-container {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-circle {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 14px;
+            line-height: 32px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        #tbGestion {
+            border-collapse: collapse !important;
+        }
+
+        @@media (max-width: 768px) {
+            #tbGestion thead th:first-child,
+            #tbGestion tbody td:first-child {
+                position: sticky;
+                left: 0;
+                background-color: #f8f9fa !important;
+                z-index: 5;
+                border-right: 2px solid #dee2e6;
+            }
+        }
+        
         .dataTables_processing {
-            background-color: #ffcccc !important; /* Fondo rojizo suave */
-            color: #d9534f !important; /* Texto rojo fuerte */
+            background-color: #ffcccc !important;
+            color: #d9534f !important;
             font-weight: bold !important;
             font-size: 1.2rem !important;
             border: 2px solid #d9534f !important;
@@ -21,835 +53,14 @@
             height: auto !important;
             padding: 20px !important;
         }
-    </style>
 
-}
-
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
-<div class="container-fluid px-4">
-    <h2 class="mt-4 mb-4">Gestión de Citas</h2>
-
-    <!-- Ayuda interactiva -->
-    <div class="ms-2">
-        <button type="button"
-                class="btn btn-outline-light btn-sm"
-                onclick="openHelpVideo('Doctor_Horario.mp4')"
-                data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-citas"
-                title="Ayuda: abre el vídeo de explicación (wwwroot/helps/Doctor_Horario.mp4).">
-            <i class="fa fa-circle-question"></i> Ayuda
-        </button>
-
-    </div>
-    <!-- Filtros -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-filter me-1"></i> Filtro de citas
-        </div>
-
-        <div class="card-body">
-            <div class="row g-3 align-items-end">
-
-                <!-- Estado -->
-                <div class="col-12 col-sm-6 col-md-4">
-                    <label for="cboEstadoGestion"
-                           class="form-label"
-                           data-bs-toggle="tooltip"
-                           data-bs-placement="top"
-                           title="Selección del estado de las citas a mostrar: Todos, Pendientes, Atendidas, Anuladas, Provisionales.">
-                        Estado
-                    </label>
-
-                    <select id="cboEstadoGestion"
-                            class="form-select"
-                            data-bs-toggle="tooltip"
-                            data-bs-placement="top"
-                            title="Elige el estado para filtrar el listado de citas.">
-                        <option value="0">Todos</option>
-                        <option value="1">Pendiente</option>
-                        <option value="2">Atendido</option>
-                        <option value="3">Anulado</option>
-                        <option value="4">Provisional</option>
-                    </select>
-                </div>
-
-                <!-- Botón aplicar filtro -->
-                <div class="col-12 col-sm-6 col-md-3">
-                    <button type="button"
-                            id="btnFiltrar"
-                            class="btn btn-primary w-100 w-sm-auto"
-                            data-bs-toggle="tooltip"
-                            data-bs-placement="top"
-                            title="Aplica el filtro seleccionado y redespliega el listado de citas según el estado.">
-                        Aplicar filtro
-                    </button>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- Tabla -->
-    <div class="card mb-4">
-        <div class="card-header d-flex align-items-center">
-            <i class="fas fa-table me-1"></i>
-            <span>Lista global de citas</span>
-
-            <button type="button"
-                    class="btn btn-success btn-sm ms-auto"
-                    onclick="openHelpVideo('Doctor_Horario.mp4')"
-                    data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-citas"
-                    title="Ayuda: abre el vídeo de explicación (wwwroot/helps/Doctor_Horario.mp4).">
-                <i class="fa fa-circle-question"></i> Ayuda
-            </button>
-        </div>
-
-        <div class="card-body">
-            <div class="table-responsive">
-                <table id="tbGestion"
-                       class="display table table-striped table-bordered table-hover nowrap"
-                       cellspacing="0"
-                       style="width:100%">
-                    <thead>
-                        <tr>
-                            <th><span data-bs-toggle="tooltip" data-bs-placement="top" title="Identificador de la cita.">Id</span></th>
-                            <th><span data-bs-toggle="tooltip" data-bs-placement="top" title="Fecha de la cita.">Fecha</span></th>
-                            <th><span data-bs-toggle="tooltip" data-bs-placement="top" title="Hora de la cita.">Hora</span></th>
-                            <th><span data-bs-toggle="tooltip" data-bs-placement="top" title="Nombre y apellidos del paciente.">Paciente</span></th>
-                            <th><span data-bs-toggle="tooltip" data-bs-placement="top" title="Nombre y apellidos del doctor.">Doctor</span></th>
-                            <th><span data-bs-toggle="tooltip" data-bs-placement="top" title="Estado de la cita: pendiente, atendida, anulada, provisional.">Estado</span></th>
-                            <th><span data-bs-toggle="tooltip" data-bs-placement="top" title="Origen de la cita: WEB, WHATSAPP, VAPI, TELEGRAM, etc.">Origen</span></th>
-                            <th><span data-bs-toggle="tooltip" data-bs-placement="top" title="Motivo o justificación del paciente para la consulta.">Motivo (paciente)</span></th>
-                            <th><span data-bs-toggle="tooltip" data-bs-placement="top" title="Acciones disponibles: por ejemplo ver indicaciones (abre el modal con los datos completos).">Acciones</span></th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        @* DataTables rellena *@
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal edición Admin -->
-<div class="modal fade" id="mdGestion"
-     data-bs-backdrop="static"
-     data-bs-keyboard="false"
-     tabindex="-1"
-     aria-labelledby="mdGestionLabel"
-     aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
-        <div class="modal-content">
-
-            <div class="modal-header">
-                <h5 class="modal-title" id="mdGestionLabel">Editar cita (Admin)</h5>
-                <button type="button"
-                        class="btn-close"
-                        data-bs-dismiss="modal"
-                        aria-label="Cerrar"></button>
-            </div>
-
-            <div class="modal-body">
-                <input type="hidden" id="hdIdCita" />
-
-                <div class="row g-2 mb-2">
-                    <div class="col-12 col-md-3">
-                        <label class="form-label">Fecha</label>
-                        <label class="form-label"
-                               data-bs-toggle="tooltip" data-bs-placement="top"
-                               title="Fecha de la cita">
-                            Fecha
-                        </label>
-                        <input type="text"
-                               id="txtFechaCitaAdmin"
-                               class="form-control"
-                               data-bs-toggle="tooltip" data-bs-placement="top"
-                               title="Fecha de la cita"
-                               disabled />
-                    </div>
-                    <div class="col-12 col-md-3">
-                       
-                        <label class="form-label"
-                               data-bs-toggle="tooltip" data-bs-placement="top"
-                               title="Hora de la cita">
-                            Hora
-                        </label>
-                        <input type="text"
-                               id="txtHoraCitaAdmin"
-                               class="form-control"
-                               data-bs-toggle="tooltip" data-bs-placement="top"
-                               title="Hora de la cita"
-                               disabled />
-                    </div>
-                    <div class="col-12 col-md-3">
-                        <label class="form-label"
-                               data-bs-toggle="tooltip" data-bs-placement="top"
-                               title="Nombre y apellidos paciente">
-                            Paciente
-                        </label>
-                        <input type="text"
-                               id="txtPacienteAdmin"
-                               class="form-control"
-                               data-bs-toggle="tooltip" data-bs-placement="top"
-                               title="Nombre y apellidos paciente"
-                               disabled />
-                    </div>
-                    <div class="col-12 col-md-3">
-                        
-                        <label class="form-label"
-                               data-bs-toggle="tooltip" data-bs-placement="top"
-                               title="Nombre y apellidos doctor">
-                            Doctor
-                        </label>
-                        <input type="text"
-                               id="txtDoctorAdmin"
-                               class="form-control"
-                               disabled />
-                    </div>
-                </div>
-
-                <div class="row g-2 mb-3">
-                    <div class="col-12 col-md-4">
-                       
-                        <label class="form-label"
-                               data-bs-toggle="tooltip" data-bs-placement="top"
-                               title="Estado de la Cita Pendiente, atendida, anulada,provisional, reconfirmada ..">
-                            Estado
-                        </label>
-                        <select id="cboEstadoAdmin" class="form-select">
-                            <option value="1">Pendiente</option>
-                            <option value="2">Atendido</option>
-                            <option value="3">Anulado</option>
-                            <option value="4">Provisional</option>
-                        </select>
-                    </div>
-                    <div class="col-12 col-md-4">
-                    
-                        <label class="form-label"
-                               data-bs-toggle="tooltip" data-bs-placement="top"
-                               title="Origen de la cita puede venir de WEB, VAPI (asist Telefonico), WASSAP, TELEGRAM,CLINICA ..">
-                            Origen de la cita
-                        </label>
-                        <input type="text"
-                               id="txtOrigenCitaAdmin"
-                               class="form-control" />
-                    </div>
-                </div>
-                <div class="row g-2 mb-3">
-                    <div class="col-12 col-md-4">
-                        <label class="form-label"
-                               data-bs-toggle="tooltip" data-bs-placement="top"
-                               title="Indica si el paciente ha reconfirmado la cita (S/N).">
-                            Cita confirmada
-                        </label>
-                        <select id="cboCitaConfirmadaAdmin" class="form-select">
-                            <option value="">(Sin dato)</option>
-                            <option value="S">Sí</option>
-                            <option value="N">No</option>
-                        </select>
-                    </div>
-
-                    <div class="col-12 col-md-4">
-                        <label class="form-label"
-                               data-bs-toggle="tooltip" data-bs-placement="top"
-                               title="Fecha en la que se solicita al paciente que reconfirme la cita.">
-                            Fecha petición
-                        </label>
-                        <input type="text" id="txtFechaPeticionAdmin" class="form-control" disabled />
-                    </div>
-
-                    <div class="col-12 col-md-4">
-                        <label class="form-label"
-                               data-bs-toggle="tooltip" data-bs-placement="top"
-                               title="Fecha real en la que el paciente reconfirma la cita.">
-                            Fecha confirmación
-                        </label>
-                        <input type="text" id="txtFechaConfirmacionAdmin" class="form-control" disabled />
-                    </div>
-                </div>
-
-                <hr />
-
-                <h6>Datos del paciente</h6>
-                <div class="row g-2 mb-3">
-                    <div class="col-12">
-                      
-                        <label class="form-label"
-                               data-bs-toggle="tooltip" data-bs-placement="top"
-                               title="Texto en el que el paciente registra el motivo por el que ha solicitado la cita">
-                            Motivo de la cita (paciente)
-                        </label>
-                        <textarea id="txtRazonCitaUsrAdmin"
-                                  class="form-control"
-                                  rows="3"></textarea>
-                    </div>
-                </div>
-
-                <div class="row g-2 mb-3">
-                    <div class="col-12 col-md-6">
-                        <label class="form-label d-block">Documento del paciente</label>
-                        <button type="button"
-                                id="btnVerDocPacienteAdmin"
-                                class="btn btn-outline-secondary btn-sm"
-                                disabled
-                                data-bs-toggle="tooltip"
-                                data-bs-placement="top"
-                                title="Descargar el documento del paciente.">
-                            Ver documento del paciente
-                        </button>
-
-                        <div class="mt-1">
-                            <small id="lblHayDocPacienteAdmin"
-                                   class="form-text text-success d-none">
-                                ✔ Hay documento de paciente.
-                            </small>
-                            <small id="lblSinDocPacienteAdmin"
-                                   class="form-text text-muted">
-                                No hay documento de paciente.
-                            </small>
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <label class="form-label">Adjuntar / sustituir documento paciente</label>
-                        <input type="file"
-                               id="fileDocPacienteAdmin"
-                               class="form-control"
-                               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" />
-                    </div>
-                </div>
-
-                <hr />
-
-
-                <h6>Datos del doctor</h6>
-                <div class="row g-2 mb-3">
-                    <div class="col-12">
-                        <label class="form-label"
-                               data-bs-toggle="tooltip" data-bs-placement="top"
-                               title="Indicaciones del doctor para el paciente despues de la cita.">
-                            Indicaciones del doctor
-                        </label>
-
-                        <textarea id="txtIndicacionesDoctorAdmin"
-                                  class="form-control"
-                                  rows="3"></textarea>
-                    </div>
-                </div>
-
-                <div class="row g-2 mb-3">
-                    <div class="col-12 col-md-6">
-                        <label class="form-label d-block">Documento del doctor</label>
-                        <button type="button"
-                                id="btnVerDocDoctorAdmin"
-                                class="btn btn-outline-secondary btn-sm"
-                                disabled
-                                data-bs-toggle="tooltip"
-                                data-bs-placement="top"
-                                title="Descargar el documento del doctor.">
-                            Ver documento del doctor
-                        </button>
-
-
-                        <div class="mt-1">
-                            <small id="lblHayDocDoctorAdmin"
-                                   class="form-text text-success d-none">
-                                ✔ Hay documento del doctor.
-                            </small>
-                            <small id="lblSinDocDoctorAdmin"
-                                   class="form-text text-muted">
-                                No hay documento del doctor.
-                            </small>
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <label class="form-label">Adjuntar / sustituir documento doctor</label>
-                        <input type="file"
-                               id="fileDocDoctorAdmin"
-                               class="form-control"
-                               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" />
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="modal-footer">
-                <button type="button"
-                        class="btn btn-secondary"
-                        data-bs-dismiss="modal"
-                        data-bs-toggle="tooltip"
-                        data-bs-placement="top"
-                        title="Cerrar el modal sin guardar cambios.">
-                    Cerrar
-                </button>
-
-                <button type="button"
-                        class="btn btn-primary"
-                        id="btnGuardarAdmin"
-                        data-bs-toggle="tooltip"
-                        data-bs-placement="top"
-                        title="Guardar los cambios en la base de datos.">
-                    Guardar cambios
-                </button>
-            </div>
-
-        </div>
-    </div>
-</div>
-
-@section Scripts {
-    <!-- JS base de DataTables -->
-    @* cambio 99 comzo *@
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    @* cambio 99 fin *@
-
-    <script>
-               (function () {
-          "use strict";
-
-          // ========= HELP VIDEO (simple) =========
-          window.openHelpVideo = function (fileName) {
-            const w = 900, h = 520;
-            const left = Math.max(0, (screen.width - w) / 2);
-            const top = Math.max(0, (screen.height - h) / 2);
-
-            const url = "/helps/" + encodeURIComponent(fileName);
-
-            window.open(
-              url,
-              "helpVideo",
-              `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no`
-            );
-          };
-        })();
-                function formatFecha(dt) {
-          if (!dt) return "";
-          const d = new Date(dt);
-          if (isNaN(d.getTime())) return "";
-          const dd = String(d.getDate()).padStart(2, '0');
-          const mm = String(d.getMonth() + 1).padStart(2, '0');
-          const yyyy = d.getFullYear();
-          const hh = String(d.getHours()).padStart(2, '0');
-          const mi = String(d.getMinutes()).padStart(2, '0');
-          return `${dd}/${mm}/${yyyy} ${hh}:${mi}`;
-        }
-
-                let tablaGestion;
-                let idCitaEditar = 0;
-
-                let docPacienteBase64 = null;
-                let docPacienteContentType = null;
-                let docDoctorBase64 = null;
-                let docDoctorContentType = null;
-
-                document.addEventListener("DOMContentLoaded", function () {
-
-                    console.log("Gestión de citas (Admin) - inicializando DataTable");
-
-                    // Por si acaso se reinicializa, destruimos primero
-                    if ($.fn.DataTable.isDataTable('#tbGestion')) {
-                        $('#tbGestion').DataTable().destroy();
-                    }
-
-                    tablaGestion = $('#tbGestion').DataTable({
-                        responsive: true,
-                        processing: true,
-                        serverSide: true,
-                        searchDelay: 500,
-                        scrollX: true,
-                        autoWidth: false,
-                        order: [[1, 'desc'], [2, 'asc']],  // 1=Fecha (visible), 2=Hora
-                        dom: 'Bfrtip',   // 🔹 Añade la barra de botones arriba de la tabla
-                                columnDefs: [
-                                  // Columna de ACCIONES (última): prioridad máxima -> NO se oculta
-                                  { targets: -1, responsivePriority: 1, orderable: false, className: 'text-nowrap' },
-                                  // (Opcional) primera columna o columnas clave con alta prioridad
-                                  // { targets: 0, responsivePriority: 2 },
-
-                                  // Columnas “largas” (por ejemplo Indicaciones/Observaciones) con prioridad baja -> que se oculten antes
-                                  // { targets: 3, responsivePriority: 100 },
-                                  // { targets: 4, responsivePriority: 101 },
-                                ],
-
-
-                        buttons: [
-                            'copyHtml5',
-                            'excelHtml5',
-                            'pdfHtml5',
-                            'print'
-                        ],
-                        ajax: {
-                                url: '/Citas/ListaCitasGestionServerSide',
-                                type: 'POST',
-                                dataType: 'json',
-                                data: function (d) {
-                                    d.idEstadoCita = parseInt($('#cboEstadoGestion').val() || '0');
-
-                                    // Si tu action usa "search" (string) y no quieres parsear Request.Form:
-                                    d.search = d.search?.value || '';
-                                }
-                        },
-                        columns: [
-                            { data: 'idCita', visible: false },
-                    // empieza modificacion
-                            {
-                              data: 'fechaCita',
-                              width: '90px',
-                              render: function (data, type, row) {
-                                // Para ordenar, usa el datetime real (fechaCitaOrden)
-                                if (type === 'sort' || type === 'type') return row.fechaCitaOrden || '';
-                                // Para mostrar, usa el dd/MM/yyyy
-                                return data || '';
-                              }
-                            },
-        // fin modificacion
-
-                            { data: 'horaCita', width: '70px' },
-                            {
-                                data: 'usuario',
-                                render: function (data) {
-                                    if (!data) return '';
-                                    const nom = data.nombre || '';
-                                    const ape = data.apellido || '';
-                                    return (nom + ' ' + ape).trim();
-                                }
-                            },
-                            {
-                                data: 'doctor',
-                                render: function (data) {
-                                    if (!data) return '';
-                                    const nom = data.nombres || '';
-                                    const ape = data.apellidos || '';
-                                    return (nom + ' ' + ape).trim();
-                                }
-                            },
-                            {
-                                data: 'estadoCita',
-                                render: function (data) {
-                                    return data && data.nombre ? data.nombre : '';
-                                }
-                            },
-                            { data: 'origenCita', width: '80px' },
-                            {
-                                data: 'razonCitaUsr',
-                                render: function (data, type) {
-                                    if (!data) return '';
-                                    if (type === 'display' && data.length > 40) {
-                                        return $('<div>').text(data.substring(0, 40) + '...').html();
-                                    }
-                                    return $('<div>').text(data).html();
-                                }
-                            },
-                            {
-                                data: null,
-                                orderable: false,
-                                width: '120px',
-                                render: function () {
-                                    return `
-        <button type="button"
-                class="btn btn-sm btn-outline-primary btn-detalle">
-            Detalle
-        </button>`;
-                                }
-                            }
-                        ],
-                        language: {
-                            url: 'https://cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json'
-                        }
-                    });
-                                            // ✅ ARREGLO: tras cualquier redraw (reload, filtro, etc.) recalcular widths + responsive
-                        tablaGestion.on('draw.dt', function () {
-                          tablaGestion.columns.adjust();
-
-                          if (tablaGestion.responsive) {
-                            tablaGestion.responsive.recalc();
-                          }
-                        });
-
-                    $('#btnFiltrar').on('click', function () {
-                                                            tablaGestion.ajax.reload(function () {
-
-                                      // Ajuste inmediato
-                                      tablaGestion.columns.adjust();
-
-                                      // ✅ Lo que suele arreglarlo: recalcular responsive después de 1 tick
-                                      setTimeout(function () {
-                                        if (tablaGestion.responsive) {
-                                          tablaGestion.responsive.recalc();
-                                        }
-                                        tablaGestion.columns.adjust().draw(false);
-                                      }, 50);
-
-                                    }, false);
-
-                    });
-                });
-                        // ✅ Cuando cambia el estado, recarga la tabla
-        $('#cboEstadoGestion').on('change', function () {
-          tablaGestion.ajax.reload(null, false); // false = mantiene la página actual si quieres
-        });
-
-                // ================== DETALLE (abre modal) ==================
-                $('#tbGestion tbody').on('click', '.btn-detalle', function () {
-                    const fila = $(this).closest('tr');
-                    const data = tablaGestion.row(fila).data();
-
-                    console.log("Admin - detalle cita:", data);
-
-                    idCitaEditar = data.idCita;
-                    limpiarModalAdmin();
-
-                    $('#hdIdCita').val(data.idCita);
-
-                    $('#txtFechaCitaAdmin').val(data.fechaCita || '');
-                    $('#txtHoraCitaAdmin').val(data.horaCita || '');
-
-                    const nomPac = data.usuario ? (data.usuario.nombre || '') : '';
-                    const apePac = data.usuario ? (data.usuario.apellido || '') : '';
-                    $('#txtPacienteAdmin').val((nomPac + ' ' + apePac).trim());
-
-                    const nomDoc = data.doctor ? (data.doctor.nombres || '') : '';
-                    const apeDoc = data.doctor ? (data.doctor.apellidos || '') : '';
-                    $('#txtDoctorAdmin').val((nomDoc + ' ' + apeDoc).trim());
-
-                    const idEstado = data.estadoCita ? (data.estadoCita.idEstadoCita || 0) : 0;
-                    $('#cboEstadoAdmin').val(idEstado > 0 ? idEstado : 1);
-
-                    $('#txtOrigenCitaAdmin').val(data.origenCita || '');
-                    $('#txtRazonCitaUsrAdmin').val(data.razonCitaUsr || '');
-
-                    $('#txtIndicacionesDoctorAdmin').val(data.indicaciones || '');
-                                        // empieza modificacion - nuevos campos confirmación
-                    // OJO: por defecto System.Text.Json suele sacar camelCase => citaConfirmada/fechaPeticion/fechaConfirmacion
-                    $('#cboCitaConfirmadaAdmin').val((data.citaConfirmada || '').toString().trim());
-
-                    // Tú dices que ya tienes formatFecha() al principio:
-                    $('#txtFechaPeticionAdmin').val(formatFecha(data.fechaPeticion));
-                    $('#txtFechaConfirmacionAdmin').val(formatFecha(data.fechaConfirmacion));
-                    // fin modificacion
-
-                    // Documento paciente
-                    if (data.documentoCitaUsr) {
-                        docPacienteBase64 = data.documentoCitaUsr;
-                        docPacienteContentType = data.contentType || 'application/octet-stream';
-
-                        $('#btnVerDocPacienteAdmin').prop('disabled', false);
-                        $('#lblHayDocPacienteAdmin').removeClass('d-none');
-                        $('#lblSinDocPacienteAdmin').addClass('d-none');
-                    } else {
-                        docPacienteBase64 = null;
-                        docPacienteContentType = null;
-
-                        $('#btnVerDocPacienteAdmin').prop('disabled', true);
-                        $('#lblHayDocPacienteAdmin').addClass('d-none');
-                        $('#lblSinDocPacienteAdmin').removeClass('d-none');
-                    }
-
-                    // Documento doctor
-                    if (data.docIndicacionesDoctor) {
-                        docDoctorBase64 = data.docIndicacionesDoctor;
-                        docDoctorContentType = data.contentTypeDoctor || 'application/octet-stream';
-
-                        $('#btnVerDocDoctorAdmin').prop('disabled', false);
-                        $('#lblHayDocDoctorAdmin').removeClass('d-none');
-                        $('#lblSinDocDoctorAdmin').addClass('d-none');
-                    } else {
-                        docDoctorBase64 = null;
-                        docDoctorContentType = null;
-
-                        $('#btnVerDocDoctorAdmin').prop('disabled', true);
-                        $('#lblHayDocDoctorAdmin').addClass('d-none');
-                        $('#lblSinDocDoctorAdmin').removeClass('d-none');
-                    }
-
-                    $('#fileDocPacienteAdmin').val('');
-                    $('#fileDocDoctorAdmin').val('');
-
-                    $('#mdGestion').modal('show');
-                });
-
-                // ================== VER DOC PACIENTE ==================
-                $('#btnVerDocPacienteAdmin').on('click', function () {
-                    if (!docPacienteBase64) {
-                        Swal.fire({
-                            title: 'Información',
-                            text: 'No hay documento del paciente.',
-                            icon: 'info'
-                        });
-                        return;
-                    }
-                    abrirDocumento(docPacienteBase64, docPacienteContentType);
-                });
-
-                // ================== VER DOC DOCTOR ==================
-                $('#btnVerDocDoctorAdmin').on('click', function () {
-                    if (!docDoctorBase64) {
-                        Swal.fire({
-                            title: 'Información',
-                            text: 'No hay documento del doctor.',
-                            icon: 'info'
-                        });
-                        return;
-                    }
-                    abrirDocumento(docDoctorBase64, docDoctorContentType);
-                });
-
-                // ================== GUARDAR ADMIN ==================
-                $('#btnGuardarAdmin').on('click', function () {
-                    const idCita = parseInt($('#hdIdCita').val() || '0');
-                    if (!idCita) {
-                        Swal.fire({
-                            title: 'Error',
-                            text: 'No se ha podido identificar la cita.',
-                            icon: 'error'
-                        });
-                        return;
-                    }
-
-                    const formData = new FormData();
-                    formData.append('IdCita', idCita);
-                    formData.append('IdEstadoCita', parseInt($('#cboEstadoAdmin').val() || '1'));
-                    formData.append('OrigenCita', $('#txtOrigenCitaAdmin').val() || '');
-                     
-                    formData.append('RazonCitaUsr', $('#txtRazonCitaUsrAdmin').val() || '');
-                    formData.append('IndicacionesDoctor', $('#txtIndicacionesDoctorAdmin').val() || '');
-                                        // empieza modificacion - enviar confirmación (solo si tu endpoint lo espera)
-                    formData.append('CitaConfirmada', ($('#cboCitaConfirmadaAdmin').val() || '').toString());
-                    // fin modificacion
-
-                    const filePac = $('#fileDocPacienteAdmin')[0];
-                    if (filePac && filePac.files && filePac.files.length > 0) {
-                        formData.append('DocumentoPaciente', filePac.files[0]);
-                    }
-
-                    const fileDoc = $('#fileDocDoctorAdmin')[0];
-                    if (fileDoc && fileDoc.files && fileDoc.files.length > 0) {
-                        formData.append('DocumentoDoctor', fileDoc.files[0]);
-                    }
-
-                    fetch('/Citas/AdminActualizarCita', {
-                        method: 'POST',
-                        body: formData
-                    })
-                        .then(async response => {
-                            console.log('Response', response);
-                            let json = null;
-                            try {
-                                json = await response.json();
-                            } catch { }
-
-                            if (!response.ok) {
-                                const msg = json && json.data
-                                    ? json.data
-                                    : ('Error HTTP ' + response.status);
-                                console.error('Error:', msg);
-                                Swal.fire({
-                                    title: 'Error',
-                                    text: msg,
-                                    icon: 'error'
-                                });
-                                return;
-                            }
-                                             // después de que tu guardado actual devuelva OK...
-        $.post('/Citas/ActualizarCitaAdminConfirmacion', {
-          idCita: $('#hdIdCita').val(),
-          citaConfirmada: $('#cboCitaConfirmadaAdmin').val() || ''
-        });
-                            Swal.fire({
-                                title: 'Listo',
-                                text: 'La cita se ha actualizado correctamente.',
-                                icon: 'success'
-                            });
-
-                            $('#mdGestion').modal('hide');
-                                   tablaGestion.ajax.reload(function () {
-                                        setTimeout(function () {
-                                            tablaGestion.columns.adjust();
-                                            if (tablaGestion.responsive) tablaGestion.responsive.recalc();
-                                        }, 0);
-                                    }, false);
-                        })
-                        .catch(err => {
-                            console.error(err);
-                            Swal.fire({
-                                title: 'Error',
-                                text: 'No se pudo actualizar la cita.',
-                                icon: 'error'
-                            });
-                        });
-                });
-       
-
-                // ================== HELPERS ==================
-                function limpiarModalAdmin() {
-                    $('#hdIdCita').val('');
-                    $('#txtFechaCitaAdmin').val('');
-                    $('#txtHoraCitaAdmin').val('');
-                    $('#txtPacienteAdmin').val('');
-                    $('#txtDoctorAdmin').val('');
-                    $('#cboEstadoAdmin').val('1');
-                    $('#txtOrigenCitaAdmin').val('');
-                    $('#txtRazonCitaUsrAdmin').val('');
-                    $('#txtIndicacionesDoctorAdmin').val('');
-                                        // empieza modificacion - limpiar nuevos campos confirmación
-                    $('#cboCitaConfirmadaAdmin').val('');
-                    $('#txtFechaPeticionAdmin').val('');
-                    $('#txtFechaConfirmacionAdmin').val('');
-                    // fin modificacion
-                    docPacienteBase64 = null;
-                    docPacienteContentType = null;
-                    $('#btnVerDocPacienteAdmin').prop('disabled', true);
-                    $('#lblHayDocPacienteAdmin').addClass('d-none');
-                    $('#lblSinDocPacienteAdmin').removeClass('d-none');
-
-                    docDoctorBase64 = null;
-                    docDoctorContentType = null;
-                    $('#btnVerDocDoctorAdmin').prop('disabled', true);
-                    $('#lblHayDocDoctorAdmin').addClass('d-none');
-                    $('#lblSinDocDoctorAdmin').removeClass('d-none');
-
-                    $('#fileDocPacienteAdmin').val('');
-                    $('#fileDocDoctorAdmin').val('');
-                }
-
-                function abrirDocumento(base64, contentType) {
-                    try {
-                        const byteCharacters = atob(base64);
-                        const byteNumbers = new Array(byteCharacters.length);
-                        for (let i = 0; i < byteCharacters.length; i++) {
-                            byteNumbers[i] = byteCharacters.charCodeAt(i);
-                        }
-                        const byteArray = new Uint8Array(byteNumbers);
-                        const blob = new Blob([byteArray], { type: contentType || 'application/octet-stream' });
-                        const url = URL.createObjectURL(blob);
-                        window.open(url, '_blank');
-                    } catch (e) {
-                        console.error(e);
-                        Swal.fire({
-                            title: 'Error',
-                            text: 'No se pudo mostrar el documento.',
-                            icon: 'error'
-                        });
-                    }
-                }
-    </script>
-    <!-- ✅ Tooltips Bootstrap (inicialización simple y segura) -->
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
-                new bootstrap.Tooltip(el);
-            });
-        });
-    </script>
-    <style>
-        /* ✅ Tooltips Bootstrap: fondo verde oscuro + texto blanco */
+        /* Tooltips Bootstrap: fondo verde oscuro + texto blanco */
         .tooltip .tooltip-inner {
-            background-color: #1f7a3a !important; /* verde oscuro */
-            color: #ffffff !important; /* blanco */
+            background-color: #1f7a3a !important;
+            color: #ffffff !important;
             opacity: 1 !important;
         }
 
-        /* ✅ Color de la flechita (arrow) */
         .bs-tooltip-top .tooltip-arrow::before {
             border-top-color: #1f7a3a !important;
         }
@@ -866,7 +77,404 @@
             border-right-color: #1f7a3a !important;
         }
     </style>
+}
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+<div class="container-fluid px-4">
+    <h2 class="mt-4 mb-4">Gestión de Citas</h2>
 
+    <div class="ms-2">
+        <button type="button" class="btn btn-outline-light btn-sm" onclick="openHelpVideo('Doctor_Horario.mp4')"
+                data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-citas"
+                title="Ayuda: abre el vídeo de explicación.">
+            <i class="fa fa-circle-question"></i> Ayuda
+        </button>
+    </div>
 
+    <div class="card mb-4">
+        <div class="card-header"><i class="fas fa-filter me-1"></i> Filtro de citas </div>
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-sm-6 col-md-4">
+                    <label for="cboEstadoGestion" class="form-label" data-bs-toggle="tooltip" data-bs-placement="top" title="Selección del estado.">Estado</label>
+                    <select id="cboEstadoGestion" class="form-select" data-bs-toggle="tooltip" data-bs-placement="top" title="Elige el estado.">
+                        <option value="0">Todos</option>
+                        <option value="1">Pendiente</option>
+                        <option value="2">Atendido</option>
+                        <option value="3">Anulado</option>
+                        <option value="4">Provisional</option>
+                    </select>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <button type="button" id="btnFiltrar" class="btn btn-primary w-100 w-sm-auto" data-bs-toggle="tooltip" data-bs-placement="top" title="Aplica el filtro.">Aplicar filtro</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header d-flex align-items-center">
+            <i class="fas fa-table me-1"></i> <span>Lista global de citas</span>
+            <button type="button" class="btn btn-success btn-sm ms-auto" onclick="openHelpVideo('Doctor_Horario.mp4')" data-bs-toggle="tooltip" title="Ayuda.">
+                <i class="fa fa-circle-question"></i> Ayuda
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="tbGestion" class="display table table-striped table-bordered table-hover nowrap" cellspacing="0" style="width:100%">
+                    <thead>
+                        <tr>
+                            
+                            <th>Acciones</th>
+                           
+                            <th><span data-bs-toggle="tooltip" title="Id">Id</span></th>
+                            <th><span data-bs-toggle="tooltip" title="Fecha">Fecha</span></th>
+                            <th><span data-bs-toggle="tooltip" title="Hora">Hora</span></th>
+                            <th><span data-bs-toggle="tooltip" title="Paciente">Paciente</span></th>
+                            <th><span data-bs-toggle="tooltip" title="Doctor">Doctor</span></th>
+                            <th><span data-bs-toggle="tooltip" title="Estado">Estado</span></th>
+                            <th><span data-bs-toggle="tooltip" title="Origen">Origen</span></th>
+                            <th><span data-bs-toggle="tooltip" title="Motivo">Motivo (paciente)</span></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="mdGestion" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="mdGestionLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mdGestionLabel">Editar cita (Admin)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="hdIdCita" />
+                <div class="row g-2 mb-2">
+                    <div class="col-12 col-md-3">
+                        <label class="form-label" data-bs-toggle="tooltip" title="Fecha">Fecha</label>
+                        <input type="text" id="txtFechaCitaAdmin" class="form-control" disabled />
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label" data-bs-toggle="tooltip" title="Hora">Hora</label>
+                        <input type="text" id="txtHoraCitaAdmin" class="form-control" disabled />
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label" data-bs-toggle="tooltip" title="Paciente">Paciente</label>
+                        <input type="text" id="txtPacienteAdmin" class="form-control" disabled />
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label" data-bs-toggle="tooltip" title="Doctor">Doctor</label>
+                        <input type="text" id="txtDoctorAdmin" class="form-control" disabled />
+                    </div>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" data-bs-toggle="tooltip" title="Estado">Estado</label>
+                        <select id="cboEstadoAdmin" class="form-select">
+                            <option value="1">Pendiente</option>
+                            <option value="2">Atendido</option>
+                            <option value="3">Anulado</option>
+                            <option value="4">Provisional</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" data-bs-toggle="tooltip" title="Origen">Origen de la cita</label>
+                        <input type="text" id="txtOrigenCitaAdmin" class="form-control" />
+                    </div>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" data-bs-toggle="tooltip" title="Confirmada">Cita confirmada</label>
+                        <select id="cboCitaConfirmadaAdmin" class="form-select">
+                            <option value="">(Sin dato)</option>
+                            <option value="S">Sí</option>
+                            <option value="N">No</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" data-bs-toggle="tooltip" title="Petición">Fecha petición</label>
+                        <input type="text" id="txtFechaPeticionAdmin" class="form-control" disabled />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" data-bs-toggle="tooltip" title="Confirmación">Fecha confirmación</label>
+                        <input type="text" id="txtFechaConfirmacionAdmin" class="form-control" disabled />
+                    </div>
+                </div>
+                <hr />
+                <h6>Datos del paciente</h6>
+                <div class="row g-2 mb-3">
+                    <div class="col-12">
+                        <label class="form-label" data-bs-toggle="tooltip" title="Motivo">Motivo de la cita (paciente)</label>
+                        <textarea id="txtRazonCitaUsrAdmin" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label d-block">Documento del paciente</label>
+                        <button type="button" id="btnVerDocPacienteAdmin" class="btn btn-outline-secondary btn-sm" disabled data-bs-toggle="tooltip" title="Descargar">Ver documento del paciente</button>
+                        <div class="mt-1">
+                            <small id="lblHayDocPacienteAdmin" class="form-text text-success d-none"> ✔ Hay documento de paciente. </small>
+                            <small id="lblSinDocPacienteAdmin" class="form-text text-muted"> No hay documento de paciente. </small>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Adjuntar / sustituir documento paciente</label>
+                        <input type="file" id="fileDocPacienteAdmin" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" />
+                    </div>
+                </div>
+                <hr />
+                <h6>Datos del doctor</h6>
+                <div class="row g-2 mb-3">
+                    <div class="col-12">
+                        <label class="form-label" data-bs-toggle="tooltip" title="Indicaciones">Indicaciones del doctor</label>
+                        <textarea id="txtIndicacionesDoctorAdmin" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label d-block">Documento del doctor</label>
+                        <button type="button" id="btnVerDocDoctorAdmin" class="btn btn-outline-secondary btn-sm" disabled data-bs-toggle="tooltip" title="Descargar">Ver documento del doctor</button>
+                        <div class="mt-1">
+                            <small id="lblHayDocDoctorAdmin" class="form-text text-success d-none"> ✔ Hay documento del doctor. </small>
+                            <small id="lblSinDocDoctorAdmin" class="form-text text-muted"> No hay documento del doctor. </small>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Adjuntar / sustituir documento doctor</label>
+                        <input type="file" id="fileDocDoctorAdmin" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-bs-toggle="tooltip" title="Cerrar">Cerrar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarAdmin" data-bs-toggle="tooltip" title="Guardar">Guardar cambios</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        (function () {
+          "use strict";
+          window.openHelpVideo = function (fileName) {
+            const w = 900, h = 520;
+            const left = Math.max(0, (screen.width - w) / 2);
+            const top = Math.max(0, (screen.height - h) / 2);
+            const url = "/helps/" + encodeURIComponent(fileName);
+            window.open(url, "helpVideo", `width=${w},height=${h},left=${left},top=${top},resizable=yes`);
+          };
+        })();
+
+        function formatFecha(dt) {
+          if (!dt) return "";
+          const d = new Date(dt);
+          if (isNaN(d.getTime())) return "";
+          const dd = String(d.getDate()).padStart(2, '0');
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const yyyy = d.getFullYear();
+          const hh = String(d.getHours()).padStart(2, '0');
+          const mi = String(d.getMinutes()).padStart(2, '0');
+          return `${dd}/${mm}/${yyyy} ${hh}:${mi}`;
+        }
+
+        let tablaGestion, idCitaEditar = 0;
+        let docPacienteBase64 = null, docPacienteContentType = null;
+        let docDoctorBase64 = null, docDoctorContentType = null;
+
+        document.addEventListener("DOMContentLoaded", function () {
+            if ($.fn.DataTable.isDataTable('#tbGestion')) {
+                $('#tbGestion').DataTable().destroy();
+            }
+
+            tablaGestion = $('#tbGestion').DataTable({
+                responsive: false,
+                processing: true,
+                serverSide: true,
+                searchDelay: 500,
+                scrollX: true,
+                autoWidth: false,
+                order: [[1, 'desc'], [2, 'asc']],
+                dom: 'Bfrtip',
+                columnDefs: [ { targets: 0, orderable: false, className: 'text-nowrap' } ],
+                buttons: ['copyHtml5', 'excelHtml5', 'pdfHtml5', 'print'],
+                ajax: {
+                    url: '/Citas/ListaCitasGestionServerSide',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: function (d) {
+                        d.idEstadoCita = parseInt($('#cboEstadoGestion').val() || '0');
+                        d.search = d.search?.value || '';
+                    }
+                },
+                columns: [
+                   
+                    {
+                        data: null,
+                        orderable: false,
+                        width: '80px',
+                        render: function () {
+                            return `<div class="acciones-container">
+                                        <button type="button" class="btn btn-primary btn-circle btn-detalle" title="Detalle">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>`;
+                        }
+                    },
+                   
+                    { data: 'idCita', visible: false },
+                    {
+                        data: 'fechaCita',
+                        width: '90px',
+                        render: function (data, type, row) {
+                            if (type === 'sort' || type === 'type') return row.fechaCitaOrden || '';
+                            return data || '';
+                        }
+                    },
+                    { data: 'horaCita', width: '70px' },
+                    {
+                        data: 'usuario',
+                        render: function (data) {
+                            if (!data) return '';
+                            return ((data.nombre || '') + ' ' + (data.apellido || '')).trim();
+                        }
+                    },
+                    {
+                        data: 'doctor',
+                        render: function (data) {
+                            if (!data) return '';
+                            return ((data.nombres || '') + ' ' + (data.apellidos || '')).trim();
+                        }
+                    },
+                    {
+                        data: 'estadoCita',
+                        render: function (data) { return data && data.nombre ? data.nombre : ''; }
+                    },
+                    { data: 'origenCita', width: '80px' },
+                    {
+                        data: 'razonCitaUsr',
+                        render: function (data, type) {
+                            if (!data) return '';
+                            if (type === 'display' && data.length > 40) return $('<div>').text(data.substring(0, 40) + '...').html();
+                            return $('<div>').text(data).html();
+                        }
+                    }
+                ],
+                language: { url: 'https://cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json' }
+            });
+
+            tablaGestion.on('draw.dt', function () { tablaGestion.columns.adjust(); });
+            $('#btnFiltrar').on('click', function () { tablaGestion.ajax.reload(function () { tablaGestion.columns.adjust(); }, false); });
+            $('#cboEstadoGestion').on('change', function () { tablaGestion.ajax.reload(null, false); });
+        });
+
+        $('#tbGestion tbody').on('click', '.btn-detalle', function () {
+            const data = tablaGestion.row($(this).closest('tr')).data();
+            idCitaEditar = data.idCita;
+            limpiarModalAdmin();
+            $('#hdIdCita').val(data.idCita);
+            $('#txtFechaCitaAdmin').val(data.fechaCita || '');
+            $('#txtHoraCitaAdmin').val(data.horaCita || '');
+            $('#txtPacienteAdmin').val(((data.usuario?.nombre || '') + ' ' + (data.usuario?.apellido || '')).trim());
+            $('#txtDoctorAdmin').val(((data.doctor?.nombres || '') + ' ' + (data.doctor?.apellidos || '')).trim());
+            $('#cboEstadoAdmin').val(data.estadoCita?.idEstadoCita || 1);
+            $('#txtOrigenCitaAdmin').val(data.origenCita || '');
+            $('#txtRazonCitaUsrAdmin').val(data.razonCitaUsr || '');
+            $('#txtIndicacionesDoctorAdmin').val(data.indicaciones || '');
+            $('#cboCitaConfirmadaAdmin').val((data.citaConfirmada || '').toString().trim());
+            $('#txtFechaPeticionAdmin').val(formatFecha(data.fechaPeticion));
+            $('#txtFechaConfirmacionAdmin').val(formatFecha(data.fechaConfirmacion));
+
+            if (data.documentoCitaUsr) {
+                docPacienteBase64 = data.documentoCitaUsr;
+                docPacienteContentType = data.contentType || 'application/octet-stream';
+                $('#btnVerDocPacienteAdmin').prop('disabled', false);
+                $('#lblHayDocPacienteAdmin').removeClass('d-none');
+                $('#lblSinDocPacienteAdmin').addClass('d-none');
+            }
+            if (data.docIndicacionesDoctor) {
+                docDoctorBase64 = data.docIndicacionesDoctor;
+                docDoctorContentType = data.contentTypeDoctor || 'application/octet-stream';
+                $('#btnVerDocDoctorAdmin').prop('disabled', false);
+                $('#lblHayDocDoctorAdmin').removeClass('d-none');
+                $('#lblSinDocDoctorAdmin').addClass('d-none');
+            }
+            $('#mdGestion').modal('show');
+        });
+
+        $('#btnVerDocPacienteAdmin').on('click', function () {
+            if (!docPacienteBase64) return Swal.fire('Info', 'No hay documento.', 'info');
+            abrirDocumento(docPacienteBase64, docPacienteContentType);
+        });
+
+        $('#btnVerDocDoctorAdmin').on('click', function () {
+            if (!docDoctorBase64) return Swal.fire('Info', 'No hay documento.', 'info');
+            abrirDocumento(docDoctorBase64, docDoctorContentType);
+        });
+
+        $('#btnGuardarAdmin').on('click', function () {
+            const idCita = parseInt($('#hdIdCita').val() || '0');
+            if (!idCita) return Swal.fire('Error', 'No identificado.', 'error');
+
+            const formData = new FormData();
+            formData.append('IdCita', idCita);
+            formData.append('IdEstadoCita', parseInt($('#cboEstadoAdmin').val() || '1'));
+            formData.append('OrigenCita', $('#txtOrigenCitaAdmin').val() || '');
+            formData.append('RazonCitaUsr', $('#txtRazonCitaUsrAdmin').val() || '');
+            formData.append('IndicacionesDoctor', $('#txtIndicacionesDoctorAdmin').val() || '');
+            formData.append('CitaConfirmada', ($('#cboCitaConfirmadaAdmin').val() || '').toString());
+
+            const filePac = $('#fileDocPacienteAdmin')[0]?.files[0];
+            if (filePac) formData.append('DocumentoPaciente', filePac);
+            const fileDoc = $('#fileDocDoctorAdmin')[0]?.files[0];
+            if (fileDoc) formData.append('DocumentoDoctor', fileDoc);
+
+            fetch('/Citas/AdminActualizarCita', { method: 'POST', body: formData })
+                .then(async response => {
+                    if (!response.ok) throw new Error('Fallo al actualizar');
+                    $.post('/Citas/ActualizarCitaAdminConfirmacion', { idCita: idCita, citaConfirmada: $('#cboCitaConfirmadaAdmin').val() || '' });
+                    Swal.fire('Listo', 'Actualizado correctamente.', 'success');
+                    $('#mdGestion').modal('hide');
+                    tablaGestion.ajax.reload(null, false);
+                }).catch(err => Swal.fire('Error', 'No se pudo actualizar.', 'error'));
+        });
+
+        function limpiarModalAdmin() {
+            $('#hdIdCita').val('');
+            $('#txtFechaCitaAdmin').val('');
+            $('#txtHoraCitaAdmin').val('');
+            $('#txtPacienteAdmin').val('');
+            $('#txtDoctorAdmin').val('');
+            $('#cboEstadoAdmin').val('1');
+            $('#txtOrigenCitaAdmin').val('');
+            $('#txtRazonCitaUsrAdmin').val('');
+            $('#txtIndicacionesDoctorAdmin').val('');
+            $('#cboCitaConfirmadaAdmin').val('');
+            $('#txtFechaPeticionAdmin').val('');
+            $('#txtFechaConfirmacionAdmin').val('');
+            docPacienteBase64 = null; docDoctorBase64 = null;
+            $('#btnVerDocPacienteAdmin').prop('disabled', true);
+            $('#btnVerDocDoctorAdmin').prop('disabled', true);
+            $('#fileDocPacienteAdmin').val(''); $('#fileDocDoctorAdmin').val('');
+        }
+
+        function abrirDocumento(base64, contentType) {
+            try {
+                const byteCharacters = atob(base64);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) byteNumbers[i] = byteCharacters.charCodeAt(i);
+                const blob = new Blob([new Uint8Array(byteNumbers)], { type: contentType || 'application/octet-stream' });
+                window.open(URL.createObjectURL(blob), "_blank");
+            } catch (e) { Swal.fire('Error', 'No se pudo mostrar.', 'error'); }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+        });
+    </script>
 }

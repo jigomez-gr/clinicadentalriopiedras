@@ -3,13 +3,45 @@
 }
 
 @section Styles {
-    @* cambio 99 comzo *@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css" />
-    @* cambio 99 fin *@
     <style>
+      
+        .acciones-container {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-circle {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 14px;
+            line-height: 32px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        #tbSms {
+            border-collapse: collapse !important;
+        }
+
+        @@media (max-width: 768px) {
+            #tbSms thead th:first-child,
+            #tbSms tbody td:first-child {
+                position: sticky;
+                left: 0;
+                background-color: #f8f9fa !important;
+                z-index: 5;
+                border-right: 2px solid #dee2e6;
+            }
+        }
+       
+
         .dataTables_processing {
-            background-color: #ffcccc !important; /* Fondo rojizo suave */
-            color: #d9534f !important; /* Texto rojo fuerte */
+            background-color: #ffcccc !important;
+            color: #d9534f !important;
             font-weight: bold !important;
             font-size: 1.2rem !important;
             border: 2px solid #d9534f !important;
@@ -19,8 +51,6 @@
             padding: 20px !important;
         }
     </style>
-
-
 }
 
 <h2 class="mt-4 mb-4">Zadarma - SMS enviados</h2>
@@ -28,7 +58,7 @@
 <div class="row">
     <div class="col-12">
         <div class="card mb-4">
-           <div class="card-header d-flex align-items-center">
+            <div class="card-header d-flex align-items-center">
                 <i class="fas fa-sms me-1"></i>
                 <span> Respuestas Zadarma (solo consulta)</span>
 
@@ -41,9 +71,6 @@
                 </button>
             </div>
 
-
-
-
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="display table table-striped table-bordered table-hover nowrap"
@@ -52,13 +79,15 @@
                            style="width:100%">
                         <thead>
                             <tr>
+                               
+                                <th>Acciones</th>
+                               
                                 <th>Fecha</th>
                                 <th>ID</th>
                                 <th>CallerId</th>
                                 <th>Número destino</th>
                                 <th>Mensaje</th>
                                 <th>Coste</th>
-                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -73,7 +102,6 @@
     </div>
 </div>
 
-<!-- MODAL DETALLE -->
 <div class="modal fade" id="mdDetalleSms"
      data-bs-backdrop="static"
      data-bs-keyboard="false"
@@ -85,13 +113,10 @@
 
             <div class="modal-header" style="background: var(--brand-blue); color:#fff;">
                 <h5 class="modal-title" id="mdDetalleSmsLabel">Detalle SMS</h5>
-                <button type="button"
-                        class="btn-close"
-                        data-bs-dismiss="modal"
-                        aria-label="Cerrar"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
 
-            <div class="modal-body">
+            <div class="modal-body text-start">
                 <input type="hidden" id="hdIdRespuestaSms" />
 
                 <div class="row g-2 mb-2">
@@ -187,28 +212,21 @@
 
                 <small id="lblJsonInfo" class="text-muted d-block mt-2"></small>
             </div>
-
         </div>
     </div>
 </div>
 
 @section Scripts {
-    @* cambio 99  comzo *@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
-
     <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
-    @* cambio 99  fin *@
 
     <script>
-          (function () {
+        (function () {
           "use strict";
-
-          // ========= HELP VIDEO (simple) =========
           window.openHelpVideo = function (fileName) {
             const w = 900, h = 520;
             const left = Math.max(0, (screen.width - w) / 2);
             const top = Math.max(0, (screen.height - h) / 2);
-
             const url = "/helps/" + encodeURIComponent(fileName);
 
             window.open(
@@ -218,22 +236,15 @@
             );
           };
         })();
+
         let tablaSms = null;
 
         document.addEventListener("DOMContentLoaded", function () {
-
-            if (!window.jQuery) {
-                console.error("jQuery NO está cargado (Layout).");
-                return;
-            }
-            if (!jQuery.fn || !jQuery.fn.DataTable) {
-                console.error("DataTables NO está cargado. Revisa rutas /lib/datatables2/js/dataTables.js");
-                return;
-            }
+            if (!window.jQuery) return;
 
             tablaSms = $("#tbSms").DataTable({
                 processing: true,
-                responsive: true,
+                responsive: false,
                 scrollX: true,
                 autoWidth: false,
                 ajax: {
@@ -242,6 +253,21 @@
                     datatype: "json"
                 },
                 columns: [
+                 
+                    {
+                        title: "Acciones",
+                        data: null,
+                        orderable: false,
+                        width: "80px",
+                        render: function () {
+                            return `<div class="acciones-container">
+                                        <button type="button" class="btn btn-primary btn-circle btn-detalle" title="Ver Detalle">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>`;
+                        }
+                    },
+                    
                     {
                         title: "Fecha",
                         data: "fechaRegistro",
@@ -272,101 +298,57 @@
                             if (isNaN(n)) return escapeHtml(String(data));
                             return n.toFixed(4);
                         }
-                    },
-                    {
-                        title: "Acciones",
-                        data: null,
-                        orderable: false,
-                        width: "140px",
-                        render: function () {
-                            return `
-                                <button type="button" class="btn btn-sm btn-outline-primary btn-detalle">
-                                    Detalle
-                                </button>
-                            `;
-                        }
                     }
                 ],
                 language: {
                     url: "https://cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json"
-                },
-                drawCallback: function () {
-                    setTimeout(() => {
-                        try { tablaSms.columns.adjust(); } catch (e) { }
-                    }, 50);
                 }
             });
 
-            // Detalle SIEMPRE
             $("#tbSms tbody").on("click", ".btn-detalle", function () {
                 const row = tablaSms.row($(this).closest("tr")).data();
                 if (!row) return;
                 abrirModalDetalle(row);
             });
 
-            // Descargar JSON (desde endpoint)
             $("#btnDescargarJson").on("click", async function () {
                 const id = parseInt($("#hdIdRespuestaSms").val() || "0", 10);
                 if (!id) return;
-
-                const url = `/ZadarmaSmsRespuesta/DescargarJson?idRespuestaSms=${id}`;
-                const r = await fetch(url, { method: "GET" });
-
+                const r = await fetch(`/ZadarmaSmsRespuesta/DescargarJson?idRespuestaSms=${id}`, { method: "GET" });
                 if (!r.ok) {
                     Swal.fire("Información", "No hay JSON guardado para este registro.", "info");
                     return;
                 }
-
                 const blob = await r.blob();
-
-                // filename por header
-                let filename = "";
-                const cd = r.headers.get("content-disposition") || "";
-                const m = /filename\*=UTF-8''([^;]+)|filename="?([^"]+)"?/i.exec(cd);
-                if (m) filename = decodeURIComponent(m[1] || m[2] || "");
-                if (!filename) filename = `zadarma_sms_${id}.json`;
-
                 const urlObj = URL.createObjectURL(blob);
                 const a = document.createElement("a");
                 a.href = urlObj;
-                a.download = filename;
+                a.download = `zadarma_sms_${id}.json`;
                 document.body.appendChild(a);
                 a.click();
                 a.remove();
                 setTimeout(() => URL.revokeObjectURL(urlObj), 1500);
             });
-
-            $("#mdDetalleSms").on("hidden.bs.modal", function () {
-                $("#lblJsonInfo").text("");
-            });
         });
 
         function abrirModalDetalle(row) {
             $("#hdIdRespuestaSms").val(row.idRespuestaSms || 0);
-
             $("#txtFechaRegistro").val(row.fechaRegistro ? formatearFechaHora(row.fechaRegistro) : "");
             $("#txtHttpStatusCode").val(row.httpStatusCode ?? "");
             $("#txtStatus").val(row.status ?? "");
             $("#txtMessages").val(row.messages ?? "");
             $("#txtCostTotal").val(row.costTotal != null ? Number(row.costTotal).toFixed(4) : "");
             $("#txtCurrency").val(row.currency ?? "");
-
             $("#txtCallerId").val(row.callerId ?? "");
             $("#txtNumeroDestino").val(row.numeroDestino ?? "");
             $("#txtParts").val(row.parts ?? "");
-
             $("#txtCost").val(row.cost != null ? Number(row.cost).toFixed(4) : "");
             $("#txtCostMin").val(row.costMin != null ? Number(row.costMin).toFixed(4) : "");
             $("#txtCostMax").val(row.costMax != null ? Number(row.costMax).toFixed(4) : "");
-
             $("#txtMensaje").val(row.mensaje ?? "");
             $("#txtDeniedNumbers").val(row.deniedNumbers ?? "");
-
-            const tieneJson = !!row.rawJsonRespuesta;
-            $("#lblJsonInfo").text(tieneJson ? "JSON guardado: puedes descargarlo." : "Puede que no exista JSON guardado (te avisará al descargar).");
-
-            const modal = new bootstrap.Modal(document.getElementById("mdDetalleSms"));
-            modal.show();
+            $("#lblJsonInfo").text(row.rawJsonRespuesta ? "JSON guardado: puedes descargarlo." : "Puede que no exista JSON guardado.");
+            new bootstrap.Modal(document.getElementById("mdDetalleSms")).show();
         }
 
         function formatearFechaHora(valor) {
@@ -380,12 +362,7 @@
         }
 
         function escapeHtml(s) {
-            return String(s)
-                .replaceAll("&", "&amp;")
-                .replaceAll("<", "&lt;")
-                .replaceAll(">", "&gt;")
-                .replaceAll('"', "&quot;")
-                .replaceAll("'", "&#039;");
+            return String(s).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
         }
     </script>
 }

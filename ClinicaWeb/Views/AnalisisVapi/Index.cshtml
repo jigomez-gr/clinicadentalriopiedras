@@ -3,23 +3,54 @@
 }
 
 @section Styles {
- 
-
     <link href="/lib/datatables2/css/dataTables.dataTables.css" rel="stylesheet" />
     <style>
-        .dataTables_processing {
-                background-color: #ffcccc !important; /* Fondo rojizo suave */
-                color: #d9534f !important; /* Texto rojo fuerte */
-                font-weight: bold !important;
-                font-size: 1.2rem !important;
-                border: 2px solid #d9534f !important;
-                z-index: 9999 !important;
-                top: 50% !important;
-                height: auto !important;
-                padding: 20px !important;
-            }
-    </style>
+      
+        .acciones-container {
+            display: flex;
+            gap: 4px;
+        }
 
+        .btn-circle {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 14px;
+            line-height: 32px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        #tbVapi {
+            border-collapse: collapse !important;
+        }
+
+        @@media (max-width: 768px) {
+            #tbVapi thead th:first-child,
+            #tbVapi tbody td:first-child {
+                position: sticky;
+                left: 0;
+                background-color: #f8f9fa !important;
+                z-index: 5;
+                border-right: 2px solid #dee2e6;
+            }
+        }
+     
+
+        .dataTables_processing {
+            background-color: #ffcccc !important;
+            color: #d9534f !important;
+            font-weight: bold !important;
+            font-size: 1.2rem !important;
+            border: 2px solid #d9534f !important;
+            z-index: 9999 !important;
+            top: 50% !important;
+            height: auto !important;
+            padding: 20px !important;
+        }
+    </style>
 }
 
 <h2 class="mt-4 mb-4">Análisis VAPI</h2>
@@ -29,7 +60,7 @@
         <div class="card mb-4">
             <div class="card-header d-flex align-items-center">
                 <i class="fas fa-chart-bar me-1"></i>
-                <span>  Llamadas analizadas</span>
+                <span> Llamadas analizadas</span>
 
                 <button type="button"
                         class="btn btn-success btn-sm ms-auto"
@@ -48,11 +79,13 @@
                            style="width:100%">
                         <thead>
                             <tr>
+                              
+                                <th>Acciones</th>
+                               
                                 <th>Inicio</th>
                                 <th>Fin</th>
                                 <th>Teléfono</th>
                                 <th>Coste</th>
-                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -60,14 +93,13 @@
                 </div>
 
                 <small class="text-muted d-block mt-2">
-                    * Vista de solo consulta (solo Administrador).
+                    * Vista de solo consulta (solo Administrador). [cite: 420]
                 </small>
             </div>
         </div>
     </div>
 </div>
 
-<!-- MODAL DETALLE -->
 <div class="modal fade" id="mdDetalle"
      data-bs-backdrop="static"
      data-bs-keyboard="false"
@@ -79,13 +111,10 @@
 
             <div class="modal-header" style="background: var(--brand-blue); color:#fff;">
                 <h5 class="modal-title" id="mdDetalleLabel">Detalle</h5>
-                <button type="button"
-                        class="btn-close"
-                        data-bs-dismiss="modal"
-                        aria-label="Cerrar"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
 
-            <div class="modal-body">
+            <div class="modal-body text-start">
                 <input type="hidden" id="hdIdLlamada" />
 
                 <div class="row g-2 mb-2">
@@ -151,7 +180,7 @@
                 <hr />
 
                 <div class="alert alert-info mb-2">
-                    Audio: puedes escucharlo o descargarlo. Si no existe, te lo dirá.
+                    Audio: puedes escucharlo o descargarlo. [cite: 435] Si no existe, te lo dirá. [cite: 435]
                 </div>
 
                 <audio id="audioPlayer" controls style="width:100%"></audio>
@@ -169,11 +198,7 @@
             </div>
 
             <div class="modal-footer">
-                <button type="button"
-                        class="btn btn-secondary"
-                        data-bs-dismiss="modal">
-                    Cerrar
-                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
 
         </div>
@@ -185,15 +210,12 @@
     <script src="/lib/datatables2/js/dataTables.js"></script>
 
     <script>
-                   (function () {
+        (function () {
           "use strict";
-
-          // ========= HELP VIDEO (simple) =========
           window.openHelpVideo = function (fileName) {
             const w = 900, h = 520;
             const left = Math.max(0, (screen.width - w) / 2);
             const top = Math.max(0, (screen.height - h) / 2);
-
             const url = "/helps/" + encodeURIComponent(fileName);
 
             window.open(
@@ -203,19 +225,17 @@
             );
           };
         })();
-        let tablaVapi = null;
 
-        // para audio
+        let tablaVapi = null;
         let audioBlobUrlActual = null;
         let audioFileNameActual = "audio_llamada.wav";
 
         document.addEventListener("DOMContentLoaded", function () {
-
-            // Si aquí falla, es que el Layout no está cargando jQuery antes de esta sección
             if (!window.jQuery) {
                 console.error("jQuery NO está cargado (Layout).");
                 return;
             }
+
             if (!jQuery.fn || !jQuery.fn.DataTable) {
                 console.error("DataTables NO está cargado. Revisa rutas /lib/datatables2/js/dataTables.js");
                 return;
@@ -223,7 +243,7 @@
 
             tablaVapi = $("#tbVapi").DataTable({
                 processing: true,
-                responsive: true,          
+                responsive: false,
                 scrollX: true,
                 autoWidth: false,
                 ajax: {
@@ -232,6 +252,21 @@
                     datatype: "json"
                 },
                 columns: [
+                    
+                    {
+                        title: "Acciones",
+                        data: null,
+                        orderable: false,
+                        width: "80px",
+                        render: function () {
+                            return `<div class="acciones-container">
+                                        <button type="button" class="btn btn-primary btn-circle btn-detalle" title="Ver Detalle">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>`;
+                        }
+                    },
+                    
                     {
                         title: "Inicio",
                         data: null,
@@ -270,20 +305,6 @@
                             if (isNaN(n)) return escapeHtml(String(v));
                             return n.toFixed(2);
                         }
-                    },
-                    {
-                        title: "Acciones",
-                        data: null,
-                        orderable: false,
-                        width: "180px",
-                        render: function () {
-                            // BOTÓN SIEMPRE (no depende de audio)
-                            return `
-                                <button type="button" class="btn btn-sm btn-outline-primary btn-detalle">
-                                    Detalle
-                                </button>
-                            `;
-                        }
                     }
                 ],
                 language: {
@@ -291,29 +312,23 @@
                 }
             });
 
-            // Click Detalle -> abre modal SIEMPRE
             $("#tbVapi tbody").on("click", ".btn-detalle", function () {
-                const row = tablaVapi.row($(this).closest("tr")).data();
-                if (!row) return;
-                abrirModalDetalle(row);
+                const fila = $(this).closest("tr");
+                const rowData = tablaVapi.row(fila).data();
+                if (!rowData) return;
+                abrirModalDetalle(rowData);
             });
 
-            // Botones del modal
             $("#btnEscucharAudio").on("click", async function () {
                 const id = parseInt($("#hdIdLlamada").val() || "0", 10);
-                if (!id) return;
-
-                await cargarAudioEnPlayer(id);
+                if (id) await cargarAudioEnPlayer(id);
             });
 
             $("#btnDescargarAudio").on("click", async function () {
                 const id = parseInt($("#hdIdLlamada").val() || "0", 10);
-                if (!id) return;
-
-                await descargarAudio(id);
+                if (id) await descargarAudio(id);
             });
 
-            // limpiar al cerrar
             $("#mdDetalle").on("hidden.bs.modal", function () {
                 try {
                     const ap = document.getElementById("audioPlayer");
@@ -340,9 +355,8 @@
 
             const ini = row.fecha_inicio || row.fechaInicio;
             const fin = row.fecha_fin || row.fechaFin;
-
             $("#txtInicio").val(ini ? formatearFechaHora(ini) : "");
-            $("#txtFin").val(fin ? formatearFechaHora(fin) : "");
+            $("#txtFin").val(fin ? formatearHoraSolo(fin) : "");
             $("#txtTelefono").val(row.telefono || "");
             $("#txtCoste").val((row.coste ?? "") !== "" && row.coste != null ? Number(row.coste).toFixed(2) : "");
 
@@ -350,23 +364,14 @@
             $("#txtSugerencia").val(row.sugerencia_mejora || row.sugerenciaMejora || "");
             $("#txtResumen").val(row.resumen || "");
 
-            // info inicial audio (sin fiarnos de que venga audio en la lista)
-            const tieneAudio = (row.tieneAudio === true)
-                || (row.tiene_audio === true)
-                || (row.TieneAudio === true)
-                || (row.tieneAudio === 1)
-                || (row.tiene_audio === 1)
-                || (row.TieneAudio === 1);
+            const tieneAudio = (row.tieneAudio === true || row.tiene_audio === true || row.TieneAudio === true || row.tieneAudio === 1 || row.tiene_audio === 1 || row.TieneAudio === 1);
+            $("#lblAudioInfo").text(tieneAudio ? "Audio: disponible. Pulsa Escuchar o Descargar." : "Audio: si no existe se avisará.");
 
-            $("#lblAudioInfo").text(tieneAudio ? "Audio: parece que hay audio. Pulsa Escuchar o Descargar." : "Audio: puede que no exista. Si no existe te avisará.");
-
-            const modal = new bootstrap.Modal(document.getElementById("mdDetalle"));
-            modal.show();
+            new bootstrap.Modal(document.getElementById("mdDetalle")).show();
         }
 
         async function cargarAudioEnPlayer(id) {
             $("#lblAudioInfo").text("Cargando audio...");
-
             const r = await fetch(`/AnalisisVapi/ObtenerAudio?idLlamada=${id}`, { method: "GET" });
             if (!r.ok) {
                 $("#lblAudioInfo").text("");
@@ -375,15 +380,11 @@
             }
 
             const blob = await r.blob();
-
-            // filename por header (si existe)
             let filename = "";
             const cd = r.headers.get("content-disposition") || "";
             const m = /filename\*=UTF-8''([^;]+)|filename="?([^"]+)"?/i.exec(cd);
             if (m) filename = decodeURIComponent(m[1] || m[2] || "");
-
             if (!filename) filename = `audio_llamada_${id}`;
-
             audioFileNameActual = filename;
 
             if (audioBlobUrlActual) URL.revokeObjectURL(audioBlobUrlActual);
@@ -392,14 +393,12 @@
             const ap = document.getElementById("audioPlayer");
             ap.src = audioBlobUrlActual;
             ap.load();
-            ap.play().catch(() => { /* si el navegador bloquea autoplay, no pasa nada */ });
-
+            ap.play().catch(() => { });
             $("#lblAudioInfo").text("Audio cargado.");
         }
 
         async function descargarAudio(id) {
             $("#lblAudioInfo").text("Preparando descarga...");
-
             const r = await fetch(`/AnalisisVapi/ObtenerAudio?idLlamada=${id}`, { method: "GET" });
             if (!r.ok) {
                 $("#lblAudioInfo").text("");
@@ -408,12 +407,10 @@
             }
 
             const blob = await r.blob();
-
             let filename = "";
             const cd = r.headers.get("content-disposition") || "";
             const m = /filename\*=UTF-8''([^;]+)|filename="?([^"]+)"?/i.exec(cd);
             if (m) filename = decodeURIComponent(m[1] || m[2] || "");
-
             if (!filename) filename = `audio_llamada_${id}.wav`;
 
             const urlObj = URL.createObjectURL(blob);
@@ -424,7 +421,6 @@
             a.click();
             a.remove();
             setTimeout(() => URL.revokeObjectURL(urlObj), 1500);
-
             $("#lblAudioInfo").text("");
         }
 
@@ -433,6 +429,16 @@
                 if (typeof moment !== "undefined") {
                     const m = moment(valor);
                     if (m.isValid()) return m.format("DD/MM/YYYY HH:mm");
+                }
+            } catch { }
+            return String(valor);
+        }
+
+        function formatearHoraSolo(valor) {
+            try {
+                if (typeof moment !== "undefined") {
+                    const m = moment(valor);
+                    if (m.isValid()) return m.format("HH:mm");
                 }
             } catch { }
             return String(valor);

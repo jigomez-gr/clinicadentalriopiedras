@@ -3,14 +3,47 @@
 }
 @section Estilos {
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css" />
-
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
-
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+
     <style>
+       
+        .acciones-container {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-circle {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 14px;
+            line-height: 32px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        #tbData {
+            border-collapse: collapse !important;
+        }
+
+        @@media (max-width: 768px) {
+            #tbData thead th:first-child,
+            #tbData tbody td:first-child {
+                position: sticky;
+                left: 0;
+                background-color: #f8f9fa !important;
+                z-index: 5;
+                border-right: 2px solid #dee2e6;
+            }
+        }
+        
+
         .dataTables_processing {
-            background-color: #ffcccc !important; /* Fondo rojizo suave */
-            color: #d9534f !important; /* Texto rojo fuerte */
+            background-color: #ffcccc !important;
+            color: #d9534f !important;
             font-weight: bold !important;
             font-size: 1.2rem !important;
             border: 2px solid #d9534f !important;
@@ -20,8 +53,8 @@
             padding: 20px !important;
         }
     </style>
-
 }
+
 <div class="container-fluid px-2 px-md-4">
 
     <h2 class="mt-4 mb-4 d-flex align-items-center">
@@ -38,7 +71,6 @@
     </h2>
 
     <style>
-        /* Tooltips claros (fondo blanco, texto negro) */
         .tooltip-light {
             --bs-tooltip-bg: #fff;
             --bs-tooltip-color: #000;
@@ -53,8 +85,6 @@
     <div class="card shadow-sm mb-3">
         <div class="card-body">
             <div class="row g-2 align-items-center">
-                <!-- /* CAMBIO2 empieza */ -->
-                <!-- Pantalla SOLO PACIENTES: ocultamos filtro por rol -->
                 <div>
                     <i class="fas fa-users me-1"></i>
                     Lista de Pacientes Registrados
@@ -68,7 +98,6 @@
                         <option value="3">Paciente</option>
                     </select>
                 </div>
-                <!-- /* CAMBIO2 termina */ -->
 
                 <div class="col-12 col-md-8 d-flex justify-content-md-end">
                     <button type="button" class="btn btn-primary" id="btnNuevo">
@@ -85,13 +114,15 @@
                 <table id="tbData" class="table table-striped table-bordered table-hover w-100 align-middle" style="width:100%">
                     <thead>
                         <tr>
+                           
+                            <th style="width:80px;">Acciones</th>
+                            
                             <th>Documento</th>
                             <th>Nombre</th>
                             <th>Apellido</th>
                             <th>Correo</th>
                             <th>Móvil</th>
                             <th>Rol</th>
-                            <th style="width:120px;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -101,7 +132,6 @@
     </div>
 </div>
 
-<!-- MODAL -->
 <div class="modal fade" id="mdData" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="mdDataLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
         <div class="modal-content">
@@ -109,11 +139,8 @@
                 <h5 class="modal-title" id="mdDataLabel">Usuario</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-
-            <div class="modal-body">
-
+            <div class="modal-body text-start">
                 <input type="hidden" id="txtIdUsuario" value="0" />
-
                 <div class="row g-2 mb-2">
                     <div class="col-12 col-md-6">
                         <label class="form-label">Documento</label>
@@ -124,7 +151,6 @@
                         <input type="password" class="form-control" id="txtClave" autocomplete="off" />
                     </div>
                 </div>
-
                 <div class="row g-2 mb-2">
                     <div class="col-12 col-md-6">
                         <label class="form-label">Nombre</label>
@@ -135,7 +161,6 @@
                         <input type="text" class="form-control" id="txtApellido" autocomplete="off" />
                     </div>
                 </div>
-
                 <div class="row g-2 mb-2">
                     <div class="col-12 col-md-6">
                         <label class="form-label">Correo</label>
@@ -146,9 +171,6 @@
                         <input type="text" class="form-control" id="txtMovil" autocomplete="off" />
                     </div>
                 </div>
-
-                <!-- /* CAMBIO2 empieza */ -->
-                <!-- Rol fijo PACIENTE: ocultamos selector y lo dejamos en 3 -->
                 <div class="row g-2 mb-2" style="display:none;">
                     <div class="col-12 col-md-4">
                         <label class="form-label">Rol</label>
@@ -157,20 +179,13 @@
                         </select>
                     </div>
                 </div>
-                <!-- /* CAMBIO2 termina */ -->
-
             </div>
-
             <div class="modal-footer d-flex flex-wrap gap-2">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                 <button type="button" class="btn btn-primary" id="btnGuardar">Guardar</button>
-               
-                    <button type="button"
-                            class="btn btn-outline-success me-auto"
-                            id="btnNuevaCitaPaciente">
-                     
-                        Nueva cita del paciente
-                    </button>
+                <button type="button" class="btn btn-outline-success me-auto" id="btnNuevaCitaPaciente">
+                    Nueva cita del paciente
+                </button>
             </div>
         </div>
     </div>
@@ -178,9 +193,6 @@
 
 @section Scripts {
     <script>
-        // ---------------------------
-        // Tooltips Bootstrap 5 (claro)
-        // ---------------------------
         function initTooltips(scope) {
             const root = scope || document;
             const triggers = root.querySelectorAll('[data-bs-toggle="tooltip"]');
@@ -199,59 +211,56 @@
             $("#txtCorreo").val("");
             $("#txtMovil").val("");
             $("#txtClave").val("");
-
-            /* CAMBIO2 empieza */
-            $("#cboRol").val("3"); // rol fijo paciente
-            /* CAMBIO2 termina */
+            $("#cboRol").val("3");
         }
 
         (function () {
-
             let tablaData;
             const controlador = "Usuario";
             const modal = "mdData";
-
-            /* CAMBIO2 empieza */
-            // Esta pantalla es SOLO PACIENTES (IdRolUsuario=3)
             let idRol = 3;
-            /* CAMBIO2 termina */
 
             $(document).ready(function () {
-
                 initTooltips();
-                   let idEditar = 0;
+                let idEditar = 0;
+
                 tablaData = $('#tbData').DataTable({
-                    /* CAMBIO2 empieza */
-                    // SIN serverSide: paginación normal en cliente
                     processing: true,
-                    responsive: true,
                     serverSide: false,
                     pageLength: 10,
                     lengthMenu: [10, 25, 50, 100],
-                    /* CAMBIO2 termina */
-
-                    responsive: true,
+                    responsive: false, // Desactivamos el responsive nativo para usar scrollX + sticky
                     autoWidth: false,
-                    scrollX: !window.matchMedia('(max-width: 576px)').matches,
-
+                    scrollX: true,
                     ajax: {
-                        /* CAMBIO2 empieza */
-                        // Solo pacientes -> endpoint Lista2 (idRol=3 por defecto)
                         url: '/' + controlador + "/Lista2",
                         type: 'GET',
                         dataType: 'json',
-                        dataSrc: "data", // <- IMPORTANTÍSIMO para que DataTables lea { data:[...] }
+                        dataSrc: "data",
                         data: function (d) {
                             d.idRol = idRol;
                             return d;
                         },
-                        /* CAMBIO2 termina */
                         error: function (xhr, status, err) {
                             console.error('AJAX error:', status, err, xhr.responseText);
                         }
                     },
-
                     columns: [
+                      
+                        {
+                            data: "idUsuario",
+                            orderable: false,
+                            searchable: false,
+                            render: function (data, type, row) {
+                                return `
+                                    <div class="acciones-container">
+                                        <button type="button" class="btn btn-primary btn-circle btn-editar" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>`;
+                            }
+                        },
+                        
                         { data: "numeroDocumentoIdentidad" },
                         { data: "nombre" },
                         { data: "apellido" },
@@ -259,74 +268,43 @@
                         { data: "movil" },
                         {
                             data: "rolUsuario",
-                            render: function (data, type, row) {
-                                return data?.nombre || "";
-                            }
-                        },
-                        {
-                            data: "idUsuario",
-                            orderable: false,
-                            searchable: false,
-                            render: function (data, type, row) {
-                                return `
-                                    <div class="dropdown">
-                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            Acciones
-                                        </button>
-                                        <ul class="dropdown-menu">
-                                            <li><button type="button" class="dropdown-item btn-editar">Editar</button></li>
-                                            <!-- /* CAMBIO2 empieza */ -->
-                                            <!-- Eliminado el botón BORRAR en esta pantalla -->
-                                            <!-- /* CAMBIO2 termina */ -->
-                                        </ul>
-                                    </div>
-                                `;
-                            }
+                            render: function (data) { return data?.nombre || ""; }
                         }
                     ],
-
                     language: {
                         url: "https://cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json"
                     }
                 });
 
-                // Nuevo
                 $("#btnNuevo").on("click", function () {
                     limpiarModal();
                     $("#" + modal).modal("show");
                 });
 
-                // Editar
                 $("#tbData tbody").on("click", ".btn-editar", function () {
                     const fila = $(this).closest('tr');
                     const data = tablaData.row(fila).data();
-
                     limpiarModal();
-                         idEditar = data.idUsuario ?? data.IdUsuario ?? 0;
+                    idEditar = data.idUsuario ?? data.IdUsuario ?? 0;
                     $("#txtIdUsuario").val(data.idUsuario || 0);
                     $("#txtNumeroDocumentoIdentidad").val(data.numeroDocumentoIdentidad || "");
                     $("#txtNombre").val(data.nombre || "");
                     $("#txtApellido").val(data.apellido || "");
                     $("#txtCorreo").val(data.correo || "");
                     $("#txtMovil").val(data.movil || "");
-
-                    /* CAMBIO2 empieza */
-                    // Rol fijo
                     $("#cboRol").val("3");
-                    /* CAMBIO2 termina */
-                       $("#btnNuevaCitaPaciente").off("click").on("click", function () {
-                    if (!idEditar || idEditar === 0) {
-                        Swal.fire({ title: "Aviso", text: "Primero guarda el usuario antes de crear una cita.", icon: "info" });
-                        return;
-                    }
-                    window.location.href = `/Citas/NuevaCita?idUsuario=${idEditar}`;
-                });
+
+                    $("#btnNuevaCitaPaciente").off("click").on("click", function () {
+                        if (!idEditar || idEditar === 0) {
+                            Swal.fire({ title: "Aviso", text: "Primero guarda el usuario antes de crear una cita.", icon: "info" });
+                            return;
+                        }
+                        window.location.href = `/Citas/NuevaCita?idUsuario=${idEditar}`;
+                    });
                     $("#" + modal).modal("show");
                 });
 
-                // Guardar (Nuevo / Editar)
                 $("#btnGuardar").on("click", function () {
-
                     const idUsuario = parseInt($("#txtIdUsuario").val() || "0");
                     const numeroDocumentoIdentidad = ($("#txtNumeroDocumentoIdentidad").val() || "").trim();
                     const nombre = ($("#txtNombre").val() || "").trim();
@@ -334,19 +312,11 @@
                     const correo = ($("#txtCorreo").val() || "").trim();
                     const movil = ($("#txtMovil").val() || "").trim();
                     const clave = ($("#txtClave").val() || "").trim();
-
-                    /* CAMBIO2 empieza */
-                    // Rol fijo PACIENTE
                     const idRolUsuario = 3;
-                    $("#cboRol").val("3");
-                    /* CAMBIO2 termina */
-                     // Botón Nueva cita del paciente
-             
+
                     if (!numeroDocumentoIdentidad) { Swal.fire("Aviso", "Documento requerido.", "info"); return; }
                     if (!nombre) { Swal.fire("Aviso", "Nombre requerido.", "info"); return; }
                     if (!apellido) { Swal.fire("Aviso", "Apellido requerido.", "info"); return; }
-
-                    // En alta obligamos clave; en edición, si viene vacía no la cambiamos (si tu SP lo permite)
                     if (idUsuario === 0 && !clave) { Swal.fire("Aviso", "Clave requerida para alta.", "info"); return; }
 
                     const objeto = {
@@ -361,17 +331,11 @@
                     };
 
                     const esNuevo = (idUsuario === 0);
-
-                    /* CAMBIO2 empieza */
-                    // OJO: tu controlador es Guardar2 (POST) y Editar2 (PUT)
                     const urlAccion = esNuevo ? ("/" + controlador + "/Guardar2") : ("/" + controlador + "/Editar2");
                     const httpMethod = esNuevo ? "POST" : "PUT";
-                    /* CAMBIO2 termina */
 
                     fetch(urlAccion, {
-                        /* CAMBIO2 empieza */
                         method: httpMethod,
-                        /* CAMBIO2 termina */
                         headers: { "Content-Type": "application/json;charset=utf-8" },
                         body: JSON.stringify(objeto)
                     })
@@ -380,7 +344,6 @@
                         if (rJson.data === "") {
                             Swal.fire("OK", "Guardado correctamente.", "success");
                             $("#" + modal).modal("hide");
-                            // client-side: recargar datos
                             tablaData.ajax.reload(null, false);
                         } else {
                             Swal.fire("Aviso", rJson.data, "warning");
@@ -390,11 +353,18 @@
                         console.error(err);
                         Swal.fire("Error", "No se pudo guardar.", "error");
                     });
-
                 });
-
             });
+        })();
 
+        (function () {
+          "use strict";
+          window.openHelpVideo = function (fileName) {
+            const w = 900, h = 520;
+            const left = Math.max(0, (screen.width - w) / 2);
+            const top = Math.max(0, (screen.height - h) / 2);
+            window.open("/helps/" + encodeURIComponent(fileName), "helpVideo", `width=${w},height=${h},left=${left},top=${top},resizable=yes`);
+          };
         })();
     </script>
 }
