@@ -3,31 +3,59 @@
 }
 
 @section Styles {
-    <!-- DataTables (mismo paquete que usas en Mis Citas) -->
-    @*
-    <link href="/lib/datatables2/css/dataTables.dataTables.css" rel="stylesheet" />
-    <link href="/lib/select2/css/select2.min.css" rel="stylesheet" />
-    <link href="/lib/select2/css/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
-    *@
     @* cambio 99 comzo *@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css" />
-
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
-
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
     @* cambio 99 fin *@
+
+    <style>
+        
+        .acciones-container {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-circle {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 14px;
+            line-height: 32px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        #tbCita {
+            border-collapse: collapse !important;
+        }
+
+        @@media (max-width: 768px) {
+            #tbCita thead th:first-child,
+            #tbCita tbody td:first-child {
+                position: sticky;
+                left: 0;
+                background-color: #f8f9fa !important;
+                z-index: 5;
+                border-right: 2px solid #dee2e6;
+            }
+        }
        
-    .dataTables_processing {
-        background-color: #ffcccc !important; /* Fondo rojizo suave */
-        color: #d9534f !important;           /* Texto rojo fuerte */
-        font-weight: bold !important;
-        font-size: 1.2rem !important;
-        border: 2px solid #d9534f !important;
-        z-index: 9999 !important;
-        top: 50% !important;
-        height: auto !important;
-        padding: 20px !important;
-    }
+
+        .dataTables_processing {
+            background-color: #ffcccc !important;
+            color: #d9534f !important;
+            font-weight: bold !important;
+            font-size: 1.2rem !important;
+            border: 2px solid #d9534f !important;
+            z-index: 9999 !important;
+            top: 50% !important;
+            height: auto !important;
+            padding: 20px !important;
+        }
+    </style>
 }
 
 <h2 class="mt-4 mb-4 d-flex align-items-center">
@@ -38,10 +66,11 @@
             style="background-color:#ff8c00;color:#fff;border-color:#ff8c00;"
             onclick="openHelpVideo('Doctor_Horario.mp4')"
             data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-citas"
-            title="Ayuda: abre el vídeo de explicación (wwwroot/helps/Doctor_Horario.mp4).">
+            title="Ayuda">
         <i class="fa fa-circle-question me-1"></i> Ayuda
     </button>
 </h2>
+
 <div class="row">
     <div class="col-sm-12">
         <div class="card mb-4">
@@ -51,7 +80,6 @@
             </div>
 
             <div class="card-body">
-
                 <div class="row">
                     <div class="col-sm-12">
                         <div class="table-responsive">
@@ -61,13 +89,15 @@
                                    style="width:100%">
                                 <thead>
                                     <tr>
-                                        <th class="d-none">FechaCitaOrden</th>  <!-- 👈 NUEVO -->
+                                        
+                                        <th>Acciones</th>
+                                       
+                                        <th class="d-none">FechaCitaOrden</th>
                                         <th>Fecha</th>
                                         <th>Hora</th>
                                         <th>Especialidad</th>
                                         <th>Doctor</th>
                                         <th>Origen</th>
-                                        <th>Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody></tbody>
@@ -75,14 +105,11 @@
                         </div>
                     </div>
                 </div>
-
             </div>
-
         </div>
     </div>
 </div>
 
-<!-- MODAL DETALLE CITA (SOLO LECTURA) -->
 <div class="modal fade" id="mdData"
      data-bs-backdrop="static"
      data-bs-keyboard="false"
@@ -104,7 +131,6 @@
 
                 <input type="hidden" id="hdIdCita" />
 
-                <!-- Datos básicos -->
                 <div class="row g-2 mb-2">
                     <div class="col-12 col-md-4">
                         <label class="form-label">Fecha cita</label>
@@ -148,7 +174,6 @@
 
                 <hr />
 
-                <!-- Motivo + documento paciente -->
                 <div class="row g-2 mb-3">
                     <div class="col-12">
                         <label class="form-label">Motivo de la cita (paciente)</label>
@@ -183,7 +208,6 @@
 
                 <hr />
 
-                <!-- Información del doctor -->
                 <div class="alert alert-info" role="alert">
                     A continuación puede consultar las indicaciones y el documento registrados por el doctor para esta cita.
                 </div>
@@ -228,7 +252,6 @@
                         data-bs-dismiss="modal">
                     Cerrar
                 </button>
-                <!-- NO hay botón Guardar: es solo lectura -->
             </div>
 
         </div>
@@ -236,30 +259,18 @@
 </div>
 
 @section Scripts {
-    <!-- DataTables y select2 (como Mis Citas) -->
-    @*<script src="/lib/datatables2/js/moment.min.js"></script>
-    <script src="/lib/datatables2/js/dataTables.js"></script>
-    <script src="/lib/select2/js/select2.min.js"></script>
-    *@
-    @* cambio 99 comzo *@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
-
     <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    @* cambio 99 fin *@
+
     <script>
-
-               (function () {
+        (function () {
           "use strict";
-
-          // ========= HELP VIDEO (simple) =========
           window.openHelpVideo = function (fileName) {
             const w = 900, h = 520;
             const left = Math.max(0, (screen.width - w) / 2);
             const top = Math.max(0, (screen.height - h) / 2);
-
             const url = "/helps/" + encodeURIComponent(fileName);
 
             window.open(
@@ -269,10 +280,9 @@
             );
           };
         })();
-        // HistorialCitas en un SOLO Index.cshtml (DataTable + modal SOLO lectura)
 
         let tablaHistorial = null;
-        let filaActual = null; // cita seleccionada para ver docs
+        let filaActual = null;
 
         function safe(v) {
             return (v === undefined || v === null) ? "" : String(v);
@@ -280,7 +290,6 @@
 
         function normHora(v) {
             const s = safe(v).trim();
-            // "10:00:00" -> "10:00"
             return s.length >= 5 ? s.substring(0, 5) : s;
         }
 
@@ -296,7 +305,6 @@
 
         function base64ToBlob(base64, contentType) {
             if (!base64) return null;
-            // si viniera con prefijo data:*/*;base64,XXXXX lo limpiamos
             const clean = String(base64).includes(",") ? String(base64).split(",")[1] : String(base64);
             const byteChars = atob(clean);
             const byteNumbers = new Array(byteChars.length);
@@ -360,7 +368,6 @@
             $("#txtRazonCitaUsr").val(safe(cita?.razonCitaUsr ?? cita?.RazonCitaUsr));
             $("#txtIndicacionesDoctor").val(safe(cita?.indicaciones ?? cita?.Indicaciones));
 
-            // docs (vienen como string base64 desde byte[] serializado)
             const docPac = cita?.documentoCitaUsr ?? cita?.DocumentoCitaUsr;
             const docDoc = cita?.docIndicacionesDoctor ?? cita?.DocIndicacionesDoctor;
 
@@ -382,7 +389,6 @@
 
         function descargarDocPaciente() {
             if (!filaActual) return;
-
             const id = filaActual?.idCita ?? filaActual?.IdCita ?? 0;
             const base64 = filaActual?.documentoCitaUsr ?? filaActual?.DocumentoCitaUsr;
             const ct = filaActual?.contentType ?? filaActual?.ContentType ?? "application/octet-stream";
@@ -392,16 +398,12 @@
             const blob = base64ToBlob(base64, ct);
             if (!blob) return info("No se pudo preparar el documento del paciente.");
 
-            const ext = (ct && ct.includes("pdf")) ? ".pdf"
-                : (ct && ct.includes("png")) ? ".png"
-                    : (ct && (ct.includes("jpeg") || ct.includes("jpg"))) ? ".jpg"
-                        : "";
+            const ext = (ct && ct.includes("pdf")) ? ".pdf" : (ct && ct.includes("png")) ? ".png" : (ct && (ct.includes("jpeg") || ct.includes("jpg"))) ? ".jpg" : "";
             downloadBlob(blob, `documento_paciente_cita_${id}${ext}`);
         }
 
         function descargarDocDoctor() {
             if (!filaActual) return;
-
             const id = filaActual?.idCita ?? filaActual?.IdCita ?? 0;
             const base64 = filaActual?.docIndicacionesDoctor ?? filaActual?.DocIndicacionesDoctor;
             const ct = filaActual?.contentTypeDoctor ?? filaActual?.ContentTypeDoctor ?? "application/octet-stream";
@@ -411,24 +413,20 @@
             const blob = base64ToBlob(base64, ct);
             if (!blob) return info("No se pudo preparar el documento del doctor.");
 
-            const ext = (ct && ct.includes("pdf")) ? ".pdf"
-                : (ct && ct.includes("png")) ? ".png"
-                    : (ct && (ct.includes("jpeg") || ct.includes("jpg"))) ? ".jpg"
-                        : "";
+            const ext = (ct && ct.includes("pdf")) ? ".pdf" : (ct && ct.includes("png")) ? ".png" : (ct && (ct.includes("jpeg") || ct.includes("jpg"))) ? ".jpg" : "";
             downloadBlob(blob, `documento_doctor_cita_${id}${ext}`);
         }
 
         $(document).ready(function () {
 
-            // evita "cabeceras duplicadas" por doble init en hot reload / browser refresh
             if ($.fn.DataTable.isDataTable("#tbCita")) {
                 $("#tbCita").DataTable().clear().destroy();
             }
 
             tablaHistorial = $("#tbCita").DataTable({
-                 "processing": true, // <--- AÑADIR ESTA LÍNEA AQUÍ
-                 "serverSide": false, // O true según tu configuración actual
-                responsive: true,
+                "processing": true,
+                "serverSide": false,
+                responsive: false,
                 scrollX: true,
                 ajax: {
                     url: "/HistorialCitas/ListaHistorialCitas",
@@ -436,7 +434,22 @@
                     datatype: "json"
                 },
                 columns: [
-             
+                   
+                    {
+                        title: "Acciones",
+                        data: null,
+                        orderable: false,
+                        searchable: false,
+                        width: "80px",
+                        render: function () {
+                            return `<div class="acciones-container">
+                                        <button type="button" class="btn btn-primary btn-circle btn-detalle" title="Ver Detalle">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>`;
+                        }
+                    },
+                   
                     { data: "fechaCitaOrden", visible: false },
 
                     { title: "Fecha", data: "fechaCita", width: "150px" },
@@ -455,28 +468,14 @@
                         title: "Origen",
                         data: "origenCita",
                         render: function (d, type, row) { return safe(row?.origenCita ?? row?.OrigenCita); }
-                    },
-                    {
-                        title: "Acciones",
-                        data: null,
-                        orderable: false,
-                        searchable: false,
-                        width: "140px",
-                        render: function () {
-                            return `
-                                <button type="button" class="btn btn-sm btn-outline-primary btn-detalle">
-                                    Detalle
-                                </button>`;
-                        }
                     }
                 ],
-                order: [[0, "desc"], [2, "asc"]], // 0=FechaCitaOrden, 2=HoraCita (porque 1 es FechaCita)
+                order: [[1, "desc"], [3, "asc"]],
                 language: {
                     url: "https://cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json"
                 }
             });
 
-            // click detalle
             $("#tbCita tbody").on("click", ".btn-detalle", function () {
                 const fila = $(this).closest("tr");
                 const data = tablaHistorial.row(fila).data();
@@ -484,7 +483,6 @@
                 abrirModalDetalle(data);
             });
 
-            // botones docs
             $("#btnVerDocPaciente").on("click", function () { descargarDocPaciente(); });
             $("#btnVerDocDoctor").on("click", function () { descargarDocDoctor(); });
         });

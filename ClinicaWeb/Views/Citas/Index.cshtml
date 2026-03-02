@@ -4,10 +4,42 @@
 }
 
 @section Styles {
-       
- 
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
     <style>
+     
+        .acciones-container {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-circle {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 14px;
+            line-height: 32px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        #tbData {
+            border-collapse: collapse !important;
+        }
+
+        @@media (max-width: 768px) {
+            #tbData thead th:first-child,
+            #tbData tbody td:first-child {
+                position: sticky;
+                left: 0;
+                background-color: #f8f9fa !important;
+                z-index: 5;
+                border-right: 2px solid #dee2e6;
+            }
+        }
+       
+
         #ui-datepicker-div {
             z-index: 999999 !important;
         }
@@ -65,10 +97,10 @@
         .cita-modal-compact .modal-body {
             padding: .75rem;
         }
-        /* Estilo para el mensaje de carga de DataTable */
+
         .dataTables_processing {
-            background-color: #ffcccc !important; /* Fondo rojizo suave */
-            color: #d9534f !important; /* Texto rojo fuerte */
+            background-color: #ffcccc !important;
+            color: #d9534f !important;
             font-weight: bold !important;
             font-size: 1.2rem !important;
             border: 2px solid #d9534f !important;
@@ -78,7 +110,6 @@
             padding: 20px !important;
         }
     </style>
-        /* final cambio */
 }
 
 <h2 class="mt-4 mb-4 d-flex align-items-center">
@@ -102,11 +133,13 @@
                     <table class="display table table-striped table-bordered table-hover nowrap" id="tbData" cellspacing="0" style="width:100%">
                         <thead>
                             <tr>
+                            
+                                <th>Acciones</th>
+                               
                                 <th>Fecha Cita</th>
                                 <th>Hora Cita</th>
                                 <th>Especialidad</th>
                                 <th>Doctor</th>
-                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -116,6 +149,7 @@
         </div>
     </div>
 </div>
+
 <div class="modal fade" id="mdData" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="mdDataLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
         <div class="modal-content cita-modal-compact">
@@ -127,7 +161,6 @@
                 <div class="row g-2 mb-2">
                     <div class="col-12 col-md-4"><label class="form-label">Fecha cita</label><input type="text" class="form-control" id="txtFechaCitaResumen" disabled /></div>
                     <div class="col-12 col-md-4"><label class="form-label">Hora cita</label><input type="text" class="form-control" id="txtHoraCitaResumen" disabled /></div>
-                    
                     <div class="col-12 col-md-4"><label class="form-label">Origen</label><input type="text" class="form-control" id="txtOrigenCita" disabled /></div>
                 </div>
                 <hr />
@@ -151,6 +184,7 @@
         </div>
     </div>
 </div>
+
 <div class="modal fade" id="mdCancelarPaciente" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content shadow-lg">
@@ -162,8 +196,7 @@
                 <input type="hidden" id="cancelarIdCitaPac" value="0">
                 <div class="mb-3">
                     <label class="form-label fw-bold text-danger">Motivo de la cancelación (Obligatorio):</label>
-                    <textarea id="cancelarMotivoPac" class="form-control border-danger" rows="3"
-                              placeholder="Indique brevemente el motivo..."></textarea>
+                    <textarea id="cancelarMotivoPac" class="form-control border-danger" rows="3" placeholder="Indique brevemente el motivo..."></textarea>
                 </div>
                 <div class="alert alert-warning small py-2">
                     <i class="bi bi-exclamation-triangle me-1"></i>
@@ -172,13 +205,12 @@
             </div>
             <div class="modal-footer bg-light border-0">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" id="btnConfirmarCancelPac" class="btn btn-danger px-4">
-                    Confirmar Cancelación
-                </button>
+                <button type="button" id="btnConfirmarCancelPac" class="btn btn-danger px-4">Confirmar Cancelación</button>
             </div>
         </div>
     </div>
 </div>
+
 <div class="modal fade" id="mdReproPaciente" tabindex="-1" aria-hidden="true" data-bs-focus="false">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content shadow-lg">
@@ -188,65 +220,46 @@
             </div>
             <div class="modal-body">
                 <input type="hidden" id="reproIdCita" value="0">
-
                 <div class="row g-3 mb-3">
                     <div class="col-12">
                         <label class="form-label fw-bold text-success">1. Nueva Fecha</label>
                         <div class="input-group">
                             <span class="input-group-text bg-white"><i class="bi bi-calendar-event text-success"></i></span>
-                            <input type="text" id="reproFechaPac" class="form-control" readonly
-                                   style="background:#fff; cursor:pointer;" placeholder="Elegir día...">
+                            <input type="text" id="reproFechaPac" class="form-control" readonly style="background:#fff; cursor:pointer;" placeholder="Elegir día...">
                         </div>
                     </div>
                     <input type="text" id="reproHoraPac" style="display:none;" value="">
                 </div>
-
                 <div class="mb-3">
                     <label class="form-label fw-bold text-success">2. Horarios Disponibles</label>
                     <div class="border rounded p-3 bg-light">
                         <div class="mb-2">
-                            <small class="text-muted fw-bold text-uppercase" style="font-size: 0.75rem;">
-                                <i class="bi bi-brightness-high me-1"></i>Turno Mañana
-                            </small>
-                            <div id="containerSlotsAM" class="d-flex flex-wrap gap-2 mt-1" style="min-height:30px;">
-                                <small class="text-muted italic">Seleccione una fecha...</small>
-                            </div>
+                            <small class="text-muted fw-bold text-uppercase" style="font-size: 0.75rem;"><i class="bi bi-brightness-high me-1"></i>Turno Mañana</small>
+                            <div id="containerSlotsAM" class="d-flex flex-wrap gap-2 mt-1" style="min-height:30px;"><small class="text-muted italic">Seleccione una fecha...</small></div>
                         </div>
-
                         <hr class="my-2">
-
                         <div>
-                            <small class="text-muted fw-bold text-uppercase" style="font-size: 0.75rem;">
-                                <i class="bi bi-moon-stars me-1"></i>Turno Tarde
-                            </small>
-                            <div id="containerSlotsPM" class="d-flex flex-wrap gap-2 mt-1" style="min-height:30px;">
-                            </div>
+                            <small class="text-muted fw-bold text-uppercase" style="font-size: 0.75rem;"><i class="bi bi-moon-stars me-1"></i>Turno Tarde</small>
+                            <div id="containerSlotsPM" class="d-flex flex-wrap gap-2 mt-1" style="min-height:30px;"></div>
                         </div>
                     </div>
                 </div>
-
                 <div class="mb-3">
                     <label class="form-label fw-bold text-success">3. Motivo del cambio (Obligatorio)</label>
-                    <textarea id="reproMotivoPac" class="form-control" rows="2"
-                              placeholder="Escriba aquí por qué cambia la cita..."></textarea>
+                    <textarea id="reproMotivoPac" class="form-control" rows="2" placeholder="Escriba aquí por qué cambia la cita..."></textarea>
                 </div>
             </div>
-
             <div class="modal-footer bg-light border-0">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" id="btnConfirmarReproPac" class="btn btn-success px-4 shadow-sm">
-                    <i class="bi bi-check-circle me-1"></i>Confirmar Cambio
-                </button>
+                <button type="button" id="btnConfirmarReproPac" class="btn btn-success px-4 shadow-sm"><i class="bi bi-check-circle me-1"></i>Confirmar Cambio</button>
             </div>
         </div>
     </div>
 </div>
+
 @section Scripts {
-   
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
-
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/i18n/datepicker-es.min.js"></script>
     <script>
         (function () {
@@ -266,73 +279,72 @@
         document.addEventListener("DOMContentLoaded", function () {
             modalReproObj = new bootstrap.Modal(document.getElementById('mdReproPaciente'));
             $.datepicker.setDefaults($.datepicker.regional['es']);
-        $("#reproFechaPac").datepicker({
-            dateFormat: "dd-mm-yy", // Devuelve dd-mm-yyyy para que sea común en tu app
-            minDate: 0,
-            beforeShow: function(input, inst) {
-                // Esto es para que el calendario salga POR ENCIMA del modal
-                setTimeout(() => { $('#ui-datepicker-div').css('z-index', 999999); }, 0);
-            },
-            onSelect: function (dateText) {
-                // Limpiamos la hora vieja al cambiar de fecha
-                $("#reproHoraPac").val("");
-                // Llamamos a la carga de slots
-                fetchSlots(dateText);
-            }
-        });
-
-            tablaData = $('#tbData').DataTable({
-                 "processing": true, // <--- AÑADIR ESTA LÍNEA AQUÍ
-                 "serverSide": false, // O true según tu configuración actual
-                ajax: { url: `/${controlador}/ListaCitasPendiente`, type: "GET", datatype: "json" },
-                columns: [
-                    { data: "fechaCita" }, { data: "horaCita" },
-                    { data: "especialidad", render: (d) => d ? d.nombre : "" },
-                    { data: "doctor", render: (d) => d ? `${d.nombres} ${d.apellidos}`.trim() : "" },
-                    {
-                        data: null, orderable: false,
-                        render: function (data, type, row) {
-                            return `<div class="dt-actions">
-                                <button class="btn btn-sm btn-outline-primary btn-detalle">Indicaciones</button>
-                                <button class="btn btn-sm btn-repro-verde" onclick="abrirModalRepro(${row.idCita})">Reprogramar</button>
-                                <button class="btn btn-sm btn-outline-danger btn-cancelar">Cancelar</button>
-                            </div>`;
-                        }
-                    }
-                ]
+            $("#reproFechaPac").datepicker({
+                dateFormat: "dd-mm-yy",
+                minDate: 0,
+                beforeShow: function(input, inst) {
+                    setTimeout(() => { $('#ui-datepicker-div').css('z-index', 999999); }, 0);
+                },
+                onSelect: function (dateText) {
+                    $("#reproHoraPac").val("");
+                    fetchSlots(dateText);
+                }
             });
 
-            // comienzo cambio: DETECTOR DE CLICS DINÁMICO
+            tablaData = $('#tbData').DataTable({
+                "processing": true,
+                "serverSide": false,
+                ajax: { url: `/${controlador}/ListaCitasPendiente`, type: "GET", datatype: "json" },
+                columns: [
+                  
+                    {
+                        "data": null,
+                        "render": function (data, type, row) {
+                            const urlInd = row.eventInboxUrl ? `'${row.eventInboxUrl}'` : 'null';
+                            return `<div class="acciones-container">
+                                        <button class="btn btn-info btn-circle text-white btn-detalle" title="Indicaciones"><i class="fas fa-info-circle"></i></button>
+                                        <button class="btn btn-warning btn-circle text-white btn-repro-pac" onclick="abrirModalRepro(${row.idCita})" title="Reprogramar"><i class="fas fa-calendar-alt"></i></button>
+                                        <button class="btn btn-danger btn-circle btn-cancelar" title="Cancelar"><i class="fas fa-trash"></i></button>
+                                    </div>`;
+                        },
+                        "orderable": false,
+                        "width": "115px"
+                    },
+                   
+                    { data: "fechaCita" },
+                    { data: "horaCita" },
+                    { data: "especialidad", render: (d) => d ? d.nombre : "" },
+                    { data: "doctor", render: (d) => d ? `${d.nombres} ${d.apellidos}`.trim() : "" }
+                ],
+                "scrollX": true,
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json"
+                }
+            });
+
             $(document).on("click", ".slot-btn-pac", function () {
                 const hora = $(this).data("hora");
                 $(".slot-btn-pac").removeClass("active-slot");
                 $(this).addClass("active-slot");
                 $("#reproHoraPac").val(hora);
             });
-            // final cambio
         });
-                // Función para limpiar y cargar turnos
+
         async function fetchSlots(fecha) {
             const idCita = $("#reproIdCita").val();
-
-            // Limpiamos el valor oculto para que no se quede una hora de una fecha anterior
             $("#reproHoraPac").val("");
             $("#containerSlotsAM, #containerSlotsPM").html('<div class="spinner-border spinner-border-sm text-success"></div>');
-
             try {
                 const r = await fetch(`/Citas/GetSlotsLibres?idCitaVieja=${idCita}&fecha=${encodeURIComponent(fecha)}`);
                 const data = await r.json();
                 let am = "", pm = "";
-
                 if (!data || data.length === 0) {
                     $("#containerSlotsAM").html('<small class="text-danger">Sin turnos disponibles</small>');
                     return;
                 }
-
                 data.forEach(s => {
                     const h = s.turnoHora || s.TurnoHora || "";
                     if (h) {
-                        // Importante: Usamos 'llenarHoraFinal' para que sea compatible con tu lógica anterior
                         const btn = `<div class="slot-btn-pac" onclick="llenarHoraFinal('${h}', this)">${h}</div>`;
                         const horaNum = parseInt(h.split(':')[0]);
                         if (horaNum < 14) am += btn; else pm += btn;
@@ -344,120 +356,44 @@
                 $("#containerSlotsAM").html('<span class="text-danger">Error al cargar horarios</span>');
             }
         }
-                             function llenarHoraFinal(hora, elemento) {
-            // Marcamos el botón verde
+
+        function llenarHoraFinal(hora, elemento) {
             $(".slot-btn-pac").removeClass("active-slot bg-success text-white");
             $(elemento).addClass("active-slot bg-success text-white");
-
-            // ESCRIBIMOS DIRECTO AL CAMPO USANDO JS NATIVO
             document.getElementById("reproHoraPac").value = hora;
-
-            console.log("-> HORA GUARDADA EN EL DOM: " + document.getElementById("reproHoraPac").value);
-        }
-                /* Nueva función independiente para no tocar la anterior */
-        async function fetchSlotsPaciente(fechaSeleccionada) {
-            // 1. Forzamos la búsqueda en el ID que usa el modal del paciente
-            const idCita = $("#reproIdCita").val() || $("#reproIdCitaPac").val();
-
-            console.log("Intentando buscar slots para Cita ID:", idCita, "en fecha:", fechaSeleccionada);
-
-            if (!idCita || idCita == "0") {
-                alert("Error: No se pudo detectar el ID de la cita. Cierre el modal y vuelva a intentarlo.");
-                return;
-            }
-
-            // Limpiamos y ponemos el spinner
-            $("#containerSlotsAM, #containerSlotsPM").html('<div class="spinner-border spinner-border-sm text-success"></div>');
-
-            try {
-                // Llamada al controlador con el nombre de parámetro idCitaVieja
-                const resp = await fetch(`/Citas/GetSlotsLibres?idCitaVieja=${idCita}&fecha=${encodeURIComponent(fechaSeleccionada)}`);
-                const slots = await resp.json();
-
-                let htmlAM = "", htmlPM = "";
-
-                if (slots.length === 0) {
-                    $("#containerSlotsAM").html('<small class="text-muted">Sin turnos disponibles</small>');
-                    $("#containerSlotsPM").html("");
-                    return;
-                }
-
-                slots.forEach(s => {
-                    const hora = s.turnoHora || s.TurnoHora || "";
-                    if (hora) {
-                        // Creamos el botón con la clase que ya tienes configurada
-                        const btn = `<div class="slot-btn-pac" onclick="seleccionarHoraNueva('${hora}', this)">${hora}</div>`;
-
-                        // Separación simple: antes de las 14h es AM
-                        const hNum = parseInt(hora.split(':')[0]);
-                        if (hNum < 14) htmlAM += btn; else htmlPM += btn;
-                    }
-                });
-
-                $("#containerSlotsAM").html(htmlAM || '<small class="text-muted">Sin turnos</small>');
-                $("#containerSlotsPM").html(htmlPM || '<small class="text-muted">Sin turnos</small>');
-
-            } catch (error) {
-                console.error("Error en fetchSlotsPaciente:", error);
-                $("#containerSlotsAM").html('<span class="text-danger">Error de conexión</span>');
-            }
         }
 
-        // Función auxiliar para que el clic funcione
         function seleccionarHoraNueva(hora, elemento) {
             $(".slot-btn-pac").removeClass("selected active-slot");
             $(elemento).addClass("selected active-slot");
-            $("#reproHoraPac").val(hora); // Ponemos la hora en el input invisible o visible
-            console.log("Hora seleccionada:", hora);
+            $("#reproHoraPac").val(hora);
         }
-        async function abrirModalRepro(idCita) {
+
+        window.abrirModalRepro = function(idCita) {
             $("#reproIdCita").val(idCita);
             $("#reproFechaPac, #reproHoraPac, #reproMotivoPac").val("");
             $("#containerSlotsAM, #containerSlotsPM").html('<small class="text-muted">Elija una fecha primero...</small>');
             modalReproObj.show();
-        }
-                          $("#btnConfirmarReproPac").on("click", async function () {
-            // 1. Capturamos la fecha y el motivo normalmente
+        };
+
+        $("#btnConfirmarReproPac").on("click", async function () {
             const f = document.getElementById("reproFechaPac").value;
             const m = document.getElementById("reproMotivoPac").value.trim();
             const idCita = document.getElementById("reproIdCita").value;
-
-            // 2. SOLUCIÓN RADICAL PARA LA HORA:
-            // Buscamos el texto del botón que tenga la clase 'active-slot'
             let h = "";
             const botonActivo = document.querySelector(".slot-btn-pac.active-slot");
-            if (botonActivo) {
-                h = botonActivo.innerText.trim();
-            }
-
-            // 3. LOG DE VERIFICACIÓN FINAL
-            console.log("ENVIANDO AL SERVER -> Fecha:", f, "| Hora detectada:", h, "| Motivo:", m, "| ID:", idCita);
-
-            // 4. VALIDACIÓN
-            if (!f || f === "" || !h || h === "" || !m || m === "") {
-                Swal.fire({
-                    icon: "warning",
-                    title: "Atención",
-                    text: "Debe completar la fecha, seleccionar un horario (botón verde) e indicar el motivo."
-                });
+            if (botonActivo) h = botonActivo.innerText.trim();
+            if (!f || !h || !m) {
+                Swal.fire({ icon: "warning", title: "Atención", text: "Debe completar la fecha, seleccionar un horario (botón verde) e indicar el motivo." });
                 return;
             }
-
-            // Si pasa la validación, procesamos el envío
             Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
             try {
                 const res = await fetch("/Citas/ReprogramarCita", {
                     method: "POST",
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        idCitaVieja: parseInt(idCita),
-                        nuevaFecha: f,
-                        nuevaHora: h,
-                        motivo: m
-                    })
+                    body: JSON.stringify({ idCitaVieja: parseInt(idCita), nuevaFecha: f, nuevaHora: h, motivo: m })
                 });
-
                 const result = await res.json();
                 if (result.ok) {
                     Swal.fire("¡Éxito!", "Cita reprogramada correctamente.", "success").then(() => location.reload());
@@ -468,21 +404,16 @@
                 Swal.fire("Error", "Fallo de conexión con el servidor.", "error");
             }
         });
-        // ==========================================
-        // LÓGICA DE BASE64 Y DOCUMENTOS (INTEGRA)
-        // ==========================================
+
         $("#tbData tbody").on("click", ".btn-detalle", function () {
             const data = tablaData.row($(this).closest("tr")).data();
             idEditar = data.idCita;
             limpiarModalPaciente();
-
             $("#txtFechaCitaResumen").val(data.fechaCita);
             $("#txtHoraCitaResumen").val(data.horaCita);
-            $("#txtEspecialidad").val(data.especialidad ? data.especialidad.nombre : "");
-            $("#txtDoctor").val((data.doctor.nombres + " " + data.doctor.apellidos).trim());
+            $("#txtOrigenCita").val(data.origenCita || "N/A");
             $("#txtRazonCitaUsr").val(data.razonCitaUsr);
             $("#txtIndicacionesDoctor").val(data.indicaciones);
-
             if (data.documentoCitaUsr) {
                 docPacienteBase64 = data.documentoCitaUsr;
                 docPacienteContentType = data.contentType || "application/octet-stream";
@@ -504,15 +435,10 @@
         $("#btnGuardarPaciente").on("click", async function () {
             const inputFile = document.getElementById("fileDocPaciente");
             const file = inputFile.files[0];
-            let docB64 = null, cType = null;
             if (file) {
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
-                reader.onload = () => {
-                    docB64 = reader.result.split(',')[1];
-                    cType = file.type;
-                    enviarDatos(docB64, cType);
-                };
+                reader.onload = () => enviarDatos(reader.result.split(',')[1], file.type);
             } else { enviarDatos(null, null); }
         });
 
@@ -531,8 +457,6 @@
             $("#fileDocPaciente").val("");
         }
 
-
-        // 1. Reemplazar el detector de clics antiguo
         $("#tbData tbody").on("click", ".btn-cancelar", function () {
             const data = tablaData.row($(this).closest("tr")).data();
             $("#cancelarIdCitaPac").val(data.idCita);
@@ -540,35 +464,25 @@
             new bootstrap.Modal(document.getElementById('mdCancelarPaciente')).show();
         });
 
-        // 2. Evento para confirmar la cancelación
         $("#btnConfirmarCancelPac").on("click", async function () {
             const idCita = $("#cancelarIdCitaPac").val();
             const motivo = $("#cancelarMotivoPac").val().trim();
-
             if (!motivo) {
                 Swal.fire("Atención", "Debe indicar un motivo para cancelar.", "warning");
                 return;
             }
-
             Swal.fire({ title: 'Procesando...', didOpen: () => Swal.showLoading() });
-
             try {
-                // Usamos el mismo endpoint que el doctor para asegurar la lógica de orquestación
-                const response = await fetch(`/Citas/CancelarCitaAgenda?idCita=${idCita}&motivo=${encodeURIComponent(motivo)}`, {
-                    method: "POST"
-                });
+                const response = await fetch(`/Citas/CancelarCitaAgenda?idCita=${idCita}&motivo=${encodeURIComponent(motivo)}`, { method: "POST" });
                 const result = await response.json();
-
                 if (result.ok) {
-                    Swal.fire("", result.mensaje || "La cancelación de la cita se ha realizado correctamente.", "success");
-                  
+                    Swal.fire("", result.mensaje || "La cancelación de la cita se ha realizado correctamente.", "success").then(() => tablaData.ajax.reload());
                 }
             } catch (error) {
                 Swal.fire("Error", "Fallo de comunicación con el servidor.", "error");
             }
         });
 
-        // Reutilizamos la lógica de polling para actualizar la tabla tras el éxito
         function iniciarPollingCancelacion(idAccion) {
             let intentos = 0;
             const intervalo = setInterval(async () => {
@@ -577,7 +491,6 @@
                     const check = await fetch(`/Citas/ConsultarEstadoAccion?id=${idAccion}`);
                     const res = await check.json();
                     const estado = (res.status || "").trim().toUpperCase();
-
                     if (estado === 'S') {
                         clearInterval(intervalo);
                         Swal.fire("Éxito", "Cita cancelada correctamente.", "success").then(() => tablaData.ajax.reload());
@@ -588,6 +501,5 @@
                 } catch (err) { console.error(err); }
             }, 3000);
         }
-
     </script>
 }

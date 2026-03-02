@@ -636,7 +636,8 @@ public async Task<(List<Cita> Lista, int TotalRegistros)> ListaCitasAsignadasSer
             const string sql = @"
 SELECT iddoctor, email, telefono, nombreyapellido, apikey,
        cal_username, cal_event_type_id, cal_public_url,
-       event_inbox, event_inbox_url, is_active, notes
+       event_inbox, event_inbox_url, is_active, notes,
+        cal_event_name , cal_slot_interval 
 FROM public.doctoresapikeycalcom
 WHERE iddoctor = @iddoctor
 LIMIT 1;
@@ -660,7 +661,11 @@ LIMIT 1;
                 EventInbox = rd.IsDBNull(8) ? "DEFAULT" : rd.GetString(8),
                 EventInboxUrl = rd.IsDBNull(9) ? null : rd.GetString(9),
                 IsActive = !rd.IsDBNull(10) && rd.GetBoolean(10),
-                Notes = rd.IsDBNull(11) ? null : rd.GetString(11)
+                Notes = rd.IsDBNull(11) ? null : rd.GetString(11),
+                CalEventName = rd.IsDBNull(12) ? null : rd.GetString(12),
+                CalSlotInterval = rd.IsDBNull(13) ? null : rd.GetInt32(13)
+
+
             };
         }
 
@@ -675,11 +680,11 @@ LIMIT 1;
 INSERT INTO public.doctoresapikeycalcom
 (iddoctor, email, telefono, nombreyapellido, apikey,
  cal_username, cal_event_type_id, cal_public_url,
- event_inbox, event_inbox_url, is_active, notes, created_at, updated_at)
+ event_inbox, event_inbox_url, is_active, notes, cal_event_name , cal_slot_interval , created_at, updated_at)
 VALUES
 (@iddoctor, @email, @telefono, @nombreyapellido, @apikey,
  @cal_username, @cal_event_type_id, @cal_public_url,
- @event_inbox, @event_inbox_url, @is_active, @notes, now(), now())
+ @event_inbox, @event_inbox_url, @is_active, @notes, @cal_event_name ,@cal_slot_interval , now(), now())
 ON CONFLICT (iddoctor)
 DO UPDATE SET
  email = EXCLUDED.email,
@@ -693,6 +698,9 @@ DO UPDATE SET
  event_inbox_url = EXCLUDED.event_inbox_url,
  is_active = EXCLUDED.is_active,
  notes = EXCLUDED.notes,
+cal_event_name = EXCLUDED.cal_event_name,
+cal_slot_interval = EXCLUDED.cal_slot_interval,
+
  updated_at = now();
 ";
                 await using var cmd = new NpgsqlCommand(sql, cn);
@@ -709,6 +717,8 @@ DO UPDATE SET
                 cmd.Parameters.AddWithValue("@event_inbox_url", (object?)cfg.EventInboxUrl ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@is_active", cfg.IsActive);
                 cmd.Parameters.AddWithValue("@notes", (object?)cfg.Notes ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@cal_event_name", (object?)cfg.CalEventName ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@cal_slot_interval", (object?)cfg.CalSlotInterval ?? DBNull.Value);
 
                 await cmd.ExecuteNonQueryAsync();
                 return "";

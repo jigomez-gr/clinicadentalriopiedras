@@ -196,9 +196,9 @@
                 <h5 class="modal-title">Config Cal.com (doctor)</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-
+            
             <div class="modal-body">
-           
+
                 <div class="row g-2">
                     <div class="col-12 col-md-6">
                         <label class="form-label">API Key</label>
@@ -220,6 +220,24 @@
                         <input type="text" class="form-control" id="txtCalPublicUrl" autocomplete="off">
                     </div>
 
+                    
+                    <div class="col-12 col-md-8">
+                        <label class="form-label">Nombre del Evento (Cal)</label>
+                        <input type="text" class="form-control" id="txtCalEventName" placeholder="Se cargará desde la API">
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Intervalo (min)</label>
+                        <input type="number" class="form-control" id="txtCalSlotInterval" placeholder="30">
+                    </div>
+
+                    <div class="col-12 mt-2 d-none" id="divApiInfo">
+                        <div class="alert alert-info py-2 mb-0">
+                            <h6 class="alert-heading mb-1" style="font-size:0.9rem;"><i class="fa-solid fa-circle-info me-2"></i>Info detectada en API:</h6>
+                            <div id="apiDetails" style="font-size: 0.8rem;"></div>
+                        </div>
+                    </div>
+                    
                     <div class="col-12 col-md-6">
                         <label class="form-label">Email (Cal)</label>
                         <input type="text" class="form-control" id="txtCalEmail" autocomplete="off">
@@ -261,10 +279,16 @@
             </div>
 
             <div class="modal-footer">
+              
+                <button type="button" class="btn btn-repro-verde" id="btnConsultarApi">
+                    <i class="fa-solid fa-magnifying-glass me-1"></i> Consultar API
+                </button>
+               
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                 <button type="button" class="btn btn-primary" id="btnGuardarCalcom">Guardar Cal</button>
             </div>
 
+            
         </div>
     </div>
 </div>
@@ -412,97 +436,154 @@
             // ============================
             // CAL.COM (con tus endpoints)
             // ============================
-            
-            function limpiarCalcomModal() {
-                $("#txtCalApiKey").val("");
-                $("#txtCalUsername").val("");
-                $("#txtCalEventTypeId").val("");
-                $("#txtCalPublicUrl").val("");
-                $("#txtCalEmail").val("");
-                $("#txtCalTelefono").val("");
-                $("#txtCalNombreYApellido").val("");
-                $("#txtCalEventInbox").val("DEFAULT");
-                $("#txtCalEventInboxUrl").val("");
-                $("#txtCalNotes").val("");
-                $("#chkCalIsActive").prop("checked", true);
+
+          /* empieza  CALCOM */
+        function limpiarCalcomModal() {
+            $("#txtCalApiKey").val("");
+            $("#txtCalUsername").val("");
+            $("#txtCalEventTypeId").val("");
+            $("#txtCalPublicUrl").val("");
+            $("#txtCalEmail").val("");
+            $("#txtCalTelefono").val("");
+            $("#txtCalNombreYApellido").val("");
+            $("#txtCalEventInbox").val("DEFAULT");
+            $("#txtCalEventInboxUrl").val("");
+            $("#txtCalNotes").val("");
+            $("#chkCalIsActive").prop("checked", true);
+
+            // Nuevos campos correlacionados con la tabla
+            $("#txtCalEventName").val("");
+            $("#txtCalSlotInterval").val(30);
+
+            // Limpieza de panel de info API
+            $("#divApiInfo").addClass("d-none");
+            $("#apiDetails").html("");
+        }
+
+        async function cargarCalcom(idDoctor) {
+            limpiarCalcomModal();
+            if (!idDoctor) return;
+
+            const r = await fetch(`/Doctor/ObtenerCalcom?idDoctor=${encodeURIComponent(idDoctor)}`, {
+                headers: { "Accept": "application/json" }
+            });
+            const j = await r.json().catch(() => null);
+            if (!r.ok || !j) return;
+
+            const d = j.data || {};
+            $("#txtCalApiKey").val((d.apiKey || "").trim());
+            $("#txtCalUsername").val((d.calUsername || "").trim());
+            $("#txtCalEventTypeId").val(d.calEventTypeId ?? "");
+            $("#txtCalPublicUrl").val((d.calPublicUrl || "").trim());
+            $("#txtCalEmail").val((d.email || "").trim());
+            $("#txtCalTelefono").val((d.telefono || "").trim());
+            $("#txtCalNombreYApellido").val((d.nombreYApellido || "").trim());
+            $("#txtCalEventInbox").val((d.eventInbox || "DEFAULT").trim());
+            $("#txtCalEventInboxUrl").val((d.eventInboxUrl || "").trim());
+            $("#txtCalNotes").val((d.notes || "").trim());
+            $("#chkCalIsActive").prop("checked", (d.isActive !== false));
+
+            // Carga de los nuevos campos
+            $("#txtCalEventName").val((d.calEventName || "").trim());
+            $("#txtCalSlotInterval").val(d.calSlotInterval ?? 30);
+        }
+
+        async function guardarCalcom(idDoctor) {
+            if (!idDoctor) {
+                Swal.fire("Error", "No hay idDoctor para guardar.", "error");
+                return;
             }
 
-            async function cargarCalcom(idDoctor) {
-                limpiarCalcomModal();
-                if (!idDoctor) return;
+            const payload = {
+                idDoctor: idDoctor,
+                apiKey: ($("#txtCalApiKey").val() || "").trim(),
+                calUsername: ($("#txtCalUsername").val() || "").trim(),
+                calEventTypeId: parseInt($("#txtCalEventTypeId").val() || "0", 10) || null,
+                calPublicUrl: ($("#txtCalPublicUrl").val() || "").trim(),
+                email: ($("#txtCalEmail").val() || "").trim(),
+                telefono: ($("#txtCalTelefono").val() || "").trim(),
+                nombreYApellido: ($("#txtCalNombreYApellido").val() || "").trim(),
+                eventInbox: ($("#txtCalEventInbox").val() || "DEFAULT").trim(),
+                eventInboxUrl: ($("#txtCalEventInboxUrl").val() || "").trim(),
+                isActive: $("#chkCalIsActive").is(":checked"),
+                notes: ($("#txtCalNotes").val() || "").trim(),
 
-                const r = await fetch(`/Doctor/ObtenerCalcom?idDoctor=${encodeURIComponent(idDoctor)}`, {
-                    headers: { "Accept": "application/json" }
+                // Nuevos campos para el guardado
+                calEventName: ($("#txtCalEventName").val() || "").trim(),
+                calSlotInterval: parseInt($("#txtCalSlotInterval").val() || "30", 10)
+            };
+
+            const r = await fetch("/Doctor/GuardarCalcom", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (!r.ok) {
+                Swal.fire("Error", "HTTP " + r.status, "error");
+                return;
+            }
+
+            Swal.fire("OK", "Configuración de Cal.com guardada correctamente.", "success");
+            bootstrap.Modal.getInstance(document.getElementById("mdCalcom")).hide();
+        }
+                async function consultarInformacionApi() {
+            const apiKey = ($("#txtCalApiKey").val() || "").trim();
+            if (!apiKey) {
+                Swal.fire("Aviso", "Se requiere la API Key.", "warning");
+                return;
+            }
+
+                   $("#btnConsultarApi").prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> Consultando...');
+
+        try {
+            const apiKey = ($("#txtCalApiKey").val() || "").trim();
+            // Importante: pasar también el apiBase si lo tienes en un campo, o dejar que el controlador use el default
+            const r = await fetch(`/Doctor/GetDetallesApiCal?apiKey=${encodeURIComponent(apiKey)}`);
+            const j = await r.json();
+
+            if (r.ok && j.data && Array.isArray(j.data)) {
+                const events = j.data;
+                $("#divApiInfo").removeClass("d-none");
+
+                let html = '<ul class="mb-0 list-unstyled">';
+                // Convertimos a número para comparar con seguridad
+                const currentId = parseInt($("#txtCalEventTypeId").val(), 10);
+                let encontrado = false;
+
+                events.forEach(e => {
+                    const isSelected = (parseInt(e.id, 10) === currentId);
+
+                    html += `<li class="mb-1 p-1 ${isSelected ? 'bg-light border-start border-success border-3' : ''}">
+                                ${isSelected ? '<strong>' : ''}
+                                ID: ${e.id} - ${e.title} (${e.length} min)
+                                ${isSelected ? ' [ACTUAL]</strong>' : ''}
+                             </li>`;
+
+                    if (isSelected) {
+                        encontrado = true;
+                        $("#txtCalEventName").val(e.title);
+                        $("#txtCalSlotInterval").val(e.length);
+                    }
                 });
-                const j = await r.json().catch(() => null);
-                if (!r.ok || !j) return;
 
-                const d = j.data || {};
+                html += '</ul>';
+                $("#apiDetails").html(html);
 
-                // OJO: tu modelo C# DoctorApiKeyCalcom se serializa a camelCase
-                $("#txtCalApiKey").val((d.apiKey || "").trim());
-                $("#txtCalUsername").val((d.calUsername || "").trim());
-                $("#txtCalEventTypeId").val(d.calEventTypeId ?? "");
-                $("#txtCalPublicUrl").val((d.calPublicUrl || "").trim());
-                $("#txtCalEmail").val((d.email || "").trim());
-                $("#txtCalTelefono").val((d.telefono || "").trim());
-                $("#txtCalNombreYApellido").val((d.nombreYApellido || "").trim());
-                $("#txtCalEventInbox").val((d.eventInbox || "DEFAULT").trim());
-                $("#txtCalEventInboxUrl").val((d.eventInboxUrl || "").trim());
-                $("#txtCalNotes").val((d.notes || "").trim());
-                $("#chkCalIsActive").prop("checked", (d.isActive !== false));
+                if (!encontrado && currentId) {
+                    Swal.fire("Aviso", "Conectado a Cal.com, pero el ID " + currentId + " no existe en esta cuenta. Revisa la lista azul.", "info");
+                }
+            } else {
+                const errorMsg = j.msg || "No se pudo obtener la lista de eventos.";
+                Swal.fire("Error", errorMsg, "error");
             }
-
-            async function guardarCalcom(idDoctor) {
-                if (!idDoctor) {
-                    Swal.fire("Aviso", "Primero pulsa Editar sobre un doctor (para tener IdDoctor).", "info");
-                    return;
-                }
-
-                const payload = {
-                    // camelCase para que el binder case-insensitive lo coja bien
-                    idDoctor: idDoctor,
-                    apiKey: ($("#txtCalApiKey").val() || "").trim(),
-                    calUsername: ($("#txtCalUsername").val() || "").trim(),
-                    calEventTypeId: parseInt($("#txtCalEventTypeId").val() || "0", 10) || null,
-                    calPublicUrl: ($("#txtCalPublicUrl").val() || "").trim(),
-                    email: ($("#txtCalEmail").val() || "").trim(),
-                    telefono: ($("#txtCalTelefono").val() || "").trim(),
-                    nombreYApellido: ($("#txtCalNombreYApellido").val() || "").trim(),
-                    eventInbox: ($("#txtCalEventInbox").val() || "DEFAULT").trim(),
-                    eventInboxUrl: ($("#txtCalEventInboxUrl").val() || "").trim(),
-                    isActive: $("#chkCalIsActive").is(":checked"),
-                    notes: ($("#txtCalNotes").val() || "").trim()
-                };
-
-                if (!payload.apiKey) {
-                    Swal.fire("Aviso", "ApiKey requerida.", "warning");
-                    return;
-                }
-
-                const r = await fetch("/Doctor/GuardarCalcom", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json;charset=utf-8" },
-                    body: JSON.stringify(payload)
-                });
-
-                const j = await r.json().catch(() => null);
-                if (!r.ok || !j) {
-                    Swal.fire("Error", "No se pudo guardar (HTTP " + r.status + ").", "error");
-                    return;
-                }
-
-                const msg = (j.data ?? j.msg ?? "");
-                if (msg && msg !== "") {
-                    Swal.fire("Aviso", msg, "warning");
-                    return;
-                }
-
-                Swal.fire("OK", "Configuración Cal.com guardada.", "success");
-                bootstrap.Modal.getOrCreateInstance(document.getElementById("mdCalcom")).hide();
-            }
-            
-
+        } catch (e) {
+            console.error("Error en peticion:", e);
+            Swal.fire("Error", "Error en la comunicación con el servidor local.", "error");
+        } finally {
+            $("#btnConsultarApi").prop("disabled", false).html('<i class="fa-solid fa-magnifying-glass me-1"></i> Consultar API');
+        }
+        }
             // ============================
             // INIT
             // ============================
@@ -549,7 +630,8 @@
                 });
 
                 $("#btnNuevo").on("click", abrirModalNuevo);
-
+                        // Dentro de $(document).ready(async function () { ...
+        $("#btnConsultarApi").on("click", consultarInformacionApi);
                 $("#tbData tbody").on("click", ".btn-editar", function () {
                     const row = tablaData.row($(this).closest("tr")).data();
                     abrirModalEditar(row);

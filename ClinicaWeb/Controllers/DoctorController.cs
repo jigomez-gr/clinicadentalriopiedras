@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Npgsql;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace ClinicaWeb.Controllers
 {
@@ -269,6 +270,47 @@ namespace ClinicaWeb.Controllers
             if (detalle == null) return Json(new { ok = false, msg = "No hay datos de Cal.com." });
             return Json(new { ok = true, data = detalle });
         }
+        [Authorize(Roles = "Doctor,Administrador")]
+        [HttpGet]
+        public async Task<IActionResult> GetDetallesApiCal(string apiKey, string apiBase)
+        {
+            try
+            {
+                string url = (string.IsNullOrEmpty(apiBase) ? "https://api.cal.eu/v2" : apiBase).TrimEnd('/');
+                if (!url.EndsWith("/v2")) url += "/v2";
 
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
+
+                var res = await client.GetAsync($"{url}/event-types");
+
+                if (!res.IsSuccessStatusCode)
+                {
+                    var errorContent = await res.Content.ReadAsStringAsync();
+                    return BadRequest(new { msg = "Cal.com respondió con error: " + res.StatusCode });
+                }
+
+                var json = await res.Content.ReadFromJsonAsync<JsonElement>();
+
+                // EXTRAEMOS EL ARRAY REAL DE EVENTOS
+                // Cal.com v2 devuelve: { data: { eventTypeGroups: [ { eventTypes: [...] } ] } }
+                JsonElement eventTypes;
+                try
+                {
+                    eventTypes = json.GetProperty("data").GetProperty("eventTypeGroups")[0].GetProperty("eventTypes");
+                }
+                catch
+                {
+                    // Fallback por si la estructura cambia o viene simplificada
+                    eventTypes = json.GetProperty("data");
+                }
+
+                return Ok(new { data = eventTypes });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { msg = "Error interno: " + ex.Message });
+            }
+        }
     }
 }

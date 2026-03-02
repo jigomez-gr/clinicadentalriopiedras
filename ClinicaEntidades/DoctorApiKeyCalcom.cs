@@ -20,5 +20,22 @@ namespace ClinicaEntidades
         public string? EventInboxUrl { get; set; }
         public bool IsActive { get; set; } = true;
         public string? Notes { get; set; }
+
+        // --- NUEVOS CAMPOS ---
+
+        /// <summary>
+        /// URL base de la API (https://api.cal.com/v2 o https://api.cal.eu/v2)
+        /// </summary>
+        public string? ApiBase { get; set; }
+
+        /// <summary>
+        /// Nombre descriptivo del calendario/evento obtenido de Cal.com
+        /// </summary>
+        public string? CalEventName { get; set; }
+
+        /// <summary>
+        /// Frecuencia de los slots (15, 30, 60 min) obtenida de la API
+        /// </summary>
+        public int? CalSlotInterval { get; set; }
     }
 }
