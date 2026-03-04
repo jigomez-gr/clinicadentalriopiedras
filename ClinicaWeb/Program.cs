@@ -60,5 +60,7 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Acceso}/{action=Login}/{id?}");
-
+// Esto lee la cadena del appsettings (Local o Producción) y la inyecta en tu clase estática
+var connectionString = builder.Configuration.GetConnectionString("CadenaSQL");
+ClinicaWeb.Controllers.Conexion.CN = connectionString;
 app.Run();

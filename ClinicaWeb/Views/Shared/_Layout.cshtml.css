@@ -47,3 +47,29 @@ button.accept-policy {
     white-space: nowrap;
     line-height: 60px;
 }
+/* Cabecera con el nuevo verde más claro */
+.chat-header {
+    background: linear-gradient(135deg, #14532d 0%, #166534 100%) !important;
+    color: white;
+    padding: 12px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 8px 8px 0 0;
+}
+
+/* Botón de borrar chat integrado en la cabecera */
+.btn-borrar {
+    background-color: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: background 0.3s;
+}
+
+    .btn-borrar:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+    }

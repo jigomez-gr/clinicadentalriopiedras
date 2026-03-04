@@ -13,18 +13,27 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace ClinicaWeb.Controllers
 {
 
+ //   public class Conexion
+ //   {
+ //       public static string CN = "Host=localhost;Port=5432;Database=dbclinica;Username=postgres;Password=W39xlpS9;Pooling=true;Maximum Pool Size=20;Minimum Pool Size=0;Timeout=15;";
+ //   }
     public class Conexion
     {
-        public static string CN = "Host=localhost;Port=5432;Database=dbclinica;Username=postgres;Password=W39xlpS9;Pooling=true;Maximum Pool Size=20;Minimum Pool Size=0;Timeout=15;";
+        // Dejamos la variable vacía para que se llene desde Program.cs
+        public static string CN { get; set; } = "";
     }
     public class CitasController : Controller
     {
+
 
         private readonly IDoctorRepositorio _repositorioDoctor;
         private readonly ICitaRepositorio _repositorioCita;
@@ -34,7 +43,7 @@ namespace ClinicaWeb.Controllers
             _repositorioDoctor = repositorioDoctor;
             _repositorioCita = repositorioCita;
         }
-       
+
 
         // ===================== VISTAS =====================
 
@@ -339,7 +348,7 @@ namespace ClinicaWeb.Controllers
         /// - Administrador: puede elegir especialidad/doctor (desde la vista vía JS).
         /// - Doctor: agenda fija de su propio doctor (por NumeroDocumentoIdentidad).
         /// </summary>
-        
+
         private static bool TryParseFechaFlexible(string? input, out DateTime fecha)
         {
             fecha = default;
@@ -370,12 +379,12 @@ namespace ClinicaWeb.Controllers
         /// <summary>
         /// Devuelve agenda del día (slots AM/PM) para pintar la pantalla Detalle_Horario_Citas.
         /// </summary>
-    
+
 
         /// <summary>
         /// Devuelve el detalle completo de una cita (para modal editar/ver).
         /// </summary>
-       
+
         [HttpGet]
         [Authorize(Roles = "Doctor,Administrador")]
         public async Task<IActionResult> Detalle_Horario_Citas()
@@ -562,7 +571,7 @@ namespace ClinicaWeb.Controllers
         /// </summary>
         [HttpPost]
         [Authorize(Roles = "Doctor,Administrador")]
-        public async Task<IActionResult>  ActualizarDocumentoDoctor([FromBody] DoctorActualizarDocumentoRequest modelo)
+        public async Task<IActionResult> ActualizarDocumentoDoctor([FromBody] DoctorActualizarDocumentoRequest modelo)
         {
             if (modelo == null || modelo.IdCita <= 0)
                 return StatusCode(StatusCodes.Status400BadRequest, new { data = "Modelo inválido." });
@@ -883,7 +892,7 @@ namespace ClinicaWeb.Controllers
                     idDoctorHorarioDetalle = h.IdDoctorHorarioDetalle,
                     turno = h.Turno,
                     // INYECTAMOS EL NUEVO CAMPO QUE VIENE DEL DTO
-                   // idDoctorHorarioDetalleCalcom = h.IdDoctorHorarioDetalleCalcom,
+                    // idDoctorHorarioDetalleCalcom = h.IdDoctorHorarioDetalleCalcom,
                     // BLINDAJE: Si h es null o la propiedad falla, enviamos 0
                     idDoctorHorarioDetalleCalcom = h?.IdDoctorHorarioDetalleCalcom ?? 0,
 
@@ -982,7 +991,7 @@ namespace ClinicaWeb.Controllers
                 var cita = lista.FirstOrDefault(x => x.IdCita == idCita);
                 if (cita == null) return NotFound();
                 var bytes = cita.DocumentoCitaUsr;
-              
+
                 if (bytes == null || bytes.Length == 0) return NotFound();
 
                 var contentType = string.IsNullOrWhiteSpace(cita.ContentType) ? "application/octet-stream" : cita.ContentType;
@@ -1020,7 +1029,7 @@ namespace ClinicaWeb.Controllers
                 var cita = lista.FirstOrDefault(x => x.IdCita == idCita);
                 if (cita == null) return NotFound();
 
-               
+
                 var bytes = cita.DocIndicacionesDoctor;
                 if (bytes == null || bytes.Length == 0) return NotFound();
 
@@ -1103,7 +1112,7 @@ namespace ClinicaWeb.Controllers
             return Json(slots);
         }
         [HttpGet]
-       
+
         [Authorize(Roles = "Doctor,Administrador,Paciente")]
         public async Task<IActionResult> GetCalPublicUrl(int idDoctor)
         {
@@ -1251,6 +1260,87 @@ LIMIT 1;
             var resultado = await _repositorioCita.CancelarDesdeAgenda(idCita, motivo);
             return Json(new { ok = resultado.ok, idAccion = resultado.idAccion });
         }
+        [HttpPost]
 
+        [Authorize(Roles = "Paciente,Doctor,Administrador")]
+
+        public async Task<IActionResult> ChatConAgenteFicheros(string mensajeusuario, IFormFile fichero)
+        {
+            try
+            {
+                // 1. LEER CONFIGURACIÓN
+                var config = new ConfigurationBuilder()
+                    .SetBasePath(Directory.GetCurrentDirectory())
+                    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                    .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json", optional: true)
+                    .Build();
+
+                string urln8n = config["ChatbotConfig:WebhookUrl"] ?? "https://n8njigretera.cloud/webhook/a0959c71-7ec2-4c72-93e9-1a1ecccde4fc";
+
+                // 2. DATOS DEL USUARIO (Claims)
+                string idUsuario = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0";
+                string nombre = User.FindFirstValue(ClaimTypes.Name) ?? "Anonimo";
+                string apellido = User.FindFirstValue(ClaimTypes.Surname) ?? "";
+                string correo = User.FindFirstValue(ClaimTypes.Email) ?? "";
+                string movil = User.FindFirstValue(ClaimTypes.MobilePhone) ?? "";
+                string idRol = User.IsInRole("Administrador") ? "1" : (User.IsInRole("Doctor") ? "2" : "3");
+
+                // 3. PROCESAR FICHERO A BASE64
+                string base64File = "";
+                string mimeType = "";
+                string fileName = "";
+
+                if (fichero != null && fichero.Length > 0)
+                {
+                    using (var ms = new MemoryStream())
+                    {
+                        await fichero.CopyToAsync(ms);
+                        byte[] fileBytes = ms.ToArray();
+                        base64File = Convert.ToBase64String(fileBytes);
+                        mimeType = fichero.ContentType;
+                        fileName = fichero.FileName;
+                    }
+                }
+
+                // 4. CREAR PAYLOAD JSON
+                var payload = new
+                {
+                    idusuario = idUsuario,
+                    nombre = nombre,
+                    apellido = apellido,
+                    correo = correo,
+                    movil = movil,
+                    idrolusuario = idRol,
+                    mensajeusuario = mensajeusuario ?? "",
+                    archivoBase64 = base64File,    // Enviamos el texto Base64
+                    tipoMime = mimeType,          // Ejemplo: image/jpeg
+                    nombreArchivo = fileName      // Ejemplo: analitica.jpg
+                };
+
+                // 5. ENVIAR A N8N
+                using (var client = new HttpClient())
+                {
+                    // Enviamos como PostAsJsonAsync para que n8n no use el disco duro
+                    var response = await client.PostAsJsonAsync(urln8n, payload);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var resString = await response.Content.ReadAsStringAsync();
+                        using var jDoc = JsonDocument.Parse(resString);
+
+                        // Extraemos la respuesta de la IA
+                        string respuestaIA = jDoc.RootElement.GetProperty("output").GetString() ?? "";
+
+                        return Json(new { ok = true, tipo = "texto", data = respuestaIA });
+                    }
+
+                    return Json(new { ok = false, msg = "n8n no responde o ha devuelto error" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { ok = false, msg = ex.Message });
+            }
+        }
     }
-}
+    }

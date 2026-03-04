@@ -14,44 +14,130 @@
     <meta name="description" content="" />
     <meta name="author" content="" />
     <title>Clinica - Net8</title>
-    
-    <!-- CSS base del template -->
+
     <link href="~/css/styles.css" rel="stylesheet" asp-append-version="true" />
 
-    <!-- PATCH: tu tema (azul unificado + mensajes verde/rojo) -->
     <link href="~/css/clinica-theme.css" rel="stylesheet" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap4.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap4.min.css">
-   
-    <!-- Si alguna vista define sección Styles/Estilos, no rompe -->
-    @RenderSection("Styles", required: false)
+
+    <link rel="stylesheet" href="/@($"{asmName}.styles.css")" asp-append-version="true" />
+
+    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+
     @RenderSection("Estilos", required: false)
+    @RenderSection("Styles", required: false)
 
-    <script src="~/lib/fontawesome/all.js"></script>
+    /* empiezo burbuja */
+    <style>
+        .chatbot-bubble {
+            position: fixed;
+            bottom: 40px; /* Subido unos cm */
+            right: 40px; /* Movido un pelín a la izquierda */
+            width: 60px;
+            height: 60px;
+            background-color: #ff8c00;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            z-index: 9999;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: transform 0.3s;
+        }
+
+            .chatbot-bubble:hover {
+                transform: scale(1.1);
+            }
+
+        .chat-container {
+            position: fixed;
+            bottom: 110px;
+            right: 40px;
+            width: 350px;
+            height: 500px;
+            background: white;
+            border-radius: 15px;
+            display: none; /* Se maneja por JS */
+            flex-direction: column;
+            z-index: 9999;
+            border: 1px solid #ddd;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        /* Este verde (#10b981) es el estándar de salud/limpieza, muy visible */
+        .chat-header {
+            background-color: #10b981 !important;
+            color: white;
+            padding: 12px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 10px 10px 0 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .btn-borrar {
+            background-color: #059669; /* Verde un pelín más oscuro para el botón */
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+        }
+       
+        
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: #fdfdfd;
+            font-size: 0.9rem;
+        }
+
+        .msg-user {
+            background: #e3f2fd;
+            padding: 8px 12px;
+            border-radius: 12px 12px 0 12px;
+            margin-bottom: 10px;
+            margin-left: 20%;
+            text-align: right;
+        }
+
+        .msg-ia {
+            background: #f1f1f1;
+            padding: 8px 12px;
+            border-radius: 12px 12px 12px 0;
+            margin-bottom: 10px;
+            margin-right: 20%;
+        }
+
+        #fileNamePreview {
+            font-size: 0.75rem;
+            color: #ff8c00;
+            padding: 0 10px;
+        }
+
+      
+    </style>
+    /* final burbuja */
 </head>
-
 <body class="sb-nav-fixed">
-   
 
     <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
         <a class="clinic-top-logo" href="/Home/Index" title="Clínica">
             <img src="~/images/logo.jpg" alt="Logo" />
         </a>
+        <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!"><i class="fas fa-bars"></i></button>
 
-        <!-- Sidebar Toggle-->
-        <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!">
-            <i class="fas fa-bars"></i>
-        </button>
-
-        <!-- Navbar Search-->
-        <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0"></form>
-
-        <!-- Navbar-->
-        <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
+        <ul class="navbar-nav ms-auto me-0 me-md-3 my-2 my-md-0">
             <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-user fa-fw"></i>
-                </a>
+                <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                     <li><a class="dropdown-item" href="#!">@User.Identity?.Name</a></li>
                     <li><hr class="dropdown-divider" /></li>
@@ -60,7 +146,6 @@
             </li>
         </ul>
     </nav>
-
     <div id="layoutSidenav">
         <div id="layoutSidenav_nav">
             <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
@@ -70,167 +155,193 @@
                             <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
                             Dashboard
                         </a>
-
                         <div class="sb-sidenav-menu-heading">Gestion</div>
 
                         @if (User.IsInRole("Administrador"))
                         {
-                            <a class="nav-link" asp-controller="Home" asp-action="Index">
-                                <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
-                                Dashboard
-                            </a>
+                            <a class="nav-link" asp-controller="Usuario" asp-action="Index"><div class="sb-nav-link-icon"><i class="fas fa-table"></i></div> Usuario</a>
+                            <a class="nav-link" asp-controller="Especialidad" asp-action="Index"><div class="sb-nav-link-icon"><i class="fas fa-table"></i></div> Especialidad</a>
+                            <a class="nav-link" asp-controller="Doctor" asp-action="Index"><div class="sb-nav-link-icon"><i class="fa-solid fa-user-doctor"></i></div> Doctor</a>
+                            <a class="nav-link" asp-controller="DoctorHorario" asp-action="Index"><div class="sb-nav-link-icon"><i class="fa-solid fa-user-doctor"></i></div> Horarios de Doctores</a>
+                            <a class="nav-link" asp-controller="Gestion" asp-action="Index"><div class="sb-nav-link-icon"><i class="fas fa-table"></i></div> Gestión de Citas</a>
+                            <a class="nav-link" href="/AnalisisVapi/Index"><div class="sb-nav-link-icon"><i class="fas fa-chart-bar"></i></div> Análisis VAPI</a>
+                            <a class="nav-link" href="/ZadarmaSmsRespuesta/Index"><div class="sb-nav-link-icon"><i class="fas fa-chart-bar"></i></div> Análisis SMS Zadarma</a>
                         }
 
-                        @if (User.IsInRole("Administrador"))
-                        {
-                            <a class="nav-link" asp-controller="Usuario" asp-action="Index">
-                                <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
-                                Usuario
-                            </a>
-                            <a class="nav-link" asp-controller="Especialidad" asp-action="Index">
-                                <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
-                                Especialidad
-                            </a>
-                            <a class="nav-link" asp-controller="Doctor" asp-action="Index">
-                                <div class="sb-nav-link-icon"><i class="fa-solid fa-user-doctor"></i></div>
-                                Doctor
-                            </a>
-                            <a class="nav-link" asp-controller="DoctorHorario" asp-action="Index">
-                                <div class="sb-nav-link-icon"><i class="fa-solid fa-user-doctor"></i></div>
-                                Horarios de Doctores
-                            </a>
-                            <a class="nav-link" asp-controller="Gestion" asp-action="Index">
-                                <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
-                                Gestión de Citas
-                            </a>
-                            <a class="nav-link" href="/AnalisisVapi/Index">
-                                <div class="sb-nav-link-icon"><i class="fas fa-chart-bar"></i></div>
-                                Análisis VAPI
-                            </a>
-
-                            <a class="nav-link" href="/ZadarmaSmsRespuesta/Index">
-                                <div class="sb-nav-link-icon"><i class="fas fa-chart-bar"></i></div>
-                                Análisis SMS Zadarma
-                            </a>
-
-                        }
                         @if (User.IsInRole("Paciente"))
                         {
-                            <a class="nav-link" asp-controller="Citas" asp-action="Index">
-                                <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
-                                Mis Citas
-                            </a>
-                            <a class="nav-link" asp-controller="HistorialCitas" asp-action="Index">
-                                <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
-                                Historial Citas
-                            </a>
+                            <a class="nav-link" asp-controller="Citas" asp-action="Index"><div class="sb-nav-link-icon"><i class="fas fa-table"></i></div> Mis Citas</a>
+                            <a class="nav-link" asp-controller="HistorialCitas" asp-action="Index"><div class="sb-nav-link-icon"><i class="fas fa-table"></i></div> Historial Citas</a>
                         }
 
                         @if (User.IsInRole("Doctor"))
                         {
-                            <a class="nav-link" asp-controller="Usuario" asp-action="Index2">
-                                <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
-                                Usuario
-                            </a>
-
-                            <a class="nav-link" asp-controller="Citas" asp-action="CitasAsignadas">
-                                <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
-                                Citas
-                            </a>
-                            <a class="nav-link" asp-controller="Citas" asp-action="Detalle_Horario_Citas">
-                                <div class="fa-stethoscope "><i class="fas fa-table"></i></div>
-                                Calendario Horarios y Citas
-                            </a>
-
+                            <a class="nav-link" asp-controller="Usuario" asp-action="Index2"><div class="sb-nav-link-icon"><i class="fas fa-table"></i></div> Usuario</a>
+                            <a class="nav-link" asp-controller="Citas" asp-action="CitasAsignadas"><div class="sb-nav-link-icon"><i class="fas fa-table"></i></div> Citas</a>
+                            <a class="nav-link" asp-controller="Citas" asp-action="Detalle_Horario_Citas"><div class="sb-nav-link-icon"><i class="fas fa-table"></i></div> Calendario Horarios y Citas</a>
                         }
-
-
                     </div>
                 </div>
-
                 <div class="sb-sidenav-footer">
-                    <div class="small">Logged in as:</div>
-                    Start Bootstrap
+                    <div class="small">Usuario:</div>
+                    @User.Identity?.Name
                 </div>
             </nav>
         </div>
-
         <div id="layoutSidenav_content">
             <main>
                 <div class="container-fluid px-4">
                     @RenderBody()
                 </div>
             </main>
-
             <footer class="py-4 bg-light mt-auto">
                 <div class="container-fluid px-4">
                     <div class="d-flex align-items-center justify-content-between small">
                         <div class="text-muted"> 2026 </div>
-                        <div>
-                            <a href="#">Privacy Policy</a>
-                            &middot;
-                            <a href="#">Terms &amp; Conditions</a>
-                        </div>
                     </div>
                 </div>
             </footer>
         </div>
     </div>
+
+    /* empiezo burbuja */
+    <div id="chatbot-bubble" class="chatbot-bubble" onclick="toggleChat()"
+         data-bs-toggle="tooltip" data-bs-placement="left"
+         title="¿Necesitas ayuda con tus citas? ¡Pregúntame!">
+        <i class="fas fa-robot fa-2x"></i>
+    </div>
+
+    <div id="chat-container" class="chat-container">
+        <div class="chat-header">
+            <span>Asistente Clínica Dental Río Piedras</span>
+         
+
+        </div>
+    
+         <div id="chat-messages" style="height: 400px; overflow-y: auto;">
+            <div class="msg-ia">Hola, ¿en qué puedo ayudarte hoy?</div>
+        </div>
+        <div id="fileNamePreview"></div>
+        <div class="p-2 bg-light">
+            <div class="input-group input-group-sm">
+                <label for="chatFile" class="btn btn-outline-secondary">
+                    <i class="fas fa-paperclip"></i>
+                </label>
+                <input type="file" id="chatFile" style="display:none" onchange="if(this.files[0]) document.getElementById('fileNamePreview').innerText = this.files[0].name" />
+                <input type="text" id="chat-input" class="form-control" placeholder="Escribe un mensaje...">
+                <button class="btn btn-primary" id="btn-chat-send">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+        <div class="chat-header">
+        <button type="button" class="btn-borrar" onclick="confirmarBorrado()">
+            🗑️ Borrar Chat
+        </button>
+        </div>
+    </div>
+    /* final burbuja */
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
     <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
-
     <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
-
-    <script>
-        // Polyfill: soporte de $(...).modal(...) para Bootstrap 5 (evita errores en vistas antiguas)
-        (function () {
-            if (!window.jQuery || window.jQuery.fn.modal || !window.bootstrap || !window.bootstrap.Modal) return;
-
-            window.jQuery.fn.modal = function (action) {
-                return this.each(function () {
-                    const instance = window.bootstrap.Modal.getOrCreateInstance(this);
-                    if (action === "show") instance.show();
-                    else if (action === "hide") instance.hide();
-                    else if (action === "toggle") instance.toggle();
-                });
-            };
-        })();
-    </script>
-    @*
-    <script src="~/js/scripts.js"></script>
-    <script src="~/lib/sweetAlert2/js/sweetalert2.js"></script>
-    <script src="~/lib/loadingoverlay/loadingoverlay.min.js"></script>
-  *@
-
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <script src="https://cdn.jsdelivr.net/npm/gasparesganga-jquery-loading-overlay@2.1.7/dist/loadingoverlay.min.js"></script>
-
     <script src="/js/scripts.js"></script>
+
     <script>
-        /* comienzo cambio 9898 */
-        // Configuración global para todos los Datepickers del programa
-        if ($.datepicker) {
-            $.datepicker.setDefaults({
-                dateFormat: 'dd/mm/yy', // Fuerza el formato día/mes/año en toda la web
-                dayNames: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
-                dayNamesMin: ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá'],
-                monthNames: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
-                monthNamesShort: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
-                firstDay: 1, // La semana empieza en Lunes
-                isRTL: false,
-                showMonthAfterYear: false,
-                yearSuffix: ''
+        $(document).ready(function() {
+            // Inicializar Tooltip de la burbuja
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            })
+
+            // Configuración Datepicker global
+            if ($.datepicker) {
+                $.datepicker.setDefaults({
+                    dateFormat: 'dd/mm/yy',
+                    dayNamesMin: ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá'],
+                    monthNames: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+                    firstDay: 1
+                });
+            }
+                  /* Reemplaza la lógica del botón enviar en el _Layout.cshtml */
+        $("#btn-chat-send").on("click", async function() {
+            const input = $("#chat-input");
+            const fileInput = $("#chatFile");
+            const msg = input.val().trim();
+            const file = fileInput[0].files[0];
+
+            if (!msg && !file) return;
+
+            const chatBox = $("#chat-messages");
+            chatBox.append(`<div class="msg-user">${file ? '[Fichero: '+file.name+'] ' : ''}${msg}</div>`);
+
+            input.val("");
+            fileInput.val("");
+            $("#fileNamePreview").text("");
+            chatBox.scrollTop(chatBox[0].scrollHeight);
+
+            const formData = new FormData();
+            formData.append("mensajeusuario", msg); // Nombre sincronizado con el controlador
+            if(file) formData.append("fichero", file);
+
+            try {
+                const response = await fetch('/Citas/ChatConAgenteFicheros', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                if(result.ok) {
+                    chatBox.append(`<div class="msg-ia">${result.data}</div>`);
+                }
+            } catch (error) {
+                chatBox.append(`<div class="msg-ia text-danger">Error de comunicación.</div>`);
+            }
+            chatBox.scrollTop(chatBox[0].scrollHeight);
+        });
+
+        // Enviar con Enter
+        $("#chat-input").on("keypress", function(e) {
+            if (e.which === 13) $("#btn-chat-send").click();
+        });
+
+            $("#chat-input").on("keypress", function(e) {
+                if (e.which === 13) $("#btn-chat-send").click();
             });
-            console.log("Datepicker global configurado en dd/mm/yy");
+        });
+
+        function toggleChat() {
+            const chat = $("#chat-container");
+            if (chat.is(":visible")) {
+                chat.fadeOut();
+            } else {
+                chat.fadeIn().css("display", "flex");
+            }
         }
-        /* final cambio 9898 */
+        /* final burbuja js */
+                function borrarHistorial() {
+            if (confirm("¿Estás seguro de que quieres limpiar la conversación?")) {
+                const chatBox = document.getElementById('chat-contenedor');
+                chatBox.innerHTML = ''; // Vacía la vista
+                alert("Historial limpiado.");
+            }
+        }
+                function confirmarBorrado() {
+            if (confirm("¿Deseas limpiar la conversación actual?")) {
+                const contenedor = document.getElementById('chat-messages');
+                if (contenedor) {
+                    contenedor.innerHTML = '';
+                    console.log("Chat limpiado con éxito");
+                } else {
+                    console.error("No se encontró el contenedor 'chat-messages'. Revisa el ID en tu HTML.");
+                }
+            }
+        }
     </script>
+
     @RenderSection("Scripts", required: false)
 </body>
 </html>
