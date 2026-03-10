@@ -28,12 +28,12 @@
     @RenderSection("Estilos", required: false)
     @RenderSection("Styles", required: false)
 
-    /* empiezo burbuja */
     <style>
+        /* --- Burbuja Flotante (Naranja para destacar) --- */
         .chatbot-bubble {
             position: fixed;
-            bottom: 40px; /* Subido unos cm */
-            right: 40px; /* Movido un pelín a la izquierda */
+            bottom: 40px;
+            right: 40px;
             width: 60px;
             height: 60px;
             background-color: #ff8c00;
@@ -43,7 +43,7 @@
             justify-content: center;
             color: white;
             cursor: pointer;
-            z-index: 9999;
+            z-index: 10000;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             transition: transform 0.3s;
         }
@@ -52,22 +52,24 @@
                 transform: scale(1.1);
             }
 
+        /* --- Contenedor Principal del Chat --- */
         .chat-container {
             position: fixed;
             bottom: 110px;
             right: 40px;
-            width: 350px;
-            height: 500px;
+            width: 380px;
+            height: 550px;
             background: white;
             border-radius: 15px;
-            display: none; /* Se maneja por JS */
+            display: none; /* Se activa con toggleChat() */
             flex-direction: column;
-            z-index: 9999;
+            z-index: 10000;
             border: 1px solid #ddd;
             box-shadow: 0 8px 24px rgba(0,0,0,0.2);
             overflow: hidden;
         }
-        /* Este verde (#10b981) es el estándar de salud/limpieza, muy visible */
+
+        /* --- Cabecera Verde Dental --- */
         .chat-header {
             background-color: #10b981 !important;
             color: white;
@@ -75,57 +77,106 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-radius: 10px 10px 0 0;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
         .btn-borrar {
-            background-color: #059669; /* Verde un pelín más oscuro para el botón */
-            border: none;
+            background-color: #059669;
+            border: 1px solid rgba(255,255,255,0.3);
             color: white;
-            padding: 6px 12px;
+            padding: 4px 10px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: bold;
         }
-       
-        
 
-        .chat-messages {
+        /* --- Área de Mensajes --- */
+        #chat-messages {
             flex: 1;
-            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
             padding: 15px;
-            background: #fdfdfd;
-            font-size: 0.9rem;
+            overflow-y: auto;
+            background-color: #f8fafc;
         }
 
         .msg-user {
-            background: #e3f2fd;
-            padding: 8px 12px;
-            border-radius: 12px 12px 0 12px;
-            margin-bottom: 10px;
-            margin-left: 20%;
-            text-align: right;
+            align-self: flex-end;
+            background-color: #dcf8c6 !important; /* Estilo WhatsApp */
+            color: #000;
+            padding: 8px 14px;
+            border-radius: 15px 15px 0 15px;
+            max-width: 85%;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
 
         .msg-ia {
-            background: #f1f1f1;
-            padding: 8px 12px;
-            border-radius: 12px 12px 12px 0;
-            margin-bottom: 10px;
-            margin-right: 20%;
+            align-self: flex-start;
+            background-color: #ffffff !important;
+            color: #000;
+            padding: 8px 14px;
+            border-radius: 15px 15px 15px 0;
+            max-width: 85%;
+            border-left: 4px solid #0d9488;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
+
+        /* --- Área de Entrada y Botón Enviar --- */
+        .chat-input-container {
+            padding: 10px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-enviar-chat {
+            width: 45px !important;
+            height: 45px !important;
+            min-width: 45px;
+            background-color: #0d9488 !important;
+            color: white !important;
+            border-radius: 50% !important;
+            border: none !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 20px !important;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+            .btn-enviar-chat:hover {
+                background-color: #0a766d !important;
+            }
 
         #fileNamePreview {
-            font-size: 0.75rem;
-            color: #ff8c00;
-            padding: 0 10px;
+            font-size: 11px;
+            color: #0d9488;
+            padding: 5px 15px;
+            background: #f1f5f9;
+            display: none;
         }
 
-      
+        /* --- Adaptación Móvil --- */
+        @@media (max-width: 768px) {
+            .chat-container {
+                width: 92% !important;
+                right: 4% !important;
+                left: 4% !important;
+                bottom: 20px !important;
+                height: 80vh !important;
+                border-radius: 15px !important;
+            }
+
+            .chatbot-bubble {
+                display: none; /* Opcional: ocultar burbuja cuando el chat está abierto en móvil */
+            }
+        }
     </style>
-    /* final burbuja */
 </head>
 <body class="sb-nav-fixed">
 
@@ -203,51 +254,53 @@
             </footer>
         </div>
     </div>
-
-    /* empiezo burbuja */
     <div id="chatbot-bubble" class="chatbot-bubble" onclick="toggleChat()"
          data-bs-toggle="tooltip" data-bs-placement="left"
          title="¿Necesitas ayuda con tus citas? ¡Pregúntame!">
         <i class="fas fa-robot fa-2x"></i>
     </div>
-
     <div id="chat-container" class="chat-container">
         <div class="chat-header">
-            <span>Asistente Clínica Dental Río Piedras</span>
-         
-
+            <span>Asistente Dental Río Piedras</span>
+            <button type="button" class="btn-borrar" onclick="limpiarChatDental()">
+                🗑️ Borrar
+            </button>
         </div>
-    
-         <div id="chat-messages" style="height: 400px; overflow-y: auto;">
+
+        <div id="chat-messages">
             <div class="msg-ia">Hola, ¿en qué puedo ayudarte hoy?</div>
         </div>
-        <div id="fileNamePreview"></div>
-        <div class="p-2 bg-light">
-            <div class="input-group input-group-sm">
-                <label for="chatFile" class="btn btn-outline-secondary">
+
+        <div id="filePreviewContainer" style="display:none; background: #f1f5f9; padding: 5px 15px; border-top: 1px solid #eee; justify-content: space-between; align-items: center;">
+            <span id="fileNameLabel" style="font-size: 12px; color: #0d9488;"></span>
+            <button type="button" onclick="quitarArchivo()" style="border:none; background:none; color:red; cursor:pointer;">✕</button>
+        </div>
+
+        <div class="p-2 bg-light border-top">
+            <div class="input-group d-flex align-items-center">
+                <label for="chatFile" class="btn btn-outline-secondary border-0 bg-transparent">
                     <i class="fas fa-paperclip"></i>
                 </label>
-                <input type="file" id="chatFile" style="display:none" onchange="if(this.files[0]) document.getElementById('fileNamePreview').innerText = this.files[0].name" />
-                <input type="text" id="chat-input" class="form-control" placeholder="Escribe un mensaje...">
-                <button class="btn btn-primary" id="btn-chat-send">
+                <input type="file" id="chatFile" style="display:none"
+                       accept="image/*,video/*,audio/*"
+                       onchange="actualizarPrevisualización(this)" />
+
+                <input type="text" id="chat-input" class="form-control border-0 bg-transparent" placeholder="Escribe un mensaje..."
+                       onkeypress="if(event.key === 'Enter') enviarMensaje()">
+
+                <button class="btn-enviar-chat" id="btn-chat-send" onclick="enviarMensaje()">
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
         </div>
-        <div class="chat-header">
-        <button type="button" class="btn-borrar" onclick="confirmarBorrado()">
-            🗑️ Borrar Chat
-        </button>
-        </div>
     </div>
-    /* final burbuja */
-
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/js/scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gasparesganga-jquery-loading-overlay@2.1.7/dist/loadingoverlay.min.js"></script>
 
     <script>
         $(document).ready(function() {
@@ -313,7 +366,7 @@
             });
         });
 
-        function toggleChat() {
+             function toggleChat() {
             const chat = $("#chat-container");
             if (chat.is(":visible")) {
                 chat.fadeOut();
@@ -321,6 +374,7 @@
                 chat.fadeIn().css("display", "flex");
             }
         }
+
         /* final burbuja js */
                 function borrarHistorial() {
             if (confirm("¿Estás seguro de que quieres limpiar la conversación?")) {
@@ -340,6 +394,84 @@
                 }
             }
         }
+
+       
+       
+
+        // Función auxiliar para convertir a Base64
+        const toBase64 = file => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+                    async function enviarMensaje() {
+            const input = document.getElementById('chat-input');
+            const fileInput = document.getElementById('chatFile');
+            const chatMessages = document.getElementById('chat-messages');
+            const mensaje = input.value.trim();
+
+            if (!mensaje && (!fileInput.files || !fileInput.files[0])) return;
+
+            // Mostrar mensaje local
+            const userDiv = document.createElement('div');
+            userDiv.className = 'msg-user';
+            userDiv.innerText = (fileInput.files[0] ? "[Fichero: " + fileInput.files[0].name + "] " : "") + mensaje;
+            chatMessages.appendChild(userDiv);
+
+            input.value = '';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            const formData = new FormData();
+            formData.append("mensajeusuario", mensaje);
+            if (fileInput.files && fileInput.files[0]) {
+                formData.append("fichero", fileInput.files[0]);
+                quitarArchivo();
+            }
+
+            try {
+                const response = await fetch('/Citas/ChatConAgenteFicheros', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error("Error en servidor");
+
+                const result = await response.json();
+                const iaDiv = document.createElement('div');
+                iaDiv.className = 'msg-ia';
+                iaDiv.innerText = result.ok ? result.data : "Error: " + result.msg;
+                chatMessages.appendChild(iaDiv);
+
+            } catch (error) {
+                const errDiv = document.createElement('div');
+                errDiv.className = 'msg-ia text-danger';
+                errDiv.innerText = "Error de conexión con el asistente.";
+                chatMessages.appendChild(errDiv);
+            }
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+
+        function actualizarPrevisualización(input) {
+            const container = document.getElementById('filePreviewContainer');
+            const label = document.getElementById('fileNameLabel');
+            if (input.files && input.files[0]) {
+                label.innerText = "📎 " + input.files[0].name;
+                container.style.display = 'flex';
+            }
+        }
+        function quitarArchivo() {
+              document.getElementById('chatFile').value = '';
+              document.getElementById('filePreviewContainer').style.display = 'none';
+          }
+
+        function limpiarChatDental() {
+            if (confirm("¿Deseas limpiar la conversación actual?")) {
+                document.getElementById('chat-messages').innerHTML = '<div class="msg-ia">Hola, ¿en qué puedo ayudarte hoy?</div>';
+            }
+        }
+
     </script>
 
     @RenderSection("Scripts", required: false)

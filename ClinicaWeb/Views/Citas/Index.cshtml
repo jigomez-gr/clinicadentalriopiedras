@@ -375,36 +375,82 @@
             $("#containerSlotsAM, #containerSlotsPM").html('<small class="text-muted">Elija una fecha primero...</small>');
             modalReproObj.show();
         };
+                $("#btnConfirmarReproPac").on("click", async function (e) {
+            e.preventDefault(); // Evita comportamientos por defecto
 
-        $("#btnConfirmarReproPac").on("click", async function () {
+            // 1. Recogida de datos del formulario del modal
             const f = document.getElementById("reproFechaPac").value;
             const m = document.getElementById("reproMotivoPac").value.trim();
             const idCita = document.getElementById("reproIdCita").value;
+
             let h = "";
+            // Buscamos el slot de hora activo
             const botonActivo = document.querySelector(".slot-btn-pac.active-slot");
             if (botonActivo) h = botonActivo.innerText.trim();
+
+            // Validamos campos obligatorios
             if (!f || !h || !m) {
-                Swal.fire({ icon: "warning", title: "Atención", text: "Debe completar la fecha, seleccionar un horario (botón verde) e indicar el motivo." });
+                Swal.fire({
+                    icon: "warning",
+                    title: "Atención",
+                    text: "Debe completar la fecha, seleccionar un horario e indicar el motivo."
+                });
                 return;
             }
-            Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            // 2. Iniciamos el visual de carga (Sincronización con Cal.com)
+            Swal.fire({
+                title: 'Sincronizando...',
+                text: 'Procesando el cambio de cita, por favor espere.',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
             try {
+                // 3. Llamada al servidor
                 const res = await fetch("/Citas/ReprogramarCita", {
                     method: "POST",
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ idCitaVieja: parseInt(idCita), nuevaFecha: f, nuevaHora: h, motivo: m })
+                    body: JSON.stringify({
+                        idCitaVieja: parseInt(idCita),
+                        nuevaFecha: f,
+                        nuevaHora: h,
+                        motivo: m
+                    })
                 });
+
                 const result = await res.json();
+
                 if (result.ok) {
-                    Swal.fire("¡Éxito!", "Cita reprogramada correctamente.", "success").then(() => location.reload());
+                    // ✅ CERRAMOS EL MODAL USANDO EL ID VERIFICADO: mdReproPaciente
+                    const modalEl = document.getElementById('mdReproPaciente');
+                    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                    if (modalInstance) modalInstance.hide();
+
+                    // ✅ LANZAMOS EL POLLING (Estado S/Z refresca tablaData)
+                    const idAccion = result.idAccion || result.IdAccion;
+
+                    if (idAccion) {
+                        iniciarPollingCancelacion(idAccion);
+                    } else {
+                        // Fallback si no hay ID de seguimiento
+                        Swal.fire("¡Éxito!", "Cita reprogramada correctamente.", "success")
+                            .then(() => { if (typeof tablaData !== 'undefined') tablaData.ajax.reload(); });
+                    }
+
                 } else {
-                    Swal.fire("Error", result.data || "No se pudo realizar el cambio", "error");
+                    // Cerramos el modal
+        bootstrap.Modal.getInstance(document.getElementById('mdReproPaciente'))?.hide();
+
+        // Mensaje y recarga de tabla
+        Swal.fire("Info", result.data || result.mensaje || "Verifique que el cambio se ha hecho en unos minutos", "info")
+            .then(() => { tablaData.ajax.reload(); });
                 }
             } catch (e) {
-                Swal.fire("Error", "Fallo de conexión con el servidor.", "error");
+                console.error("Error en reprogramación paciente:", e);
+                Swal.fire("Error", "Vuelva a entrar y salir de la aplicacion y verifique el resultado.", "error");
             }
         });
-
         $("#tbData tbody").on("click", ".btn-detalle", function () {
             const data = tablaData.row($(this).closest("tr")).data();
             idEditar = data.idCita;
@@ -464,25 +510,51 @@
             new bootstrap.Modal(document.getElementById('mdCancelarPaciente')).show();
         });
 
-        $("#btnConfirmarCancelPac").on("click", async function () {
+                $("#btnConfirmarCancelPac").on("click", async function (e) {
+            // 1. Evitamos cualquier comportamiento extraño del navegador
+            e.preventDefault();
+
             const idCita = $("#cancelarIdCitaPac").val();
             const motivo = $("#cancelarMotivoPac").val().trim();
+
             if (!motivo) {
                 Swal.fire("Atención", "Debe indicar un motivo para cancelar.", "warning");
                 return;
             }
+
+            // 2. Bloqueamos con el cargador tal cual tu función
             Swal.fire({ title: 'Procesando...', didOpen: () => Swal.showLoading() });
+
             try {
-                const response = await fetch(`/Citas/CancelarCitaAgenda?idCita=${idCita}&motivo=${encodeURIComponent(motivo)}`, { method: "POST" });
+                // 3. Llamada al servidor
+                const response = await fetch(`/Citas/CancelarCitaAgenda?idCita=${idCita}&motivo=${encodeURIComponent(motivo)}`, {
+                    method: "POST"
+                });
+
                 const result = await response.json();
+
                 if (result.ok) {
-                    Swal.fire("", result.mensaje || "La cancelación de la cita se ha realizado correctamente.", "success").then(() => tablaData.ajax.reload());
+                    // ✅ Cerramos el modal de Bootstrap (usando el ID de tu HTML)
+                    const modalEl = document.getElementById('mdCancelarPaciente');
+                    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                    if (modalInstance) modalInstance.hide();
+
+                    // ✅ LANZAMOS LA FUNCIÓN DE POLLING QUE ME HAS DADO
+                    // Usamos result.idAccion o result.IdAccion según devuelva tu C#
+                    const idAccion = result.idAccion || result.IdAccion;
+                    iniciarPollingCancelacion(idAccion);
+
+                } else {
+                    Swal.fire("Error", result.mensaje, "error");
                 }
+
             } catch (error) {
+                console.error("Error en la cancelación:", error);
                 Swal.fire("Error", "Fallo de comunicación con el servidor.", "error");
             }
         });
-
+     
+                // Esta es tu función de polling tal cual, solo verificando que tablaData exista
         function iniciarPollingCancelacion(idAccion) {
             let intentos = 0;
             const intervalo = setInterval(async () => {
@@ -491,14 +563,23 @@
                     const check = await fetch(`/Citas/ConsultarEstadoAccion?id=${idAccion}`);
                     const res = await check.json();
                     const estado = (res.status || "").trim().toUpperCase();
+
                     if (estado === 'S') {
                         clearInterval(intervalo);
-                        Swal.fire("Éxito", "Cita cancelada correctamente.", "success").then(() => tablaData.ajax.reload());
+                        Swal.fire("Éxito", "Cita cancelada correctamente.", "success")
+                            .then(() => {
+                                if (typeof tablaData !== 'undefined') tablaData.ajax.reload();
+                            });
                     } else if (estado === 'Z' || intentos > 15) {
                         clearInterval(intervalo);
-                        Swal.fire("Info", "El proceso está terminando.", "info").then(() => tablaData.ajax.reload());
+                        Swal.fire("Info", "El proceso está terminando.", "info")
+                            .then(() => {
+                                if (typeof tablaData !== 'undefined') tablaData.ajax.reload();
+                            });
                     }
-                } catch (err) { console.error(err); }
+                } catch (err) {
+                    console.error("La cita se cancelará en breve vuelva a entrar y salir a la aplicación:", err);
+                }
             }, 3000);
         }
     </script>

@@ -632,7 +632,7 @@ namespace ClinicaWeb.Controllers
         /* cambio comienzo */
         /* cambio comienzo */
         [HttpGet]
-        [Authorize(Roles = "Doctor,Administrador")]
+        [Authorize(Roles = "Paciente, Doctor,Administrador")]
         public async Task<IActionResult> ConsultarEstadoAccion(int id)
         {
             // Validación de seguridad para el ID recibido
@@ -1263,26 +1263,23 @@ LIMIT 1;
         [HttpPost]
 
         [Authorize(Roles = "Paciente,Doctor,Administrador")]
-
         public async Task<IActionResult> ChatConAgenteFicheros(string mensajeusuario, IFormFile fichero)
         {
             try
             {
-                // 1. LEER CONFIGURACIÓN
+                // 1. LEER CONFIGURACIÓN (Optimizado: Usa el IConfiguration inyectado si es posible, si no, mantén esto)
                 var config = new ConfigurationBuilder()
                     .SetBasePath(Directory.GetCurrentDirectory())
                     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                    .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json", optional: true)
                     .Build();
 
+                // IMPORTANTE: Asegúrate de que la URL termine en /waiting (si es Test) o que sea la URL de Producción correcta
                 string urln8n = config["ChatbotConfig:WebhookUrl"] ?? "https://n8njigretera.cloud/webhook/a0959c71-7ec2-4c72-93e9-1a1ecccde4fc";
 
                 // 2. DATOS DEL USUARIO (Claims)
                 string idUsuario = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0";
                 string nombre = User.FindFirstValue(ClaimTypes.Name) ?? "Anonimo";
                 string apellido = User.FindFirstValue(ClaimTypes.Surname) ?? "";
-                string correo = User.FindFirstValue(ClaimTypes.Email) ?? "";
-                string movil = User.FindFirstValue(ClaimTypes.MobilePhone) ?? "";
                 string idRol = User.IsInRole("Administrador") ? "1" : (User.IsInRole("Doctor") ? "2" : "3");
 
                 // 3. PROCESAR FICHERO A BASE64
@@ -1302,44 +1299,63 @@ LIMIT 1;
                     }
                 }
 
-                // 4. CREAR PAYLOAD JSON
+                // 4. CREAR PAYLOAD JSON (Debe coincidir EXACTAMENTE con lo que espera el nodo "Preparar Datos")
                 var payload = new
                 {
                     idusuario = idUsuario,
                     nombre = nombre,
                     apellido = apellido,
-                    correo = correo,
-                    movil = movil,
-                    idrolusuario = idRol,
                     mensajeusuario = mensajeusuario ?? "",
-                    archivoBase64 = base64File,    // Enviamos el texto Base64
-                    tipoMime = mimeType,          // Ejemplo: image/jpeg
-                    nombreArchivo = fileName      // Ejemplo: analitica.jpg
+                    archivoBase64 = base64File,
+                    tipoMime = mimeType,
+                    nombreArchivo = fileName
                 };
 
                 // 5. ENVIAR A N8N
                 using (var client = new HttpClient())
                 {
-                    // Enviamos como PostAsJsonAsync para que n8n no use el disco duro
+                    // Aumentamos el timeout porque la IA puede tardar más de 30 segundos
+                    client.Timeout = TimeSpan.FromSeconds(120);
+
                     var response = await client.PostAsJsonAsync(urln8n, payload);
 
                     if (response.IsSuccessStatusCode)
                     {
                         var resString = await response.Content.ReadAsStringAsync();
                         using var jDoc = JsonDocument.Parse(resString);
+                        var root = jDoc.RootElement;
 
-                        // Extraemos la respuesta de la IA
-                        string respuestaIA = jDoc.RootElement.GetProperty("output").GetString() ?? "";
+                        /* AJUSTE CLAVE: 
+                           El nuevo flujo responde: { "ok": true, "data": "Respuesta IA", "localizador": "..." }
+                        */
+                        string respuestaIA = "";
+                        string localizador = "";
 
-                        return Json(new { ok = true, tipo = "texto", data = respuestaIA });
+                        if (root.TryGetProperty("data", out var dataProp))
+                        {
+                            respuestaIA = dataProp.GetString() ?? "";
+                        }
+
+                        if (root.TryGetProperty("localizador", out var locProp))
+                        {
+                            localizador = locProp.GetString() ?? "";
+                        }
+
+                        return Json(new
+                        {
+                            ok = true,
+                            tipo = "texto",
+                            data = respuestaIA,
+                            referencia = localizador // Pasamos el localizador a la vista por si quieres mostrarlo
+                        });
                     }
 
-                    return Json(new { ok = false, msg = "n8n no responde o ha devuelto error" });
+                    return Json(new { ok = false, msg = "Error en n8n: " + response.ReasonPhrase });
                 }
             }
             catch (Exception ex)
             {
-                return Json(new { ok = false, msg = ex.Message });
+                return Json(new { ok = false, msg = "Error crítico: " + ex.Message });
             }
         }
     }

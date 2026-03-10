@@ -1516,51 +1516,93 @@
         }
         modalCancelarObj.show();
     }
-             async function ejecutarCancelacionCita() {
-        const idCita = document.getElementById("cancelarIdCita").value;
-        const motivo = document.getElementById("cancelarMotivo").value.trim();
+                $("#btnConfirmarCancelPac").on("click", async function (e) {
+        // 1. FUNDAMENTAL: Detenemos el envío automático del botón/form
+        e.preventDefault();
 
-        Swal.fire({ title: 'Procesando...', didOpen: () => Swal.showLoading() });
+        const idCita = $("#cancelarIdCitaPac").val();
+        const motivo = $("#cancelarMotivoPac").val().trim();
+
+        if (!motivo) {
+            Swal.fire("Atención", "Debe indicar un motivo para cancelar.", "warning");
+            return;
+        }
+
+        // Bloqueamos la interfaz para que el usuario no haga doble clic
+        Swal.fire({
+            title: 'Procesando...',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
 
         try {
-            // Llamamos al NUEVO método
+            // 2. FETCH: Sin inventos, tal cual tu método
             const response = await fetch(`/Citas/CancelarCitaAgenda?idCita=${idCita}&motivo=${encodeURIComponent(motivo)}`, {
-    method: "POST"
+                method: "POST"
             });
 
+            // 3. RECUPERAR JSON
             const result = await response.json();
 
             if (result.ok) {
-                // Cerramos modal y empezamos a vigilar Cal.com
-                if(modalCancelarObj) modalCancelarObj.hide();
+                // Cerramos el modal si existe
+                if (window.modalCancelarObj) {
+                    window.modalCancelarObj.hide();
+                }
+
+                // 4. EL REPINTE: El polling es el que se encarga de actualizar
                 iniciarPollingCancelacion(result.idAccion);
+
             } else {
-                Swal.fire("Error", result.mensaje, "error");
+                Swal.fire("Error", result.mensaje || "Error desconocido", "error");
             }
         } catch (error) {
-            Swal.fire("Error", "No se pudo conectar con el servidor", "error");
+            console.error("Error en la petición:", error);
+            Swal.fire("Error", "No se pudo conectar con el servidor o la petición fue anulada.", "error");
         }
-    }
-    function iniciarPollingCancelacion(idAccion) {
+    });
+       function iniciarPollingCancelacion(idAccion) {
+        console.log("--- Iniciando Polling de Cancelación ---");
+        console.log("ID de Acción a vigilar:", idAccion);
+
         let intentos = 0;
         const intervalo = setInterval(async () => {
             intentos++;
+            console.log(`Petición de estado #${intentos} para ID: ${idAccion}...`);
+
             try {
                 const check = await fetch(`/Citas/ConsultarEstadoAccion?id=${idAccion}`);
                 const res = await check.json();
+
+                // Log de la respuesta completa del servidor
+                console.log("Respuesta recibida del servidor:", res);
+
                 const estado = (res.status || "").trim().toUpperCase();
+                console.log("Estado procesado:", estado);
 
                 if (estado === 'S') {
+                    console.log("¡Éxito detectado (Estado S)! Limpiando intervalo y repintando.");
                     clearInterval(intervalo);
                     if(modalCancelarObj) modalCancelarObj.hide();
-                    Swal.fire("Éxito", "Cita cancelada correctamente.", "success").then(() => verAgenda());
-                } else if (estado === 'Z' || intentos > 20) {
+                    Swal.fire("Éxito", "Cita cancelada correctamente.", "success").then(() => {
+                        console.log("Llamando a verAgenda()...");
+                        verAgenda();
+                    });
+                }
+                else if (estado === 'Z' || intentos > 20) {
+                    console.log(estado === 'Z' ? "Estado final 'Z' detectado." : "Límite de intentos (20) alcanzado.");
                     clearInterval(intervalo);
                     if(modalCancelarObj) modalCancelarObj.hide();
-                    Swal.fire("Info", "El proceso terminará en breve.", "info").then(() => verAgenda());
+                    Swal.fire("Info", "El proceso terminará en breve.", "info").then(() => {
+                        console.log("Llamando a verAgenda() tras tiempo de espera o estado Z...");
+                        verAgenda();
+                    });
+                } else {
+                    console.log("El proceso sigue pendiente... Reintentando en 3 segundos.");
                 }
             } catch (err) {
-                console.error(err);
+                console.error("Error en el polling de cancelación:", err);
+                // Si hay un error de red, no detenemos el intervalo para dar margen a que se recupere
             }
         }, 3000);
     }
