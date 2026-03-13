@@ -1,5 +1,6 @@
 ﻿using ClinicaData.Configuracion;
 using ClinicaData.Contrato;
+using ClinicaData.Implementacion;
 using ClinicaEntidades;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -48,35 +49,139 @@ namespace ClinicaWeb.Controllers
             return View();
         }
 
+
         [Authorize(Roles = "Administrador,Paciente,Doctor")]
         [HttpGet]
         public async Task<IActionResult> Lista()
         {
+            // El repositorio ya devuelve los nuevos campos (Bio, Valoración, etc.)
             List<Doctor> lista = await _repositorio.Lista();
             return StatusCode(StatusCodes.Status200OK, new { data = lista });
         }
-
+        [Authorize(Roles = "Administrador,Paciente,Doctor")]
         [HttpPost]
-        public async Task<IActionResult> Guardar([FromBody] Doctor objeto)
+        public async Task<IActionResult> Guardar([FromForm] Doctor objeto, IFormFile FotoFile)
         {
-            string respuesta = await _repositorio.Guardar(objeto);
-            return StatusCode(StatusCodes.Status200OK, new { data = respuesta });
+            try
+            {
+                // Si el usuario subió una foto, la convertimos a byte[] para el repositorio
+                if (FotoFile != null && FotoFile.Length > 0)
+                {
+                    using (var ms = new MemoryStream())
+                    {
+                        await FotoFile.CopyToAsync(ms);
+                        objeto.Archivo = ms.ToArray();
+                    }
+                }
+
+                string respuesta = await _repositorio.Guardar(objeto);
+                return StatusCode(StatusCodes.Status200OK, new { data = respuesta });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { data = ex.Message });
+            }
+        }
+        [Authorize(Roles = "Administrador,Paciente,Doctor")]
+        [HttpGet]
+        public async Task<IActionResult> VerFoto(int id)
+        {
+            // Obtener la lista y buscar al doctor por su ID
+            var listaDoctores = await _repositorio.Lista();
+            var doctor = listaDoctores.FirstOrDefault(d => d.IdDoctor == id);
+
+            // Si el doctor no existe o no tiene archivo (BLOB)
+            if (doctor?.Archivo == null || doctor.Archivo.Length == 0)
+            {
+                return NotFound(); // O puedes devolver una imagen por defecto desde wwwroot
+            }
+
+            // Retornamos el array de bytes como un archivo de imagen
+            // El navegador detectará automáticamente si es PNG o JPG
+            return File(doctor.Archivo, "image/jpeg");
+        }
+        [Authorize(Roles = "Administrador,Paciente,Doctor")]
+        [HttpGet]
+        public async Task<IActionResult> DescargarFotoDirecta(int id)
+        {
+            // Recupera la lista completa o un objeto específico por ID
+            var lista = await _repositorio.Lista();
+            var doctor = lista.FirstOrDefault(d => d.IdDoctor == id);
+
+            // Verificación crítica: el campo 'Archivo' debe contener el byte[] de la DB
+            if (doctor?.Archivo == null || doctor.Archivo.Length == 0)
+            {
+                return Content("El doctor no tiene ninguna foto guardada.");
+            }
+
+            // Se utiliza 'application/octet-stream' para forzar la descarga del BLOB
+            return File(doctor.Archivo, "application/octet-stream", $"doctor_{id}_foto.jpg");
         }
 
-        [HttpPut]
-        public async Task<IActionResult> Editar([FromBody] Doctor objeto)
+        public async Task<IActionResult> Editar([FromForm] Doctor objeto, IFormFile FotoFile)
         {
-            string respuesta = await _repositorio.Editar(objeto);
+            try
+            {
+                // 1. Si se adjunta una foto nueva, la procesamos
+                if (FotoFile != null && FotoFile.Length > 0)
+                {
+                    using (var ms = new MemoryStream())
+                    {
+                        await FotoFile.CopyToAsync(ms);
+                        objeto.Archivo = ms.ToArray();
+                    }
+                }
+                else
+                {
+                    // 2. CRÍTICO: Si NO hay foto nueva, recuperamos la actual de la DB 
+                    // para que 'objeto.Archivo' no sea null y no borre la foto en el UPDATE.
+                    var listaCompleta = await _repositorio.Lista();
+                    var doctorExistente = listaCompleta.FirstOrDefault(d => d.IdDoctor == objeto.IdDoctor);
+                    if (doctorExistente != null)
+                    {
+                        objeto.Archivo = doctorExistente.Archivo;
+                    }
+                }
+
+                string respuesta = await _repositorio.Editar(objeto);
+                return StatusCode(StatusCodes.Status200OK, new { data = respuesta });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { data = ex.Message });
+            }
+        }
+        [Authorize(Roles = "Administrador,Paciente,Doctor")]
+        // NUEVO: Método para listar las especialidades de la tabla intermedia
+        [HttpGet]
+        public async Task<IActionResult> ListarEspecialidadesDoctor(int idDoctor)
+        {
+            // Este método lo llamará el nuevo DataTable dentro del modal de especialidades
+            var lista = await _repositorio.ListarEspecialidadesPorDoctor(idDoctor);
+            return StatusCode(StatusCodes.Status200OK, new { data = lista });
+        }
+        [Authorize(Roles = "Administrador,Paciente,Doctor")]
+        [HttpPost]
+        public async Task<IActionResult> AsignarEspecialidad(int idDoctor, int idEspecialidad)
+        {
+            string respuesta = await _repositorio.AsignarEspecialidad(idDoctor, idEspecialidad);
             return StatusCode(StatusCodes.Status200OK, new { data = respuesta });
         }
-
+        [Authorize(Roles = "Administrador,Paciente,Doctor")]
+        [HttpDelete]
+        public async Task<IActionResult> EliminarEspecialidad(int id)
+        {
+            bool respuesta = await _repositorio.EliminarEspecialidadDoctor(id);
+            return StatusCode(StatusCodes.Status200OK, new { data = respuesta });
+        }
+        [Authorize(Roles = "Administrador,Paciente,Doctor")]
         [HttpDelete]
         public async Task<IActionResult> Eliminar(int Id)
         {
             int respuesta = await _repositorio.Eliminar(Id);
             return StatusCode(StatusCodes.Status200OK, new { data = respuesta });
         }
-
+        [Authorize(Roles = "Administrador,Paciente,Doctor")]
         [HttpGet]
         public async Task<IActionResult> ListaCitasAsignadas(int IdEstadoCita)
         {

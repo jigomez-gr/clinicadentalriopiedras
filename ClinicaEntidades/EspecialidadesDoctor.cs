@@ -6,11 +6,17 @@ using System.Threading.Tasks;
 
 namespace ClinicaEntidades
 {
-    public class Especialidad
+
+    public class EspecialidadesDoctor
     {
+        public int IdEspecialidadDoctor { get; set; }
+        public int IdDoctor { get; set; }
         public int IdEspecialidad { get; set; }
-        public string Nombre { get; set; } = string.Empty;
+        public string NombreEspecialidad { get; set; } = string.Empty;
         public string FechaCreacion { get; set; } = string.Empty;
     }
+
+
+
 
 }

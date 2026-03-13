@@ -41,6 +41,11 @@ namespace ClinicaData.Contrato
         Task<DoctorApiKeyCalcom?> ObtenerCalcom(int idDoctor);
         Task<string> GuardarCalcom(DoctorApiKeyCalcom cfg); // upsert
         Task<(bool ok, string msg, int idAccion)> EncolarSincroCalcom(int idDoctor, string mes, string anio);
-     
+        Task<List<EspecialidadesDoctor>> ListarEspecialidadesPorDoctor(int idDoctor);
+        Task<string> AsignarEspecialidad(int idDoctor, int idEspecialidad);
+        Task<bool> EliminarEspecialidadDoctor(int idEspecialidadDoctor);
+
+
+
     }
 }

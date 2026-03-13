@@ -1,15 +1,12 @@
-﻿@{
+﻿@* *@
+@{
     ViewData["Title"] = "Doctores";
 }
 
 @section Styles {
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
-    @* cambio datatable comzo *@
-    @* Referencias necesarias para que la paginación y tablas recuperen el estilo Bootstrap *@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" />
-    @* cambio datatable fin *@
     <style>
-
         .acciones-container {
             display: flex;
             gap: 4px;
@@ -32,8 +29,7 @@
         }
 
         @@media (max-width: 768px) {
-            #tbData thead th:first-child,
-            #tbData tbody td:first-child {
+            #tbData thead th:first-child, #tbData tbody td:first-child {
                 position: sticky;
                 left: 0;
                 background-color: #f8f9fa !important;
@@ -42,33 +38,13 @@
             }
         }
 
-
         #ui-datepicker-div {
             z-index: 999999 !important;
         }
 
-        .slot-btn-pac {
-            cursor: pointer;
-            border: 1px solid #ccc;
-            border-radius: 0.375rem;
-            padding: 10px;
-            text-align: center;
-            background: #fff;
-            min-width: 80px;
-            font-weight: bold;
-            display: inline-block;
+        table.dataTable td, table.dataTable th {
+            white-space: normal !important;
         }
-
-            .slot-btn-pac:hover {
-                background: #f8f9fa;
-                border-color: #198754;
-            }
-
-            .slot-btn-pac.active-slot {
-                background-color: #198754 !important;
-                color: #fff !important;
-                border-color: #198754 !important;
-            }
 
         .btn-repro-verde {
             color: #198754 !important;
@@ -81,26 +57,25 @@
                 color: white !important;
             }
 
-        .tooltip-citas {
-            --bs-tooltip-bg: #fff;
-            --bs-tooltip-color: #000;
+        .api-item {
+            cursor: pointer;
+            padding: 8px;
+            transition: 0.2s;
+            border-bottom: 1px solid #eee;
         }
 
-        table.dataTable td, table.dataTable th {
-            white-space: normal !important;
-        }
+            .api-item:hover {
+                background-color: #f0fdf4;
+            }
 
-        .dataTables_processing {
-            background-color: #ffcccc !important;
-            color: #d9534f !important;
-            font-weight: bold !important;
-            font-size: 1.2rem !important;
-            border: 2px solid #d9534f !important;
-            z-index: 9999 !important;
-            top: 50% !important;
-            height: auto !important;
-            padding: 20px !important;
-        }
+        
+            /* Mejora de contraste en la selección de la API  */
+            .api-item.selected {
+                background-color: #d1e7dd !important;
+                color: #0f5132 !important; /* Texto oscuro para lectura fácil */
+                border: 1px solid #0f5132 !important;
+                font-weight: bold;
+            }
     </style>
 }
 
@@ -110,16 +85,10 @@
             <div class="card-header d-flex align-items-center">
                 <i class="fa-solid fa-user-doctor me-2"></i>
                 <span>Lista de Doctores</span>
-
-                <button type="button"
-                        class="btn btn-success btn-sm ms-auto"
-                        onclick="openHelpVideo('Doctor_Horario.mp4')"
-                        data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-citas"
-                        title="Ayuda: abre el vídeo de explicación (wwwroot/helps/Doctor_Horario.mp4).">
+                <button type="button" class="btn btn-success btn-sm ms-auto" onclick="openHelpVideo('Doctor_Horario.mp4')">
                     <i class="fa fa-circle-question me-1"></i> Ayuda
                 </button>
             </div>
-
             <div class="card-body">
                 <div class="row">
                     <div class="col-sm-3">
@@ -127,12 +96,10 @@
                     </div>
                 </div>
                 <hr />
-
                 <div class="row">
                     <div class="col-sm-12">
                         <div class="table-responsive">
-                            <table class="display table table-striped table-bordered table-hover nowrap"
-                                   id="tbData" style="width:100%" cellspacing="0">
+                            <table class="display table table-striped table-bordered table-hover nowrap" id="tbData" style="width:100%">
                                 <thead>
                                     <tr>
                                         <th>Acciones</th>
@@ -153,40 +120,68 @@
     </div>
 </div>
 
-<div class="modal fade" id="mdData" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="mdData" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Doctor</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body text-start">
+            <div class="modal-body">
                 <div class="row g-2">
-                    <div class="col-sm-6">
-                        <label class="col-form-label">Nro Documento:</label>
-                        <input type="text" class="form-control" id="txtNroDocumento" autocomplete="off">
+                    <div class="col-sm-4">
+                        <label class="col-form-label small">Nro Documento:</label>
+                        <input type="text" class="form-control form-control-sm" id="txtNroDocumento">
                     </div>
-                    <div class="col-sm-6">
-                        <label class="col-form-label">Nombres:</label>
-                        <input type="text" class="form-control" id="txtNombres" autocomplete="off">
+                    <div class="col-sm-4">
+                        <label class="col-form-label small">Nombres:</label>
+                        <input type="text" class="form-control form-control-sm" id="txtNombres">
                     </div>
-                    <div class="col-sm-6">
-                        <label class="col-form-label">Apellidos:</label>
-                        <input type="text" class="form-control" id="txtApellidos" autocomplete="off">
+                    <div class="col-sm-4">
+                        <label class="col-form-label small">Apellidos:</label>
+                        <input type="text" class="form-control form-control-sm" id="txtApellidos">
                     </div>
-                    <div class="col-sm-6">
-                        <label class="col-form-label">Genero:</label>
-                        <select id="cboGenero" class="form-control" data-width="100%"></select>
+                    <div class="col-sm-4">
+                        <label class="col-form-label small">Género:</label>
+                        <select id="cboGenero" class="form-control form-control-sm"></select>
+                    </div>
+
+                   
+                    
+                    <div class="col-sm-5">
+                        <label class="col-form-label small">Fotografía:</label>
+                        <input type="file" class="form-control form-control-sm" id="txtFoto" accept="image/*">
+                        <a id="btnDescargarFoto" href="#" download="foto_doctor.jpg" class="btn btn-outline-secondary btn-sm mt-2" style="display:none;">
+                            <i class="fas fa-download"></i> Descargar Foto
+                        </a>
+                    </div>
+                    <div class="col-sm-4 text-center">
+                        <img id="imgFotoPreview" src="" class="img-thumbnail"
+                             style="width: 160px; height: 160px; display:none; border: 1px solid #ccc; object-fit: cover;">
+                    </div>
+
+                    <div class="col-sm-3">
+                        <label class="col-form-label small">Valoración (User):</label>
+                        <input type="number" class="form-control form-control-sm" id="txtValoracion" min="1" max="5" step="0.1">
+                    </div>
+                    <div class="col-sm-3">
+                        <label class="col-form-label small">Valoración AI:</label>
+                        <input type="number" class="form-control form-control-sm" id="txtValoracionAi" min="1" max="5" step="0.1">
+                    </div>
+                   
+                    <div class="col-sm-12">
+                        <label class="col-form-label small">Resumen AI:</label>
+                        <textarea class="form-control form-control-sm" id="txtResumenValoracion" rows="3"></textarea>
                     </div>
                     <div class="col-sm-12">
-                        <label class="col-form-label">Especialidad:</label>
-                        <select id="cboEspecialidad" class="form-control" data-width="100%"></select>
+                        <label class="col-form-label small">Biografía:</label>
+                        <textarea class="form-control form-control-sm" id="txtBiografia" rows="3"></textarea>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-outline-success" id="btnCalcom" data-bs-toggle="tooltip" title="Configurar Cal.com">
+                <button type="button" class="btn btn-outline-success" id="btnCalcom">
                     <i class="fa-solid fa-link me-1"></i> Cal.com
                 </button>
                 <button type="button" class="btn btn-primary" id="btnGuardar">Guardar</button>
@@ -195,81 +190,61 @@
     </div>
 </div>
 
-<div class="modal fade" id="mdCalcom" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="mdEspecialidades" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title">Especialidades: <span id="lblDoctorEsp" class="badge bg-primary"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group mb-3">
+                    <select id="cboEspecialidadMultiple" class="form-select form-select-sm"></select>
+                    <button class="btn btn-success btn-sm" id="btnAsignarEspecialidad">Añadir</button>
+                </div>
+                <div class="table-responsive">
+                    <table id="tbEspecialidadesDoc" class="table table-hover table-sm w-100">
+                        <thead>
+                            <tr>
+                                <th>Especialidad</th>
+                                <th style="width:50px"></th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="mdCalcom" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Config Cal.com (doctor)</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                <h5 class="modal-title">Configuración Cal.com: <span id="lblDoctorCal" class="badge bg-info"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body text-start">
                 <div class="row g-2">
-                    <div class="col-12 col-md-6">
-                        <label class="form-label">API Key</label>
-                        <input type="text" class="form-control" id="txtCalApiKey" autocomplete="off">
+                    <div class="col-md-6"><label class="small">API Key</label><input type="text" class="form-control" id="txtCalApiKey"></div>
+                    <div class="col-md-6"><label class="small">Cal Username</label><input type="text" class="form-control" id="txtCalUsername"></div>
+                    <div class="col-md-6"><label class="small">Event Type Id (Seleccionado)</label><input type="number" class="form-control" id="txtCalEventTypeId" readonly></div>
+                    <div class="col-md-6"><label class="small">Cal Public URL</label><input type="text" class="form-control" id="txtCalPublicUrl"></div>
+                    <div class="col-md-12"><label class="small">Nombre del Evento</label><input type="text" class="form-control" id="txtCalEventName" readonly></div>
+                    <div id="divApiInfo" class="col-12 mt-3 border p-2 bg-light" style="max-height: 250px; overflow-y: auto;">
+                        <p class="text-muted small">Pulsa "Consultar API" para cargar los eventos...</p>
                     </div>
-                    <div class="col-12 col-md-6">
-                        <label class="form-label">Cal Username</label>
-                        <input type="text" class="form-control" id="txtCalUsername" autocomplete="off">
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <label class="form-label">Event Type Id</label>
-                        <input type="number" class="form-control" id="txtCalEventTypeId" autocomplete="off">
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <label class="form-label">Cal Public URL</label>
-                        <input type="text" class="form-control" id="txtCalPublicUrl" autocomplete="off">
-                    </div>
-                    <div class="col-12 col-md-8">
-                        <label class="form-label">Nombre del Evento (Cal)</label>
-                        <input type="text" class="form-control" id="txtCalEventName" placeholder="Se cargará desde la API">
-                    </div>
-                    <div class="col-12 col-md-4">
-                        <label class="form-label">Intervalo (min)</label>
-                        <input type="number" class="form-control" id="txtCalSlotInterval" placeholder="30">
-                    </div>
-                    <div class="col-12 mt-2 d-none" id="divApiInfo">
-                        <div class="alert alert-info py-2 mb-0">
-                            <h6 class="alert-heading mb-1" style="font-size:0.9rem;"><i class="fa-solid fa-circle-info me-2"></i>Info detectada en API:</h6>
-                            <div id="apiDetails" style="font-size: 0.8rem;"></div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <label class="form-label">Email (Cal)</label>
-                        <input type="text" class="form-control" id="txtCalEmail" autocomplete="off">
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <label class="form-label">Teléfono (Cal)</label>
-                        <input type="text" class="form-control" id="txtCalTelefono" autocomplete="off">
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label">Nombre y Apellido (Cal)</label>
-                        <input type="text" class="form-control" id="txtCalNombreYApellido" autocomplete="off">
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <label class="form-label">Event Inbox</label>
-                        <input type="text" class="form-control" id="txtCalEventInbox" autocomplete="off" placeholder="DEFAULT">
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <label class="form-label">Event Inbox URL</label>
-                        <input type="text" class="form-control" id="txtCalEventInboxUrl" autocomplete="off">
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label">Notes</label>
-                        <textarea class="form-control" id="txtCalNotes" rows="2"></textarea>
-                    </div>
-                    <div class="col-12">
-                        <div class="form-check mt-1">
-                            <input class="form-check-input" type="checkbox" id="chkCalIsActive" checked>
-                            <label class="form-check-label" for="chkCalIsActive">Activo</label>
+                    <div class="col-12 mt-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="chkCalIsActive">
+                            <label class="form-check-label">Sincronización Activa</label>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-repro-verde" id="btnConsultarApi">
-                    <i class="fa-solid fa-magnifying-glass me-1"></i> Consultar API
-                </button>
+                <button type="button" class="btn btn-repro-verde" id="btnConsultarApi">Consultar API</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                 <button type="button" class="btn btn-primary" id="btnGuardarCalcom">Guardar Cal</button>
             </div>
@@ -278,281 +253,296 @@
 </div>
 
 @section Scripts {
-    @* cambio datatable comzo *@
-    @* Importante cargar el JS de integración con Bootstrap 5 *@
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-    @* cambio datatable fin *@
     <script>
         (function () {
             "use strict";
-            window.openHelpVideo = function (fileName) {
-                const w = 900, h = 520;
-                const left = Math.max(0, (screen.width - w) / 2);
-                const top = Math.max(0, (screen.height - h) / 2);
-                const url = "/helps/" + encodeURIComponent(fileName);
-                window.open(url, "helpVideo", `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no`);
-            };
-
-            function initTooltips(scope) {
-                const root = scope || document;
-                const triggers = root.querySelectorAll('[data-bs-toggle="tooltip"]');
-                triggers.forEach(el => {
-                    const inst = bootstrap.Tooltip.getInstance(el);
-                    if (inst) return;
-                    new bootstrap.Tooltip(el);
-                });
-            }
-
             let tablaData;
             let idEditar = 0;
             const controlador = "Doctor";
             const modal = "mdData";
 
-            async function cargarGeneros() {
-                const cbo = document.getElementById("cboGenero");
-                if (!cbo) return;
-                cbo.innerHTML = "";
-                const o1 = document.createElement("option"); o1.value = "M"; o1.textContent = "M";
-                const o2 = document.createElement("option"); o2.value = "F"; o2.textContent = "F";
-                cbo.appendChild(o1); cbo.appendChild(o2);
-            }
-
-            async function cargarEspecialidades() {
-                const r = await fetch("/Especialidad/Lista", { headers: { "Accept": "application/json" } });
-                const j = await r.json().catch(() => null);
-                const arr = (j && j.data) ? j.data : [];
-                const cbo = document.getElementById("cboEspecialidad");
-                cbo.innerHTML = "";
-                for (const e of arr) {
-                    const id = e.idEspecialidad ?? e.IdEspecialidad ?? 0;
-                    const nom = e.nombre ?? e.Nombre ?? "";
-                    const o = document.createElement("option");
-                    o.value = id; o.textContent = nom;
-                    cbo.appendChild(o);
-                }
-            }
+            window.openHelpVideo = function (fileName) {
+                const url = "/helps/" + encodeURIComponent(fileName);
+                window.open(url, "helpVideo", "width=900,height=520");
+            };
 
             function limpiarModal() {
                 idEditar = 0;
-                $("#txtNroDocumento").val("");
-                $("#txtNombres").val("");
-                $("#txtApellidos").val("");
-                $("#cboGenero").val("");
-                $("#cboEspecialidad").val("");
+                $("#txtNroDocumento, #txtNombres, #txtApellidos, #txtBiografia, #txtResumenValoracion, #txtFoto").val("");
+                $("#cboGenero").val("M");
+                $("#txtValoracion, #txtValoracionAi").val("3.0");
             }
 
             function llenarModal(row) {
                 limpiarModal();
                 idEditar = row.idDoctor ?? row.IdDoctor ?? 0;
-                $("#txtNroDocumento").val((row.numeroDocumentoIdentidad ?? row.NumeroDocumentoIdentidad ?? "").trim());
-                $("#txtNombres").val((row.nombres ?? row.Nombres ?? "").trim());
-                $("#txtApellidos").val((row.apellidos ?? row.Apellidos ?? "").trim());
-                $("#cboGenero").val((row.genero ?? row.Genero ?? "").trim());
-                const idEsp = row.especialidad?.idEspecialidad ?? row.Especialidad?.IdEspecialidad ?? 0;
-                if (idEsp) $("#cboEspecialidad").val(idEsp);
+                $("#txtNroDocumento").val(row.numeroDocumentoIdentidad ?? row.NumeroDocumentoIdentidad ?? "");
+                $("#txtNombres").val(row.nombres ?? row.Nombres ?? "");
+                $("#txtApellidos").val(row.apellidos ?? row.Apellidos ?? "");
+                $("#cboGenero").val(row.genero ?? row.Genero ?? "M");
+                $("#txtBiografia").val(row.biografia ?? row.Biografia ?? "");
+                $("#txtValoracion").val(row.valoracion ?? row.Valoracion ?? "3.0");
+                $("#txtValoracionAi").val(row.valoracionAi ?? row.ValoracionAi ?? "3.0");
+                $("#txtResumenValoracion").val(row.resumenValoracion ?? row.ResumenValoracion ?? "");
+                        // Dentro de llenarModal(row)
+   
+           // Mostramos la foto llamando al nuevo método del controlador
+           idEditar = row.idDoctor ?? row.IdDoctor ?? 0;
+
+        if (idEditar > 0) {
+            const urlFoto = `/Doctor/VerFoto?id=${idEditar}&t=${new Date().getTime()}`;
+
+            // 1. Muestra la foto automáticamente
+            $("#imgFotoPreview").attr("src", urlFoto).show();
+
+            // 2. Configura el botón de descargar
+            $("#btnDescargarFoto").attr("href", urlFoto).show();
+        } else {
+            $("#imgFotoPreview, #btnDescargarFoto").hide();
+        }
+            }
+
+            async function cargarGeneros() {
+                $("#cboGenero").html('<option value="M">M</option><option value="F">F</option>');
+            }
+
+            async function cargarEspecialidades() {
+                const r = await fetch("/Especialidad/Lista");
+                const j = await r.json().catch(() => null);
+                const arr = (j && j.data) ? j.data : [];
+                const cboMul = document.getElementById("cboEspecialidadMultiple");
+                if (cboMul) {
+                    cboMul.innerHTML = "<option value=''>-- Seleccionar --</option>";
+                    arr.forEach(e => {
+                        const o = document.createElement("option");
+                        o.value = e.idEspecialidad ?? e.IdEspecialidad;
+                        o.textContent = e.nombre ?? e.Nombre;
+                        cboMul.appendChild(o);
+                    });
+                }
             }
 
             async function guardarDoctor() {
-                const nro = ($("#txtNroDocumento").val() || "").trim();
-                const nom = ($("#txtNombres").val() || "").trim();
-                const ape = ($("#txtApellidos").val() || "").trim();
-                const gen = ($("#cboGenero").val() || "").trim();
-                const idEsp = parseInt($("#cboEspecialidad").val() || "0", 10) || 0;
+                const formData = new FormData();
+                formData.append("IdDoctor", idEditar);
+                formData.append("NumeroDocumentoIdentidad", $("#txtNroDocumento").val());
+                formData.append("Nombres", $("#txtNombres").val());
+                formData.append("Apellidos", $("#txtApellidos").val());
+                formData.append("Genero", $("#cboGenero").val());
+                formData.append("Biografia", $("#txtBiografia").val());
 
-                if (!nro || !nom || !ape || !gen || !idEsp) {
-                    Swal.fire("Aviso", "Completa documento, nombres, apellidos, género y especialidad.", "info");
-                    return;
+                // Corrección decimales (reemplazar . por , para C#)
+                formData.append("Valoracion", $("#txtValoracion").val().toString().replace('.', ','));
+                formData.append("ValoracionAi", $("#txtValoracionAi").val().toString().replace('.', ','));
+                formData.append("ResumenValoracion", $("#txtResumenValoracion").val());
+
+                const inputFoto = document.getElementById('txtFoto');
+                if (inputFoto && inputFoto.files.length > 0) {
+                    formData.append("FotoFile", inputFoto.files[0]);
                 }
 
-                const payload = {
-                    IdDoctor: idEditar,
-                    NumeroDocumentoIdentidad: nro,
-                    Nombres: nom,
-                    Apellidos: ape,
-                    Genero: gen,
-                    Especialidad: { IdEspecialidad: idEsp }
-                };
+                const url = `/${controlador}/${idEditar > 0 ? "Editar" : "Guardar"}`;
+                const r = await fetch(url, { method: idEditar > 0 ? "PUT" : "POST", body: formData });
+                if (r.ok) {
+                    Swal.fire("OK", "Doctor guardado con éxito.", "success");
+                    bootstrap.Modal.getOrCreateInstance(document.getElementById(modal)).hide();
+                    tablaData.ajax.reload(null, false);
+                }
+            }
 
-                const method = (idEditar && idEditar > 0) ? "PUT" : "POST";
-                const url = "/" + controlador + ((method === "POST") ? "/Guardar" : "/Editar");
-                const r = await fetch(url, {
-                    method,
-                    headers: { "Content-Type": "application/json;charset=utf-8" },
+            async function cargarCalcom(id) {
+                // Reset campos Calcom
+                $("#txtCalApiKey, #txtCalUsername, #txtCalEventTypeId, #txtCalPublicUrl, #txtCalEventName").val("");
+                $("#chkCalIsActive").prop("checked", false);
+                $("#divApiInfo").html('<p class="text-muted small">Pulsa "Consultar API" para cargar los eventos...</p>');
+
+                const r = await fetch(`/Doctor/ObtenerCalcom?idDoctor=${id}`);
+                const j = await r.json();
+                if (j && j.data) {
+                    const d = j.data;
+                    $("#txtCalApiKey").val(d.apiKey);
+                    $("#txtCalUsername").val(d.calUsername);
+                    $("#txtCalEventTypeId").val(d.calEventTypeId);
+                    $("#txtCalPublicUrl").val(d.calPublicUrl);
+                    $("#txtCalEventName").val(d.calEventName || "");
+                    $("#chkCalIsActive").prop("checked", d.isActive !== false);
+                    $("#lblDoctorCal").text($("#txtNombres").val());
+                }
+            }
+
+            async function consultarApiCal() {
+                const key = $("#txtCalApiKey").val();
+                if (!key) return Swal.fire("Aviso", "Ingresa la API Key", "warning");
+                $("#divApiInfo").html('<div class="spinner-border spinner-border-sm" role="status"></div> Buscando...');
+
+                const r = await fetch(`/Doctor/GetDetallesApiCal?apiKey=${encodeURIComponent(key)}`);
+                const j = await r.json();
+
+                if (r.ok && j.data && j.data.length > 0) {
+                    let html = '<div class="list-group">';
+                    j.data.forEach(e => {
+                        html += `<a href="#" class="list-group-item list-group-item-action api-item" data-id="${e.id}" data-title="${e.title}" data-slug="${e.slug}">
+                                    <strong>${e.title}</strong><br><small>ID: ${e.id} | Slug: ${e.slug}</small>
+                                 </a>`;
+                    });
+                    html += '</div>';
+                    $("#divApiInfo").html(html);
+
+                    $(".api-item").on("click", function(e) {
+                        e.preventDefault();
+                        $(".api-item").removeClass("selected active");
+                        $(this).addClass("selected active");
+                        $("#txtCalEventTypeId").val($(this).data("id"));
+                        $("#txtCalEventName").val($(this).data("title"));
+                        $("#chkCalIsActive").prop("checked", true);
+                        const user = $("#txtCalUsername").val();
+                        if(user) $("#txtCalPublicUrl").val(`https://cal.com/${user}/${$(this).data("slug")}`);
+                    });
+                } else {
+                    $("#divApiInfo").html('<p class="text-danger small">No se encontraron eventos o la clave es inválida.</p>');
+                }
+            }
+
+            async function guardarCalcom() {
+                const payload = {
+                    idDoctor: idEditar,
+                    apiKey: $("#txtCalApiKey").val(),
+                    calUsername: $("#txtCalUsername").val(),
+                    calEventTypeId: parseInt($("#txtCalEventTypeId").val()) || 0,
+                    calPublicUrl: $("#txtCalPublicUrl").val(),
+                    calEventName: $("#txtCalEventName").val(),
+                    isActive: $("#chkCalIsActive").is(":checked")
+                };
+                const r = await fetch("/Doctor/GuardarCalcom", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
                 });
-                const j = await r.json().catch(() => null);
-                const msg = j ? (j.data ?? j.msg ?? "") : "";
-                if (!r.ok) { Swal.fire("Error", "HTTP " + r.status + " al guardar.", "error"); return; }
-                if (msg && msg !== "") { Swal.fire("Aviso", msg, "warning"); return; }
-
-                Swal.fire("OK", "Guardado.", "success");
-                bootstrap.Modal.getOrCreateInstance(document.getElementById(modal)).hide();
-                tablaData.ajax.reload(null, false);
-            }
-
-            function limpiarCalcomModal() {
-                $("#txtCalApiKey").val("");
-                $("#txtCalUsername").val("");
-                $("#txtCalEventTypeId").val("");
-                $("#txtCalPublicUrl").val("");
-                $("#txtCalEmail").val("");
-                $("#txtCalTelefono").val("");
-                $("#txtCalNombreYApellido").val("");
-                $("#txtCalEventInbox").val("DEFAULT");
-                $("#txtCalEventInboxUrl").val("");
-                $("#txtCalNotes").val("");
-                $("#chkCalIsActive").prop("checked", true);
-                $("#txtCalEventName").val("");
-                $("#txtCalSlotInterval").val(30);
-                $("#divApiInfo").addClass("d-none");
-                $("#apiDetails").html("");
-            }
-
-            async function cargarCalcom(idDoctor) {
-                limpiarCalcomModal();
-                if (!idDoctor) return;
-                const r = await fetch(`/Doctor/ObtenerCalcom?idDoctor=${encodeURIComponent(idDoctor)}`, { headers: { "Accept": "application/json" } });
-                const j = await r.json().catch(() => null);
-                if (!r.ok || !j) return;
-                const d = j.data || {};
-                $("#txtCalApiKey").val((d.apiKey || "").trim());
-                $("#txtCalUsername").val((d.calUsername || "").trim());
-                $("#txtCalEventTypeId").val(d.calEventTypeId ?? "");
-                $("#txtCalPublicUrl").val((d.calPublicUrl || "").trim());
-                $("#txtCalEmail").val((d.email || "").trim());
-                $("#txtCalTelefono").val((d.telefono || "").trim());
-                $("#txtCalNombreYApellido").val((d.nombreYApellido || "").trim());
-                $("#txtCalEventInbox").val((d.eventInbox || "DEFAULT").trim());
-                $("#txtCalEventInboxUrl").val((d.eventInboxUrl || "").trim());
-                $("#txtCalNotes").val((d.notes || "").trim());
-                $("#chkCalIsActive").prop("checked", (d.isActive !== false));
-                $("#txtCalEventName").val((d.calEventName || "").trim());
-                $("#txtCalSlotInterval").val(d.calSlotInterval ?? 30);
-            }
-
-            async function guardarCalcom(idDoctor) {
-                if (!idDoctor) { Swal.fire("Error", "No hay idDoctor para guardar.", "error"); return; }
-                const payload = {
-                    idDoctor: idDoctor,
-                    apiKey: ($("#txtCalApiKey").val() || "").trim(),
-                    calUsername: ($("#txtCalUsername").val() || "").trim(),
-                    calEventTypeId: parseInt($("#txtCalEventTypeId").val() || "0", 10) || null,
-                    calPublicUrl: ($("#txtCalPublicUrl").val() || "").trim(),
-                    email: ($("#txtCalEmail").val() || "").trim(),
-                    telefono: ($("#txtCalTelefono").val() || "").trim(),
-                    nombreYApellido: ($("#txtCalNombreYApellido").val() || "").trim(),
-                    eventInbox: ($("#txtCalEventInbox").val() || "DEFAULT").trim(),
-                    eventInboxUrl: ($("#txtCalEventInboxUrl").val() || "").trim(),
-                    isActive: $("#chkCalIsActive").is(":checked"),
-                    notes: ($("#txtCalNotes").val() || "").trim(),
-                    calEventName: ($("#txtCalEventName").val() || "").trim(),
-                    calSlotInterval: parseInt($("#txtCalSlotInterval").val() || "30", 10)
-                };
-                const r = await fetch("/Doctor/GuardarCalcom", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-                if (!r.ok) { Swal.fire("Error", "HTTP " + r.status, "error"); return; }
-                Swal.fire("OK", "Configuración guardada.", "success");
-                bootstrap.Modal.getInstance(document.getElementById("mdCalcom")).hide();
-            }
-
-            async function consultarInformacionApi() {
-                const apiKey = ($("#txtCalApiKey").val() || "").trim();
-                if (!apiKey) { Swal.fire("Aviso", "Se requiere la API Key.", "warning"); return; }
-                $("#btnConsultarApi").prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> Consultando...');
-                try {
-                    const r = await fetch(`/Doctor/GetDetallesApiCal?apiKey=${encodeURIComponent(apiKey)}`);
-                    const j = await r.json();
-                    if (r.ok && j.data && Array.isArray(j.data)) {
-                        const events = j.data;
-                        $("#divApiInfo").removeClass("d-none");
-                        let html = '<ul class="mb-0 list-unstyled">';
-                        const currentId = parseInt($("#txtCalEventTypeId").val(), 10);
-                        let encontrado = false;
-                        events.forEach(e => {
-                            const isSelected = (parseInt(e.id, 10) === currentId);
-                            html += `<li class="mb-1 p-1 ${isSelected ? 'bg-light border-start border-success border-3' : ''}">
-                                         ${isSelected ? '<strong>' : ''}ID: ${e.id} - ${e.title} (${e.length} min)${isSelected ? ' [ACTUAL]</strong>' : ''}
-                                     </li>`;
-                            if (isSelected) { encontrado = true; $("#txtCalEventName").val(e.title); $("#txtCalSlotInterval").val(e.length); }
-                        });
-                        html += '</ul>';
-                        $("#apiDetails").html(html);
-                        if (!encontrado && currentId) Swal.fire("Aviso", "ID " + currentId + " no existe en esta cuenta.", "info");
-                    } else { Swal.fire("Error", j.msg || "Error API", "error"); }
-                } catch (e) { Swal.fire("Error", "Fallo comunicación.", "error"); } finally {
-                    $("#btnConsultarApi").prop("disabled", false).html('<i class="fa-solid fa-magnifying-glass me-1"></i> Consultar API');
+                if (r.ok) {
+                    Swal.fire("OK", "Configuración de Cal.com guardada.", "success");
+                    bootstrap.Modal.getOrCreateInstance(document.getElementById("mdCalcom")).hide();
                 }
             }
 
             $(document).ready(async function () {
-                initTooltips();
                 await cargarGeneros();
                 await cargarEspecialidades();
 
-                /* cambio datatable comzo */
                 tablaData = $("#tbData").DataTable({
-                    processing: true,
-                    responsive: false, // Usamos scrollX en lugar de responsive para control total móvil
-                    scrollX: true,
-                    ajax: {
-                        url: "/" + controlador + "/Lista",
-                        type: "GET",
-                        dataType: "json",
-                        dataSrc: function (json) { return (json && json.data) ? json.data : []; }
-                    },
+                    ajax: { url: `/${controlador}/Lista`, dataSrc: "data" },
                     columns: [
                         {
                             data: null,
-                            width: "100px",
-                            orderable: false,
-                            render: function (data, type, row) {
+                            render: function () {
                                 return `<div class="acciones-container">
-                                            <button type="button" class="btn btn-primary btn-circle btn-editar" title="Editar"><i class="fas fa-edit"></i></button>
-                                            <button type="button" class="btn btn-danger btn-circle btn-eliminar" title="Eliminar"><i class="fas fa-trash-alt"></i></button>
-                                        </div>`;
+                                    <button class="btn btn-primary btn-circle btn-editar"><i class="fas fa-edit"></i></button>
+                                    <button class="btn btn-info btn-circle btn-especialidades"><i class="fas fa-graduation-cap"></i></button>
+                                    <button class="btn btn-danger btn-circle btn-eliminar"><i class="fas fa-trash-alt"></i></button>
+                                </div>`;
                             }
                         },
                         { data: "numeroDocumentoIdentidad" },
                         { data: "nombres" },
                         { data: "apellidos" },
                         { data: "genero" },
-                        { data: "especialidad", render: (d) => d?.nombre || "" }
-                    ],
-                    language: {
-                        url: "https://cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json"
-                    }
-                });
-                /* cambio datatable fin */
+                         {
+            data: "especialidadesDoc",
+            render: function(data, type, row) {
+                // Generamos los badges si existen especialidades
+                let badges = (data && data.length > 0)
+                    ? data.map(e => `<span class="badge bg-secondary me-1">${e.nombreEspecialidad}</span>`).join("")
+                    : ''; // Si no hay datos, devolvemos una cadena vacía en lugar de "Sin especialidad"
 
-                $("#btnNuevo").on("click", function() { limpiarModal(); bootstrap.Modal.getOrCreateInstance(document.getElementById(modal)).show(); });
-                $("#btnConsultarApi").on("click", consultarInformacionApi);
+                // Retornamos el contenedor con los badges y el botón alineado a la izquierda
+                return `<div class="d-flex flex-column align-items-start">
+                            <div class="mb-1">${badges}</div>
+                            <button type="button" class="btn btn-outline-primary btn-sm btn-especialidades"
+                                    style="padding: 2px 8px; font-size: 12px;"
+                                    title="Gestionar Especialidades">
+                                <i class="fas fa-plus-circle me-1"></i> Especialidades
+                            </button>
+                        </div>`;
+            }
+        }
+                    ],
+                    language: { url: "https://cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json" }
+                });
+                        // Previsualización de la foto seleccionada localmente
+        $("#txtFoto").on("change", function () {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    $("#imgFotoPreview").attr("src", e.target.result).show();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+                $("#btnGuardar").on("click", guardarDoctor);
+                $("#btnNuevo").on("click", () => { limpiarModal(); bootstrap.Modal.getOrCreateInstance(document.getElementById(modal)).show(); });
+
                 $("#tbData tbody").on("click", ".btn-editar", function () {
                     const row = tablaData.row($(this).closest("tr")).data();
                     llenarModal(row);
                     bootstrap.Modal.getOrCreateInstance(document.getElementById(modal)).show();
                 });
 
-                $("#tbData tbody").on("click", ".btn-eliminar", function () {
-                    const row = tablaData.row($(this).closest("tr")).data();
-                    const id = row.idDoctor ?? 0;
-                    if (!id) return;
-                    Swal.fire({ title: "¿Eliminar?", text: "Se eliminará el doctor.", icon: "warning", showCancelButton: true, confirmButtonText: "Sí", cancelButtonText: "No" })
-                    .then(async (res) => {
-                        if (!res.isConfirmed) return;
-                        const r = await fetch("/" + controlador + "/Eliminar?idDoctor=" + encodeURIComponent(id), { method: "DELETE" });
-                        if (r.ok) { Swal.fire("OK", "Eliminado.", "success"); tablaData.ajax.reload(null, false); }
-                        else { Swal.fire("Error", "No se pudo eliminar.", "error"); }
-                    });
+                $("#btnCalcom").on("click", () => {
+                    if (idEditar === 0) return Swal.fire("Aviso", "Primero guarda el doctor", "info");
+                    cargarCalcom(idEditar);
+                    bootstrap.Modal.getOrCreateInstance(document.getElementById("mdCalcom")).show();
                 });
 
-                $("#btnGuardar").on("click", guardarDoctor);
-                $("#btnCalcom").on("click", async function () {
-                    if (!idEditar) { Swal.fire("Aviso", "Primero pulsa Editar sobre un doctor.", "info"); return; }
-                    bootstrap.Modal.getOrCreateInstance(document.getElementById("mdCalcom")).show();
-                    await cargarCalcom(idEditar);
+                $("#btnConsultarApi").on("click", consultarApiCal);
+                $("#btnGuardarCalcom").on("click", guardarCalcom);
+      
+        // Evento para abrir el modal de especialidades
+        $("#tbData tbody").on("click", ".btn-especialidades", function () {
+            const row = tablaData.row($(this).closest("tr")).data();
+            idEditar = row.idDoctor ?? row.IdDoctor;
+
+            // CONCATENAMOS NOMBRES Y APELLIDOS AQUÍ
+            const nombreCompleto = (row.nombres + " " + row.apellidos).trim();
+            $("#lblDoctorEsp").text(nombreCompleto);
+
+            cargarEspecialidadesDoctor(idEditar);
+            bootstrap.Modal.getOrCreateInstance(document.getElementById("mdEspecialidades")).show();
+        });
+
+                $("#btnAsignarEspecialidad").on("click", async function () {
+                    const idEsp = $("#cboEspecialidadMultiple").val();
+                    if(!idEsp) return;
+                    await fetch(`/Doctor/AsignarEspecialidad?idDoctor=${idEditar}&idEspecialidad=${idEsp}`, { method: "POST" });
+                    cargarEspecialidadesDoctor(idEditar);
+                    tablaData.ajax.reload(null, false);
                 });
-                $("#btnGuardarCalcom").on("click", async function () { await guardarCalcom(idEditar); });
             });
+
+            window.cargarEspecialidadesDoctor = async function(id) {
+                if ($.fn.DataTable.isDataTable('#tbEspecialidadesDoc')) $('#tbEspecialidadesDoc').DataTable().destroy();
+                $('#tbEspecialidadesDoc').DataTable({
+                    ajax: { url: `/Doctor/ListarEspecialidadesDoctor?idDoctor=${id}`, dataSrc: "data" },
+                    columns: [
+                        { data: "nombreEspecialidad" },
+                        {
+                            data: "idEspecialidadDoctor",
+                            render: data => `<button class="btn btn-danger btn-sm" onclick="eliminarEspecialidad(${data})"><i class="fas fa-trash"></i></button>`
+                        }
+                    ],
+                    paging: false, dom: 't'
+                });
+            };
+
+            window.eliminarEspecialidad = async function(id) {
+                const res = await Swal.fire({ title: "¿Quitar?", showCancelButton: true });
+                if (res.isConfirmed) {
+                    await fetch(`/Doctor/EliminarEspecialidad?id=${id}`, { method: "DELETE" });
+                    cargarEspecialidadesDoctor(idEditar);
+                    tablaData.ajax.reload(null, false);
+                }
+            };
         })();
     </script>
 }

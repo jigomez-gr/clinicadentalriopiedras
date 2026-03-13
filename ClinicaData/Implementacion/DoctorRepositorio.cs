@@ -17,6 +17,7 @@ namespace ClinicaData.Implementacion
         {
             con = options.Value;
         }
+
         public async Task<string> Editar(Doctor objeto)
         {
             try
@@ -25,27 +26,29 @@ namespace ClinicaData.Implementacion
                 await conexion.OpenAsync();
 
                 await using var cmd = new NpgsqlCommand(
-                    "SELECT public.sp_editardoctor(" +
-                    "@IdDoctor, @NumeroDocumentoIdentidad, @Nombres, @Apellidos, @Genero, @IdEspecialidad);",
+                    "SELECT public.sp_editardoctor(@Id, @NumDoc, @Nombres, @Apellidos, @Genero, @Archivo, @Bio, @Val, @ValAi, @Resumen);",
                     conexion);
 
-                cmd.CommandType = CommandType.Text;
-
-                cmd.Parameters.AddWithValue("@IdDoctor", objeto.IdDoctor);
-                cmd.Parameters.AddWithValue("@NumeroDocumentoIdentidad", objeto.NumeroDocumentoIdentidad);
+                cmd.Parameters.AddWithValue("@Id", objeto.IdDoctor);
+                cmd.Parameters.AddWithValue("@NumDoc", objeto.NumeroDocumentoIdentidad);
                 cmd.Parameters.AddWithValue("@Nombres", objeto.Nombres);
                 cmd.Parameters.AddWithValue("@Apellidos", objeto.Apellidos);
                 cmd.Parameters.AddWithValue("@Genero", objeto.Genero);
-                cmd.Parameters.AddWithValue("@IdEspecialidad", objeto.Especialidad.IdEspecialidad);
+                cmd.Parameters.AddWithValue("@Archivo", (object?)objeto.Archivo ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@Bio", (object?)objeto.Biografia ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@Val", objeto.Valoracion);
+                cmd.Parameters.AddWithValue("@ValAi", objeto.ValoracionAi);
+                cmd.Parameters.AddWithValue("@Resumen", (object?)objeto.ResumenValoracion ?? DBNull.Value);
 
                 var result = await cmd.ExecuteScalarAsync();
                 return result?.ToString() ?? "";
             }
-            catch
+            catch (Exception ex)
             {
-                return "Error al editar el doctor";
+                return "Error al editar el doctor: " + ex.Message;
             }
         }
+
 
 
         public async Task<int> Eliminar(int Id)
@@ -106,63 +109,98 @@ namespace ClinicaData.Implementacion
                 await conexion.OpenAsync();
 
                 await using var cmd = new NpgsqlCommand(
-                    "SELECT public.sp_guardardoctor(" +
-                    "@NumeroDocumentoIdentidad, @Nombres, @Apellidos, @Genero, @IdEspecialidad);",
+                    "SELECT public.sp_guardardoctor(@NumDoc, @Nombres, @Apellidos, @Genero, @Archivo, @Bio, @Val, @ValAi, @Resumen);",
                     conexion);
 
-                cmd.CommandType = CommandType.Text;
-
-                cmd.Parameters.AddWithValue("@NumeroDocumentoIdentidad", objeto.NumeroDocumentoIdentidad);
+                cmd.Parameters.AddWithValue("@NumDoc", objeto.NumeroDocumentoIdentidad);
                 cmd.Parameters.AddWithValue("@Nombres", objeto.Nombres);
                 cmd.Parameters.AddWithValue("@Apellidos", objeto.Apellidos);
                 cmd.Parameters.AddWithValue("@Genero", objeto.Genero);
-                cmd.Parameters.AddWithValue("@IdEspecialidad", objeto.Especialidad.IdEspecialidad);
+                cmd.Parameters.AddWithValue("@Archivo", (object?)objeto.Archivo ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@Bio", (object?)objeto.Biografia ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@Val", objeto.Valoracion);
+                cmd.Parameters.AddWithValue("@ValAi", objeto.ValoracionAi);
+                cmd.Parameters.AddWithValue("@Resumen", (object?)objeto.ResumenValoracion ?? DBNull.Value);
 
                 var result = await cmd.ExecuteScalarAsync();
                 return result?.ToString() ?? "";
             }
-            catch
+            catch (Exception ex)
             {
-                // (tu mensaje decía "editar", lo dejo corregido a "guardar")
-                return "Error al guardar el doctor";
+                return "Error al guardar el doctor: " + ex.Message;
             }
         }
-
         public async Task<List<Doctor>> Lista()
         {
             var lista = new List<Doctor>();
 
-            await using var conexion = new NpgsqlConnection(con.CadenaSQL);
-            await conexion.OpenAsync();
-
-            await using var cmd = new NpgsqlCommand(
-                "SELECT * FROM public.sp_listadoctor();",
-                conexion);
-
-            cmd.CommandType = CommandType.Text;
-
-            await using var dr = await cmd.ExecuteReaderAsync();
-            while (await dr.ReadAsync())
+            try
             {
-                lista.Add(new Doctor
+                await using var conexion = new NpgsqlConnection(con.CadenaSQL);
+                await conexion.OpenAsync();
+
+                // 1. Cargamos los doctores desde tu SP (nombres, apellidos, foto, IA...)
+                await using var cmd = new NpgsqlCommand("SELECT * FROM public.sp_listadoctor();", conexion);
+                cmd.CommandType = CommandType.Text;
+
+                await using var dr = await cmd.ExecuteReaderAsync();
+                while (await dr.ReadAsync())
                 {
-                    IdDoctor = Convert.ToInt32(dr["iddoctor"]),
-                    NumeroDocumentoIdentidad = dr["numerodocumentoidentidad"]?.ToString() ?? "",
-                    Nombres = dr["nombres"]?.ToString() ?? "",
-                    Apellidos = dr["apellidos"]?.ToString() ?? "",
-                    Genero = dr["genero"]?.ToString() ?? "",
-                    Especialidad = new Especialidad
+                    lista.Add(new Doctor
                     {
-                        IdEspecialidad = Convert.ToInt32(dr["idespecialidad"]),
-                        Nombre = dr["nombreespecialidad"]?.ToString() ?? "",
-                    },
-                    FechaCreacion = dr["fechacreacion"]?.ToString() ?? ""
-                });
+                        IdDoctor = Convert.ToInt32(dr["iddoctor"]),
+                        NumeroDocumentoIdentidad = dr["numerodocumentoidentidad"]?.ToString() ?? "",
+                        Nombres = dr["nombres"]?.ToString() ?? "",
+                        Apellidos = dr["apellidos"]?.ToString() ?? "",
+                        Genero = dr["genero"]?.ToString() ?? "",
+                        FechaCreacion = dr["fechacreacion"]?.ToString() ?? "",
+                        Archivo = dr["archivo"] != DBNull.Value ? (byte[])dr["archivo"] : null,
+                        Biografia = dr["biografia"] != DBNull.Value ? dr["biografia"].ToString() : "",
+                        Valoracion = dr["valoracion"] != DBNull.Value ? Convert.ToDecimal(dr["valoracion"]) : 3,
+                        ValoracionAi = dr["valoracionai"] != DBNull.Value ? Convert.ToDecimal(dr["valoracionai"]) : 3,
+                        ResumenValoracion = dr["resumenvaloracion"] != DBNull.Value ? dr["resumenvaloracion"].ToString() : "",
+
+                        // Inicializamos la lista de tu clase Doctor.cs
+                        EspecialidadesDoc = new List<EspecialidadesDoctor>(),
+                        // Parche de compatibilidad (le ponemos un nombre cualquiera)
+                        Especialidad = new Especialidad { Nombre = "Varias" }
+                    });
+                }
+                await dr.CloseAsync();
+
+                // 2. Cargamos las especialidades desde la tabla public.especialidadesdoctor
+                foreach (var doc in lista)
+                {
+                    // Usamos el nombre exacto de tu tabla: public.especialidadesdoctor
+                    const string sqlEsp = @"
+                SELECT ed.idespecialidad, e.nombre 
+                FROM public.especialidadesdoctor ed
+                INNER JOIN public.especialidad e ON e.idespecialidad = ed.idespecialidad
+                WHERE ed.iddoctor = @id";
+
+                    await using var cmdEsp = new NpgsqlCommand(sqlEsp, conexion);
+                    cmdEsp.Parameters.AddWithValue("id", doc.IdDoctor);
+
+                    await using var drEsp = await cmdEsp.ExecuteReaderAsync();
+                    while (await drEsp.ReadAsync())
+                    {
+                        doc.EspecialidadesDoc.Add(new EspecialidadesDoctor
+                        {
+                            IdDoctor = doc.IdDoctor,
+                            IdEspecialidad = Convert.ToInt32(drEsp["idespecialidad"]),
+                            NombreEspecialidad = drEsp["nombre"].ToString()
+                        });
+                    }
+                    await drEsp.CloseAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                // Aquí podrías poner un punto de interrupción para ver si hay algún otro error
             }
 
             return lista;
         }
-
         public async Task<List<Cita>> ListaCitasAsignadas(int Id, int IdEstadoCita)
         {
             var lista = new List<Cita>();
@@ -759,5 +797,64 @@ cal_slot_interval = EXCLUDED.cal_slot_interval,
             }
         }
         /* Final Cambio CORREGIDO */
+        public async Task<List<EspecialidadesDoctor>> ListarEspecialidadesPorDoctor(int idDoctor)
+        {
+            var lista = new List<EspecialidadesDoctor>();
+            await using var conexion = new NpgsqlConnection(con.CadenaSQL);
+            await conexion.OpenAsync();
+
+            // Consulta directa a la tabla intermedia con JOIN para traer el nombre
+            string sql = @"SELECT ed.id_especialidad_doctor, ed.idespecialidad, e.nombre 
+                   FROM public.especialidadesdoctor ed
+                   JOIN public.especialidad e ON ed.idespecialidad = e.idespecialidad
+                   WHERE ed.iddoctor = @id";
+
+            await using var cmd = new NpgsqlCommand(sql, conexion);
+            cmd.Parameters.AddWithValue("@id", idDoctor);
+
+            await using var dr = await cmd.ExecuteReaderAsync();
+            while (await dr.ReadAsync())
+            {
+                lista.Add(new EspecialidadesDoctor
+                {
+                    IdEspecialidadDoctor = Convert.ToInt32(dr["id_especialidad_doctor"]),
+                    IdEspecialidad = Convert.ToInt32(dr["idespecialidad"]),
+                    NombreEspecialidad = dr["nombre"].ToString() ?? ""
+                });
+            }
+            return lista;
+        }
+        public async Task<string> AsignarEspecialidad(int idDoctor, int idEspecialidad)
+        {
+            try
+            {
+                await using var conexion = new NpgsqlConnection(con.CadenaSQL);
+                await conexion.OpenAsync();
+                string sql = @"INSERT INTO public.especialidadesdoctor (iddoctor, idespecialidad) 
+                       VALUES (@idD, @idE) ON CONFLICT DO NOTHING";
+                await using var cmd = new NpgsqlCommand(sql, conexion);
+                cmd.Parameters.AddWithValue("@idD", idDoctor);
+                cmd.Parameters.AddWithValue("@idE", idEspecialidad);
+                await cmd.ExecuteNonQueryAsync();
+                return "";
+            }
+            catch (Exception ex) { return ex.Message; }
+        }
+
+        public async Task<bool> EliminarEspecialidadDoctor(int idEspecialidadDoctor)
+        {
+            try
+            {
+                await using var conexion = new NpgsqlConnection(con.CadenaSQL);
+                await conexion.OpenAsync();
+                string sql = "DELETE FROM public.especialidadesdoctor WHERE id_especialidad_doctor = @id";
+                await using var cmd = new NpgsqlCommand(sql, conexion);
+                cmd.Parameters.AddWithValue("@id", idEspecialidadDoctor);
+                int filas = await cmd.ExecuteNonQueryAsync();
+                return filas > 0;
+            }
+            catch { return false; }
+        }
+
     }
 }
