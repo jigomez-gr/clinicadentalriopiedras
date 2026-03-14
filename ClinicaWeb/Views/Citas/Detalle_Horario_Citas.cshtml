@@ -513,36 +513,37 @@
         </div>
     </div>
 </div>
-@* /* cambio fin */ *@
-
-<div class="modal fade" id="mdCancelarCita" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content shadow-lg">
+<div class="modal fade" id="mdCancelarCita" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title"><i class="bi bi-trash me-2"></i>Cancelar Cita</h5>
+                <h5 class="modal-title"><i class="fas fa-times-circle me-2"></i>Cancelar Cita</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <input type="hidden" id="cancelarIdCita" />
+                <input type="hidden" id="cancelarIdCita" value="">
+
                 <div class="mb-3">
-                    <label class="form-label fw-bold text-danger">Motivo de la cancelación (Obligatorio):</label>
-                    <textarea id="cancelarMotivo" class="form-control border-danger" rows="3"
-                              placeholder="Ej: Ausencia del doctor, cierre de clínica..."></textarea>
+                    <label class="form-label fw-bold">Motivo de la cancelación:</label>
+                    <textarea class="form-control" id="cancelarMotivo" rows="3" placeholder="Indique el motivo..."></textarea>
                 </div>
-                <div class="alert alert-warning small py-2">
-                    <i class="bi bi-exclamation-triangle me-1"></i>
-                    Esta acción notificará al paciente y liberará el horario.
-                </div>
+
+                <p class="text-muted small">
+                    <i class="fas fa-info-circle me-1"></i> Esta acción liberará el hueco en la agenda.
+                </p>
             </div>
-            <div class="modal-footer bg-light border-0">
+            <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" id="btnConfirmarCancelacion" class="btn btn-danger px-4" onclick="ejecutarCancelacionCita()">
+                <button type="button" id="btnConfirmarCancelPac" class="btn btn-danger px-4">
                     Confirmar Cancelación
                 </button>
             </div>
         </div>
     </div>
 </div>
+
+
+
 
 <div class="modal fade" id="mdChkCalcom" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -1508,105 +1509,110 @@
             }
         });
     }
-    function abrirModalCancelarCita(idCita) {
-        document.getElementById("cancelarIdCita").value = idCita;
-        document.getElementById("cancelarMotivo").value = "";
-        if(!modalCancelarObj) {
-            modalCancelarObj = new bootstrap.Modal(document.getElementById('mdCancelarCita'));
+        function abrirModalCancelarCita(idCita) {
+        const inputId = document.getElementById("cancelarIdCita");
+        const inputMotivo = document.getElementById("cancelarMotivo");
+        const modalElem = document.getElementById('mdCancelarCita');
+
+        if (inputId) { inputId.value = idCita; }
+        if (inputMotivo) { inputMotivo.value = ""; }
+
+        if (modalElem) {
+            // Usamos la variable que declaraste arriba
+            if (!modalCancelarObj) {
+                modalCancelarObj = new bootstrap.Modal(modalElem);
+            }
+            modalCancelarObj.show();
         }
-        modalCancelarObj.show();
     }
-                $("#btnConfirmarCancelPac").on("click", async function (e) {
-        // 1. FUNDAMENTAL: Detenemos el envío automático del botón/form
-        e.preventDefault();
 
-        const idCita = $("#cancelarIdCitaPac").val();
-        const motivo = $("#cancelarMotivoPac").val().trim();
+    // Usamos el ID exacto que tienes en tu HTML: btnConfirmarCancelPac
+         document.addEventListener("click", async function (e) {
+        // Verificamos si el elemento clicado es nuestro botón de confirmación
+        if (e.target && e.target.id === "btnConfirmarCancelPac") {
+            e.preventDefault();
 
-        if (!motivo) {
-            Swal.fire("Atención", "Debe indicar un motivo para cancelar.", "warning");
-            return;
-        }
+            // Leemos los valores usando JavaScript nativo para máxima compatibilidad
+            const elId = document.getElementById("cancelarIdCita");
+            const elMotivo = document.getElementById("cancelarMotivo");
 
-        // Bloqueamos la interfaz para que el usuario no haga doble clic
-        Swal.fire({
-            title: 'Procesando...',
-            allowOutsideClick: false,
-            didOpen: () => Swal.showLoading()
-        });
+            if (!elId) return;
 
-        try {
-            // 2. FETCH: Sin inventos, tal cual tu método
-            const response = await fetch(`/Citas/CancelarCitaAgenda?idCita=${idCita}&motivo=${encodeURIComponent(motivo)}`, {
-                method: "POST"
+            const idCita = elId.value;
+            const motivoRaw = elMotivo ? elMotivo.value : "";
+            const motivo = motivoRaw.trim();
+
+            if (!motivo) {
+                Swal.fire("Atención", "Debe indicar un motivo para cancelar.", "warning");
+                return;
+            }
+
+            // Bloqueamos la interfaz con Swal (que sí suele estar cargado globalmente)
+            Swal.fire({
+                title: 'Procesando...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
             });
 
-            // 3. RECUPERAR JSON
-            const result = await response.json();
+            try {
+                // Llamada al endpoint de Agenda
+                const response = await fetch(`/Citas/CancelarCitaAgenda?idCita=${idCita}&motivo=${encodeURIComponent(motivo)}`, {
+                    method: "POST"
+                });
 
-            if (result.ok) {
-                // Cerramos el modal si existe
-                if (window.modalCancelarObj) {
-                    window.modalCancelarObj.hide();
+                const result = await response.json();
+
+                if (result.ok) {
+                    // Cerramos el modal usando la referencia global declarada al inicio
+                    if (window.modalCancelarObj) {
+                        window.modalCancelarObj.hide();
+                    }
+                    iniciarPollingCancelacion(result.idAccion);
+                } else {
+                    Swal.fire("Error", result.mensaje || "Error desconocido", "error");
                 }
-
-                // 4. EL REPINTE: El polling es el que se encarga de actualizar
-                iniciarPollingCancelacion(result.idAccion);
-
-            } else {
-                Swal.fire("Error", result.mensaje || "Error desconocido", "error");
+            } catch (error) {
+                console.error("Error en la petición:", error);
+                Swal.fire("Error", "No se pudo conectar con el servidor.", "error");
             }
-        } catch (error) {
-            console.error("Error en la petición:", error);
-            Swal.fire("Error", "No se pudo conectar con el servidor o la petición fue anulada.", "error");
         }
     });
-       function iniciarPollingCancelacion(idAccion) {
-        console.log("--- Iniciando Polling de Cancelación ---");
-        console.log("ID de Acción a vigilar:", idAccion);
 
+    /* La función de polling permanece igual ya que usa fetch nativo */
+    function iniciarPollingCancelacion(idAccion) {
+        console.log("--- Iniciando Polling de Cancelación ---");
         let intentos = 0;
+
         const intervalo = setInterval(async () => {
             intentos++;
-            console.log(`Petición de estado #${intentos} para ID: ${idAccion}...`);
-
             try {
                 const check = await fetch(`/Citas/ConsultarEstadoAccion?id=${idAccion}`);
                 const res = await check.json();
-
-                // Log de la respuesta completa del servidor
-                console.log("Respuesta recibida del servidor:", res);
-
                 const estado = (res.status || "").trim().toUpperCase();
-                console.log("Estado procesado:", estado);
 
-                if (estado === 'S') {
-                    console.log("¡Éxito detectado (Estado S)! Limpiando intervalo y repintando.");
+                if (estado === 'S' || estado === 'Z' || intentos > 20) {
                     clearInterval(intervalo);
-                    if(modalCancelarObj) modalCancelarObj.hide();
-                    Swal.fire("Éxito", "Cita cancelada correctamente.", "success").then(() => {
-                        console.log("Llamando a verAgenda()...");
-                        verAgenda();
+
+                    let titulo = (estado === 'S') ? "Éxito" : "Info";
+                    let texto = (estado === 'S') ? "Cita cancelada correctamente." : "Sincronización finalizada.";
+
+                    Swal.fire(titulo, texto, (estado === 'S' ? "success" : "info")).then(() => {
+                        // Si verAgenda es una función de jQuery, la llamamos con seguridad
+                        if (typeof verAgenda === "function") {
+                            verAgenda();
+                        } else {
+                            window.location.reload();
+                        }
                     });
-                }
-                else if (estado === 'Z' || intentos > 20) {
-                    console.log(estado === 'Z' ? "Estado final 'Z' detectado." : "Límite de intentos (20) alcanzado.");
-                    clearInterval(intervalo);
-                    if(modalCancelarObj) modalCancelarObj.hide();
-                    Swal.fire("Info", "El proceso terminará en breve.", "info").then(() => {
-                        console.log("Llamando a verAgenda() tras tiempo de espera o estado Z...");
-                        verAgenda();
-                    });
-                } else {
-                    console.log("El proceso sigue pendiente... Reintentando en 3 segundos.");
                 }
             } catch (err) {
-                console.error("Error en el polling de cancelación:", err);
-                // Si hay un error de red, no detenemos el intervalo para dar margen a que se recupere
+                console.error("Error en el polling:", err);
             }
         }, 3000);
+
     }
-    /* final cambio */
+
+
 </script>
 @section Scripts {
     @* Mantenemos los scripts que ya tenías antes si los hay *@
