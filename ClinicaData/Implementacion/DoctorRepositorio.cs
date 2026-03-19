@@ -855,6 +855,34 @@ cal_slot_interval = EXCLUDED.cal_slot_interval,
             }
             catch { return false; }
         }
+        public async Task<List<Doctor>> ListarDoctoresPorEspecialidad(int idEspecialidad)
+        {
+            var lista = new List<Doctor>();
+            await using var conexion = new NpgsqlConnection(con.CadenaSQL);
+            await conexion.OpenAsync();
 
+            // Traemos los campos que tu clase necesita para calcular el nombre
+            string sql = @"SELECT d.iddoctor, d.nombres, d.apellidos
+                  FROM public.doctor d
+                  JOIN public.especialidadesdoctor ed ON d.iddoctor = ed.iddoctor
+                  WHERE ed.idespecialidad = @id";
+
+            await using var cmd = new NpgsqlCommand(sql, conexion);
+            cmd.Parameters.AddWithValue("@id", idEspecialidad);
+
+            await using var dr = await cmd.ExecuteReaderAsync();
+            while (await dr.ReadAsync())
+            {
+                // Al asignar Nombres y Apellidos, tu propiedad calculada NombreCompleto 
+                // funcionará sola sin dar error de solo lectura
+                lista.Add(new Doctor
+                {
+                    IdDoctor = Convert.ToInt32(dr["iddoctor"]),
+                    Nombres = dr["nombres"].ToString() ?? "",
+                    Apellidos = dr["apellidos"].ToString() ?? ""
+                });
+            }
+            return lista;
+        }
     }
 }

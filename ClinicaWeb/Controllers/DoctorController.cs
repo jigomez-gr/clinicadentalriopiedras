@@ -417,5 +417,23 @@ namespace ClinicaWeb.Controllers
                 return BadRequest(new { msg = "Error interno: " + ex.Message });
             }
         }
+        // desde aqui los controladores para prototipo de telegram ..
+        // Endpoint para el Bot de Telegram
+       
+        [HttpGet]
+        [AllowAnonymous]
+        [HttpGet]
+        public async Task<IActionResult> ListarDoctoresPublico(int especialidad)
+        {
+            try
+            {
+                var lista = await _repositorio.ListarDoctoresPorEspecialidad(especialidad);
+                return StatusCode(StatusCodes.Status200OK, new { data = lista });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
+            }
+        }
     }
 }

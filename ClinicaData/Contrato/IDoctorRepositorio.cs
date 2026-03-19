@@ -44,7 +44,7 @@ namespace ClinicaData.Contrato
         Task<List<EspecialidadesDoctor>> ListarEspecialidadesPorDoctor(int idDoctor);
         Task<string> AsignarEspecialidad(int idDoctor, int idEspecialidad);
         Task<bool> EliminarEspecialidadDoctor(int idEspecialidadDoctor);
-
+        Task<List<Doctor>> ListarDoctoresPorEspecialidad(int idEspecialidad);
 
 
     }
