@@ -27,6 +27,14 @@ namespace ClinicaWeb.Controllers
             return StatusCode(StatusCodes.Status200OK, new { data = lista });
         }
 
+        [AllowAnonymous]
+        [HttpGet]
+        public async Task<IActionResult> ListarPublico()
+        {
+            List<Especialidad> lista = await _repositorio.Lista();
+            return StatusCode(StatusCodes.Status200OK, new { data = lista });
+        }
+
         public async Task<IActionResult> Guardar([FromBody] Especialidad objeto)
         {
             string respuesta = await _repositorio.Guardar(objeto);

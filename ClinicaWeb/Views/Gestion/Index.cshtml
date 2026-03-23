@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 
     <style>
-        
+
         .acciones-container {
             display: flex;
             gap: 4px;
@@ -41,7 +41,7 @@
                 border-right: 2px solid #dee2e6;
             }
         }
-        
+
         .dataTables_processing {
             background-color: #ffcccc !important;
             color: #d9534f !important;
@@ -76,6 +76,38 @@
         .bs-tooltip-end .tooltip-arrow::before {
             border-right-color: #1f7a3a !important;
         }
+
+        /* ESTILOS PARA VALORACIÓN CON ESTRELLAS */
+        .star-rating {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+            gap: 2px;
+        }
+
+            .star-rating input {
+                display: none;
+            }
+
+            .star-rating label {
+                cursor: pointer;
+                font-size: 1.8rem;
+                color: #ddd;
+                transition: color 0.15s;
+            }
+
+                .star-rating label:hover,
+                .star-rating label:hover ~ label,
+                .star-rating input:checked ~ label {
+                    color: #ffc107;
+                }
+
+            .star-rating .star-zero {
+                font-size: 1rem;
+                color: #999;
+                align-self: center;
+                margin-right: 5px;
+            }
     </style>
 }
 
@@ -124,9 +156,9 @@
                 <table id="tbGestion" class="display table table-striped table-bordered table-hover nowrap" cellspacing="0" style="width:100%">
                     <thead>
                         <tr>
-                            
+
                             <th>Acciones</th>
-                           
+
                             <th><span data-bs-toggle="tooltip" title="Id">Id</span></th>
                             <th><span data-bs-toggle="tooltip" title="Fecha">Fecha</span></th>
                             <th><span data-bs-toggle="tooltip" title="Hora">Hora</span></th>
@@ -226,6 +258,30 @@
                         <input type="file" id="fileDocPacienteAdmin" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" />
                     </div>
                 </div>
+
+                <hr />
+                <!-- SECCIÓN DE VALORACIÓN DEL PACIENTE (EDITABLE) -->
+                <h6>Valoración del paciente</h6>
+                <div class="row g-2 mb-3">
+                    <div class="col-12">
+                        <label class="form-label fw-bold" data-bs-toggle="tooltip" title="Valoración del paciente sobre el doctor (0-5 estrellas)">Valoración del doctor (0-5 estrellas)</label>
+                        <div class="star-rating">
+                            <input type="radio" id="star5Admin" name="valDoctorCitaAdmin" value="5"><label for="star5Admin" title="5 estrellas">★</label>
+                            <input type="radio" id="star4Admin" name="valDoctorCitaAdmin" value="4"><label for="star4Admin" title="4 estrellas">★</label>
+                            <input type="radio" id="star3Admin" name="valDoctorCitaAdmin" value="3"><label for="star3Admin" title="3 estrellas">★</label>
+                            <input type="radio" id="star2Admin" name="valDoctorCitaAdmin" value="2"><label for="star2Admin" title="2 estrellas">★</label>
+                            <input type="radio" id="star1Admin" name="valDoctorCitaAdmin" value="1"><label for="star1Admin" title="1 estrella">★</label>
+                            <input type="radio" id="star0Admin" name="valDoctorCitaAdmin" value="0"><label for="star0Admin" title="0 estrellas" class="star-zero">✕</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-12">
+                        <label class="form-label" data-bs-toggle="tooltip" title="Opinión del paciente">Opinión sobre el doctor y la clínica</label>
+                        <textarea id="txtOpinionDoctorYClinicaAdmin" class="form-control" rows="3" placeholder="Opinión del paciente..."></textarea>
+                    </div>
+                </div>
+
                 <hr />
                 <h6>Datos del doctor</h6>
                 <div class="row g-2 mb-3">
@@ -313,7 +369,7 @@
                     }
                 },
                 columns: [
-                   
+
                     {
                         data: null,
                         orderable: false,
@@ -326,7 +382,7 @@
                                     </div>`;
                         }
                     },
-                   
+
                     { data: 'idCita', visible: false },
                     {
                         data: 'fechaCita',
@@ -390,6 +446,14 @@
             $('#txtFechaPeticionAdmin').val(formatFecha(data.fechaPeticion));
             $('#txtFechaConfirmacionAdmin').val(formatFecha(data.fechaConfirmacion));
 
+            // Cargar valoración
+            const val = data.valDoctorCita ?? 3;
+            $("input[name='valDoctorCitaAdmin']").prop("checked", false);
+            $(`input[name='valDoctorCitaAdmin'][value='${val}']`).prop("checked", true);
+
+            // Cargar opinión
+            $('#txtOpinionDoctorYClinicaAdmin').val(data.opinionDoctorYClinica || '');
+
             if (data.documentoCitaUsr) {
                 docPacienteBase64 = data.documentoCitaUsr;
                 docPacienteContentType = data.contentType || 'application/octet-stream';
@@ -429,6 +493,11 @@
             formData.append('IndicacionesDoctor', $('#txtIndicacionesDoctorAdmin').val() || '');
             formData.append('CitaConfirmada', ($('#cboCitaConfirmadaAdmin').val() || '').toString());
 
+            // Valoración y opinión
+            const valDoctorCita = parseInt($("input[name='valDoctorCitaAdmin']:checked").val()) || 3;
+            formData.append('ValDoctorCita', valDoctorCita);
+            formData.append('OpinionDoctorYClinica', $('#txtOpinionDoctorYClinicaAdmin').val() || '');
+
             const filePac = $('#fileDocPacienteAdmin')[0]?.files[0];
             if (filePac) formData.append('DocumentoPaciente', filePac);
             const fileDoc = $('#fileDocDoctorAdmin')[0]?.files[0];
@@ -460,7 +529,16 @@
             docPacienteBase64 = null; docDoctorBase64 = null;
             $('#btnVerDocPacienteAdmin').prop('disabled', true);
             $('#btnVerDocDoctorAdmin').prop('disabled', true);
-            $('#fileDocPacienteAdmin').val(''); $('#fileDocDoctorAdmin').val('');
+            $('#lblHayDocPacienteAdmin').addClass('d-none');
+            $('#lblSinDocPacienteAdmin').removeClass('d-none');
+            $('#lblHayDocDoctorAdmin').addClass('d-none');
+            $('#lblSinDocDoctorAdmin').removeClass('d-none');
+            $('#fileDocPacienteAdmin').val('');
+            $('#fileDocDoctorAdmin').val('');
+            // Resetear valoración y opinión
+            $("input[name='valDoctorCitaAdmin']").prop("checked", false);
+            $("#star3Admin").prop("checked", true);
+            $('#txtOpinionDoctorYClinicaAdmin').val('');
         }
 
         function abrirDocumento(base64, contentType) {

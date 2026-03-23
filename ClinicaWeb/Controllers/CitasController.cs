@@ -207,23 +207,35 @@ namespace ClinicaWeb.Controllers
         /// <summary>
         /// Actualiza el motivo y el documento del paciente (Mis Citas).
         /// </summary>
-        [HttpPost]
+        /// [HttpPost]
         [Authorize(Roles = "Paciente,Administrador")]
-        public async Task<IActionResult> ActualizarMotivoPaciente([FromBody] ActualizarMotivoPacienteRequest modelo)
+        public async Task<IActionResult> ActualizarMotivoPaciente([FromBody] JsonElement modelo)
         {
-            if (modelo == null || modelo.IdCita <= 0)
+            if (modelo.ValueKind == JsonValueKind.Undefined)
             {
                 return StatusCode(StatusCodes.Status400BadRequest,
                     new { data = "Modelo inválido en ActualizarMotivoPaciente" });
             }
 
-            byte[]? docBytes = null;
+            int idCita = modelo.GetProperty("idCita").GetInt32();
+            if (idCita <= 0)
+            {
+                return StatusCode(StatusCodes.Status400BadRequest,
+                    new { data = "IdCita inválido" });
+            }
 
-            if (!string.IsNullOrWhiteSpace(modelo.DocumentoBase64))
+            string razon = modelo.TryGetProperty("razonCitaUsr", out var r) ? r.GetString() ?? "" : "";
+            string? documentoBase64 = modelo.TryGetProperty("documentoBase64", out var d) ? d.GetString() : null;
+            string? contentType = modelo.TryGetProperty("contentType", out var ct) ? ct.GetString() : null;
+            int? valDoctorCita = modelo.TryGetProperty("valDoctorCita", out var v) && v.ValueKind == JsonValueKind.Number ? v.GetInt32() : null;
+            string? opinionDoctorYClinica = modelo.TryGetProperty("opinionDoctorYClinica", out var o) ? o.GetString() : null;
+
+            byte[]? docBytes = null;
+            if (!string.IsNullOrWhiteSpace(documentoBase64))
             {
                 try
                 {
-                    docBytes = Convert.FromBase64String(modelo.DocumentoBase64);
+                    docBytes = Convert.FromBase64String(documentoBase64);
                 }
                 catch (FormatException ex)
                 {
@@ -232,18 +244,18 @@ namespace ClinicaWeb.Controllers
                 }
             }
 
-            string razon = modelo.RazonCitaUsr ?? string.Empty;
-
             string respuesta = await _repositorioCita.ActualizarMotivoPaciente(
-                modelo.IdCita,
+                idCita,
                 razon,
                 docBytes,
-                modelo.ContentType
+                contentType,
+                valDoctorCita,
+                opinionDoctorYClinica
             );
 
-            // respuesta = "" si todo OK
             return StatusCode(StatusCodes.Status200OK, new { data = respuesta });
         }
+        
 
         // ===================== ADMIN: LISTADO Y ACTUALIZACIÓN COMPLETA =====================
 
@@ -295,13 +307,15 @@ namespace ClinicaWeb.Controllers
         [Authorize(Roles = "Administrador")]
         [HttpPost]
         public async Task<IActionResult> AdminActualizarCita(
-            int IdCita,
-            int IdEstadoCita,
-            string OrigenCita,
-            string RazonCitaUsr,
-            string IndicacionesDoctor,
-            IFormFile? DocumentoPaciente,
-            IFormFile? DocumentoDoctor)
+    int IdCita,
+    int IdEstadoCita,
+    string OrigenCita,
+    string RazonCitaUsr,
+    string IndicacionesDoctor,
+    IFormFile? DocumentoPaciente,
+    IFormFile? DocumentoDoctor,
+    int? ValDoctorCita,
+    string? OpinionDoctorYClinica)
         {
             var cita = new Cita
             {
@@ -309,9 +323,10 @@ namespace ClinicaWeb.Controllers
                 EstadoCita = new EstadoCita { IdEstadoCita = IdEstadoCita },
                 OrigenCita = OrigenCita ?? string.Empty,
                 RazonCitaUsr = RazonCitaUsr ?? string.Empty,
-                Indicaciones = IndicacionesDoctor ?? string.Empty
+                Indicaciones = IndicacionesDoctor ?? string.Empty,
+                ValDoctorCita = ValDoctorCita ?? 3,
+                OpinionDoctorYClinica = OpinionDoctorYClinica
             };
-
             // Documento del paciente
             if (DocumentoPaciente != null && DocumentoPaciente.Length > 0)
             {
@@ -320,7 +335,6 @@ namespace ClinicaWeb.Controllers
                 cita.DocumentoCitaUsr = msPac.ToArray();
                 cita.ContentType = DocumentoPaciente.ContentType;
             }
-
             // Documento del doctor
             if (DocumentoDoctor != null && DocumentoDoctor.Length > 0)
             {
@@ -329,18 +343,13 @@ namespace ClinicaWeb.Controllers
                 cita.DocIndicacionesDoctor = msDoc.ToArray();
                 cita.ContentTypeDoctor = DocumentoDoctor.ContentType;
             }
-
             string respuesta = await _repositorioCita.AdminActualizarCita(cita);
-
             if (!string.IsNullOrEmpty(respuesta))
             {
-                // Hubo error en el SP
                 return StatusCode(StatusCodes.Status400BadRequest, new { data = respuesta });
             }
-
             return StatusCode(StatusCodes.Status200OK, new { data = "" });
         }
-
         // ===================== NUEVA VISTA: DETALLE HORARIO / CITAS =====================
 
         /// <summary>

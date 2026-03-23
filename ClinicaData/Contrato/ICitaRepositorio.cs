@@ -29,7 +29,9 @@ namespace ClinicaData.Contrato
             int idCita,
             string razonCitaUsr,
             byte[]? documento,
-            string? contentType
+            string? contentType,
+            int? valDoctorCita,
+            string? opinionDoctorYClinica
         );
         // ... lo que ya tengas ...
 

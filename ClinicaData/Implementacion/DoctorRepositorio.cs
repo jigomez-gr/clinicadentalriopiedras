@@ -320,7 +320,11 @@ public async Task<(List<Cita> Lista, int TotalRegistros)> ListaCitasAsignadasSer
                     CitaConfirmada = dr["CitaConfirmada"] == DBNull.Value ? null : dr["CitaConfirmada"]?.ToString(),
                     FechaPeticion = dr["FechaPeticion"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(dr["FechaPeticion"]),
                     FechaConfirmacion = dr["FechaConfirmacion"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(dr["FechaConfirmacion"]),
-                    MetodoPeticion = dr["MetodoPeticion"] == DBNull.Value ? null : dr["MetodoPeticion"]?.ToString()
+                    MetodoPeticion = dr["MetodoPeticion"] == DBNull.Value ? null : dr["MetodoPeticion"]?.ToString(),
+                
+                    // NUEVOS CAMPOS DE VALORACIÓN
+                    ValDoctorCita = dr["ValDoctorCita"] == DBNull.Value ? 3 : Convert.ToInt32(dr["ValDoctorCita"]),
+                    OpinionDoctorYClinica = dr["OpinionDoctorYClinica"] == DBNull.Value ? null : dr["OpinionDoctorYClinica"]?.ToString()
                 };
 
                 lista.Add(cita);
@@ -429,6 +433,7 @@ public async Task<(List<Cita> Lista, int TotalRegistros)> ListaCitasAsignadasSer
 
             return lista;
         }
+
         /* INICIO REPOSITORIO CORREGIDO */
         public async Task<List<FechaAtencionDTO>> ListaDoctorHorarioDetalleConCitas(int idDoctor)
         {
@@ -566,78 +571,130 @@ public async Task<(List<Cita> Lista, int TotalRegistros)> ListaCitasAsignadasSer
         {
             try
             {
-                await using var conexion = new NpgsqlConnection(con.CadenaSQL);
+                using var conexion = new NpgsqlConnection(con.CadenaSQL);
                 await conexion.OpenAsync();
 
                 int mes = fecha.Month;
 
-                // 1) Resolver DoctorHorario del doctor + mes
                 int idDoctorHorario;
-
-                // ✅ CAMBIO MÍNIMO: las horas de Postgres (time) vienen como TimeOnly
                 TimeOnly? horaInicioAM = null, horaFinAM = null, horaInicioPM = null, horaFinPM = null;
 
-                await using (var cmdH = new NpgsqlCommand(@"
-                SELECT
-                    iddoctorhorario,
-                    horainicioam, horafinam,
-                    horainiciopm, horafinpm
-                FROM public.doctorhorario
-                WHERE iddoctor = @idDoctor AND numeromes = @mes
-                ORDER BY iddoctorhorario DESC
-                LIMIT 1;
-            ", conexion))
+                // 1) Resolver DoctorHorario del doctor + mes
+                using (var cmdH = new NpgsqlCommand(@"
+            SELECT
+                iddoctorhorario,
+                horainicioam, horafinam,
+                horainiciopm, horafinpm
+            FROM public.doctorhorario
+            WHERE iddoctor = @idDoctor AND numeromes = @mes
+            ORDER BY iddoctorhorario DESC
+            LIMIT 1;
+        ", conexion))
                 {
                     cmdH.Parameters.AddWithValue("@idDoctor", idDoctor);
                     cmdH.Parameters.AddWithValue("@mes", mes);
 
-                    await using var dr = await cmdH.ExecuteReaderAsync();
+                    using var dr = await cmdH.ExecuteReaderAsync();
                     if (!await dr.ReadAsync())
                         return $"No existe DoctorHorario para el doctor {idDoctor} en el mes {mes} (NumeroMes).";
 
                     idDoctorHorario = Convert.ToInt32(dr["iddoctorhorario"]);
 
-                    // ✅ CAMBIO MÍNIMO: cast a TimeOnly
                     if (dr["horainicioam"] != DBNull.Value) horaInicioAM = (TimeOnly)dr["horainicioam"];
                     if (dr["horafinam"] != DBNull.Value) horaFinAM = (TimeOnly)dr["horafinam"];
                     if (dr["horainiciopm"] != DBNull.Value) horaInicioPM = (TimeOnly)dr["horainiciopm"];
                     if (dr["horafinpm"] != DBNull.Value) horaFinPM = (TimeOnly)dr["horafinpm"];
                 }
 
-                // 2) Inferir Turno AM/PM usando los rangos del DoctorHorario
-                // (Tu llamada ya era así; solo cambia tipos)
+                // 2) Inferir turno
                 string turno = InferirTurno(turnoHora, horaInicioAM, horaFinAM, horaInicioPM, horaFinPM);
 
-                // 3) Evitar duplicados (mismo doctorhorario + fecha + hora)
-                await using (var cmdChk = new NpgsqlCommand(@"
-                SELECT COUNT(1)
-                FROM public.doctorhorariodetalle
-                WHERE iddoctorhorario = @idh
-                  AND fecha = @fecha
-                  AND turnohora = @hora;
-            ", conexion))
+                // 3) Buscar slot en Cal.com
+                long? idHorarioDetalleCalcom = null;
+                bool existeSlotCalcom = false;
+
+                using (var cmdCal = new NpgsqlCommand(@"
+            SELECT idhorariodetallecalcom
+            FROM public.doctorhorariodetallecalcom
+            WHERE iddoctor = @idDoctor
+              AND fecha_slot = @fecha
+              AND turnohora = @hora
+            ORDER BY idhorariodetallecalcom DESC
+            LIMIT 1;
+        ", conexion))
+                {
+                    cmdCal.Parameters.AddWithValue("@idDoctor", idDoctor);
+                    cmdCal.Parameters.AddWithValue("@fecha", fecha.Date);
+                    cmdCal.Parameters.AddWithValue("@hora", turnoHora);
+
+                    var obj = await cmdCal.ExecuteScalarAsync();
+                    if (obj != null && obj != DBNull.Value)
+                    {
+                        idHorarioDetalleCalcom = Convert.ToInt64(obj);
+                        existeSlotCalcom = true;
+                    }
+                }
+
+                // 4) Ver si ya existe el slot local
+                using (var cmdChk = new NpgsqlCommand(@"
+            SELECT COUNT(1)
+            FROM public.doctorhorariodetalle
+            WHERE iddoctorhorario = @idh
+              AND fecha = @fecha
+              AND turnohora = @hora;
+        ", conexion))
                 {
                     cmdChk.Parameters.AddWithValue("@idh", idDoctorHorario);
                     cmdChk.Parameters.AddWithValue("@fecha", fecha.Date);
                     cmdChk.Parameters.AddWithValue("@hora", turnoHora);
 
                     var n = Convert.ToInt32(await cmdChk.ExecuteScalarAsync());
+
                     if (n > 0)
-                        return "Ese slot ya existe para esa fecha.";
+                    {
+                        using var cmdUpd = new NpgsqlCommand(@"
+                    UPDATE public.doctorhorariodetalle
+                    SET existe_slot_calcom = @existeSlotCalcom,
+                        idhorariodetallecalcom = @idhorariodetallecalcom
+                    WHERE iddoctorhorario = @idh
+                      AND fecha = @fecha
+                      AND turnohora = @hora;
+                ", conexion);
+
+                        cmdUpd.Parameters.AddWithValue("@existeSlotCalcom", existeSlotCalcom);
+                        cmdUpd.Parameters.AddWithValue("@idh", idDoctorHorario);
+                        cmdUpd.Parameters.AddWithValue("@fecha", fecha.Date);
+                        cmdUpd.Parameters.AddWithValue("@hora", turnoHora);
+
+                        if (idHorarioDetalleCalcom.HasValue)
+                            cmdUpd.Parameters.AddWithValue("@idhorariodetallecalcom", idHorarioDetalleCalcom.Value);
+                        else
+                            cmdUpd.Parameters.AddWithValue("@idhorariodetallecalcom", DBNull.Value);
+
+                        await cmdUpd.ExecuteNonQueryAsync();
+
+                        return "Ese slot ya existe para esa fecha. Se actualizó la referencia a Cal.com si correspondía.";
+                    }
                 }
 
-                // 4) Insert
-                await using (var cmdIns = new NpgsqlCommand(@"
-                INSERT INTO public.doctorhorariodetalle
-                (iddoctorhorario, fecha, turno, turnohora, reservado, fechacreacion)
-                VALUES
-                (@idh, @fecha, @turno, @hora, false, NOW());
-            ", conexion))
+                // 5) Insertar
+                using (var cmdIns = new NpgsqlCommand(@"
+            INSERT INTO public.doctorhorariodetalle
+            (iddoctorhorario, fecha, turno, turnohora, reservado, fechacreacion, existe_slot_calcom, idhorariodetallecalcom)
+            VALUES
+            (@idh, @fecha, @turno, @hora, false, NOW(), @existeSlotCalcom, @idhorariodetallecalcom);
+        ", conexion))
                 {
                     cmdIns.Parameters.AddWithValue("@idh", idDoctorHorario);
                     cmdIns.Parameters.AddWithValue("@fecha", fecha.Date);
                     cmdIns.Parameters.AddWithValue("@turno", turno);
                     cmdIns.Parameters.AddWithValue("@hora", turnoHora);
+                    cmdIns.Parameters.AddWithValue("@existeSlotCalcom", existeSlotCalcom);
+
+                    if (idHorarioDetalleCalcom.HasValue)
+                        cmdIns.Parameters.AddWithValue("@idhorariodetallecalcom", idHorarioDetalleCalcom.Value);
+                    else
+                        cmdIns.Parameters.AddWithValue("@idhorariodetallecalcom", DBNull.Value);
 
                     await cmdIns.ExecuteNonQueryAsync();
                 }
@@ -649,7 +706,6 @@ public async Task<(List<Cita> Lista, int TotalRegistros)> ListaCitasAsignadasSer
                 return "Error al añadir slot: " + ex.Message;
             }
         }
-
         // ✅ Si ya la tienes, sustituye SOLO la firma y tipos:
         private static string InferirTurno(TimeOnly turnoHora, TimeOnly? horaInicioAM, TimeOnly? horaFinAM, TimeOnly? horaInicioPM, TimeOnly? horaFinPM)
         {
@@ -766,37 +822,73 @@ cal_slot_interval = EXCLUDED.cal_slot_interval,
                 return "Error GuardarCalcom: " + ex.Message;
             }
         }
-        /* Comienzo Cambio CORREGIDO */
         public async Task<(bool ok, string msg, int idAccion)> EncolarSincroCalcom(int idDoctor, string mes, string anio)
         {
             try
             {
+                int mesInicio = int.Parse(mes);
+                int anioActual = int.Parse(anio);
+                int totalInsertados = 0;
+                int primerIdGenerado = 0;
+
+                var registros = new List<(int mes, int anio)>();
+
+                // Meses del año en curso desde el mes recibido hasta diciembre
+                for (int m = mesInicio; m <= 12; m++)
+                {
+                    registros.Add((m, anioActual));
+                }
+
+                // Si el mes es 11 o 12, agregar los 12 meses del año siguiente
+                if (mesInicio >= 11)
+                {
+                    int anioSiguiente = anioActual + 1;
+                    for (int m = 1; m <= 12; m++)
+                    {
+                        registros.Add((m, anioSiguiente));
+                    }
+                }
+
                 using (var conn = new NpgsqlConnection(con.CadenaSQL))
                 {
-                    // Insertamos la petición incluyendo conexiones y rutas para el orquestador
+                    await conn.OpenAsync();
+
                     string sql = @"INSERT INTO public.accionescomplementarias 
-                   (tipoaccion, iddoctor, mes, anio, repasado, reintentos, fecharegistro,
-                    conexion, conexion_vps, pathexewin, pathexevps) 
-                   VALUES 
-                   ('sincroidcalcom', @idDoctor, @mes, @anio, 'N', 0, NOW(),
-                    'Host=localhost;Port=5432;Database=dbclinica;Username=postgres;Password=W39xlpS9',
-                    'Host=72.60.89.227;Port=5433;Database=dbclinica;Username=postgres;Password=W39xlpS9;Pooling=true;Maximum Pool Size=20;Minimum Pool Size=0;Timeout=30',
-                    'C:\tmp\rios_rosas\c#\regresion\sincroidcalcom\bin\Release\net8.0\sincroidcalcom.exe',
-                    '/us2/dbclinica/exe/sincroidcalcom'
-                    ) 
-                   RETURNING idaccionescomplementarias;";
+                (tipoaccion, iddoctor, mes, anio, repasado, reintentos, fecharegistro,
+                 conexion, conexion_vps, pathexewin, pathexevps) 
+                VALUES 
+                ('sincroidcalcom', @idDoctor, @mes, @anio, 'N', 0, NOW(),
+                 'Host=localhost;Port=5432;Database=dbclinica;Username=postgres;Password=W39xlpS9',
+                 'Host=72.60.89.227;Port=5433;Database=dbclinica;Username=postgres;Password=W39xlpS9;Pooling=true;Maximum Pool Size=20;Minimum Pool Size=0;Timeout=30',
+                 'C:\tmp\rios_rosas\c#\regresion\sincroidcalcom\bin\Release\net8.0\sincroidcalcom.exe',
+                 '/us2/dbclinica/exe/sincroidcalcom'
+                ) 
+                RETURNING idaccionescomplementarias;";
 
-                    var id = await conn.ExecuteScalarAsync<int>(sql, new { idDoctor, mes, anio });
+                    foreach (var reg in registros)
+                    {
+                        var id = await conn.ExecuteScalarAsync<int>(sql, new
+                        {
+                            idDoctor,
+                            mes = reg.mes.ToString(),
+                            anio = reg.anio.ToString()
+                        });
 
-                    return (true, "Sincronización de Cal.com encolada correctamente.", id);
+                        if (primerIdGenerado == 0)
+                            primerIdGenerado = id;
+
+                        totalInsertados++;
+                    }
                 }
+
+                string mensaje = $"Sincronización encolada. Se crearon {totalInsertados} registros.";
+                return (true, mensaje, primerIdGenerado);
             }
             catch (Exception ex)
             {
                 return (false, "Error al encolar en BD: " + ex.Message, 0);
             }
         }
-        /* Final Cambio CORREGIDO */
         public async Task<List<EspecialidadesDoctor>> ListarEspecialidadesPorDoctor(int idDoctor)
         {
             var lista = new List<EspecialidadesDoctor>();

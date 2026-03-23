@@ -37,6 +37,10 @@ namespace ClinicaEntidades
         public DateTime? FechaConfirmacion { get; set; }
         public string? MetodoPeticion { get; set; }
         public DateTime? FechaCitaOrden { get; set; }
+        // ===== CAMPOS DE VALORACIÓN =====
+        public int ValDoctorCita { get; set; } = 3;                 // valdoctorcita integer DEFAULT 3
+        public string? OpinionDoctorYClinica { get; set; }          // opiniondoctoryclinica text NULL
+
 
     }
 }

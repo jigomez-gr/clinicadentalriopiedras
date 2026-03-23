@@ -3,12 +3,12 @@
 }
 
 @section Estilos {
-  
+
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css">
-    
+
     <style>
-      
+
         .acciones-container {
             display: flex;
             gap: 4px;
@@ -31,7 +31,7 @@
         }
 
         @@media (max-width: 768px) {
-            #tbData thead th:first-child, 
+            #tbData thead th:first-child,
             #tbData tbody td:first-child {
                 position: sticky;
                 left: 0;
@@ -40,7 +40,7 @@
                 border-right: 2px solid #dee2e6;
             }
         }
-       
+
 
         .dataTables_processing {
             background-color: #ffcccc !important;
@@ -60,9 +60,31 @@
             --bs-tooltip-opacity: 1;
         }
 
-        .tooltip-light .tooltip-inner {
-            border: 1px solid rgba(0,0,0,.15);
+            .tooltip-light .tooltip-inner {
+                border: 1px solid rgba(0,0,0,.15);
+            }
+
+        /* ESTILOS PARA VALORACIÓN CON ESTRELLAS (SOLO LECTURA) */
+        .star-rating-readonly {
+            display: flex;
+            gap: 2px;
         }
+
+            .star-rating-readonly .star {
+                font-size: 1.8rem;
+                color: #ddd;
+            }
+
+                .star-rating-readonly .star.active {
+                    color: #ffc107;
+                }
+
+            .star-rating-readonly .star-zero {
+                font-size: 1rem;
+                color: #999;
+                align-self: center;
+                margin-left: 5px;
+            }
     </style>
 }
 
@@ -101,9 +123,9 @@
                 <table id="tbData" class="table table-striped table-bordered table-hover w-100 align-middle" style="width:100%">
                     <thead>
                         <tr>
-                           
+
                             <th>Acciones</th>
-                           
+
                             <th>Fecha Cita</th>
                             <th>Hora Cita</th>
                             <th>Paciente</th>
@@ -173,6 +195,30 @@
 
                 <hr />
 
+                <!-- SECCIÓN DE VALORACIÓN DEL PACIENTE (SOLO LECTURA) -->
+                <div class="row g-2 mb-2">
+                    <div class="col-12">
+                        <label class="form-label fw-bold">Valoración del paciente (0-5 estrellas)</label>
+                        <div class="star-rating-readonly" id="starRatingDisplay">
+                            <span class="star" data-value="1">★</span>
+                            <span class="star" data-value="2">★</span>
+                            <span class="star" data-value="3">★</span>
+                            <span class="star" data-value="4">★</span>
+                            <span class="star" data-value="5">★</span>
+                            <span class="star-zero" id="lblSinValoracion" style="display:none;">(Sin valoración)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-12">
+                        <label class="form-label">Opinión del paciente sobre el doctor y la clínica</label>
+                        <textarea class="form-control" id="txtOpinionDoctorYClinica" rows="3" readonly placeholder="El paciente no ha dejado ninguna opinión."></textarea>
+                    </div>
+                </div>
+
+                <hr />
+
                 <div class="alert alert-primary" role="alert">
                     Escriba las indicaciones para el paciente y, si lo desea, adjunte un informe o documento del doctor.
                 </div>
@@ -236,6 +282,27 @@
             });
         }
 
+        // Función para mostrar las estrellas según el valor
+        function mostrarValoracion(valor) {
+            const estrellas = document.querySelectorAll('#starRatingDisplay .star');
+            const lblSinVal = document.getElementById('lblSinValoracion');
+
+            estrellas.forEach(star => {
+                const starValue = parseInt(star.getAttribute('data-value'));
+                if (starValue <= valor) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            });
+
+            if (valor === 0) {
+                lblSinVal.style.display = 'inline';
+            } else {
+                lblSinVal.style.display = 'none';
+            }
+        }
+
         (function () {
             let tablaData;
             let idCitaSeleccionada = 0;
@@ -263,7 +330,7 @@
                         }
                     },
                     columns: [
-                      
+
                         {
                             data: "idCita",
                             width: "80px",
@@ -276,7 +343,7 @@
                                         </div>`;
                             }
                         },
-                       
+
                         { data: "fechaCita", width: "150px" },
                         { data: "horaCita", width: "150px" },
                         {
@@ -309,6 +376,13 @@
                     $("#txtOrigenCita").val(data.origenCita || "");
                     $("#txtRazonCitaUsr").val(data.razonCitaUsr || "");
                     $("#txtIndicaciones").val(data.indicaciones || "");
+
+                    // Cargar valoración del paciente (solo lectura)
+                    const valoracion = data.valDoctorCita ?? 3;
+                    mostrarValoracion(valoracion);
+
+                    // Cargar opinión del paciente (solo lectura)
+                    $("#txtOpinionDoctorYClinica").val(data.opinionDoctorYClinica || "");
 
                     docPacienteBase64 = data.documentoCitaUsr;
                     docPacienteContentType = data.contentType || "application/octet-stream";
@@ -357,7 +431,7 @@
                 $("#btnTerminarCita").on("click", function () {
                     if ($("#txtIndicaciones").val().trim() === "") return Swal.fire("Importante", "Debe ingresar las indicaciones.", "warning");
                     const objeto = { IdCita: idCitaSeleccionada, EstadoCita: { IdEstadoCita: 2 }, Indicaciones: $("#txtIndicaciones").val().trim() };
-                    
+
                     fetch("/" + controlador + "/CambiarEstado", {
                         method: "POST", headers: { "Content-Type": "application/json;charset=utf-8" },
                         body: JSON.stringify(objeto)
