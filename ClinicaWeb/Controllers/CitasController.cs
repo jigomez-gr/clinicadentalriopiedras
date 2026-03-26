@@ -34,7 +34,13 @@ namespace ClinicaWeb.Controllers
     public class CitasController : Controller
     {
 
-
+        // Estructura para recibir el JSON de n8n
+        public class ChequeoRequest
+        {
+            public int id_operacion { get; set; }
+            public string pr_1 { get; set; }
+            public string chat_id { get; set; }
+        }
         private readonly IDoctorRepositorio _repositorioDoctor;
         private readonly ICitaRepositorio _repositorioCita;
 
@@ -1366,6 +1372,29 @@ LIMIT 1;
             {
                 return Json(new { ok = false, msg = "Error crítico: " + ex.Message });
             }
+        }
+        // desde aqui los controladores de istagram
+        // Ruta: /Citas/Chequear_SolicitudCita
+        [AllowAnonymous]
+
+        [HttpPost("Chequear_SolicitudCita")]
+        public async Task<JsonResult> Chequear_SolicitudCita([FromBody] ChequeoRequest request)
+        {
+            // Retornamos un objeto JSON que n8n entiende (Estado 1 = OK)
+            return Json(new { ESTADO = 1, MENSAJE = "" });
+        }
+
+        // Ruta: /Citas/Chequear_ValidarDisponibilidad
+        [HttpPost("Chequear_ValidarDisponibilidad")]
+        public async Task<JsonResult> Chequear_ValidarDisponibilidad([FromBody] ChequeoRequest request)
+        {
+            return Json(new { ESTADO = 1, MENSAJE = "" });
+        }
+
+        [HttpPost("Chequear_Confirmar")]
+        public async Task<JsonResult> Chequear_Confirmar([FromBody] ChequeoRequest request)
+        {
+            return Json(new { ESTADO = 1, MENSAJE = "Cita procesada" });
         }
     }
     }
