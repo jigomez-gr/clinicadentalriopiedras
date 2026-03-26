@@ -1375,23 +1375,22 @@ LIMIT 1;
         }
         // desde aqui los controladores de istagram
         // Ruta: /Citas/Chequear_SolicitudCita
-        [AllowAnonymous]
-
-        [HttpPost("Chequear_SolicitudCita")]
+       
+        [HttpPost]
+        [AllowAnonymous] // <--- IMPORTANTE: Esto permite que n8n entre sin cookies de sesión
         public async Task<JsonResult> Chequear_SolicitudCita([FromBody] ChequeoRequest request)
         {
             // Retornamos un objeto JSON que n8n entiende (Estado 1 = OK)
             return Json(new { ESTADO = 1, MENSAJE = "" });
         }
-
-        // Ruta: /Citas/Chequear_ValidarDisponibilidad
-        [HttpPost("Chequear_ValidarDisponibilidad")]
+        [HttpPost]
+        [AllowAnonymous] // <--- IMPORTANTE: Esto permite que n8n entre sin cookies de sesión
         public async Task<JsonResult> Chequear_ValidarDisponibilidad([FromBody] ChequeoRequest request)
         {
             return Json(new { ESTADO = 1, MENSAJE = "" });
         }
-
-        [HttpPost("Chequear_Confirmar")]
+        [HttpPost]
+        [AllowAnonymous] // <--- IMPORTANTE: Esto permite que n8n entre sin cookies de sesión
         public async Task<JsonResult> Chequear_Confirmar([FromBody] ChequeoRequest request)
         {
             return Json(new { ESTADO = 1, MENSAJE = "Cita procesada" });
