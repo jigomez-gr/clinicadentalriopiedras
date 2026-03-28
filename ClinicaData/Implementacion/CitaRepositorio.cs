@@ -1219,24 +1219,27 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
         }
         public async Task<dynamic> ValidarOperacionDinamica(ChequeoRequest request)
         {
+            // Construimos el nombre del procedure: public.tg_5_validaroperacion
             string nombreFuncion = $"public.tg_{request.numerooperacion}_validaroperacion";
 
             using (var conexion = new NpgsqlConnection(con.CadenaSQL))
             {
                 await conexion.OpenAsync();
 
-                // 1. Obtenemos el string JSON de Postgres
-                var jsonResult = await conexion.QueryFirstOrDefaultAsync<string>(
+                // USAMOS ExecuteScalarAsync para obtener el texto plano del JSON
+                var jsonRaw = await conexion.ExecuteScalarAsync<string>(
                     $"SELECT {nombreFuncion}(@id, @valor)",
                     new { id = request.id_operacion, valor = request.valor_recibido }
                 );
 
-                // 2. IMPORTANTE: Si es nulo o vacío, devolvemos un error controlado
-                if (string.IsNullOrEmpty(jsonResult))
-                    return new { ESTADO = 3, MENSAJE = "La función DB devolvió vacío" };
+                // Si la DB no devuelve nada, enviamos error manual
+                if (string.IsNullOrEmpty(jsonRaw))
+                {
+                    return new { ESTADO = 3, MENSAJE = "Error: La base de datos devolvió nulo." };
+                }
 
-                // 3. Devolvemos el objeto deserealizado directamente
-                return JsonConvert.DeserializeObject(jsonResult);
+                // Deserializamos el string a un objeto real para que n8n reciba { "ESTADO": 1 }
+                return JsonConvert.DeserializeObject(jsonRaw);
             }
         }
     }
