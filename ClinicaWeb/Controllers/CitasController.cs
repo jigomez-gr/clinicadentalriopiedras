@@ -34,13 +34,7 @@ namespace ClinicaWeb.Controllers
     public class CitasController : Controller
     {
 
-        // Estructura para recibir el JSON de n8n
-        public class ChequeoRequest
-        {
-            public int id_operacion { get; set; }
-            public string pr_1 { get; set; }
-            public string chat_id { get; set; }
-        }
+        
         private readonly IDoctorRepositorio _repositorioDoctor;
         private readonly ICitaRepositorio _repositorioCita;
 
@@ -1394,6 +1388,32 @@ LIMIT 1;
         public async Task<JsonResult> Chequear_Confirmar([FromBody] ChequeoRequest request)
         {
             return Json(new { ESTADO = 1, MENSAJE = "Cita procesada" });
+        }
+        [HttpPost]
+        [AllowAnonymous] // Permite la entrada desde n8n sin login
+        public async Task<JsonResult> Chequear_ValidarFlujo_unico([FromBody] ChequeoRequest request)
+        {
+            try
+            {
+                // 1. Validamos que el request no venga nulo
+                if (request == null)
+                {
+                    return Json(new { ESTADO = 3, MENSAJE = "Datos de petición nulos" });
+                }
+
+                // 2. Llamamos al método del repositorio que creamos antes
+                // Este método ejecutará el procedure tg_X_validaroperacion
+                var resultado = await _repositorioCita.ValidarOperacionDinamica(request);
+
+                // 3. Devolvemos el JSON que generó Postgres directamente a n8n
+                return Json(resultado);
+            }
+            catch (Exception ex)
+            {
+                // Si el procedure no existe o la base de datos falla, devolvemos error tipo 3
+                // Esto evita que n8n reciba un 500 y se detenga el flujo
+                return Json(new { ESTADO = 3, MENSAJE = "Excepción en Controlador: " + ex.Message });
+            }
         }
     }
     }
