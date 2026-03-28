@@ -1242,5 +1242,6 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 return JsonConvert.DeserializeObject(jsonRaw);
             }
         }
+
     }
 }

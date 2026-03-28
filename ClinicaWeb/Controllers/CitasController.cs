@@ -3,6 +3,7 @@ using ClinicaData.Contrato;
 using ClinicaData.Implementacion;
 using ClinicaEntidades;
 using ClinicaEntidades.DTO;
+using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -1390,29 +1391,36 @@ LIMIT 1;
             return Json(new { ESTADO = 1, MENSAJE = "Cita procesada" });
         }
         [HttpPost]
-        [AllowAnonymous] // Permite la entrada desde n8n sin login
-        public async Task<JsonResult> Chequear_ValidarFlujo_unico([FromBody] ChequeoRequest request)
+        [AllowAnonymous]
+        public async Task<IActionResult> Chequear_ValidarFlujo_unico([FromBody] ChequeoRequest request)
         {
             try
             {
-                // 1. Validamos que el request no venga nulo
-                if (request == null)
+                string nombreFuncion = $"public.tg_{request.numerooperacion}_validaroperacion";
+                string jsonRaw = "";
+
+                using (var conexion = new NpgsqlConnection(Conexion.CN))
                 {
-                    return Json(new { ESTADO = 3, MENSAJE = "Datos de petición nulos" });
+                    await conexion.OpenAsync();
+                    // Usamos ExecuteScalar para obtener el texto exacto de la función
+                    jsonRaw = await conexion.ExecuteScalarAsync<string>(
+                        $"SELECT {nombreFuncion}(@id, @valor)",
+                        new { id = request.id_operacion, valor = request.valor_recibido }
+                    );
                 }
 
-                // 2. Llamamos al método del repositorio que creamos antes
-                // Este método ejecutará el procedure tg_X_validaroperacion
-                var resultado = await _repositorioCita.ValidarOperacionDinamica(request);
+                if (string.IsNullOrEmpty(jsonRaw))
+                {
+                    jsonRaw = "{\"ESTADO\":3,\"MENSAJE\":\"Error: La base de datos devolvió nulo.\"}";
+                }
 
-                // 3. Devolvemos el JSON que generó Postgres directamente a n8n
-                return Json(resultado);
+                // ENVIAMOS EL TEXTO PLANO COMO JSON. 
+                // Así C# no intenta convertirlo en objeto y no pone corchetes []
+                return Content(jsonRaw, "application/json");
             }
             catch (Exception ex)
             {
-                // Si el procedure no existe o la base de datos falla, devolvemos error tipo 3
-                // Esto evita que n8n reciba un 500 y se detenga el flujo
-                return Json(new { ESTADO = 3, MENSAJE = "Excepción en Controlador: " + ex.Message });
+                return Content("{\"ESTADO\":3,\"MENSAJE\":\"" + ex.Message + "\"}", "application/json");
             }
         }
     }
