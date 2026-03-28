@@ -7,7 +7,7 @@ using Microsoft.Extensions.Options;
 using Npgsql;
 using NpgsqlTypes;
 using System.Data;
-
+using Newtonsoft.Json;
 namespace ClinicaData.Implementacion
 {
     public class CitaRepositorio : ICitaRepositorio
@@ -1218,5 +1218,26 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
             }
         }
         /* fin implementacion cita calcom FUERZO RECOMPILACION */
+        public async Task<dynamic> ValidarOperacionDinamica(ChequeoRequest request)
+        {
+            // Construimos el nombre del procedure basado en el número de operación
+            // Ejemplo: public.tg_5_validaroperacion
+            string nombreFuncion = $"public.tg_{request.numerooperacion}_validaroperacion";
+
+            using (var conexion = new NpgsqlConnection(con.CadenaSQL)) // Usa tu cadena de conexión
+            {
+                await conexion.OpenAsync();
+
+                // Ejecutamos la función de Postgres. 
+                // Importante: Postgres debe retornar un string (json)
+                var jsonResult = await conexion.QueryFirstOrDefaultAsync<string>(
+                    $"SELECT {nombreFuncion}(@id, @valor)",
+                    new { id = request.id_operacion, valor = request.valor_recibido }
+                );
+
+                // Convertimos el texto JSON que devuelve Postgres en un objeto dinámico para n8n
+                return JsonConvert.DeserializeObject<dynamic>(jsonResult);
+            }
+        }
     }
 }

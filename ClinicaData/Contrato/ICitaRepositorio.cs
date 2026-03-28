@@ -92,5 +92,7 @@ namespace ClinicaData.Contrato
 
         // Guarda o actualiza los datos extendidos (Blindado)
         Task<bool> GuardarDetalleCalcom(DoctorHorarioDetalleCalcom modelo);
+        // Este es el único método que necesita el controlador
+        Task<dynamic> ValidarOperacionDinamica(ChequeoRequest request);
     }
 }
