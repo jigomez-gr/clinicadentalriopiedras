@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -1396,31 +1397,29 @@ LIMIT 1;
         {
             try
             {
-                string nombreFuncion = $"public.tg_{request.numerooperacion}_validaroperacion";
-                string jsonRaw = "";
-
-                using (var conexion = new NpgsqlConnection(Conexion.CN))
-                {
-                    await conexion.OpenAsync();
-                    // Usamos ExecuteScalar para obtener el texto exacto de la función
-                    jsonRaw = await conexion.ExecuteScalarAsync<string>(
-                        $"SELECT {nombreFuncion}(@id, @valor)",
-                        new { id = request.id_operacion, valor = request.valor_recibido }
-                    );
-                }
-
-                if (string.IsNullOrEmpty(jsonRaw))
-                {
-                    jsonRaw = "{\"ESTADO\":3,\"MENSAJE\":\"Error: La base de datos devolvió nulo.\"}";
-                }
-
-                // ENVIAMOS EL TEXTO PLANO COMO JSON. 
-                // Así C# no intenta convertirlo en objeto y no pone corchetes []
-                return Content(jsonRaw, "application/json");
+                // LLAMADA A LA IMPLEMENTACIÓN
+                string jsonResultado = await _repositorioCita.ValidarOperacionDinamica(request);
+                return Content(jsonResultado, "application/json");
             }
             catch (Exception ex)
             {
                 return Content("{\"ESTADO\":3,\"MENSAJE\":\"" + ex.Message + "\"}", "application/json");
+            }
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> Chequear_TraducirURL_unico([FromBody] ChequeoRequest request)
+        {
+            try
+            {
+                // resultado ya es un string JSON que viene del repositorio
+                string resultado = await _repositorioCita.TraducirOperacionDinamica(request);
+                return Content(resultado, "application/json");
+            }
+            catch (Exception ex)
+            {
+                return Content("{\"url_final\":\"\", \"error\":\"" + ex.Message + "\"}", "application/json");
             }
         }
     }

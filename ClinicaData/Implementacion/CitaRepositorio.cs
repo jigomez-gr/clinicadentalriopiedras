@@ -1217,29 +1217,31 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 }
             }
         }
-        public async Task<dynamic> ValidarOperacionDinamica(ChequeoRequest request)
+        public async Task<string> ValidarOperacionDinamica(ChequeoRequest request)
         {
-            // Construimos el nombre del procedure: public.tg_5_validaroperacion
             string nombreFuncion = $"public.tg_{request.numerooperacion}_validaroperacion";
-
             using (var conexion = new NpgsqlConnection(con.CadenaSQL))
             {
                 await conexion.OpenAsync();
-
-                // USAMOS ExecuteScalarAsync para obtener el texto plano del JSON
                 var jsonRaw = await conexion.ExecuteScalarAsync<string>(
                     $"SELECT {nombreFuncion}(@id, @valor)",
                     new { id = request.id_operacion, valor = request.valor_recibido }
                 );
+                return jsonRaw ?? "{\"ESTADO\":3,\"MENSAJE\":\"Error: DB nulo\"}";
+            }
+        }
 
-                // Si la DB no devuelve nada, enviamos error manual
-                if (string.IsNullOrEmpty(jsonRaw))
-                {
-                    return new { ESTADO = 3, MENSAJE = "Error: La base de datos devolvió nulo." };
-                }
-
-                // Deserializamos el string a un objeto real para que n8n reciba { "ESTADO": 1 }
-                return JsonConvert.DeserializeObject(jsonRaw);
+        public async Task<string> TraducirOperacionDinamica(ChequeoRequest request)
+        {
+            string nombreFuncion = $"public.tg_{request.numerooperacion}_traducirurl";
+            using (var conexion = new NpgsqlConnection(con.CadenaSQL))
+            {
+                await conexion.OpenAsync();
+                var jsonRaw = await conexion.ExecuteScalarAsync<string>(
+                    $"SELECT {nombreFuncion}(@id)",
+                    new { id = request.id_operacion }
+                );
+                return jsonRaw ?? "{\"url_final\":\"\", \"error\":\"Error DB\"}";
             }
         }
 
