@@ -1422,5 +1422,53 @@ LIMIT 1;
                 return Content("{\"url_final\":\"\", \"error\":\"" + ex.Message + "\"}", "application/json");
             }
         }
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> VerificarCita(int idDoctor, string fecha)
+        {
+            try
+            {
+                // Validación de entrada básica
+                if (string.IsNullOrEmpty(fecha))
+                {
+                    return Ok(new
+                    {
+                        error = true,
+                        mensaje = "⚠️ Por favor, indica una fecha válida."
+                    });
+                }
+
+                // Llamada a la implementación que ya tienes en el Repositorio
+                var botones = await _repositorioCita.ObtenerBotonesHorarios(idDoctor, fecha);
+
+                // Si la lista de filas (List<List<...>>) está vacía, no hay slots
+                if (botones == null || botones.Count == 0)
+                {
+                    return Ok(new
+                    {
+                        mensaje = $"❌ No hay huecos libres para el día {fecha}. Por favor, prueba con otra fecha.",
+                        inline_keyboard = new List<object>()
+                    });
+                }
+
+                // Respuesta final que n8n recibirá para pintar en Telegram
+                // Al ser tipo 'boton' en la matriz, n8n usará este JSON directamente
+                return Ok(new
+                {
+                    mensaje = $"📅 Horarios disponibles para el {fecha}:",
+                    inline_keyboard = botones
+                });
+            }
+            catch (Exception ex)
+            {
+                // Logueamos internamente y devolvemos un mensaje amigable
+                return Ok(new
+                {
+                    error = true,
+                    mensaje = "Error al consultar la agenda: " + ex.Message
+                });
+            }
+        }
     }
-    }
+}
+   

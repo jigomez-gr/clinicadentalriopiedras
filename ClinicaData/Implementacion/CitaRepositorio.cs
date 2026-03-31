@@ -1244,6 +1244,46 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 return jsonRaw ?? "{\"url_final\":\"\", \"error\":\"Error DB\"}";
             }
         }
+        // En la Implementación (CitaRepositorio.cs)
+        public async Task<List<List<BotonTelegram>>> ObtenerBotonesHorarios(int idDoctor, string fecha)
+        {
+            var matrizBotones = new List<List<BotonTelegram>>();
+            using (var conexion = new NpgsqlConnection(con.CadenaSQL))
+            {
+                await conexion.OpenAsync();
+                var sql = @"SELECT turnohora, turno 
+                    FROM public.doctorhorariodetalle dhd
+                    JOIN public.doctorhorario dh ON dh.iddoctorhorario = dhd.iddoctorhorario
+                    WHERE dh.iddoctor = @id 
+                      AND dhd.fecha = to_date(@f, 'DD/MM/YYYY') 
+                      AND COALESCE(dhd.reservado, false) = false
+                    ORDER BY turnohora ASC";
 
+                var slots = (await conexion.QueryAsync<dynamic>(sql, new { id = idDoctor, f = fecha })).ToList();
+
+                if (!slots.Any()) return matrizBotones;
+
+                var filaActual = new List<BotonTelegram>();
+                foreach (var slot in slots)
+                {
+                    string horaStr = ((TimeSpan)slot.turnohora).ToString(@"hh\:mm");
+                    string icono = (slot.turno.ToString().ToUpper() == "AM") ? "☀️ " : "🌙 ";
+
+                    filaActual.Add(new BotonTelegram
+                    {
+                        text = icono + horaStr,
+                        callback_data = $"{fecha} {horaStr}"
+                    });
+
+                    if (filaActual.Count == 4)
+                    {
+                        matrizBotones.Add(filaActual);
+                        filaActual = new List<BotonTelegram>();
+                    }
+                }
+                if (filaActual.Any()) matrizBotones.Add(filaActual);
+            }
+            return matrizBotones;
+        }
     }
 }
