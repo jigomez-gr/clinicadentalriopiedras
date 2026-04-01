@@ -98,5 +98,7 @@ namespace ClinicaData.Contrato
         Task<string> TraducirOperacionDinamica(ChequeoRequest request);
 
         Task<List<List<BotonTelegram>>> ObtenerBotonesHorarios(int idDoctor, string fecha);
+        Task<string> RetrocederOperacionDinamica(ChequeoRequest request);
+
     }
 }

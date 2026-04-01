@@ -1285,5 +1285,33 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
             }
             return matrizBotones;
         }
+        public async Task<string> RetrocederOperacionDinamica(ChequeoRequest request)
+        {
+            // El nombre de la función es fijo según lo que definimos en Postgres
+            string nombreFuncion = "public.tg_global_retroceder";
+
+            using (var conexion = new NpgsqlConnection(con.CadenaSQL))
+            {
+                try
+                {
+                    await conexion.OpenAsync();
+
+                    // Ejecutamos la función de retroceso pasando el id_operacion
+                    var jsonRaw = await conexion.ExecuteScalarAsync<string>(
+                        $"SELECT {nombreFuncion}(@id)",
+                        new { id = request.id_operacion }
+                    );
+
+                    // Si el procedure devuelve algo, lo entregamos. 
+                    // Si no, devolvemos un JSON de error con el formato esperado por tu n8n.
+                    return jsonRaw ?? "{\"ESTADO\":0, \"MENSAJE\":\"Error al ejecutar retroceso en DB\"}";
+                }
+                catch (Exception ex)
+                {
+                    // En caso de error de conexión o sintaxis, devolvemos el error formateado
+                    return "{\"ESTADO\":0, \"MENSAJE\":\"Error Repositorio: " + ex.Message + "\"}";
+                }
+            }
+        }
     }
 }

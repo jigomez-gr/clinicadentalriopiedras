@@ -1422,6 +1422,23 @@ LIMIT 1;
                 return Content("{\"url_final\":\"\", \"error\":\"" + ex.Message + "\"}", "application/json");
             }
         }
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> IrAlCampoAnterior_unico([FromBody] ChequeoRequest request)
+        {
+            try
+            {
+                // Llamamos al repositorio para ejecutar el procedimiento de retroceso
+                // El repositorio debe ejecutar: SELECT public.tg_global_retroceder(@id_operacion)
+                string resultado = await _repositorioCita.RetrocederOperacionDinamica(request);
+                return Content(resultado, "application/json");
+            }
+            catch (Exception ex)
+            {
+                return Content("{\"ESTADO\":0, \"MENSAJE\":\"" + ex.Message + "\"}", "application/json");
+            }
+        }
+
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> VerificarCita(int idDoctor, string fecha)
