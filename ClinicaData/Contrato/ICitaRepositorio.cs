@@ -100,5 +100,9 @@ namespace ClinicaData.Contrato
         Task<List<List<BotonTelegram>>> ObtenerBotonesHorarios(int idDoctor, string fecha);
         Task<string> RetrocederOperacionDinamica(ChequeoRequest request);
 
+      
+        // Para procesar el Base64 de la operación de archivo
+        Task<string> ValidarOperacionArchivo(ChequeoRequest request);
+
     }
 }

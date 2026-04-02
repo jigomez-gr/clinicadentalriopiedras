@@ -1438,7 +1438,18 @@ LIMIT 1;
                 return Content("{\"ESTADO\":0, \"MENSAJE\":\"" + ex.Message + "\"}", "application/json");
             }
         }
+        
 
+        [HttpPost]
+        [AllowAnonymous]
+        [DisableRequestSizeLimit]
+        [RequestFormLimits(MultipartBodyLengthLimit = 104857600, ValueLengthLimit = 104857600)]
+        public async Task<IActionResult> ValidarArchivo_unico([FromBody] ChequeoRequest request)
+        {
+            // Este es el nuevo para la ruta de archivos de n8n
+            string resultado = await _repositorioCita.ValidarOperacionArchivo(request);
+            return Content(resultado, "application/json");
+        }
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> VerificarCita(int idDoctor, string fecha)

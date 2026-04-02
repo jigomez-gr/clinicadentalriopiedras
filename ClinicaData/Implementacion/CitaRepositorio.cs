@@ -1313,5 +1313,29 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 }
             }
         }
+        public async Task<string> ValidarOperacionArchivo(ChequeoRequest request)
+        {
+            // Usamos la función SQL tg_archivo_validar que definimos antes
+            using (var conexion = new NpgsqlConnection(con.CadenaSQL))
+            {
+                try
+                {
+                    await conexion.OpenAsync();
+                    var jsonRaw = await conexion.ExecuteScalarAsync<string>(
+                        "SELECT public.tg_archivo_validar(@id, @valor)",
+                        new
+                        {
+                            id = request.id_operacion,
+                            valor = request.valor_recibido // Aquí viaja el Base64 desde n8n
+                        }
+                    );
+                    return jsonRaw ?? "{\"ESTADO\":0, \"MENSAJE\":\"Error al procesar archivo en DB\"}";
+                }
+                catch (Exception ex)
+                {
+                    return "{\"ESTADO\":0, \"MENSAJE\":\"Error Repositorio Archivo: " + ex.Message + "\"}";
+                }
+            }
+        }
     }
 }

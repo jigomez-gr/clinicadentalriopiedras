@@ -3,7 +3,9 @@ using ClinicaData.Contrato;
 using ClinicaData.Implementacion;
 using ClinicaData.Repositorio;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +35,24 @@ builder.Services.AddScoped<IRolUsuarioRepositorio, RolUsuarioRepositorio>();
 builder.Services.AddScoped<IUsuarioRepositorio, UsuarioRepositorio>();
 builder.Services.AddScoped<IAnalisisVapiRepositorio, AnalisisVapiRepositorio>();
 builder.Services.AddScoped<IZadarmaSmsRespuestaRepositorio, ZadarmaSmsRespuestaRepositorio>();
+
+// ----------------------------------------
+
+// --- CONFIGURACIÓN DE LÍMITES PARA ARCHIVOS PESADOS (BASE64) ---
+// 1. Límite de Kestrel (Servidor) - 100 MB por ejemplo
+builder.Services.Configure<KestrelServerOptions>(options =>
+{
+    options.Limits.MaxRequestBodySize = 104857600;
+});
+
+// 2. Límite de Formulario (Multipart/JSON) - 100 MB
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.ValueLengthLimit = 104857600;
+    options.MultipartBodyLengthLimit = 104857600;
+    options.MemoryBufferThreshold = 104857600;
+});
+// -------------------------------------------------------------
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(option =>
