@@ -1317,47 +1317,61 @@
            const v = document.getElementById("ddlDoctor").value;
            return v ? parseInt(v) : null;
        }
-     async function verAgenda() {
+      async function verAgenda() {
 
-         /* MODI44 */
-         // 1) Fecha (si no hay, no hacemos nada)
-         const txtFechaEl = document.getElementById("txtFecha");
-         const fechaInput = (txtFechaEl ? (txtFechaEl.value || "") : "").trim();
-         if (!fechaInput) { Swal.fire("Aviso", "Selecciona una fecha.", "info"); return;
-         }
+        /* MODI44 */
+        // 1) Fecha (si no hay, no hacemos nada)
+        const txtFechaEl = document.getElementById("txtFecha");
+        const fechaInput = (txtFechaEl ? (txtFechaEl.value || "") : "").trim();
+        if (!fechaInput) {
+            Swal.fire("Aviso", "Selecciona una fecha.", "info");
+            return;
+        }
 
-         // 2) Doctor (blindado)
-        // const idDoctor = getIdDoctorPantalla();
-         const idDoctor = getIdDoctorPantalla_SAFE();
+        // 2) Doctor (blindado)
+       // const idDoctor = getIdDoctorPantalla();
+        const idDoctor = getIdDoctorPantalla_SAFE();
 
-         if (ES_ADMIN && !idDoctor) { Swal.fire("Aviso", "Selecciona un doctor.", "info"); return;
-         }
-         if (ES_DOCTOR && !idDoctor) { Swal.fire("Aviso", "No se ha podido resolver el doctor logueado.", "warning");
-         return; }
-         if (!idDoctor) {
-             // No hay doctor todavía: oculto botón Cal.com y salgo sin reventar nada
-             const btn = document.getElementById("btnCalAgenda");
-             if (btn) { btn.style.display = "none"; btn.href = "#"; }
-             return;
-         }
-         /*FIN MODI44 */
+        if (ES_ADMIN && !idDoctor) {
+            Swal.fire("Aviso", "Selecciona un doctor.", "info");
+            return;
+        }
+        if (ES_DOCTOR && !idDoctor) {
+            Swal.fire("Aviso", "No se ha podido resolver el doctor logueado.", "warning");
+            return;
+        }
+        if (!idDoctor) {
+            // No hay doctor todavía: oculto botón Cal.com y salgo sin reventar nada
+            const btn = document.getElementById("btnCalAgenda");
+            if (btn) { btn.style.display = "none"; btn.href = "#"; }
+            return;
+        }
+        /*FIN MODI44 */
 
-         const url = `/Citas/AgendaDia?fecha=${encodeURIComponent(fechaInput)}&idDoctor=${idDoctor}`;
-         const r = await fetch(url, { headers: { "Accept": "application/json" } });
-         const payload = await r.json().catch(() => null);
-         if (!r.ok || !payload || payload.ok === false) {
-             Swal.fire("Aviso", (payload && payload.msg) ? payload.msg : "No se pudo cargar la agenda.", "warning");
-             return;
-         }
+        // === AQUI ESTÁ LA MAGIA ANTICACHÉ ===
+        // Añadimos &_=[tiempo_en_milisegundos] a la URL para que el navegador crea que es una página nueva siempre
+        const url = `/Citas/AgendaDia?fecha=${encodeURIComponent(fechaInput)}&idDoctor=${idDoctor}&_=${new Date().getTime()}`;
 
-         FECHA_EN_PANTALLA = (payload.fecha || fechaInput || "").trim();
-         renderSlots("slotsAM", payload.am || [], FECHA_EN_PANTALLA);
-         renderSlots("slotsPM", payload.pm || [], FECHA_EN_PANTALLA);
-         /* MODI44 */
-        //await refrescarBotonCalAgenda(idDoctor);
-         /*FIN MODI44 */
-     }
+        // Además añadimos cache: "no-store" para blindarlo totalmente en Chrome/Edge
+        const r = await fetch(url, {
+            headers: { "Accept": "application/json" },
+            cache: "no-store"
+        });
+        // =====================================
 
+        const payload = await r.json().catch(() => null);
+        if (!r.ok || !payload || payload.ok === false) {
+            Swal.fire("Aviso", (payload && payload.msg) ? payload.msg : "No se pudo cargar la agenda.", "warning");
+            return;
+        }
+
+        FECHA_EN_PANTALLA = (payload.fecha || fechaInput || "").trim();
+        renderSlots("slotsAM", payload.am || [], FECHA_EN_PANTALLA);
+        renderSlots("slotsPM", payload.pm || [], FECHA_EN_PANTALLA);
+        /* MODI44 */
+       //await refrescarBotonCalAgenda(idDoctor);
+        /*FIN MODI44 */
+    }
     document.addEventListener("DOMContentLoaded", async () => {
         // 1. Inicialización de Flatpickr (Calendario principal)
         const fp = flatpickr("#txtFecha", {
