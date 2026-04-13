@@ -1253,30 +1253,34 @@
     }
 
       async function borrarSlot(idDoctorHorarioDetalle) {
-          if (!idDoctorHorarioDetalle) return;
-          const confirm = await Swal.fire({
-              title: "Borrar slot",
-              text: "¿Seguro? Solo se permite si NO hay cita asignada.",
-              icon: "warning",
-              showCancelButton: true,
-              confirmButtonText: "Sí, borrar",
-              cancelButtonText: "Cancelar"
+        if (!idDoctorHorarioDetalle) return;
+        const confirm = await Swal.fire({
+            title: "Borrar slot",
+            text: "¿Seguro? Solo se permite si NO hay cita asignada.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Sí, borrar",
+            cancelButtonText: "Cancelar"
+        });
 
-          });
+        if (!confirm.isConfirmed) return;
 
-          if (!confirm.isConfirmed) return;
+        const r = await fetch(`/Citas/EliminarSlot?idDoctorHorarioDetalle=${idDoctorHorarioDetalle}`, { method: "DELETE" });
+        const j = await r.json().catch(() => null);
 
-          const r = await fetch(`/Citas/EliminarSlot?idDoctorHorarioDetalle=${idDoctorHorarioDetalle}`, { method: "DELETE" });
-          const j = await r.json().catch(() => null);
+        if (!r.ok || (j && j.ok === false)) {
+            Swal.fire("Error", (j && (j.msg || j.data)) ? (j.msg || j.data) : "No se pudo borrar el slot.", "error");
+            return;
+        }
 
-          if (!r.ok || (j && j.ok === false)) {
-              Swal.fire("Error", (j && (j.msg || j.data)) ? (j.msg || j.data) : "No se pudo borrar el slot.", "error");
-              return;
-          }
+        Swal.fire("OK", "Slot borrado.", "success");
 
-          Swal.fire("OK", "Slot borrado.", "success");
-          await verAgenda();
-      }
+        // ✅ CORRECCIÓN 1: Damos medio segundo de oxígeno al VPS para que cierre la transacción
+        // de base de datos antes de pedirle que nos devuelva la agenda actualizada.
+        setTimeout(async () => {
+            await verAgenda();
+        }, 400);
+    }
 
       // ✅ Validación mínima HH:MM (no rangos, no 00/30, SOLO formato)
       function esHoraValidaMinima(hhmm) {
@@ -1317,47 +1321,38 @@
            const v = document.getElementById("ddlDoctor").value;
            return v ? parseInt(v) : null;
        }
-      async function verAgenda() {
 
-        /* MODI44 */
-        // 1) Fecha (si no hay, no hacemos nada)
+    async function verAgenda() {
+        // 1) Fecha
         const txtFechaEl = document.getElementById("txtFecha");
         const fechaInput = (txtFechaEl ? (txtFechaEl.value || "") : "").trim();
-        if (!fechaInput) {
-            Swal.fire("Aviso", "Selecciona una fecha.", "info");
-            return;
-        }
+        if (!fechaInput) { Swal.fire("Aviso", "Selecciona una fecha.", "info"); return; }
 
-        // 2) Doctor (blindado)
-       // const idDoctor = getIdDoctorPantalla();
+        // 2) Doctor
         const idDoctor = getIdDoctorPantalla_SAFE();
 
-        if (ES_ADMIN && !idDoctor) {
-            Swal.fire("Aviso", "Selecciona un doctor.", "info");
-            return;
-        }
-        if (ES_DOCTOR && !idDoctor) {
-            Swal.fire("Aviso", "No se ha podido resolver el doctor logueado.", "warning");
-            return;
-        }
+        if (ES_ADMIN && !idDoctor) { Swal.fire("Aviso", "Selecciona un doctor.", "info"); return; }
+        if (ES_DOCTOR && !idDoctor) { Swal.fire("Aviso", "No se ha podido resolver el doctor logueado.", "warning"); return; }
         if (!idDoctor) {
-            // No hay doctor todavía: oculto botón Cal.com y salgo sin reventar nada
             const btn = document.getElementById("btnCalAgenda");
             if (btn) { btn.style.display = "none"; btn.href = "#"; }
             return;
         }
-        /*FIN MODI44 */
 
-        // === AQUI ESTÁ LA MAGIA ANTICACHÉ ===
-        // Añadimos &_=[tiempo_en_milisegundos] a la URL para que el navegador crea que es una página nueva siempre
-        const url = `/Citas/AgendaDia?fecha=${encodeURIComponent(fechaInput)}&idDoctor=${idDoctor}&_=${new Date().getTime()}`;
+        // ✅ CORRECCIÓN 2: Generamos una cadena 100% aleatoria para engañar al Proxy de Nginx.
+        const NukeCache = new Date().getTime() + "-" + Math.random().toString(36).substring(2);
+        const url = `/Citas/AgendaDia?fecha=${encodeURIComponent(fechaInput)}&idDoctor=${idDoctor}&anticache=${NukeCache}`;
 
-        // Además añadimos cache: "no-store" para blindarlo totalmente en Chrome/Edge
+        // ✅ CORRECCIÓN 3: Le inyectamos los "Headers Anti-Caché" más agresivos que existen.
         const r = await fetch(url, {
-            headers: { "Accept": "application/json" },
+            headers: {
+                "Accept": "application/json",
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0"
+            },
             cache: "no-store"
         });
-        // =====================================
 
         const payload = await r.json().catch(() => null);
         if (!r.ok || !payload || payload.ok === false) {
@@ -1368,9 +1363,6 @@
         FECHA_EN_PANTALLA = (payload.fecha || fechaInput || "").trim();
         renderSlots("slotsAM", payload.am || [], FECHA_EN_PANTALLA);
         renderSlots("slotsPM", payload.pm || [], FECHA_EN_PANTALLA);
-        /* MODI44 */
-       //await refrescarBotonCalAgenda(idDoctor);
-        /*FIN MODI44 */
     }
     document.addEventListener("DOMContentLoaded", async () => {
         // 1. Inicialización de Flatpickr (Calendario principal)
