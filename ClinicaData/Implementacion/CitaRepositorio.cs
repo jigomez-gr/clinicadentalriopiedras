@@ -1315,18 +1315,23 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
         }
         public async Task<string> ValidarOperacionArchivo(ChequeoRequest request)
         {
-            // Usamos la función SQL tg_archivo_validar que definimos antes
             using (var conexion = new NpgsqlConnection(con.CadenaSQL))
             {
                 try
                 {
                     await conexion.OpenAsync();
+
+                    // Si el mime_type viene nulo por alguna razón, le ponemos un comodín para que no falle
+                    string mimeTypeSeguro = string.IsNullOrEmpty(request.mime_type) ? "application/octet-stream" : request.mime_type;
+
                     var jsonRaw = await conexion.ExecuteScalarAsync<string>(
-                        "SELECT public.tg_archivo_validar(@id, @valor)",
+                        // ACTUALIZAMOS LA LLAMADA AL PROCEDURE PARA QUE ACEPTE 3 PARÁMETROS
+                        "SELECT public.tg_archivo_validar(@id, @valor, @mime)",
                         new
                         {
                             id = request.id_operacion,
-                            valor = request.valor_recibido // Aquí viaja el Base64 desde n8n
+                            valor = request.valor_recibido,
+                            mime = mimeTypeSeguro
                         }
                     );
                     return jsonRaw ?? "{\"ESTADO\":0, \"MENSAJE\":\"Error al procesar archivo en DB\"}";

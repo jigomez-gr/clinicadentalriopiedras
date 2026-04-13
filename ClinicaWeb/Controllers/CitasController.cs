@@ -1439,11 +1439,12 @@ LIMIT 1;
             }
         }
         
-
+              
         [HttpPost]
         [AllowAnonymous]
         [DisableRequestSizeLimit]
-        [RequestFormLimits(MultipartBodyLengthLimit = 104857600, ValueLengthLimit = 104857600)]
+        // Lo bajamos a ~25 MB (26214400 bytes) porque Telegram no da más de 20 MB por archivo.
+        [RequestFormLimits(MultipartBodyLengthLimit = 26214400, ValueLengthLimit = 26214400)]
         public async Task<IActionResult> ValidarArchivo_unico([FromBody] ChequeoRequest request)
         {
             // Este es el nuevo para la ruta de archivos de n8n

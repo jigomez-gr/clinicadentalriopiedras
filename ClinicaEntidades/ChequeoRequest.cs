@@ -11,6 +11,7 @@ namespace ClinicaEntidades
         public int id_operacion { get; set; }
         public int numerooperacion { get; set; }
         public string valor_recibido { get; set; }
+        public string mime_type { get; set; }
         public string workflowid { get; set; }
     }
 
