@@ -1279,7 +1279,7 @@
         // de base de datos antes de pedirle que nos devuelva la agenda actualizada.
         setTimeout(async () => {
             await verAgenda();
-        }, 400);
+        }, 800);
     }
 
       // ✅ Validación mínima HH:MM (no rangos, no 00/30, SOLO formato)
@@ -1287,15 +1287,13 @@
           const s = (hhmm || "").trim();
           return /^([01]\d|2[0-3]):([0-5]\d)$/.test(s);
       }
-
-      async function addSlot() {
+    async function addSlot() {
           const fechaInput = (document.getElementById("txtFecha").value || "").trim();
           const horaInput = (document.getElementById("txtNuevoSlotHora").value || "").trim();
-         // const idDoctor = getIdDoctorPantalla();
-           const idDoctor = getIdDoctorPantalla_SAFE();
+          const idDoctor = getIdDoctorPantalla_SAFE();
+
           if (!fechaInput) { Swal.fire("Aviso", "Selecciona una fecha.", "info"); return; }
-          if (!idDoctor) { Swal.fire("Aviso", "IdDoctor inválido.", "error");
-          return; }
+          if (!idDoctor) { Swal.fire("Aviso", "IdDoctor inválido.", "error"); return; }
 
           if (!esHoraValidaMinima(horaInput)) {
               Swal.fire("Aviso", "Hora inválida. Usa formato HH:MM (ej: 10:00).", "info");
@@ -1312,10 +1310,22 @@
               return;
           }
 
+          // Vaciamos el cajetín de texto de la hora
           document.getElementById("txtNuevoSlotHora").value = "";
 
-            Swal.fire("OK", "Slot creado. " + horaInput, "success");
-          await verAgenda();
+          Swal.fire({
+              title: "OK",
+              text: "Slot creado: " + horaInput,
+              icon: "success",
+              timer: 1500,          // Hacemos que el mensaje desaparezca solo para que sea más fluido
+              showConfirmButton: false
+          });
+
+          // ✅ CORRECCIÓN: Damos 400ms de oxígeno al VPS para que cierre la transacción
+          // antes de recargar la pantalla con verAgenda() (que ya tiene los anti-cachés)
+          setTimeout(async () => {
+              await verAgenda();
+          }, 800);
       }
        function getIdDoctorPantalla() {
            const v = document.getElementById("ddlDoctor").value;

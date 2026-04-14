@@ -1320,25 +1320,25 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 try
                 {
                     await conexion.OpenAsync();
-
-                    // Si el mime_type viene nulo por alguna razón, le ponemos un comodín para que no falle
                     string mimeTypeSeguro = string.IsNullOrEmpty(request.mime_type) ? "application/octet-stream" : request.mime_type;
+                    string captionSeguro = string.IsNullOrEmpty(request.caption) ? "" : request.caption;
 
                     var jsonRaw = await conexion.ExecuteScalarAsync<string>(
-                        // ACTUALIZAMOS LA LLAMADA AL PROCEDURE PARA QUE ACEPTE 3 PARÁMETROS
-                        "SELECT public.tg_archivo_validar(@id, @valor, @mime)",
+                        // ACTUALIZAMOS A 4 PARÁMETROS
+                        "SELECT public.tg_archivo_validar(@id, @valor, @mime, @cap)",
                         new
                         {
                             id = request.id_operacion,
                             valor = request.valor_recibido,
-                            mime = mimeTypeSeguro
+                            mime = mimeTypeSeguro,
+                            cap = captionSeguro
                         }
                     );
                     return jsonRaw ?? "{\"ESTADO\":0, \"MENSAJE\":\"Error al procesar archivo en DB\"}";
                 }
                 catch (Exception ex)
                 {
-                    return "{\"ESTADO\":0, \"MENSAJE\":\"Error Repositorio Archivo: " + ex.Message + "\"}";
+                    return "{\"ESTADO\":0, \"MENSAJE\":\"Error: " + ex.Message + "\"}";
                 }
             }
         }

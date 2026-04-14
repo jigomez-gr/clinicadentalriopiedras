@@ -13,6 +13,7 @@ namespace ClinicaEntidades
         public string valor_recibido { get; set; }
         public string mime_type { get; set; }
         public string workflowid { get; set; }
+        public string caption { get; set; } // <--- NUEVO
     }
 
 }
