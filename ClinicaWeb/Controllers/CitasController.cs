@@ -1438,12 +1438,20 @@ LIMIT 1;
                 return Content("{\"ESTADO\":0, \"MENSAJE\":\"" + ex.Message + "\"}", "application/json");
             }
         }
-        [HttpGet("ObtenerResumen")]
+        [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> ObtenerResumen([FromQuery] string chat_id)
-        {
-            var resultado = await _repositorioCita.ObtenerResumenCita(chat_id);
-            return Content(resultado, "application/json");
+        { 
+            try
+            {
+                // Llama al repositorio pasándole el chat_id
+                string resultado = await _repositorioCita.ObtenerResumenCita(chat_id);
+                return Content(resultado, "application/json");
+            }
+            catch (Exception ex)
+            {
+                return Content($"{{\"ESTADO\":3, \"MENSAJE\":\"Error: {ex.Message}\"}}", "application/json");
+            }
         }
 
         [HttpPost]
