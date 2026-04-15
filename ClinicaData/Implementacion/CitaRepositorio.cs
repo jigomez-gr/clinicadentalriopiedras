@@ -1351,7 +1351,6 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 {
                     await conexion.OpenAsync();
 
-                    // Hacemos la consulta SQL directamente aquí
                     string query = @"
                 SELECT json_build_object(
                     'nombreespecialidad', COALESCE(nombreespecialidad, 'No especificada'),
@@ -1363,16 +1362,14 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 FROM public.telegramcitatemp
                 WHERE chat_id = @chatId;";
 
-                    // Ejecutamos la consulta directa
                     var jsonResumen = await conexion.ExecuteScalarAsync<string>(query, new { chatId = chat_id });
 
                     if (string.IsNullOrEmpty(jsonResumen))
                         return "{\"ESTADO\":3, \"MENSAJE\":\"No se encontraron datos de tu cita en curso.\"}";
 
-                    // Deserializamos los datos
                     var resumen = System.Text.Json.JsonSerializer.Deserialize<ResumenCita>(jsonResumen);
 
-                    // Montamos el texto para Telegram
+                    // 1. Preparamos el mensaje (sin meterlo todavía en el JSON final para no liarnos)
                     string mensaje = $"📅 *RESUMEN DE TU CITA*\n\n" +
                                      $"*Especialidad:* {resumen.nombreespecialidad}\n" +
                                      $"*Doctor:* {resumen.nombreyvaldoctor}\n" +
@@ -1386,17 +1383,23 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
 
                     mensaje += "\n¿Confirmas que los datos son correctos?";
 
-                    // Montamos los 2 botones
+                    // 2. Escapamos los saltos de línea del mensaje para que el JSON no se rompa
+                    // Esto es VITAL para que n8n no te dé el error de "valid JSON"
+                    string mensajeLimpio = mensaje.Replace("\n", "\\n");
+
+                    // 3. Montamos los botones
                     string dataBotones = "[" +
                         "{\"text\": \"✅ Confirmar y agendar\", \"callback_data\": \"CONFIRMAR_CITA\"}, " +
                         "{\"text\": \"🔙 Volver atrás\", \"callback_data\": \"VOLVER_ATRAS\"}" +
                     "]";
 
-                    return $"{{\"ESTADO\" : 2, \"MENSAJE\" : \"{mensaje}\", \"DATA\" : {dataBotones}}}";
+                    // 4. RETORNO FINAL: 
+                    // Usamos comillas simples para el string y evitamos el $ para que las llaves no fallen
+                    return "{\"ESTADO\" : 2, \"MENSAJE\" : \"" + mensajeLimpio + "\", \"DATA\" : " + dataBotones + "}";
                 }
                 catch (Exception ex)
                 {
-                    return $"{{\"ESTADO\":3, \"MENSAJE\":\"Error interno: {ex.Message}\"}}";
+                    return "{\"ESTADO\":3, \"MENSAJE\":\"Error interno: " + ex.Message + "\"}";
                 }
             }
         }

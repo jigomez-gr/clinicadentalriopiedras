@@ -1441,19 +1441,24 @@ LIMIT 1;
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> ObtenerResumen([FromQuery] string chat_id)
-        { 
+        {
             try
             {
                 // Llama al repositorio pasándole el chat_id
                 string resultado = await _repositorioCita.ObtenerResumenCita(chat_id);
+
+                // Devolvemos Content indicando explícitamente que es JSON
                 return Content(resultado, "application/json");
             }
             catch (Exception ex)
             {
-                return Content($"{{\"ESTADO\":3, \"MENSAJE\":\"Error: {ex.Message}\"}}", "application/json");
+                // Si hay un error general, garantizamos que también salga como JSON perfecto
+                var errorGeneral = new { ESTADO = 3, MENSAJE = $"Error: {ex.Message}" };
+                string jsonError = System.Text.Json.JsonSerializer.Serialize(errorGeneral);
+
+                return Content(jsonError, "application/json");
             }
         }
-
         [HttpPost]
         [AllowAnonymous]
         [DisableRequestSizeLimit]

@@ -8,6 +8,7 @@ namespace ClinicaEntidades
 {
     public class ResumenCita
     {
+
         public string nombreespecialidad { get; set; }
         public string nombreyvaldoctor { get; set; }
         public string fecha { get; set; }
