@@ -1438,7 +1438,7 @@ LIMIT 1;
                 return Content("{\"ESTADO\":0, \"MENSAJE\":\"" + ex.Message + "\"}", "application/json");
             }
         }
-        [HttpPost("ObtenerResumen")]
+        [HttpGet("ObtenerResumen")]
         [AllowAnonymous]
         public async Task<IActionResult> ObtenerResumen([FromQuery] string chat_id)
         {

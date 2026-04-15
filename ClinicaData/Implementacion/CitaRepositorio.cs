@@ -1350,18 +1350,29 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 try
                 {
                     await conexion.OpenAsync();
-                    var jsonResumen = await conexion.ExecuteScalarAsync<string>(
-                        "SELECT public.tg_obtener_resumen_temp(@chatId)",
-                        new { chatId = chat_id }
-                    );
+
+                    // Hacemos la consulta SQL directamente aquí
+                    string query = @"
+                SELECT json_build_object(
+                    'nombreespecialidad', COALESCE(nombreespecialidad, 'No especificada'),
+                    'nombreyvaldoctor', COALESCE(nombreyvaldoctor, 'Cualquier Doctor'),
+                    'fecha', COALESCE(fecha, 'Sin fecha'),
+                    'hora', COALESCE(hora, 'Sin hora'),
+                    'archivocaption', COALESCE(archivocaption, '')
+                )::text
+                FROM public.telegramcitatemp
+                WHERE chat_id = @chatId;";
+
+                    // Ejecutamos la consulta directa
+                    var jsonResumen = await conexion.ExecuteScalarAsync<string>(query, new { chatId = chat_id });
 
                     if (string.IsNullOrEmpty(jsonResumen))
                         return "{\"ESTADO\":3, \"MENSAJE\":\"No se encontraron datos de tu cita en curso.\"}";
 
-                    // Deserializamos los datos del temporal
-                    //var resumen = JsonSerializer.Deserialize<ResumenCita>(jsonResumen);
-                    var resumen = System.Text.Json.JsonSerializer.Deserialize < ResumenCita >(jsonResumen);
-                    // Montamos el texto bonito para Telegram (Markdown)
+                    // Deserializamos los datos
+                    var resumen = System.Text.Json.JsonSerializer.Deserialize<ResumenCita>(jsonResumen);
+
+                    // Montamos el texto para Telegram
                     string mensaje = $"📅 *RESUMEN DE TU CITA*\n\n" +
                                      $"*Especialidad:* {resumen.nombreespecialidad}\n" +
                                      $"*Doctor:* {resumen.nombreyvaldoctor}\n" +
