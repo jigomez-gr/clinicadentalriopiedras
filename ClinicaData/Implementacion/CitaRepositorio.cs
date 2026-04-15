@@ -8,6 +8,7 @@ using Npgsql;
 using NpgsqlTypes;
 using System.Data;
 using Newtonsoft.Json;
+using System.Text.Json;
 namespace ClinicaData.Implementacion
 {
     public class CitaRepositorio : ICitaRepositorio
@@ -1339,6 +1340,52 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 catch (Exception ex)
                 {
                     return "{\"ESTADO\":0, \"MENSAJE\":\"Error: " + ex.Message + "\"}";
+                }
+            }
+        }
+        public async Task<string> ObtenerResumenCita(string chat_id)
+        {
+            using (var conexion = new NpgsqlConnection(con.CadenaSQL))
+            {
+                try
+                {
+                    await conexion.OpenAsync();
+                    var jsonResumen = await conexion.ExecuteScalarAsync<string>(
+                        "SELECT public.tg_obtener_resumen_temp(@chatId)",
+                        new { chatId = chat_id }
+                    );
+
+                    if (string.IsNullOrEmpty(jsonResumen))
+                        return "{\"ESTADO\":3, \"MENSAJE\":\"No se encontraron datos de tu cita en curso.\"}";
+
+                    // Deserializamos los datos del temporal
+                    //var resumen = JsonSerializer.Deserialize<ResumenCita>(jsonResumen);
+                    var resumen = System.Text.Json.JsonSerializer.Deserialize < ResumenCita >(jsonResumen);
+                    // Montamos el texto bonito para Telegram (Markdown)
+                    string mensaje = $"📅 *RESUMEN DE TU CITA*\n\n" +
+                                     $"*Especialidad:* {resumen.nombreespecialidad}\n" +
+                                     $"*Doctor:* {resumen.nombreyvaldoctor}\n" +
+                                     $"*Fecha:* {resumen.fecha}\n" +
+                                     $"*Hora:* {resumen.hora}\n";
+
+                    if (!string.IsNullOrEmpty(resumen.archivocaption))
+                    {
+                        mensaje += $"\n*Tus notas:* {resumen.archivocaption}\n";
+                    }
+
+                    mensaje += "\n¿Confirmas que los datos son correctos?";
+
+                    // Montamos los 2 botones
+                    string dataBotones = "[" +
+                        "{\"text\": \"✅ Confirmar y agendar\", \"callback_data\": \"CONFIRMAR_CITA\"}, " +
+                        "{\"text\": \"🔙 Volver atrás\", \"callback_data\": \"VOLVER_ATRAS\"}" +
+                    "]";
+
+                    return $"{{\"ESTADO\" : 2, \"MENSAJE\" : \"{mensaje}\", \"DATA\" : {dataBotones}}}";
+                }
+                catch (Exception ex)
+                {
+                    return $"{{\"ESTADO\":3, \"MENSAJE\":\"Error interno: {ex.Message}\"}}";
                 }
             }
         }

@@ -104,5 +104,7 @@ namespace ClinicaData.Contrato
         // Para procesar el Base64 de la operación de archivo
         Task<string> ValidarOperacionArchivo(ChequeoRequest request);
 
+        Task<string> ObtenerResumenCita(string chat_id);
+
     }
 }
