@@ -1388,7 +1388,7 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
 
                     // 3. Configuración de la URL de la WebApp (IMPORTANTE: Debe ser HTTPS)
                     // Cambia 'tu-dominio.com' por tu dirección real.
-                    string urlFormulario = $"https:https://clinicadentalriopiedras.n8njigretera.cloud/Citas/EditarTemp?chat_id={chat_id}";
+                    string urlFormulario = $"https://clinicadentalriopiedras.n8njigretera.cloud/Citas/EditarTemp?chat_id={chat_id}";
 
                     // 4. Montamos el JSON de DATA (Botones)
                     // Nota: El botón de WebApp NO debe llevar callback_data para evitar que el bot intente procesarlo como texto.
