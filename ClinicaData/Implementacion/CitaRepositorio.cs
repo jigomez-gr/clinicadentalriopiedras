@@ -1369,7 +1369,7 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
 
                     var resumen = System.Text.Json.JsonSerializer.Deserialize<ResumenCita>(jsonResumen);
 
-                    // 1. Preparamos el mensaje
+                    // 1. Preparamos el mensaje para Telegram
                     string mensaje = $"📅 *RESUMEN DE TU CITA*\n\n" +
                                      $"*Especialidad:* {resumen.nombreespecialidad}\n" +
                                      $"*Doctor:* {resumen.nombreyvaldoctor}\n" +
@@ -1383,19 +1383,21 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
 
                     mensaje += "\n¿Confirmas que los datos son correctos?";
 
-                    // 2. Escapamos los saltos de línea para el JSON
+                    // 2. Escapamos los saltos de línea para que el JSON sea válido
                     string mensajeLimpio = mensaje.Replace("\n", "\\n");
 
-                    // 3. Montamos los botones (CAMBIO: Volver atrás ahora abre WebApp)
-                    // SUSTITUYE 'tu-dominio.com' por tu dominio real con HTTPS
+                    // 3. Configuración de la URL de la WebApp (IMPORTANTE: Debe ser HTTPS)
+                    // Cambia 'tu-dominio.com' por tu dirección real.
                     string urlFormulario = $"https://tu-dominio.com/Citas/EditarTemp?chat_id={chat_id}";
 
+                    // 4. Montamos el JSON de DATA (Botones)
+                    // Nota: El botón de WebApp NO debe llevar callback_data para evitar que el bot intente procesarlo como texto.
                     string dataBotones = "[" +
                         "{\"text\": \"✅ Confirmar y agendar\", \"callback_data\": \"CONFIRMAR_CITA\"}, " +
                         "{\"text\": \"🔙 Corregir datos\", \"web_app\": {\"url\": \"" + urlFormulario + "\"}}" +
                     "]";
 
-                    // 4. RETORNO FINAL
+                    // 5. RETORNO FINAL
                     return "{\"ESTADO\" : 2, \"MENSAJE\" : \"" + mensajeLimpio + "\", \"DATA\" : " + dataBotones + "}";
                 }
                 catch (Exception ex)
