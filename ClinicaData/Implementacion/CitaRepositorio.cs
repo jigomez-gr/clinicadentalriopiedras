@@ -1352,15 +1352,15 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                     await conexion.OpenAsync();
 
                     string query = @"
-                SELECT json_build_object(
-                    'nombreespecialidad', COALESCE(nombreespecialidad, 'No especificada'),
-                    'nombreyvaldoctor', COALESCE(nombreyvaldoctor, 'Cualquier Doctor'),
-                    'fecha', COALESCE(fecha, 'Sin fecha'),
-                    'hora', COALESCE(hora, 'Sin hora'),
-                    'archivocaption', COALESCE(archivocaption, '')
-                )::text
-                FROM public.telegramcitatemp
-                WHERE chat_id = @chatId;";
+            SELECT json_build_object(
+                'nombreespecialidad', COALESCE(nombreespecialidad, 'No especificada'),
+                'nombreyvaldoctor', COALESCE(nombreyvaldoctor, 'Cualquier Doctor'),
+                'fecha', COALESCE(fecha, 'Sin fecha'),
+                'hora', COALESCE(hora, 'Sin hora'),
+                'archivocaption', COALESCE(archivocaption, '')
+            )::text
+            FROM public.telegramcitatemp
+            WHERE chat_id = @chatId;";
 
                     var jsonResumen = await conexion.ExecuteScalarAsync<string>(query, new { chatId = chat_id });
 
@@ -1369,7 +1369,7 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
 
                     var resumen = System.Text.Json.JsonSerializer.Deserialize<ResumenCita>(jsonResumen);
 
-                    // 1. Preparamos el mensaje (sin meterlo todavía en el JSON final para no liarnos)
+                    // 1. Preparamos el mensaje
                     string mensaje = $"📅 *RESUMEN DE TU CITA*\n\n" +
                                      $"*Especialidad:* {resumen.nombreespecialidad}\n" +
                                      $"*Doctor:* {resumen.nombreyvaldoctor}\n" +
@@ -1383,24 +1383,75 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
 
                     mensaje += "\n¿Confirmas que los datos son correctos?";
 
-                    // 2. Escapamos los saltos de línea del mensaje para que el JSON no se rompa
-                    // Esto es VITAL para que n8n no te dé el error de "valid JSON"
+                    // 2. Escapamos los saltos de línea para el JSON
                     string mensajeLimpio = mensaje.Replace("\n", "\\n");
 
-                    // 3. Montamos los botones
+                    // 3. Montamos los botones (CAMBIO: Volver atrás ahora abre WebApp)
+                    // SUSTITUYE 'tu-dominio.com' por tu dominio real con HTTPS
+                    string urlFormulario = $"https://tu-dominio.com/Citas/EditarTemp?chat_id={chat_id}";
+
                     string dataBotones = "[" +
                         "{\"text\": \"✅ Confirmar y agendar\", \"callback_data\": \"CONFIRMAR_CITA\"}, " +
-                        "{\"text\": \"🔙 Volver atrás\", \"callback_data\": \"VOLVER_ATRAS\"}" +
+                        "{\"text\": \"🔙 Corregir datos\", \"web_app\": {\"url\": \"" + urlFormulario + "\"}}" +
                     "]";
 
-                    // 4. RETORNO FINAL: 
-                    // Usamos comillas simples para el string y evitamos el $ para que las llaves no fallen
+                    // 4. RETORNO FINAL
                     return "{\"ESTADO\" : 2, \"MENSAJE\" : \"" + mensajeLimpio + "\", \"DATA\" : " + dataBotones + "}";
                 }
                 catch (Exception ex)
                 {
                     return "{\"ESTADO\":3, \"MENSAJE\":\"Error interno: " + ex.Message + "\"}";
                 }
+            }
+        }
+        public async Task<bool> ActualizarCitaTemporal(GuardarEdicionTempDTO datos)
+        {
+            using (var conexion = new NpgsqlConnection(con.CadenaSQL))
+            {
+                await conexion.OpenAsync();
+
+                // 1. Preparar la imagen si el usuario subió una nueva
+                byte[] imagenBytes = null;
+                if (!string.IsNullOrEmpty(datos.ImagenBase64))
+                {
+                    // Limpiamos el prefijo data:image/... si existe
+                    string base64Real = datos.ImagenBase64.Contains(",")
+                        ? datos.ImagenBase64.Split(',')[1]
+                        : datos.ImagenBase64;
+                    imagenBytes = Convert.FromBase64String(base64Real);
+                }
+
+                // 2. Construir la consulta dinámica
+                // Solo actualizamos el campo 'archivo' (imagen) si realmente se envió una nueva
+                string sql = @"
+            UPDATE public.telegramcitatemp 
+            SET archivocaption = @notas" +
+                    (imagenBytes != null ? ", archivo = @imagen" : "") +
+                    " WHERE chat_id = @chatId";
+
+                var parametros = new
+                {
+                    notas = datos.Notas,
+                    chatId = datos.ChatId,
+                    imagen = imagenBytes
+                };
+
+                int filasAfectadas = await conexion.ExecuteAsync(sql, parametros);
+                return filasAfectadas > 0;
+            }
+        }
+        public async Task<GuardarEdicionTempDTO> ObtenerDatosParaEdicion(string chat_id)
+        {
+            using (var conexion = new NpgsqlConnection(con.CadenaSQL))
+            {
+                string query = @"
+            SELECT chat_id as ChatId, nombreyvaldoctor as NombreDoctor, 
+                   fecha as Fecha, hora as Hora, archivocaption as Notas, 
+                   encode(archivo, 'base64') as ImagenBase64
+            FROM public.telegramcitatemp 
+            WHERE chat_id = @chatId";
+
+                return await conexion.QueryFirstOrDefaultAsync<GuardarEdicionTempDTO>(query, new { chatId = chat_id });
             }
         }
     }

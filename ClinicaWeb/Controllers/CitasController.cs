@@ -1438,6 +1438,7 @@ LIMIT 1;
                 return Content("{\"ESTADO\":0, \"MENSAJE\":\"" + ex.Message + "\"}", "application/json");
             }
         }
+      
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> ObtenerResumen([FromQuery] string chat_id)
@@ -1458,6 +1459,25 @@ LIMIT 1;
 
                 return Content(jsonError, "application/json");
             }
+        }
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> EditarTemp(string chat_id)
+        {
+            // Llamamos al repositorio para traer los datos actuales
+            var modelo = await _repositorioCita.ObtenerDatosParaEdicion(chat_id);
+
+            if (modelo == null) return NotFound();
+
+            return View(modelo);
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> GuardarCambiosTemp([FromBody] GuardarEdicionTempDTO modelo)
+        {
+            bool exito = await _repositorioCita.ActualizarCitaTemporal(modelo);
+            return Ok(new { success = exito });
         }
         [HttpPost]
         [AllowAnonymous]

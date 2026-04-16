@@ -106,5 +106,11 @@ namespace ClinicaData.Contrato
 
         Task<string> ObtenerResumenCita(string chat_id);
 
+        Task<bool> ActualizarCitaTemporal(GuardarEdicionTempDTO datos);
+        // Para cargar los datos en el formulario HTML (Operación 40 GET)
+        Task<GuardarEdicionTempDTO> ObtenerDatosParaEdicion(string chat_id);
+               
+        // (Opcional) Si vas a implementar la confirmación final:
+        // Task<string> EjecutarSpGuardarCita(...);
     }
 }
