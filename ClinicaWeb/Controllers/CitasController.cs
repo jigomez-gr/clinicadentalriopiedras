@@ -1464,10 +1464,13 @@ LIMIT 1;
         [AllowAnonymous]
         public async Task<IActionResult> EditarTemp(string chat_id)
         {
-            // Llamamos al repositorio para traer los datos actuales
+            if (string.IsNullOrEmpty(chat_id))
+                return Content("Error: El chat_id llegó vacío.");
+
             var modelo = await _repositorioCita.ObtenerDatosParaEdicion(chat_id);
 
-            if (modelo == null) return NotFound();
+            if (modelo == null)
+                return Content($"Error: No hay datos en la tabla temporal para el ID: {chat_id}");
 
             return View(modelo);
         }
