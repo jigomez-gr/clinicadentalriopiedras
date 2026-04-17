@@ -1584,27 +1584,29 @@ LIMIT 1;
 
         [HttpGet]
         [AllowAnonymous]
-        public async Task<IActionResult> ConfirmarCitaFinal(string chat_id)
+        public IActionResult ConfirmarCitaFinal(string chat_id)
         {
-            // 1. URL de la WebApp
             string urlWeb = $"https://clinicadentalriopiedras.n8njigretera.cloud/Citas/EditarTemp?chat_id={chat_id}";
 
-            // 2. Mensaje (Usamos \\n para que el JSON sea válido)
-            string mensaje = "🏁 *Resumen Final de tu Cita*\\n\\nRevisa que todo esté correcto. Si necesitas cambiar algo, pulsa 'Corregir'. Si no, pulsa 'Confirmar'.";
+            // Usamos un Diccionario para obligar a que respete las MAYÚSCULAS que espera n8n
+            var respuesta = new Dictionary<string, object>
+    {
+        { "ESTADO", 2 },
+        { "MENSAJE", "🏁 *Resumen Final de tu Cita*\n\nRevisa que todo esté correcto. Si necesitas cambiar algo, pulsa 'Corregir'. Si no, pulsa 'Confirmar'." },
+        { "DATA", new object[]
+            {
+                // ¡LA MAGIA!: Una lista de botones plana, sin corchetes dobles.
+                // n8n se encargará de ponerlos uno debajo de otro automáticamente.
+                new { text = "✅ Confirmar Cita", callback_data = "CONFIRMAR_FINAL" },
+                new { text = "🔙 Corregir Datos", web_app = new { url = urlWeb } },
+                new { text = "❌ Cancelar Alta", callback_data = "CANCELAR_PROCESO" }
+            }
+        }
+    };
 
-            // 3. Botones (JSON puro)
-            // Nota: He mantenido tu estructura de filas individuales (un botón por línea)
-            string jsonBotones = @"[
-        [{ ""text"": ""✅ Confirmar Cita"", ""callback_data"": ""CONFIRMAR_FINAL"" }],
-        [{ ""text"": ""🔙 Corregir Datos"", ""web_app"": { ""url"": """ + urlWeb + @""" } }],
-        [{ ""text"": ""❌ Cancelar Alta"", ""callback_data"": ""CANCELAR_PROCESO"" }]
-    ]";
-
-            // 4. Construcción del objeto final
-            // Usamos ContentResult para asegurar que n8n reciba application/json
-            var jsonFinal = "{\"ESTADO\": 2, \"MENSAJE\": \"" + mensaje + "\", \"DATA\": " + jsonBotones + "}";
-
-            return Content(jsonFinal, "application/json");
+            // Al usar Json(), el framework .NET se encarga de que los \n y las comillas 
+            // lleguen perfectos a n8n. Cero errores.
+            return Json(respuesta);
         }
     }
 }
