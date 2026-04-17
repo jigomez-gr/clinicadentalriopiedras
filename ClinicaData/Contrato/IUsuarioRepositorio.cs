@@ -17,5 +17,6 @@ namespace ClinicaData.Contrato
         Task<int> Eliminar(int Id);
         Task<string> Guardar2(Usuario objeto);
         Task<string> Editar2(Usuario objeto);
+       
     }
 }

@@ -1392,10 +1392,13 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
 
                     // 4. Montamos el JSON de DATA (Botones)
                     // Nota: El botón de WebApp NO debe llevar callback_data para evitar que el bot intente procesarlo como texto.
+
                     string dataBotones = "[" +
-                        "{\"text\": \"✅ Confirmar y agendar\", \"callback_data\": \"CONFIRMAR_CITA\"}, " +
-                        "{\"text\": \"🔙 Corregir datos\", \"web_app\": {\"url\": \"" + urlFormulario + "\"}}" +
+                        "{\"text\": \"✅ Confirmar y Reservar\", \"callback_data\": \"CONFIRMAR_FINAL\"}, " +
+                        "{\"text\": \"🔙 Corregir datos\", \"web_app\": {\"url\": \"" + urlFormulario + "\"}}, " +
+                        "{\"text\": \"❌ Cancelar Alta\", \"callback_data\": \"CANCELAR_PROCESO\"}" +
                     "]";
+
 
                     // 5. RETORNO FINAL
                     return "{\"ESTADO\" : 2, \"MENSAJE\" : \"" + mensajeLimpio + "\", \"DATA\" : " + dataBotones + "}";
@@ -1454,6 +1457,58 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
             WHERE chat_id = @chatId";
 
                 return await conexion.QueryFirstOrDefaultAsync<GuardarEdicionTempDTO>(query, new { chatId = chat_id });
+            }
+        }
+        public async Task<Usuario> ObtenerPorChatId(string chatId)
+        {
+            using (var conexion = new NpgsqlConnection(con.CadenaSQL))
+            {
+                await conexion.OpenAsync();
+
+                // Traemos el nombre del rol como 'NombreRol' para que coincida con la propiedad
+                string sql = @"
+            SELECT u.*, r.nombre as NombreRol 
+            FROM public.usuario u
+            INNER JOIN public.rolusuario r ON u.idrolusuario = r.idrolusuario
+            WHERE u.telegram_id = @chatId LIMIT 1";
+
+                // Al ser una estructura plana, no necesitamos multi-mapping complejo
+                return await conexion.QueryFirstOrDefaultAsync<Usuario>(sql, new { chatId = chatId });
+            }
+        }
+        public async Task<string> ConfirmarYCerrarCita(string chat_id)
+        {
+            using (var conexion = new NpgsqlConnection(con.CadenaSQL))
+            {
+                try
+                {
+                    await conexion.OpenAsync();
+
+                    // 1. Doble Check de seguridad: ¿Sigue disponible el iddoctorhorariodetalle?
+                    string sqlCheck = @"
+                SELECT COUNT(*) 
+                FROM public.telegramcitatemp t
+                JOIN public.doctorhorariodetalle d ON t.iddoctorhorariodetalle = d.iddoctorhorariodetalle
+                WHERE t.chat_id = @chatId AND d.disponible = false";
+
+                    var yaOcupado = await conexion.ExecuteScalarAsync<int>(sqlCheck, new { chatId = chat_id });
+
+                    if (yaOcupado > 0)
+                    {
+                        return "{\"ESTADO\":3, \"MENSAJE\":\"⚠️ ¡Vaya! Alguien acaba de reservar ese horario mientras revisabas. Por favor, selecciona otra hora.\"}";
+                    }
+
+                    // 2. Llamada al SP Maestro
+                    // Este SP debe: Insertar en 'citas', marcar 'disponible=false' y borrar de 'telegramcitatemp'
+                    string sqlSP = "SELECT public.sp_guardarcita_telegram(@chatId)";
+                    var resultado = await conexion.ExecuteScalarAsync<string>(sqlSP, new { chatId = chat_id });
+
+                    return resultado; // Retorna el JSON de éxito o error del SP
+                }
+                catch (Exception ex)
+                {
+                    return "{\"ESTADO\":3, \"MENSAJE\":\"Error crítico: " + ex.Message + "\"}";
+                }
             }
         }
     }

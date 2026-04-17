@@ -1,6 +1,7 @@
 ﻿
 using ClinicaEntidades;
 using ClinicaEntidades.DTO;
+using System.Threading.Tasks;
 
 namespace ClinicaData.Contrato
 {
@@ -109,7 +110,8 @@ namespace ClinicaData.Contrato
         Task<bool> ActualizarCitaTemporal(GuardarEdicionTempDTO datos);
         // Para cargar los datos en el formulario HTML (Operación 40 GET)
         Task<GuardarEdicionTempDTO> ObtenerDatosParaEdicion(string chat_id);
-               
+        Task<string> ConfirmarYCerrarCita(string chat_id);
+        Task<Usuario> ObtenerPorChatId(string chatId);
         // (Opcional) Si vas a implementar la confirmación final:
         // Task<string> EjecutarSpGuardarCita(...);
     }

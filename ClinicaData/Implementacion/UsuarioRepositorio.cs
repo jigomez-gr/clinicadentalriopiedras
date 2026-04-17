@@ -1,11 +1,13 @@
 ﻿using ClinicaData.Configuracion;
 using ClinicaData.Contrato;
 using ClinicaEntidades;
+using Dapper;
 using Microsoft.Extensions.Options;
-using System.Data;
 using Npgsql;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 using NpgsqlTypes;
+using System.Data;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Threading.Tasks;
 
 namespace ClinicaData.Implementacion
 {
@@ -301,6 +303,7 @@ namespace ClinicaData.Implementacion
 
             return objeto;
         }
-
+     
     }
 }
+

@@ -4,6 +4,8 @@ using ClinicaData.Implementacion;
 using ClinicaEntidades;
 using ClinicaEntidades.DTO;
 using Dapper;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -17,6 +19,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Security.Claims;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -1460,21 +1463,7 @@ LIMIT 1;
                 return Content(jsonError, "application/json");
             }
         }
-        [HttpGet]
-        [AllowAnonymous]
-        public async Task<IActionResult> EditarTemp(string chat_id)
-        {
-            if (string.IsNullOrEmpty(chat_id))
-                return Content("Error: El chat_id llegó vacío.");
-
-            var modelo = await _repositorioCita.ObtenerDatosParaEdicion(chat_id);
-
-            if (modelo == null)
-                return Content($"Error: No hay datos en la tabla temporal para el ID: {chat_id}");
-
-            return View(modelo);
-        }
-
+      
         [HttpPost]
         [AllowAnonymous]
         public async Task<IActionResult> GuardarCambiosTemp([FromBody] GuardarEdicionTempDTO modelo)
@@ -1539,6 +1528,83 @@ LIMIT 1;
                     mensaje = "Error al consultar la agenda: " + ex.Message
                 });
             }
+        }
+        // --- ACCESO A WEB COMPLETA DESDE TELEGRAM ---
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> TokenLogin(string chat_id)
+        {
+            if (string.IsNullOrEmpty(chat_id)) return RedirectToAction("Login", "Acceso");
+
+            var usuario = await _repositorioCita.ObtenerPorChatId(chat_id);
+
+            if (usuario == null) return RedirectToAction("Login", "Acceso");
+
+            var claims = new List<System.Security.Claims.Claim>
+    {
+        new System.Security.Claims.Claim(ClaimTypes.Name, usuario.Nombre),
+        new System.Security.Claims.Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
+        new System.Security.Claims.Claim(ClaimTypes.Role, usuario.NombreRol)
+    };
+
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(claimsIdentity));
+
+            return RedirectToAction("Index", "Citas");
+        }
+
+        // --- ACCESO A CORREGIR CITA (OPERACIÓN 40) ---
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> EditarTemp(string chat_id)
+        {
+            if (string.IsNullOrEmpty(chat_id)) return RedirectToAction("Login", "Acceso");
+
+            // Login automático "silencioso" para que la cookie exista al guardar
+            var usuario = await _repositorioCita.ObtenerPorChatId(chat_id);
+            if (usuario != null)
+            {
+                var claims = new List<System.Security.Claims.Claim>
+        {
+            new System.Security.Claims.Claim(ClaimTypes.Name, usuario.Nombre),
+            new System.Security.Claims.Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
+            new System.Security.Claims.Claim(ClaimTypes.Role, usuario.NombreRol)
+        };
+                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
+            }
+
+            var modelo = await _repositorioCita.ObtenerDatosParaEdicion(chat_id);
+            if (modelo == null) return NotFound();
+
+            return View(modelo);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> ConfirmarCitaFinal(string chat_id)
+        {
+            // 1. URL de la WebApp
+            string urlWeb = $"https://clinicadentalriopiedras.n8njigretera.cloud/Citas/EditarTemp?chat_id={chat_id}";
+
+            // 2. Mensaje (Usamos \\n para que el JSON sea válido)
+            string mensaje = "🏁 *Resumen Final de tu Cita*\\n\\nRevisa que todo esté correcto. Si necesitas cambiar algo, pulsa 'Corregir'. Si no, pulsa 'Confirmar'.";
+
+            // 3. Botones (JSON puro)
+            // Nota: He mantenido tu estructura de filas individuales (un botón por línea)
+            string jsonBotones = @"[
+        [{ ""text"": ""✅ Confirmar Cita"", ""callback_data"": ""CONFIRMAR_FINAL"" }],
+        [{ ""text"": ""🔙 Corregir Datos"", ""web_app"": { ""url"": """ + urlWeb + @""" } }],
+        [{ ""text"": ""❌ Cancelar Alta"", ""callback_data"": ""CANCELAR_PROCESO"" }]
+    ]";
+
+            // 4. Construcción del objeto final
+            // Usamos ContentResult para asegurar que n8n reciba application/json
+            var jsonFinal = "{\"ESTADO\": 2, \"MENSAJE\": \"" + mensaje + "\", \"DATA\": " + jsonBotones + "}";
+
+            return Content(jsonFinal, "application/json");
         }
     }
 }

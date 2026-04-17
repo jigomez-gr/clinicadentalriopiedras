@@ -1,7 +1,10 @@
-﻿using ClinicaEntidades;
-using ClinicaData.Contrato;
+﻿using ClinicaData.Contrato;
+using ClinicaEntidades;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace SistemaClinica.Controllers
 {
@@ -134,5 +137,6 @@ namespace SistemaClinica.Controllers
             string respuesta = await _repositorio.Editar2(objeto);
             return StatusCode(StatusCodes.Status200OK, new { data = respuesta });
         }
+       
     }
 }
