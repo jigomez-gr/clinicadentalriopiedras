@@ -1583,26 +1583,20 @@ LIMIT 1;
         }
         [HttpGet]
         [AllowAnonymous]
-
-       public async Task<IActionResult> ConfirmarCitaFinal(string chat_id)
+        public async Task<IActionResult> ConfirmarCitaFinal(string chat_id)
         {
             try
             {
-                // 1. Verificación de entrada
                 if (string.IsNullOrEmpty(chat_id))
-                {
-                    return Json(new { ESTADO = 2, MENSAJE = "⚠️ Error: El chat_id no ha llegado al servidor." });
-                }
+                    return Json(new { ESTADO = 2, MENSAJE = "⚠️ Error: chat_id vacío." });
 
                 string urlWeb = $"https://clinicadentalriopiedras.n8njigretera.cloud/Citas/EditarTemp?chat_id={chat_id}";
-                string mensajeDetalle = "";
 
                 using (var conexion = new NpgsqlConnection(Conexion.CN))
                 {
                     await conexion.OpenAsync();
 
-                    // 2. Consulta real basada en tus esquemas de tabla:
-                    // telegramcitatemp (t) -> doctorhorariodetalle (dhd) -> doctorhorario (dh) -> usuario (u)
+                    // Consulta estricta: si no hay match exacto en las 4 tablas, NO devuelve nada
                     string sqlInfo = @"
                 SELECT 
                     t.fecha, 
@@ -1616,43 +1610,37 @@ LIMIT 1;
                 WHERE t.chat_id = @chatId 
                 LIMIT 1";
 
-                    var citaTemp = await conexion.QueryFirstOrDefaultAsync<dynamic>(sqlInfo, new { chatId = chat_id });
+                    var cita = await conexion.QueryFirstOrDefaultAsync<dynamic>(sqlInfo, new { chatId = chat_id });
 
-                    if (citaTemp != null)
+                    if (cita != null)
                     {
-                        // 3. Construcción del mensaje con Nombre y Apellido del doctor
-                        mensajeDetalle = $"🏁 *Resumen Final de tu Cita*\n\n" +
-                                         $"👨‍⚕️ *Doctor/a:* {citaTemp.nombre} {citaTemp.apellido}\n" +
-                                         $"📅 *Fecha:* {citaTemp.fecha:dd/MM/yyyy}\n" +
-                                         $"📝 *Motivo:* {citaTemp.motivo}\n\n" +
-                                         $"Revisa que todo esté correcto. Si necesitas cambiar algo, pulsa 'Corregir'. Si no, pulsa 'Confirmar'.";
+                        string msg = $"🏁 *Resumen de tu Cita*\n\n" +
+                                     $"👨‍⚕️ *Doctor/a:* {cita.nombre} {cita.apellido}\n" +
+                                     $"📅 *Fecha:* {cita.fecha:dd/MM/yyyy}\n" +
+                                     $"📝 *Motivo:* {cita.motivo}\n\n" +
+                                     "¿Confirmamos la reserva?";
+
+                        return Json(new
+                        {
+                            ESTADO = 2,
+                            MENSAJE = msg,
+                            DATA = new object[] {
+                        new { text = "✅ Confirmar", callback_data = "CONFIRMAR_FINAL" },
+                        new { text = "🔙 Corregir", url = urlWeb },
+                        new { text = "❌ Cancelar", callback_data = "CANCELAR_PROCESO" }
+                    }
+                        });
                     }
                     else
                     {
-                        mensajeDetalle = "⚠️ No he encontrado los datos de tu reserva en la tabla temporal. Por favor, intenta iniciar el proceso de nuevo.";
+                        // Si sale este mensaje, el problema es que la relación de IDs en la BD está rota
+                        return Json(new { ESTADO = 2, MENSAJE = $"⚠️ No hay datos para el ID {chat_id}. Revisa que el doctor esté asignado al horario." });
                     }
                 }
-
-                // 4. Respuesta estructurada para n8n
-                var respuesta = new Dictionary<string, object>
-        {
-            { "ESTADO", 2 },
-            { "MENSAJE", mensajeDetalle },
-            { "DATA", new object[]
-                {
-                    new { text = "✅ Confirmar Cita", callback_data = "CONFIRMAR_FINAL" },
-                    new { text = "🔙 Corregir Datos", url = urlWeb },
-                    new { text = "❌ Cancelar Alta", callback_data = "CANCELAR_PROCESO" }
-                }
-            }
-        };
-
-                return Json(respuesta);
             }
             catch (Exception ex)
             {
-                // Esto te dirá exactamente si algo vuelve a fallar en la base de datos
-                return Json(new { ESTADO = 2, MENSAJE = "🔥 Error en el servidor C#: " + ex.Message });
+                return Json(new { ESTADO = 2, MENSAJE = "🔥 Error BD: " + ex.Message });
             }
         }
     }
