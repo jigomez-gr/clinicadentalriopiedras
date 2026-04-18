@@ -1583,46 +1583,57 @@ LIMIT 1;
         }
         [HttpGet]
         [AllowAnonymous]
-        
-        public async Task<IActionResult> ConfirmarCitaFinal(string chat_id)
+
+       public async Task<IActionResult> ConfirmarCitaFinal(string chat_id)
         {
             try
             {
+                // 1. Verificación de entrada
+                if (string.IsNullOrEmpty(chat_id))
+                {
+                    return Json(new { ESTADO = 2, MENSAJE = "⚠️ Error: El chat_id no ha llegado al servidor." });
+                }
+
                 string urlWeb = $"https://clinicadentalriopiedras.n8njigretera.cloud/Citas/EditarTemp?chat_id={chat_id}";
                 string mensajeDetalle = "";
 
-                // 1. LEEMOS LOS DATOS (usando tu conexión)
                 using (var conexion = new NpgsqlConnection(Conexion.CN))
                 {
                     await conexion.OpenAsync();
 
+                    // 2. Consulta real basada en tus esquemas de tabla:
+                    // telegramcitatemp (t) -> doctorhorariodetalle (dhd) -> doctorhorario (dh) -> usuario (u)
                     string sqlInfo = @"
                 SELECT 
                     t.fecha, 
                     t.archivocaption AS motivo, 
-                    u.nombre AS doctor 
+                    u.nombre,
+                    u.apellido
                 FROM public.telegramcitatemp t
-                LEFT JOIN public.doctorhorariodetalle d ON t.iddoctorhorariodetalle = d.iddoctorhorariodetalle
-                LEFT JOIN public.usuario u ON d.iddoctor = u.idusuario
-                WHERE t.chat_id = @chatId LIMIT 1";
+                INNER JOIN public.doctorhorariodetalle dhd ON t.iddoctorhorariodetalle = dhd.iddoctorhorariodetalle
+                INNER JOIN public.doctorhorario dh ON dhd.iddoctorhorario = dh.iddoctorhorario
+                INNER JOIN public.usuario u ON dh.iddoctor = u.idusuario
+                WHERE t.chat_id = @chatId 
+                LIMIT 1";
 
                     var citaTemp = await conexion.QueryFirstOrDefaultAsync<dynamic>(sqlInfo, new { chatId = chat_id });
 
                     if (citaTemp != null)
                     {
+                        // 3. Construcción del mensaje con Nombre y Apellido del doctor
                         mensajeDetalle = $"🏁 *Resumen Final de tu Cita*\n\n" +
-                                         $"👨‍⚕️ *Doctor/a:* {citaTemp.doctor}\n" +
-                                         $"📅 *Fecha:* {citaTemp.fecha}\n" +
+                                         $"👨‍⚕️ *Doctor/a:* {citaTemp.nombre} {citaTemp.apellido}\n" +
+                                         $"📅 *Fecha:* {citaTemp.fecha:dd/MM/yyyy}\n" +
                                          $"📝 *Motivo:* {citaTemp.motivo}\n\n" +
                                          $"Revisa que todo esté correcto. Si necesitas cambiar algo, pulsa 'Corregir'. Si no, pulsa 'Confirmar'.";
                     }
                     else
                     {
-                        mensajeDetalle = "⚠️ No se encontraron los datos de tu reserva. Por favor, empieza de nuevo.";
+                        mensajeDetalle = "⚠️ No he encontrado los datos de tu reserva en la tabla temporal. Por favor, intenta iniciar el proceso de nuevo.";
                     }
                 }
 
-                // 2. MONTAMOS EL JSON (Arreglado el botón URL)
+                // 4. Respuesta estructurada para n8n
                 var respuesta = new Dictionary<string, object>
         {
             { "ESTADO", 2 },
@@ -1630,7 +1641,6 @@ LIMIT 1;
             { "DATA", new object[]
                 {
                     new { text = "✅ Confirmar Cita", callback_data = "CONFIRMAR_FINAL" },
-                    // AQUÍ ESTÁ EL CAMBIO: Usamos 'url' en vez de 'web_app' para evitar el BUTTON_URL_INVALID
                     new { text = "🔙 Corregir Datos", url = urlWeb },
                     new { text = "❌ Cancelar Alta", callback_data = "CANCELAR_PROCESO" }
                 }
@@ -1641,7 +1651,8 @@ LIMIT 1;
             }
             catch (Exception ex)
             {
-                return Json(new { ESTADO = 2, MENSAJE = "🔥 ERROR INTERNO C#: " + ex.Message });
+                // Esto te dirá exactamente si algo vuelve a fallar en la base de datos
+                return Json(new { ESTADO = 2, MENSAJE = "🔥 Error en el servidor C#: " + ex.Message });
             }
         }
     }
