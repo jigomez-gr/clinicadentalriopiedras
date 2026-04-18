@@ -1581,32 +1581,68 @@ LIMIT 1;
 
             return View(modelo);
         }
-
         [HttpGet]
         [AllowAnonymous]
-        public IActionResult ConfirmarCitaFinal(string chat_id)
+        
+        public async Task<IActionResult> ConfirmarCitaFinal(string chat_id)
         {
-            string urlWeb = $"https://clinicadentalriopiedras.n8njigretera.cloud/Citas/EditarTemp?chat_id={chat_id}";
-
-            // Usamos un Diccionario para obligar a que respete las MAYÚSCULAS que espera n8n
-            var respuesta = new Dictionary<string, object>
-    {
-        { "ESTADO", 2 },
-        { "MENSAJE", "🏁 *Resumen Final de tu Cita*\n\nRevisa que todo esté correcto. Si necesitas cambiar algo, pulsa 'Corregir'. Si no, pulsa 'Confirmar'." },
-        { "DATA", new object[]
+            try
             {
-                // ¡LA MAGIA!: Una lista de botones plana, sin corchetes dobles.
-                // n8n se encargará de ponerlos uno debajo de otro automáticamente.
-                new { text = "✅ Confirmar Cita", callback_data = "CONFIRMAR_FINAL" },
-                new { text = "🔙 Corregir Datos", web_app = new { url = urlWeb } },
-                new { text = "❌ Cancelar Alta", callback_data = "CANCELAR_PROCESO" }
-            }
-        }
-    };
+                string urlWeb = $"https://clinicadentalriopiedras.n8njigretera.cloud/Citas/EditarTemp?chat_id={chat_id}";
+                string mensajeDetalle = "";
 
-            // Al usar Json(), el framework .NET se encarga de que los \n y las comillas 
-            // lleguen perfectos a n8n. Cero errores.
-            return Json(respuesta);
+                // 1. LEEMOS LOS DATOS (usando tu conexión)
+                using (var conexion = new NpgsqlConnection(Conexion.CN))
+                {
+                    await conexion.OpenAsync();
+
+                    string sqlInfo = @"
+                SELECT 
+                    t.fecha, 
+                    t.archivocaption AS motivo, 
+                    u.nombre AS doctor 
+                FROM public.telegramcitatemp t
+                LEFT JOIN public.doctorhorariodetalle d ON t.iddoctorhorariodetalle = d.iddoctorhorariodetalle
+                LEFT JOIN public.usuario u ON d.iddoctor = u.idusuario
+                WHERE t.chat_id = @chatId LIMIT 1";
+
+                    var citaTemp = await conexion.QueryFirstOrDefaultAsync<dynamic>(sqlInfo, new { chatId = chat_id });
+
+                    if (citaTemp != null)
+                    {
+                        mensajeDetalle = $"🏁 *Resumen Final de tu Cita*\n\n" +
+                                         $"👨‍⚕️ *Doctor/a:* {citaTemp.doctor}\n" +
+                                         $"📅 *Fecha:* {citaTemp.fecha}\n" +
+                                         $"📝 *Motivo:* {citaTemp.motivo}\n\n" +
+                                         $"Revisa que todo esté correcto. Si necesitas cambiar algo, pulsa 'Corregir'. Si no, pulsa 'Confirmar'.";
+                    }
+                    else
+                    {
+                        mensajeDetalle = "⚠️ No se encontraron los datos de tu reserva. Por favor, empieza de nuevo.";
+                    }
+                }
+
+                // 2. MONTAMOS EL JSON (Arreglado el botón URL)
+                var respuesta = new Dictionary<string, object>
+        {
+            { "ESTADO", 2 },
+            { "MENSAJE", mensajeDetalle },
+            { "DATA", new object[]
+                {
+                    new { text = "✅ Confirmar Cita", callback_data = "CONFIRMAR_FINAL" },
+                    // AQUÍ ESTÁ EL CAMBIO: Usamos 'url' en vez de 'web_app' para evitar el BUTTON_URL_INVALID
+                    new { text = "🔙 Corregir Datos", url = urlWeb },
+                    new { text = "❌ Cancelar Alta", callback_data = "CANCELAR_PROCESO" }
+                }
+            }
+        };
+
+                return Json(respuesta);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { ESTADO = 2, MENSAJE = "🔥 ERROR INTERNO C#: " + ex.Message });
+            }
         }
     }
 }
