@@ -1351,16 +1351,26 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 {
                     await conexion.OpenAsync();
 
+                    // 1. Calculamos el Token MD5 (la misma frase secreta que en el controlador)
+                    string token = CalcularMd5(chat_id + "MiClaveSecreta2026");
+
+                    // 2. Guardamos el token en la tabla TEXTE para que haya rastro
+                    string sqlTexte = @"
+                INSERT INTO public.texte (procedimiento, paso, mensaje, fecha_registro)
+                VALUES ('TOKEN_CORREGIR', @chatId, @token, now());";
+                    await conexion.ExecuteAsync(sqlTexte, new { chatId = chat_id, token = token });
+
+                    // 3. Obtenemos los datos de la cita
                     string query = @"
-            SELECT json_build_object(
-                'nombreespecialidad', COALESCE(nombreespecialidad, 'No especificada'),
-                'nombreyvaldoctor', COALESCE(nombreyvaldoctor, 'Cualquier Doctor'),
-                'fecha', COALESCE(fecha, 'Sin fecha'),
-                'hora', COALESCE(hora, 'Sin hora'),
-                'archivocaption', COALESCE(archivocaption, '')
-            )::text
-            FROM public.telegramcitatemp
-            WHERE chat_id = @chatId;";
+                SELECT json_build_object(
+                    'nombreespecialidad', COALESCE(nombreespecialidad, 'No especificada'),
+                    'nombreyvaldoctor', COALESCE(nombreyvaldoctor, 'Cualquier Doctor'),
+                    'fecha', COALESCE(fecha, 'Sin fecha'),
+                    'hora', COALESCE(hora, 'Sin hora'),
+                    'archivocaption', COALESCE(archivocaption, '')
+                )::text
+                FROM public.telegramcitatemp
+                WHERE chat_id = @chatId;";
 
                     var jsonResumen = await conexion.ExecuteScalarAsync<string>(query, new { chatId = chat_id });
 
@@ -1369,7 +1379,7 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
 
                     var resumen = System.Text.Json.JsonSerializer.Deserialize<ResumenCita>(jsonResumen);
 
-                    // 1. Preparamos el mensaje para Telegram
+                    // 4. Preparamos el mensaje
                     string mensaje = $"📅 *RESUMEN DE TU CITA*\n\n" +
                                      $"*Especialidad:* {resumen.nombreespecialidad}\n" +
                                      $"*Doctor:* {resumen.nombreyvaldoctor}\n" +
@@ -1377,36 +1387,38 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                                      $"*Hora:* {resumen.hora}\n";
 
                     if (!string.IsNullOrEmpty(resumen.archivocaption))
-                    {
                         mensaje += $"\n*Tus notas:* {resumen.archivocaption}\n";
-                    }
 
                     mensaje += "\n¿Confirmas que los datos son correctos?";
-
-                    // 2. Escapamos los saltos de línea para que el JSON sea válido
                     string mensajeLimpio = mensaje.Replace("\n", "\\n");
 
-                    // 3. Configuración de la URL de la WebApp (IMPORTANTE: Debe ser HTTPS)
-                    // Cambia 'tu-dominio.com' por tu dirección real.
-                    string urlFormulario = $"https://clinicadentalriopiedras.n8njigretera.cloud/Citas/EditarTemp?chat_id={chat_id}";
+                    // 5. AQUI ESTÁ EL CAMBIO: URL con TOKEN
+                    string urlFormulario = $"https://clinicadentalriopiedras.n8njigretera.cloud/Citas/EditarTemp?chat_id={chat_id}&token={token}";
 
-                    // 4. Montamos el JSON de DATA (Botones)
-                    // Nota: El botón de WebApp NO debe llevar callback_data para evitar que el bot intente procesarlo como texto.
-
+                    // 6. Montamos los botones
                     string dataBotones = "[" +
                         "{\"text\": \"✅ Confirmar y Reservar\", \"callback_data\": \"CONFIRMAR_FINAL\"}, " +
                         "{\"text\": \"🔙 Corregir datos\", \"web_app\": {\"url\": \"" + urlFormulario + "\"}}, " +
                         "{\"text\": \"❌ Cancelar Alta\", \"callback_data\": \"CANCELAR_PROCESO\"}" +
-                    "]";
+                        "]";
 
-
-                    // 5. RETORNO FINAL
                     return "{\"ESTADO\" : 2, \"MENSAJE\" : \"" + mensajeLimpio + "\", \"DATA\" : " + dataBotones + "}";
                 }
                 catch (Exception ex)
                 {
                     return "{\"ESTADO\":3, \"MENSAJE\":\"Error interno: " + ex.Message + "\"}";
                 }
+            }
+        }
+
+        // Asegúrate de tener esta función en la misma clase o accesible
+        private string CalcularMd5(string input)
+        {
+            using (var md5 = System.Security.Cryptography.MD5.Create())
+            {
+                byte[] inputBytes = System.Text.Encoding.ASCII.GetBytes(input);
+                byte[] hashBytes = md5.ComputeHash(inputBytes);
+                return Convert.ToHexString(hashBytes).ToLower();
             }
         }
         public async Task<bool> ActualizarCitaTemporal(GuardarEdicionTempDTO datos)
