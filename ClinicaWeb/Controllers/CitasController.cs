@@ -1568,7 +1568,13 @@ LIMIT 1;
             // 2. VALIDACIÓN DEL TOKEN (Esto es lo que te faltaba conectar con la misma lógica del repositorio)
             // Usamos UTF8 para que coincida con Postgres
             string tokenEsperado = CalcularMd5(chat_id + "MiClaveSecreta2026");
-
+            // 2. VALIDACIÓN DEL TOKEN con DEBUG
+            
+            if (!string.Equals(token, tokenEsperado, StringComparison.OrdinalIgnoreCase))
+            {
+                // Cambiamos esta línea temporalmente para ver la diferencia en pantalla
+                return Content($"Token incorrecto. Recibido: {token} | Esperado: {tokenEsperado}");
+            }
             // Comparamos sin importar mayúsculas/minúsculas
             if (!string.Equals(token, tokenEsperado, StringComparison.OrdinalIgnoreCase))
             {

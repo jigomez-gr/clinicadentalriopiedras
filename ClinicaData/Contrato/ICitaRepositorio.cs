@@ -113,6 +113,6 @@ namespace ClinicaData.Contrato
         Task<string> ConfirmarYCerrarCita(string chat_id);
         Task<Usuario> ObtenerPorChatId(string chatId);
         // (Opcional) Si vas a implementar la confirmación final:
-        // Task<string> EjecutarSpGuardarCita(...);
+       
     }
 }
