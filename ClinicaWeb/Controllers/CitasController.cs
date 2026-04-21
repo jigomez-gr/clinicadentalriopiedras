@@ -1556,49 +1556,44 @@ LIMIT 1;
         }
 
         // --- ACCESO A CORREGIR CITA (OPERACIÓN 40) ---
-
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> EditarTemp(string chat_id, string token)
         {
             // 1. Validaciones iniciales
-           
-            // Si falta alguno de los dos, no petamos, simplemente avisamos:
             if (string.IsNullOrEmpty(chat_id) || string.IsNullOrEmpty(token))
             {
                 return Content("Acceso denegado: Se requiere identificación completa (Chat ID y Token).");
             }
-            // 2. Validar que el token sea legítimo (el que mandamos desde tg_40)
+
+            // 2. Validar que el token sea legítimo (USANDO COMPARACIÓN INSENSIBLE A MAYÚSCULAS)
             string tokenEsperado = CalcularMd5(chat_id + "MiClaveSecreta2026");
-            if (token != tokenEsperado)
-                return Unauthorized("Acceso no autorizado.");
+
+            // Comparamos ignorando si son mayúsculas o minúsculas para que coincida con la DB
+            if (!string.Equals(token, tokenEsperado, StringComparison.OrdinalIgnoreCase))
+            {
+                return Unauthorized($"Acceso no autorizado. El token no coincide.");
+            }
 
             // 3. BUSCAR AL USUARIO POR SU TELEGRAM_ID
-            // Aquí es donde le decimos a la app quién eres tú en la DB
             var usuario = await _repositorioCita.ObtenerPorChatId(chat_id);
 
             if (usuario == null)
             {
-                // Si entra aquí, es que el chat_id no existe en tu tabla 'usuario'
                 return Content($"No se encontró ningún usuario con el Telegram ID: {chat_id}");
             }
 
-            // 4. CREAR LOS CLAIMS (Esto es lo que le faltaba)
             // 4. CREAR LOS CLAIMS
-            // Usamos el operador ?? para que si la base de datos devuelve null, 
-            // el claim tenga un texto por defecto y el sistema NO explote.
             var claims = new List<Claim>
-{
-    new Claim(ClaimTypes.Name, usuario.Nombre ?? "Usuario de Telegram"),
-    new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
-    new Claim(ClaimTypes.Role, usuario.NombreRol ?? "Usuario")
-};
-      
+    {
+        new Claim(ClaimTypes.Name, usuario.Nombre ?? "Usuario de Telegram"),
+        new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
+        new Claim(ClaimTypes.Role, usuario.NombreRol ?? "Usuario")
+    };
 
             // 5. LOGIN SILENCIOSO
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
-            // Esto crea la cookie de sesión para que la web sepa quién eres
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(claimsIdentity)
