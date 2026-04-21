@@ -1581,12 +1581,16 @@ LIMIT 1;
             }
 
             // 4. CREAR LOS CLAIMS (Esto es lo que le faltaba)
+            // 4. CREAR LOS CLAIMS
+            // Usamos el operador ?? para que si la base de datos devuelve null, 
+            // el claim tenga un texto por defecto y el sistema NO explote.
             var claims = new List<Claim>
-    {
-        new Claim(ClaimTypes.Name, usuario.Nombre),
-        new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()), // Su ID de la tabla
-        new Claim(ClaimTypes.Role, usuario.NombreRol ?? "Usuario")          // Su Rol
-    };
+{
+    new Claim(ClaimTypes.Name, usuario.Nombre ?? "Usuario de Telegram"),
+    new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
+    new Claim(ClaimTypes.Role, usuario.NombreRol ?? "Usuario")
+};
+      
 
             // 5. LOGIN SILENCIOSO
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
