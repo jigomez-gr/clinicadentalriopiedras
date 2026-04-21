@@ -1437,7 +1437,6 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 byte[] imagenBytes = null;
                 if (!string.IsNullOrEmpty(datos.ImagenBase64))
                 {
-                    // Limpiamos el prefijo data:image/... si existe
                     string base64Real = datos.ImagenBase64.Contains(",")
                         ? datos.ImagenBase64.Split(',')[1]
                         : datos.ImagenBase64;
@@ -1445,11 +1444,11 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 }
 
                 // 2. Construir la consulta dinámica
-                // Solo actualizamos el campo 'archivo' (imagen) si realmente se envió una nueva
+                // CAMBIO: 'archivo' por 'documentocitausr'
                 string sql = @"
             UPDATE public.telegramcitatemp 
             SET archivocaption = @notas" +
-                    (imagenBytes != null ? ", archivo = @imagen" : "") +
+                    (imagenBytes != null ? ", documentocitausr = @imagen" : "") +
                     " WHERE chat_id = @chatId";
 
                 var parametros = new
