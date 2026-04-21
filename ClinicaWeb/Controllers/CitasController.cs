@@ -1556,32 +1556,51 @@ LIMIT 1;
         }
 
         // --- ACCESO A CORREGIR CITA (OPERACIÓN 40) ---
-       
+
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> EditarTemp(string chat_id, string token)
         {
-            if (string.IsNullOrEmpty(chat_id) || string.IsNullOrEmpty(token)) return RedirectToAction("Login", "Acceso");
+            // 1. Validaciones iniciales
+            if (string.IsNullOrEmpty(chat_id) || string.IsNullOrEmpty(token))
+                return Content("Faltan parámetros de acceso.");
 
-            // VALIDACIÓN DEL TOKEN (Para evitar que entren por fuerza bruta)
+            // 2. Validar que el token sea legítimo (el que mandamos desde tg_40)
             string tokenEsperado = CalcularMd5(chat_id + "MiClaveSecreta2026");
-            if (token != tokenEsperado) return Unauthorized();
+            if (token != tokenEsperado)
+                return Unauthorized("Acceso no autorizado.");
 
-            // Login silencioso
+            // 3. BUSCAR AL USUARIO POR SU TELEGRAM_ID
+            // Aquí es donde le decimos a la app quién eres tú en la DB
             var usuario = await _repositorioCita.ObtenerPorChatId(chat_id);
-            if (usuario == null) return NotFound();
 
-            // Crear la identidad (esto genera la cookie en el navegador del móvil)
-            var claims = new List<Claim> {
+            if (usuario == null)
+            {
+                // Si entra aquí, es que el chat_id no existe en tu tabla 'usuario'
+                return Content($"No se encontró ningún usuario con el Telegram ID: {chat_id}");
+            }
+
+            // 4. CREAR LOS CLAIMS (Esto es lo que le faltaba)
+            var claims = new List<Claim>
+    {
         new Claim(ClaimTypes.Name, usuario.Nombre),
-        new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
-        new Claim(ClaimTypes.Role, usuario.NombreRol)
+        new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()), // Su ID de la tabla
+        new Claim(ClaimTypes.Role, usuario.NombreRol ?? "Usuario")          // Su Rol
     };
 
+            // 5. LOGIN SILENCIOSO
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
 
+            // Esto crea la cookie de sesión para que la web sepa quién eres
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(claimsIdentity)
+            );
+
+            // 6. CARGAR DATOS Y MOSTRAR VISTA
             var modelo = await _repositorioCita.ObtenerDatosParaEdicion(chat_id);
+            if (modelo == null) return Content("No hay datos temporales para esta cita.");
+
             return View(modelo);
         }
         [HttpGet]
