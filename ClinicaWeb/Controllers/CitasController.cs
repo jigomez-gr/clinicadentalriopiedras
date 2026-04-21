@@ -1562,9 +1562,12 @@ LIMIT 1;
         public async Task<IActionResult> EditarTemp(string chat_id, string token)
         {
             // 1. Validaciones iniciales
+           
+            // Si falta alguno de los dos, no petamos, simplemente avisamos:
             if (string.IsNullOrEmpty(chat_id) || string.IsNullOrEmpty(token))
-                return Content("Faltan parámetros de acceso.");
-
+            {
+                return Content("Acceso denegado: Se requiere identificación completa (Chat ID y Token).");
+            }
             // 2. Validar que el token sea legítimo (el que mandamos desde tg_40)
             string tokenEsperado = CalcularMd5(chat_id + "MiClaveSecreta2026");
             if (token != tokenEsperado)
@@ -1669,6 +1672,7 @@ LIMIT 1;
                 return Json(new { ESTADO = 2, MENSAJE = "🔥 Error BD: " + ex.Message });
             }
         }
+        
         private string CalcularMd5(string input)
         {
             using (var md5 = System.Security.Cryptography.MD5.Create())
@@ -1676,7 +1680,7 @@ LIMIT 1;
                 byte[] inputBytes = System.Text.Encoding.ASCII.GetBytes(input);
                 byte[] hashBytes = md5.ComputeHash(inputBytes);
 
-                // Convertimos los bytes a string hexadecimal (el "churro" de letras y números)
+                // El "x2" fuerza minúsculas. Si usas "X2" serían mayúsculas.
                 var sb = new System.Text.StringBuilder();
                 for (int i = 0; i < hashBytes.Length; i++)
                 {

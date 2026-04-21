@@ -1411,14 +1411,20 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
             }
         }
 
-        // Asegúrate de tener esta función en la misma clase o accesible
         private string CalcularMd5(string input)
         {
             using (var md5 = System.Security.Cryptography.MD5.Create())
             {
                 byte[] inputBytes = System.Text.Encoding.ASCII.GetBytes(input);
                 byte[] hashBytes = md5.ComputeHash(inputBytes);
-                return Convert.ToHexString(hashBytes).ToLower();
+
+                // El "x2" fuerza minúsculas. Si usas "X2" serían mayúsculas.
+                var sb = new System.Text.StringBuilder();
+                for (int i = 0; i < hashBytes.Length; i++)
+                {
+                    sb.Append(hashBytes[i].ToString("x2"));
+                }
+                return sb.ToString();
             }
         }
         public async Task<bool> ActualizarCitaTemporal(GuardarEdicionTempDTO datos)
