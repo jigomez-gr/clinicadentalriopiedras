@@ -1556,29 +1556,32 @@ LIMIT 1;
         }
 
         // --- ACCESO A CORREGIR CITA (OPERACIÓN 40) ---
+       
         [HttpGet]
         [AllowAnonymous]
-        public async Task<IActionResult> EditarTemp(string chat_id)
+        public async Task<IActionResult> EditarTemp(string chat_id, string token)
         {
-            if (string.IsNullOrEmpty(chat_id)) return RedirectToAction("Login", "Acceso");
+            if (string.IsNullOrEmpty(chat_id) || string.IsNullOrEmpty(token)) return RedirectToAction("Login", "Acceso");
 
-            // Login automático "silencioso" para que la cookie exista al guardar
+            // VALIDACIÓN DEL TOKEN (Para evitar que entren por fuerza bruta)
+            string tokenEsperado = CalcularMd5(chat_id + "MiClaveSecreta2026");
+            if (token != tokenEsperado) return Unauthorized();
+
+            // Login silencioso
             var usuario = await _repositorioCita.ObtenerPorChatId(chat_id);
-            if (usuario != null)
-            {
-                var claims = new List<System.Security.Claims.Claim>
-        {
-            new System.Security.Claims.Claim(ClaimTypes.Name, usuario.Nombre),
-            new System.Security.Claims.Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
-            new System.Security.Claims.Claim(ClaimTypes.Role, usuario.NombreRol)
-        };
-                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
-            }
+            if (usuario == null) return NotFound();
+
+            // Crear la identidad (esto genera la cookie en el navegador del móvil)
+            var claims = new List<Claim> {
+        new Claim(ClaimTypes.Name, usuario.Nombre),
+        new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
+        new Claim(ClaimTypes.Role, usuario.NombreRol)
+    };
+
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
 
             var modelo = await _repositorioCita.ObtenerDatosParaEdicion(chat_id);
-            if (modelo == null) return NotFound();
-
             return View(modelo);
         }
         [HttpGet]
@@ -1641,6 +1644,22 @@ LIMIT 1;
             catch (Exception ex)
             {
                 return Json(new { ESTADO = 2, MENSAJE = "🔥 Error BD: " + ex.Message });
+            }
+        }
+        private string CalcularMd5(string input)
+        {
+            using (var md5 = System.Security.Cryptography.MD5.Create())
+            {
+                byte[] inputBytes = System.Text.Encoding.ASCII.GetBytes(input);
+                byte[] hashBytes = md5.ComputeHash(inputBytes);
+
+                // Convertimos los bytes a string hexadecimal (el "churro" de letras y números)
+                var sb = new System.Text.StringBuilder();
+                for (int i = 0; i < hashBytes.Length; i++)
+                {
+                    sb.Append(hashBytes[i].ToString("x2"));
+                }
+                return sb.ToString();
             }
         }
     }
