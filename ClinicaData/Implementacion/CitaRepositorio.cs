@@ -1467,26 +1467,35 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
         {
             using (var conexion = new NpgsqlConnection(con.CadenaSQL))
             {
+                // Corregido: 'documentocitausr' en lugar de 'archivo'
+                // Corregido: 'archivocaption' ya lo tenías bien como 'Notas'
                 string query = @"
-            SELECT chat_id as ChatId, nombreyvaldoctor as NombreDoctor, 
-                   fecha as Fecha, hora as Hora, archivocaption as Notas, 
-                   encode(archivo, 'base64') as ImagenBase64
+            SELECT 
+                chat_id as ChatId, 
+                nombreyvaldoctor as NombreDoctor, 
+                fecha as Fecha, 
+                hora as Hora, 
+                archivocaption as Notas, 
+                encode(documentocitausr, 'base64') as ImagenBase64
             FROM public.telegramcitatemp 
-            WHERE chat_id = @chatId";
+            WHERE chat_id = @chatId LIMIT 1";
 
                 return await conexion.QueryFirstOrDefaultAsync<GuardarEdicionTempDTO>(query, new { chatId = chat_id });
             }
         }
-      
         public async Task<Usuario> ObtenerPorChatId(string chatId)
         {
             using (var conexion = new NpgsqlConnection(con.CadenaSQL))
             {
                 await conexion.OpenAsync();
 
-                // Usamos idrolusuario (como debe ser) y traemos el nombre del rol
                 string sql = @"
-            SELECT u.*, r.nombre as NombreRol 
+            SELECT 
+                u.idusuario, 
+                u.nombre, 
+                u.telegram_id, 
+                u.idrolusuario AS idrol, 
+                r.nombre as NombreRol 
             FROM public.usuario u
             INNER JOIN public.rolusuario r ON u.idrolusuario = r.idrolusuario
             WHERE u.telegram_id = @chatId LIMIT 1";
