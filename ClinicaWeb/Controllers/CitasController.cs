@@ -1559,61 +1559,43 @@ LIMIT 1;
         [AllowAnonymous]
         public async Task<IActionResult> EditarTemp(string chat_id, string token)
         {
-            // 1. Validaciones iniciales: Si falta algo en la URL, avisamos y no seguimos
-            if (string.IsNullOrEmpty(chat_id) || string.IsNullOrEmpty(token))
+            try
             {
-                return Content("Acceso denegado: Se requiere identificación completa (Chat ID y Token).");
-            }
+                // 1. Validar parámetros
+                if (string.IsNullOrEmpty(chat_id) || string.IsNullOrEmpty(token))
+                    return Content("Faltan parámetros: chat_id o token.");
 
-            // 2. VALIDACIÓN DEL TOKEN (Esto es lo que te faltaba conectar con la misma lógica del repositorio)
-            // Usamos UTF8 para que coincida con Postgres
-            string tokenEsperado = CalcularMd5(chat_id + "MiClaveSecreta2026");
-            // 2. VALIDACIÓN DEL TOKEN con DEBUG
-            
-            if (!string.Equals(token, tokenEsperado, StringComparison.OrdinalIgnoreCase))
+                // 2. Validar Token
+                string tokenEsperado = CalcularMd5(chat_id + "MiClaveSecreta2026");
+                if (!string.Equals(token, tokenEsperado, StringComparison.OrdinalIgnoreCase))
+                    return Content($"Token incorrecto. Recibido: {token} | Esperado: {tokenEsperado}");
+
+                // 3. Buscar Usuario
+                var usuario = await _repositorioCita.ObtenerPorChatId(chat_id);
+                if (usuario == null)
+                    return Content($"El usuario {chat_id} no existe en la tabla.");
+
+                // 4. Login (Claims)
+                var claims = new List<Claim> {
+            new Claim(ClaimTypes.Name, usuario.Nombre ?? "Usuario"),
+            new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
+            new Claim(ClaimTypes.Role, usuario.NombreRol ?? "Usuario")
+        };
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)));
+
+                // 5. Cargar Datos
+                var modelo = await _repositorioCita.ObtenerDatosParaEdicion(chat_id);
+                if (modelo == null)
+                    return Content("No hay datos en telegramcitatemp para este chat_id.");
+
+                return View(modelo);
+            }
+            catch (Exception ex)
             {
-                // Cambiamos esta línea temporalmente para ver la diferencia en pantalla
-                return Content($"Token incorrecto. Recibido: {token} | Esperado: {tokenEsperado}");
+                // ESTO es el paracaídas: si algo falla, verás el mensaje real aquí
+                return Content("ERROR DETECTADO: " + ex.Message);
             }
-            // Comparamos sin importar mayúsculas/minúsculas
-            if (!string.Equals(token, tokenEsperado, StringComparison.OrdinalIgnoreCase))
-            {
-                return Unauthorized("Acceso no autorizado: El token de seguridad no es válido.");
-            }
-
-            // 3. BUSCAR AL USUARIO POR SU TELEGRAM_ID
-            var usuario = await _repositorioCita.ObtenerPorChatId(chat_id);
-
-            if (usuario == null)
-            {
-                return Content($"Error: No se encontró ningún usuario con el ID: {chat_id}");
-            }
-
-            // 4. CREAR LOS CLAIMS (Identidad del usuario para la sesión web)
-            var claims = new List<Claim>
-    {
-        new Claim(ClaimTypes.Name, usuario.Nombre ?? "Paciente de Telegram"),
-        new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
-        new Claim(ClaimTypes.Role, usuario.NombreRol ?? "Usuario")
-    };
-
-            // 5. LOGIN SILENCIOSO (Crea la cookie de autenticación)
-            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-            await HttpContext.SignInAsync(
-                CookieAuthenticationDefaults.AuthenticationScheme,
-                new ClaimsPrincipal(claimsIdentity)
-            );
-
-            // 6. CARGAR DATOS Y MOSTRAR VISTA
-            var modelo = await _repositorioCita.ObtenerDatosParaEdicion(chat_id);
-
-            if (modelo == null)
-                return Content("No hay datos temporales pendientes para editar.");
-
-            return View(modelo);
         }
-
         // ESTA ES LA FUNCIÓN QUE TE FALTA EN EL CONTROLADOR PARA QUE TODO FUNCIONE
         private string CalcularMd5(string input)
         {

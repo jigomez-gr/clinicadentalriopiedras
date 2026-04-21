@@ -1477,20 +1477,20 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 return await conexion.QueryFirstOrDefaultAsync<GuardarEdicionTempDTO>(query, new { chatId = chat_id });
             }
         }
+      
         public async Task<Usuario> ObtenerPorChatId(string chatId)
         {
             using (var conexion = new NpgsqlConnection(con.CadenaSQL))
             {
                 await conexion.OpenAsync();
 
-                // Traemos el nombre del rol como 'NombreRol' para que coincida con la propiedad
+                // Usamos idrolusuario (como debe ser) y traemos el nombre del rol
                 string sql = @"
             SELECT u.*, r.nombre as NombreRol 
             FROM public.usuario u
             INNER JOIN public.rolusuario r ON u.idrolusuario = r.idrolusuario
             WHERE u.telegram_id = @chatId LIMIT 1";
 
-                // Al ser una estructura plana, no necesitamos multi-mapping complejo
                 return await conexion.QueryFirstOrDefaultAsync<Usuario>(sql, new { chatId = chatId });
             }
         }
