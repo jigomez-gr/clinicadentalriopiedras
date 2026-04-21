@@ -1555,24 +1555,24 @@ LIMIT 1;
             return RedirectToAction("Index", "Citas");
         }
 
-        // --- ACCESO A CORREGIR CITA (OPERACIÓN 40) ---
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> EditarTemp(string chat_id, string token)
         {
-            // 1. Validaciones iniciales
+            // 1. Validaciones iniciales: Si falta algo en la URL, avisamos y no seguimos
             if (string.IsNullOrEmpty(chat_id) || string.IsNullOrEmpty(token))
             {
                 return Content("Acceso denegado: Se requiere identificación completa (Chat ID y Token).");
             }
 
-            // 2. Validar que el token sea legítimo (USANDO COMPARACIÓN INSENSIBLE A MAYÚSCULAS)
+            // 2. VALIDACIÓN DEL TOKEN (Esto es lo que te faltaba conectar con la misma lógica del repositorio)
+            // Usamos UTF8 para que coincida con Postgres
             string tokenEsperado = CalcularMd5(chat_id + "MiClaveSecreta2026");
 
-            // Comparamos ignorando si son mayúsculas o minúsculas para que coincida con la DB
+            // Comparamos sin importar mayúsculas/minúsculas
             if (!string.Equals(token, tokenEsperado, StringComparison.OrdinalIgnoreCase))
             {
-                return Unauthorized($"Acceso no autorizado. El token no coincide.");
+                return Unauthorized("Acceso no autorizado: El token de seguridad no es válido.");
             }
 
             // 3. BUSCAR AL USUARIO POR SU TELEGRAM_ID
@@ -1580,18 +1580,18 @@ LIMIT 1;
 
             if (usuario == null)
             {
-                return Content($"No se encontró ningún usuario con el Telegram ID: {chat_id}");
+                return Content($"Error: No se encontró ningún usuario con el ID: {chat_id}");
             }
 
-            // 4. CREAR LOS CLAIMS
+            // 4. CREAR LOS CLAIMS (Identidad del usuario para la sesión web)
             var claims = new List<Claim>
     {
-        new Claim(ClaimTypes.Name, usuario.Nombre ?? "Usuario de Telegram"),
+        new Claim(ClaimTypes.Name, usuario.Nombre ?? "Paciente de Telegram"),
         new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
         new Claim(ClaimTypes.Role, usuario.NombreRol ?? "Usuario")
     };
 
-            // 5. LOGIN SILENCIOSO
+            // 5. LOGIN SILENCIOSO (Crea la cookie de autenticación)
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
             await HttpContext.SignInAsync(
@@ -1601,9 +1601,29 @@ LIMIT 1;
 
             // 6. CARGAR DATOS Y MOSTRAR VISTA
             var modelo = await _repositorioCita.ObtenerDatosParaEdicion(chat_id);
-            if (modelo == null) return Content("No hay datos temporales para esta cita.");
+
+            if (modelo == null)
+                return Content("No hay datos temporales pendientes para editar.");
 
             return View(modelo);
+        }
+
+        // ESTA ES LA FUNCIÓN QUE TE FALTA EN EL CONTROLADOR PARA QUE TODO FUNCIONE
+        private string CalcularMd5(string input)
+        {
+            using (var md5 = System.Security.Cryptography.MD5.Create())
+            {
+                // IMPORTANTE: UTF8 para que coincida con lo que guarda la DB en el repositorio
+                byte[] inputBytes = System.Text.Encoding.UTF8.GetBytes(input);
+                byte[] hashBytes = md5.ComputeHash(inputBytes);
+
+                var sb = new System.Text.StringBuilder();
+                for (int i = 0; i < hashBytes.Length; i++)
+                {
+                    sb.Append(hashBytes[i].ToString("x2"));
+                }
+                return sb.ToString();
+            }
         }
         [HttpGet]
         [AllowAnonymous]
@@ -1667,23 +1687,7 @@ LIMIT 1;
                 return Json(new { ESTADO = 2, MENSAJE = "🔥 Error BD: " + ex.Message });
             }
         }
-        
-        private string CalcularMd5(string input)
-        {
-            using (var md5 = System.Security.Cryptography.MD5.Create())
-            {
-                byte[] inputBytes = System.Text.Encoding.ASCII.GetBytes(input);
-                byte[] hashBytes = md5.ComputeHash(inputBytes);
 
-                // El "x2" fuerza minúsculas. Si usas "X2" serían mayúsculas.
-                var sb = new System.Text.StringBuilder();
-                for (int i = 0; i < hashBytes.Length; i++)
-                {
-                    sb.Append(hashBytes[i].ToString("x2"));
-                }
-                return sb.ToString();
-            }
-        }
     }
 }
    

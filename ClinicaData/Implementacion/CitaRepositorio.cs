@@ -1415,10 +1415,10 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
         {
             using (var md5 = System.Security.Cryptography.MD5.Create())
             {
-                byte[] inputBytes = System.Text.Encoding.ASCII.GetBytes(input);
+                // CAMBIO CLAVE: Usar UTF8 para que coincida con la base de datos
+                byte[] inputBytes = System.Text.Encoding.UTF8.GetBytes(input);
                 byte[] hashBytes = md5.ComputeHash(inputBytes);
 
-                // El "x2" fuerza minúsculas. Si usas "X2" serían mayúsculas.
                 var sb = new System.Text.StringBuilder();
                 for (int i = 0; i < hashBytes.Length; i++)
                 {
