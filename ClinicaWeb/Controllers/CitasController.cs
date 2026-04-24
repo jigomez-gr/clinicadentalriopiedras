@@ -1680,7 +1680,7 @@ LIMIT 1;
         public async Task<IActionResult> ListarPublicoTelegram(string chat_id)
         {
             if (string.IsNullOrEmpty(chat_id))
-                return Ok(new { error = true, mensaje = "ID de chat no proporcionado." });
+                return Ok(new { error = true, mensajepregunta = "ID de chat no proporcionado." });
 
             try
             {
@@ -1689,11 +1689,7 @@ LIMIT 1;
             }
             catch (Exception ex)
             {
-                return Ok(new
-                {
-                    error = true,
-                    mensaje = "Error al recuperar citas: " + ex.Message
-                });
+                return Ok(new { error = true, mensajepregunta = "Error: " + ex.Message });
             }
         }
     }
