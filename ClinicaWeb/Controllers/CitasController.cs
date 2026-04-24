@@ -1686,32 +1686,39 @@ LIMIT 1;
             {
                 var citas = await _repositorioCita.ListarCitasTelegram(chat_id);
 
+                // Si no hay citas, devolvemos un objeto que el bot pueda leer para dar un mensaje amigable
                 if (citas == null || !citas.Any())
                 {
-                    return Ok(new
-                    {
-                        mensaje = "No tienes citas pendientes.",
-                        botones = new List<object>()
-                    });
+                    return Ok(new[] {
+                new {
+                    texto_mensaje = "No tienes citas próximas disponibles para modificar.",
+                    botones = new List<object>()
+                }
+            });
                 }
 
-                // Formateamos la respuesta para que el Bot sepa qué pintar
+                // Importante: Devolvemos una lista de objetos. 
+                // Cada objeto es una "tarjeta" para el bot.
                 var respuesta = citas.Select(c => new {
+                    // El bot usará este texto para el cuerpo del mensaje
                     texto_mensaje = $"🏥 *Cita: {c.NombreEspecialidad}*\n" +
                                     $"📅 Fecha: {c.FechaCita} - {c.HoraCita}\n" +
                                     $"👨‍⚕️ Dr. {c.NombreDoctor}\n" +
-                                    $"📝 Motivo: {c.RazonCitaUsr}",
+                                    $"📝 Motivo: {(string.IsNullOrEmpty(c.RazonCitaUsr) ? "Sin motivo especificado" : c.RazonCitaUsr)}",
+
+                    // El bot generará los botones inline con esto
                     botones = new[] {
                 new { text = "🔍 Detalle", callback_data = $"DETALLE_CITA_{c.IdCita}" },
                 new { text = "📝 Modificar", callback_data = $"MODIFICAR_CITA_{c.IdCita}" }
             }
-                });
+                }).ToList();
 
                 return Ok(respuesta);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error interno: {ex.Message}");
+                // Log del error para saber qué falló si sale mal
+                return StatusCode(500, new { error = ex.Message });
             }
         }
     }
