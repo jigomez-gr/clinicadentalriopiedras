@@ -1539,7 +1539,8 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
         }
         public async Task<object> ObtenerCitasPendientesTelegram(string telegramId)
         {
-            var matrizBotones = new List<List<BotonTelegram>>();
+            // IMPORTANTE: Lista PLANA de botones (no matriz de listas)
+            var listaBotones = new List<BotonTelegram>();
             string mensajeHeader = "📋 *Gestión de sus Citas Pendientes*\nPulse 🔍 para ver detalles o 📝 para modificar:";
 
             using (var conexion = new NpgsqlConnection(con.CadenaSQL))
@@ -1560,24 +1561,31 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
 
                 var citasRaw = await conexion.QueryAsync<CitaPendienteSQL>(sql, new { tId = telegramId });
 
-                if (!citasRaw.Any()) return new { mensajepregunta = "No tienes citas.", inline_keyboard = matrizBotones };
+                if (!citasRaw.Any())
+                    return new { MENSAJE = "No tienes citas.", DATA = listaBotones };
 
                 foreach (var c in citasRaw)
                 {
-                    var fila = new List<BotonTelegram>
-            {
-                // Ahora el texto incluye al Doctor
-                new BotonTelegram {
-                    text = $"{c.fechacita:dd/MM} {c.turnohora:HH:mm} - {c.nombre_especialidad} (Dr. {c.nombre_doctor})",
-                    callback_data = $"INFO_CITA_{c.idcita}"
-                },
-                new BotonTelegram { text = "🔍", callback_data = $"DETALLE_CITA_{c.idcita}" },
-                new BotonTelegram { text = "📝", callback_data = $"MODIFICAR_CITA_{c.idcita}" }
-            };
-                    matrizBotones.Add(fila);
+                    // BOTÓN 1: Info
+                    listaBotones.Add(new BotonTelegram
+                    {
+                        text = $"{c.fechacita:dd/MM} {c.turnohora:HH:mm} - {c.nombre_especialidad} (Dr. {c.nombre_doctor})",
+                        callback_data = $"INFO_CITA_{c.idcita}"
+                    });
+                    // BOTÓN 2: Lupa
+                    listaBotones.Add(new BotonTelegram { text = "🔍", callback_data = $"DETALLE_CITA_{c.idcita}" });
+                    // BOTÓN 3: Lápiz
+                    listaBotones.Add(new BotonTelegram { text = "📝", callback_data = $"MODIFICAR_CITA_{c.idcita}" });
                 }
             }
-            return new { mensajepregunta = mensajeHeader, inline_keyboard = matrizBotones, numerobotones = 3 };
+
+            // Usamos MAYÚSCULAS porque tu n8n lo busca así en "Prepara NumeroBotones"
+            return new
+            {
+                MENSAJE = mensajeHeader,
+                DATA = listaBotones,
+                numerobotones = 3
+            };
         }
     }
 }

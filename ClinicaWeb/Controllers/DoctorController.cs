@@ -419,20 +419,22 @@ namespace ClinicaWeb.Controllers
         }
         // desde aqui los controladores para prototipo de telegram ..
         // Endpoint para el Bot de Telegram
-       
+
         [HttpGet]
         [AllowAnonymous]
-        [HttpGet]
-        public async Task<IActionResult> ListarDoctoresPublico(int especialidad)
+        public async Task<IActionResult> ListarPublicoTelegram(string chat_id)
         {
+            if (string.IsNullOrEmpty(chat_id))
+                return Ok(new { error = true, MENSAJE = "Falta chat_id" });
+
             try
             {
-                var lista = await _repositorio.ListarDoctoresPorEspecialidad(especialidad);
-                return StatusCode(StatusCodes.Status200OK, new { data = lista });
+                var resultado = await _repositorioCita.ObtenerCitasPendientesTelegram(chat_id);
+                return Ok(resultado);
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
+                return Ok(new { error = true, MENSAJE = ex.Message });
             }
         }
     }
