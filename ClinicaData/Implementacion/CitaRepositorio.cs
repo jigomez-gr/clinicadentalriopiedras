@@ -1537,5 +1537,14 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 }
             }
         }
+        public async Task<IEnumerable<CitaPendienteTelegramDTO>> ListarCitasTelegram(string telegramId)
+        {
+            using (var conexion = new NpgsqlConnection(con.CadenaSQL))
+            {
+                // Usamos el SP que busca por telegram_id
+                string sql = "SELECT * FROM public.sp_listacitaspendiente_telegram(@tId)";
+                return await conexion.QueryAsync<CitaPendienteTelegramDTO>(sql, new { tId = telegramId });
+            }
+        }
     }
 }

@@ -6,13 +6,14 @@ using System.Threading.Tasks;
 
 namespace ClinicaEntidades.DTO
 {
-    
-    public class CitaDetalleDTO
+
+    public class CitaPendienteTelegramDTO
     {
         public int IdCita { get; set; }
-        public string? CitaConfirmada { get; set; }         // "S"/"N" o "1"/"0"
-        public DateTime? FechaPeticion { get; set; }
-        public DateTime? FechaConfirmacion { get; set; }
-        public string? MetodoPeticion { get; set; }
+        public string FechaCita { get; set; }
+        public string HoraCita { get; set; }
+        public string NombreEspecialidad { get; set; }
+        public string NombreDoctor { get; set; }
+        public string RazonCitaUsr { get; set; }
     }
 }

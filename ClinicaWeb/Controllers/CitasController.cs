@@ -1675,7 +1675,45 @@ LIMIT 1;
                 return Json(new { ESTADO = 2, MENSAJE = "🔥 Error BD: " + ex.Message });
             }
         }
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> ListarPublicoTelegram(string chat_id)
+        {
+            if (string.IsNullOrEmpty(chat_id))
+                return BadRequest("Falta chat_id");
 
+            try
+            {
+                var citas = await _repositorioCita.ListarCitasTelegram(chat_id);
+
+                if (citas == null || !citas.Any())
+                {
+                    return Ok(new
+                    {
+                        mensaje = "No tienes citas pendientes.",
+                        botones = new List<object>()
+                    });
+                }
+
+                // Formateamos la respuesta para que el Bot sepa qué pintar
+                var respuesta = citas.Select(c => new {
+                    texto_mensaje = $"🏥 *Cita: {c.NombreEspecialidad}*\n" +
+                                    $"📅 Fecha: {c.FechaCita} - {c.HoraCita}\n" +
+                                    $"👨‍⚕️ Dr. {c.NombreDoctor}\n" +
+                                    $"📝 Motivo: {c.RazonCitaUsr}",
+                    botones = new[] {
+                new { text = "🔍 Detalle", callback_data = $"DETALLE_CITA_{c.IdCita}" },
+                new { text = "📝 Modificar", callback_data = $"MODIFICAR_CITA_{c.IdCita}" }
+            }
+                });
+
+                return Ok(respuesta);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
     }
 }
    
