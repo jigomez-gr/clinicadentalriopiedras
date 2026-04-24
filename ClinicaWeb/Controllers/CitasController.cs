@@ -1683,49 +1683,58 @@ LIMIT 1;
 
             try
             {
-                var todas = await _repositorioCita.ListarCitasTelegram(chat_id);
-                var citas = todas.Take(5).ToList(); // Probamos con 5 para asegurar estabilidad
+                var citas = await _repositorioCita.ListarCitasTelegram(chat_id);
 
-                if (!citas.Any())
+                if (citas == null || !citas.Any())
                 {
-                    return Ok(new { mensajepregunta = "No tienes citas pendientes.", numerobotones = 0 });
+                    return Ok(new
+                    {
+                        mensaje = "No tienes citas pendientes.",
+                        inline_keyboard = new List<object>()
+                    });
                 }
 
-                string texto = "📅 *Tus Citas Pendientes:*\n\n";
-                // Usamos un ExpandoObject o Dictionary para crear las columnas pr_1, pr_2 dinámicamente
-                var resultado = new Dictionary<string, object>();
+                // Creamos la matriz: una lista de filas, cada fila es una lista de botones
+                var matrizBotones = new List<List<BotonTelegram>>();
 
-                int i = 1;
                 foreach (var c in citas)
                 {
-                    texto += $"{i}. {c.NombreEspecialidad} ({c.FechaCita})\n";
+                    var fila = new List<BotonTelegram>();
 
-                    // IMPORTANTE: Tu n8n probablemente espera que pr_X sea el TEXTO del botón
-                    // y que el callback se gestione internamente o sea fijo.
-                    // Si tu n8n usa el objeto completo, lo mandamos como string JSON:
+                    // Botón 1: Info básica (Ocupa la parte principal)
+                    fila.Add(new BotonTelegram
+                    {
+                        text = $"{c.FechaCita} {c.HoraCita} - {c.NombreEspecialidad}",
+                        callback_data = $"INFO_CITA_{c.IdCita}" // Solo informativo
+                    });
 
-                    string callbackData = $"MODIFICAR_CITA_{c.IdCita}";
-                    string botonTexto = $"{i}. {c.NombreEspecialidad} {c.HoraCita}";
+                    // Botón 2: Lupa
+                    fila.Add(new BotonTelegram
+                    {
+                        text = "🔍",
+                        callback_data = $"DETALLE_CITA_{c.IdCita}"
+                    });
 
-                    // Intentamos el formato que n8n suele digerir mejor en esos nodos:
-                    resultado.Add($"pr_{i}", botonTexto);
+                    // Botón 3: Lápiz
+                    fila.Add(new BotonTelegram
+                    {
+                        text = "📝",
+                        callback_data = $"MODIFICAR_CITA_{c.IdCita}"
+                    });
 
-                    // Si n8n necesita el callback_data en algún sitio, 
-                    // a veces se usa pce_1 o variables similares. 
-                    // Pero si el formateador de n8n es rígido, solo verá el texto.
-                    i++;
+                    matrizBotones.Add(fila);
                 }
 
-                texto += "\nSelecciona el número para editar:";
-
-                resultado.Add("mensajepregunta", texto);
-                resultado.Add("numerobotones", citas.Count);
-
-                return Ok(resultado);
+                // Devolvemos la estructura EXACTA que n8n ya sabe procesar en 'VerificarCita'
+                return Ok(new
+                {
+                    mensaje = "📋 *Gestión de sus Citas Pendientes*\nPulse 🔍 para ver detalles o 📝 para modificar:",
+                    inline_keyboard = matrizBotones
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { error = ex.Message });
+                return Ok(new { error = true, mensaje = "Error: " + ex.Message });
             }
         }
     }
