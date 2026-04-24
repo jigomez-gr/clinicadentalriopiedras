@@ -1683,9 +1683,8 @@ LIMIT 1;
 
             try
             {
-                // Tomamos solo las primeras 4 para no saturar al formateador de n8n
-                var todasLasCitas = await _repositorioCita.ListarCitasTelegram(chat_id);
-                var citas = todasLasCitas.Take(4).ToList();
+                var todas = await _repositorioCita.ListarCitasTelegram(chat_id);
+                var citas = todas.Take(5).ToList(); // Probamos con 5 para asegurar estabilidad
 
                 if (!citas.Any())
                 {
@@ -1693,23 +1692,31 @@ LIMIT 1;
                 }
 
                 string texto = "📅 *Tus Citas Pendientes:*\n\n";
+                // Usamos un ExpandoObject o Dictionary para crear las columnas pr_1, pr_2 dinámicamente
                 var resultado = new Dictionary<string, object>();
-                int i = 1;
 
+                int i = 1;
                 foreach (var c in citas)
                 {
-                    // Quitamos emojis del texto por si acaso el encoding da guerra
-                    texto += $"{i}. {c.NombreEspecialidad} - {c.FechaCita}\n";
+                    texto += $"{i}. {c.NombreEspecialidad} ({c.FechaCita})\n";
 
-                    resultado.Add($"pr_{i}", new
-                    {
-                        text = $"Editar {i} ({c.FechaCita})",
-                        callback_data = $"MODIFICAR_CITA_{c.IdCita}"
-                    });
+                    // IMPORTANTE: Tu n8n probablemente espera que pr_X sea el TEXTO del botón
+                    // y que el callback se gestione internamente o sea fijo.
+                    // Si tu n8n usa el objeto completo, lo mandamos como string JSON:
+
+                    string callbackData = $"MODIFICAR_CITA_{c.IdCita}";
+                    string botonTexto = $"{i}. {c.NombreEspecialidad} {c.HoraCita}";
+
+                    // Intentamos el formato que n8n suele digerir mejor en esos nodos:
+                    resultado.Add($"pr_{i}", botonTexto);
+
+                    // Si n8n necesita el callback_data en algún sitio, 
+                    // a veces se usa pce_1 o variables similares. 
+                    // Pero si el formateador de n8n es rígido, solo verá el texto.
                     i++;
                 }
 
-                texto += "\nSeleccione una para gestionar:";
+                texto += "\nSelecciona el número para editar:";
 
                 resultado.Add("mensajepregunta", texto);
                 resultado.Add("numerobotones", citas.Count);
