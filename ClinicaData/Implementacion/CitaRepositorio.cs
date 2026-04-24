@@ -1540,69 +1540,44 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
         public async Task<object> ObtenerCitasPendientesTelegram(string telegramId)
         {
             var matrizBotones = new List<List<BotonTelegram>>();
-            // Usamos mensajepregunta que es lo que busca n8n en la matriz
             string mensajeHeader = "📋 *Gestión de sus Citas Pendientes*\nPulse 🔍 para ver detalles o 📝 para modificar:";
 
             using (var conexion = new NpgsqlConnection(con.CadenaSQL))
             {
                 string sql = @"
             SELECT
-                c.idcita,
-                c.fechacita,
-                dhd.turnohora,
+                c.idcita, c.fechacita, dhd.turnohora,
                 e.nombre AS nombre_especialidad,
-                (d.nombres || ' ' || d.apellidos) AS nombre_doctor,
-                COALESCE(c.razoncitausr, 'Sin motivo') AS razon
+                (d.nombres || ' ' || d.apellidos) AS nombre_doctor
             FROM cita c
             INNER JOIN usuario u ON u.idusuario = c.idusuario
             INNER JOIN doctorhorariodetalle dhd ON dhd.iddoctorhorariodetalle = c.iddoctorhorariodetalle
             INNER JOIN doctorhorario dh ON dh.iddoctorhorario = dhd.iddoctorhorario
             INNER JOIN doctor d ON d.iddoctor = dh.iddoctor
             INNER JOIN especialidad e ON e.idespecialidad = d.idespecialidad
-            WHERE c.idestadocita = 1
-              AND u.telegram_id = @tId
-              AND c.fechacita::date >= CURRENT_DATE
+            WHERE c.idestadocita = 1 AND u.telegram_id = @tId AND c.fechacita::date >= CURRENT_DATE
             ORDER BY c.fechacita ASC, dhd.turnohora ASC";
 
                 var citasRaw = await conexion.QueryAsync<CitaPendienteSQL>(sql, new { tId = telegramId });
 
-                if (!citasRaw.Any())
-                {
-                    return new { mensajepregunta = "No tienes citas pendientes.", inline_keyboard = matrizBotones };
-                }
+                if (!citasRaw.Any()) return new { mensajepregunta = "No tienes citas.", inline_keyboard = matrizBotones };
 
                 foreach (var c in citasRaw)
                 {
-                    string fechaStr = c.fechacita.ToString("dd/MM/yyyy");
-                    string horaStr = c.turnohora.ToString("HH:mm");
-
-                    // Cada cita es una fila (List) con 3 botones
                     var fila = new List<BotonTelegram>
             {
+                // Ahora el texto incluye al Doctor
                 new BotonTelegram {
-                    text = $"{fechaStr} {horaStr} - {c.nombre_especialidad}",
+                    text = $"{c.fechacita:dd/MM} {c.turnohora:HH:mm} - {c.nombre_especialidad} (Dr. {c.nombre_doctor})",
                     callback_data = $"INFO_CITA_{c.idcita}"
                 },
-                new BotonTelegram {
-                    text = "🔍",
-                    callback_data = $"DETALLE_CITA_{c.idcita}"
-                },
-                new BotonTelegram {
-                    text = "📝",
-                    callback_data = $"MODIFICAR_CITA_{c.idcita}"
-                }
+                new BotonTelegram { text = "🔍", callback_data = $"DETALLE_CITA_{c.idcita}" },
+                new BotonTelegram { text = "📝", callback_data = $"MODIFICAR_CITA_{c.idcita}" }
             };
                     matrizBotones.Add(fila);
                 }
             }
-
-            // Retornamos el objeto con los nombres exactos que n8n espera
-            return new
-            {
-                mensajepregunta = mensajeHeader,
-                inline_keyboard = matrizBotones,
-                numerobotones = 3 // Le indicamos que el diseño es de 3 columnas
-            };
+            return new { mensajepregunta = mensajeHeader, inline_keyboard = matrizBotones, numerobotones = 3 };
         }
     }
 }
