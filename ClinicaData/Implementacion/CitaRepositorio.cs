@@ -1537,14 +1537,75 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 }
             }
         }
-        public async Task<IEnumerable<CitaPendienteTelegramDTO>> ListarCitasTelegram(string telegramId)
+        public async Task<object> ObtenerCitasPendientesTelegram(string telegramId)
         {
+            var matrizBotones = new List<List<BotonTelegram>>();
+            string mensajeHeader = "📋 *Gestión de sus Citas Pendientes*\nPulse 🔍 para ver detalles o 📝 para modificar:";
+
             using (var conexion = new NpgsqlConnection(con.CadenaSQL))
             {
-                // Usamos el SP que busca por telegram_id
-                string sql = "SELECT * FROM public.sp_listacitaspendiente_telegram(@tId)";
-                return await conexion.QueryAsync<CitaPendienteTelegramDTO>(sql, new { tId = telegramId });
+                // SQL directo en el repositorio, pasando del SP
+                string sql = @"
+            SELECT
+                c.idcita,
+                c.fechacita,
+                dhd.turnohora,
+                e.nombre AS nombre_especialidad,
+                (d.nombres || ' ' || d.apellidos) AS nombre_doctor,
+                COALESCE(c.razoncitausr, 'Sin motivo') AS razon
+            FROM cita c
+            INNER JOIN usuario u ON u.idusuario = c.idusuario
+            INNER JOIN doctorhorariodetalle dhd ON dhd.iddoctorhorariodetalle = c.iddoctorhorariodetalle
+            INNER JOIN doctorhorario dh ON dh.iddoctorhorario = dhd.iddoctorhorario
+            INNER JOIN doctor d ON d.iddoctor = dh.iddoctor
+            INNER JOIN especialidad e ON e.idespecialidad = d.idespecialidad
+            WHERE c.idestadocita = 1
+              AND u.telegram_id = @tId
+              AND c.fechacita::date >= CURRENT_DATE
+            ORDER BY c.fechacita ASC, dhd.turnohora ASC";
+
+                var citas = await conexion.QueryAsync<dynamic>(sql, new { tId = telegramId });
+
+                if (!citas.Any())
+                {
+                    return new { mensaje = "No tienes citas pendientes actualmente.", inline_keyboard = matrizBotones };
+                }
+
+                foreach (var c in citas)
+                {
+                    // Formateo de fecha y hora en C# para mayor control
+                    string fechaStr = ((DateTime)c.fechacita).ToString("dd/MM/yyyy");
+                    string horaStr = ((TimeSpan)c.turnohora).ToString(@"hh\:mm");
+
+                    // Creamos la fila para esta cita (3 botones)
+                    var fila = new List<BotonTelegram>
+            {
+                // Botón 1: Info (Ancho)
+                new BotonTelegram {
+                    text = $"{fechaStr} {horaStr} - {c.nombre_especialidad}",
+                    callback_data = $"INFO_CITA_{c.idcita}"
+                },
+                // Botón 2: Lupa
+                new BotonTelegram {
+                    text = "🔍",
+                    callback_data = $"DETALLE_CITA_{c.idcita}"
+                },
+                // Botón 3: Lápiz
+                new BotonTelegram {
+                    text = "📝",
+                    callback_data = $"MODIFICAR_CITA_{c.idcita}"
+                }
+            };
+
+                    matrizBotones.Add(fila);
+                }
             }
+
+            return new
+            {
+                mensaje = mensajeHeader,
+                inline_keyboard = matrizBotones
+            };
         }
     }
 }

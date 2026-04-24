@@ -114,7 +114,8 @@ namespace ClinicaData.Contrato
         Task<Usuario> ObtenerPorChatId(string chatId);
         // (Opcional) Si vas a implementar la confirmación final:
         // ... otros métodos ...
-        Task<IEnumerable<CitaPendienteTelegramDTO>> ListarCitasTelegram(string telegramId);
+
+        Task<object> ObtenerCitasPendientesTelegram(string telegramId);
 
     }
 }

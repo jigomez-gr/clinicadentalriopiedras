@@ -1679,62 +1679,24 @@ LIMIT 1;
         [AllowAnonymous]
         public async Task<IActionResult> ListarPublicoTelegram(string chat_id)
         {
-            if (string.IsNullOrEmpty(chat_id)) return BadRequest("Falta chat_id");
+            if (string.IsNullOrEmpty(chat_id))
+                return Ok(new { error = true, mensaje = "ID de chat no proporcionado." });
 
             try
             {
-                var citas = await _repositorioCita.ListarCitasTelegram(chat_id);
+                // Llamamos al repositorio "currado"
+                var resultado = await _repositorioCita.ObtenerCitasPendientesTelegram(chat_id);
 
-                if (citas == null || !citas.Any())
-                {
-                    return Ok(new
-                    {
-                        mensaje = "No tienes citas pendientes.",
-                        inline_keyboard = new List<object>()
-                    });
-                }
-
-                // Creamos la matriz: una lista de filas, cada fila es una lista de botones
-                var matrizBotones = new List<List<BotonTelegram>>();
-
-                foreach (var c in citas)
-                {
-                    var fila = new List<BotonTelegram>();
-
-                    // Botón 1: Info básica (Ocupa la parte principal)
-                    fila.Add(new BotonTelegram
-                    {
-                        text = $"{c.FechaCita} {c.HoraCita} - {c.NombreEspecialidad}",
-                        callback_data = $"INFO_CITA_{c.IdCita}" // Solo informativo
-                    });
-
-                    // Botón 2: Lupa
-                    fila.Add(new BotonTelegram
-                    {
-                        text = "🔍",
-                        callback_data = $"DETALLE_CITA_{c.IdCita}"
-                    });
-
-                    // Botón 3: Lápiz
-                    fila.Add(new BotonTelegram
-                    {
-                        text = "📝",
-                        callback_data = $"MODIFICAR_CITA_{c.IdCita}"
-                    });
-
-                    matrizBotones.Add(fila);
-                }
-
-                // Devolvemos la estructura EXACTA que n8n ya sabe procesar en 'VerificarCita'
-                return Ok(new
-                {
-                    mensaje = "📋 *Gestión de sus Citas Pendientes*\nPulse 🔍 para ver detalles o 📝 para modificar:",
-                    inline_keyboard = matrizBotones
-                });
+                // Devolvemos el objeto tal cual, que ya tiene 'mensaje' e 'inline_keyboard'
+                return Ok(resultado);
             }
             catch (Exception ex)
             {
-                return Ok(new { error = true, mensaje = "Error: " + ex.Message });
+                return Ok(new
+                {
+                    error = true,
+                    mensaje = "Error al recuperar citas: " + ex.Message
+                });
             }
         }
     }
