@@ -1686,19 +1686,14 @@ LIMIT 1;
             {
                 var citas = await _repositorioCita.ListarCitasTelegram(chat_id);
 
-                // Si no hay citas, devolvemos un mensaje plano
+                // Si no hay citas, devolvemos el objeto 'data' vacío
                 if (citas == null || !citas.Any())
                 {
-                    return Ok(new[] {
-                new {
-                    texto_mensaje = "No tienes citas proximas disponibles para modificar.",
-                    botones = new List<object>()
-                }
-            });
+                    return Ok(new { data = new List<object>() });
                 }
 
-                // Devolvemos la lista de citas en texto plano
-                var respuesta = citas.Select(c => new {
+                // Creamos la lista de objetos de la cita
+                var listaCitas = citas.Select(c => new {
                     texto_mensaje = $"Cita: {c.NombreEspecialidad}\n" +
                                     $"Fecha: {c.FechaCita} - {c.HoraCita}\n" +
                                     $"Doctor: {c.NombreDoctor}\n" +
@@ -1710,7 +1705,9 @@ LIMIT 1;
             }
                 }).ToList();
 
-                return Ok(respuesta);
+                // IMPORTANTE: Envolvemos todo en un objeto con la propiedad "data"
+                // Esto es lo que n8n espera para poder leer los elementos
+                return Ok(new { data = listaCitas });
             }
             catch (Exception ex)
             {
