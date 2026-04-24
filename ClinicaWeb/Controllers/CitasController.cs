@@ -1684,10 +1684,7 @@ LIMIT 1;
 
             try
             {
-                // Llamamos al repositorio "currado"
                 var resultado = await _repositorioCita.ObtenerCitasPendientesTelegram(chat_id);
-
-                // Devolvemos el objeto tal cual, que ya tiene 'mensaje' e 'inline_keyboard'
                 return Ok(resultado);
             }
             catch (Exception ex)

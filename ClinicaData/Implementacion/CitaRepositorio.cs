@@ -1544,7 +1544,6 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
 
             using (var conexion = new NpgsqlConnection(con.CadenaSQL))
             {
-                // SQL directo en el repositorio, pasando del SP
                 string sql = @"
             SELECT
                 c.idcita,
@@ -1564,33 +1563,29 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
               AND c.fechacita::date >= CURRENT_DATE
             ORDER BY c.fechacita ASC, dhd.turnohora ASC";
 
-                var citas = await conexion.QueryAsync<dynamic>(sql, new { tId = telegramId });
+                var citasRaw = await conexion.QueryAsync<CitaPendienteSQL>(sql, new { tId = telegramId });
 
-                if (!citas.Any())
+                if (!citasRaw.Any())
                 {
-                    return new { mensaje = "No tienes citas pendientes actualmente.", inline_keyboard = matrizBotones };
+                    return new { mensaje = "No tienes citas pendientes.", inline_keyboard = matrizBotones };
                 }
 
-                foreach (var c in citas)
+                foreach (var c in citasRaw)
                 {
-                    // Formateo de fecha y hora en C# para mayor control
-                    string fechaStr = ((DateTime)c.fechacita).ToString("dd/MM/yyyy");
-                    string horaStr = ((TimeSpan)c.turnohora).ToString(@"hh\:mm");
+                    string fechaStr = c.fechacita.ToString("dd/MM/yyyy");
+                    // TimeOnly usa formato directo "HH:mm"
+                    string horaStr = c.turnohora.ToString("HH:mm");
 
-                    // Creamos la fila para esta cita (3 botones)
                     var fila = new List<BotonTelegram>
             {
-                // Botón 1: Info (Ancho)
                 new BotonTelegram {
                     text = $"{fechaStr} {horaStr} - {c.nombre_especialidad}",
                     callback_data = $"INFO_CITA_{c.idcita}"
                 },
-                // Botón 2: Lupa
                 new BotonTelegram {
                     text = "🔍",
                     callback_data = $"DETALLE_CITA_{c.idcita}"
                 },
-                // Botón 3: Lápiz
                 new BotonTelegram {
                     text = "📝",
                     callback_data = $"MODIFICAR_CITA_{c.idcita}"
@@ -1601,11 +1596,7 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 }
             }
 
-            return new
-            {
-                mensaje = mensajeHeader,
-                inline_keyboard = matrizBotones
-            };
+            return new { mensaje = mensajeHeader, inline_keyboard = matrizBotones };
         }
     }
 }

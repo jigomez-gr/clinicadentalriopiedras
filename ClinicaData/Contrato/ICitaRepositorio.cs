@@ -116,6 +116,7 @@ namespace ClinicaData.Contrato
         // ... otros métodos ...
 
         Task<object> ObtenerCitasPendientesTelegram(string telegramId);
+      
 
     }
 }
