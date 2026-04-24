@@ -1683,38 +1683,36 @@ LIMIT 1;
 
             try
             {
-                var citas = await _repositorioCita.ListarCitasTelegram(chat_id);
+                // Tomamos solo las primeras 4 para no saturar al formateador de n8n
+                var todasLasCitas = await _repositorioCita.ListarCitasTelegram(chat_id);
+                var citas = todasLasCitas.Take(4).ToList();
 
-                if (citas == null || !citas.Any())
+                if (!citas.Any())
                 {
                     return Ok(new { mensajepregunta = "No tienes citas pendientes.", numerobotones = 0 });
                 }
 
-                // 1. Construimos el texto del mensaje
                 string texto = "📅 *Tus Citas Pendientes:*\n\n";
                 var resultado = new Dictionary<string, object>();
                 int i = 1;
 
                 foreach (var c in citas)
                 {
+                    // Quitamos emojis del texto por si acaso el encoding da guerra
                     texto += $"{i}. {c.NombreEspecialidad} - {c.FechaCita}\n";
 
-                    // 2. IMPORTANTE: Creamos pr_1, pr_2... que es lo que busca tu n8n
-                    // Cada pr_X es un objeto con text y callback_data
                     resultado.Add($"pr_{i}", new
                     {
-                        text = $"✏️ Editar {i} ({c.FechaCita})",
+                        text = $"Editar {i} ({c.FechaCita})",
                         callback_data = $"MODIFICAR_CITA_{c.IdCita}"
                     });
                     i++;
-                    if (i > 8) break; // Límite de seguridad para no romper el layout
                 }
 
                 texto += "\nSeleccione una para gestionar:";
 
-                // 3. Añadimos los campos base que tu flujo n8n lee del nodo "Llamada API Clínica"
                 resultado.Add("mensajepregunta", texto);
-                resultado.Add("numerobotones", citas.Count());
+                resultado.Add("numerobotones", citas.Count);
 
                 return Ok(resultado);
             }
