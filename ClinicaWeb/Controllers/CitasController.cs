@@ -1687,43 +1687,36 @@ LIMIT 1;
 
                 if (citas == null || !citas.Any())
                 {
-                    return Ok(new
-                    {
-                        mensajepregunta = "No tienes citas pendientes.",
-                        numerobotones = 0
-                    });
+                    return Ok(new { mensajepregunta = "No tienes citas pendientes.", numerobotones = 0 });
                 }
 
-                // 1. Construimos UN SOLO TEXTO con todas las citas numeradas
-                string textoCompleto = "📅 *Tus Citas Pendientes:*\n\n";
-                var listaBotones = new List<object>();
-                int contador = 1;
+                // 1. Construimos el texto del mensaje
+                string texto = "📅 *Tus Citas Pendientes:*\n\n";
+                var resultado = new Dictionary<string, object>();
+                int i = 1;
 
                 foreach (var c in citas)
                 {
-                    textoCompleto += $"{contador}. {c.NombreEspecialidad} - {c.FechaCita}\n";
+                    texto += $"{i}. {c.NombreEspecialidad} - {c.FechaCita}\n";
 
-                    // 2. Creamos los botones siguiendo el formato que tu n8n ya entiende (pr_X)
-                    // Agregamos un botón de "Editar" por cada cita
-                    listaBotones.Add(new
+                    // 2. IMPORTANTE: Creamos pr_1, pr_2... que es lo que busca tu n8n
+                    // Cada pr_X es un objeto con text y callback_data
+                    resultado.Add($"pr_{i}", new
                     {
-                        text = $"✏️ Editar Cita {contador} ({c.FechaCita})",
+                        text = $"✏️ Editar {i} ({c.FechaCita})",
                         callback_data = $"MODIFICAR_CITA_{c.IdCita}"
                     });
-                    contador++;
+                    i++;
+                    if (i > 8) break; // Límite de seguridad para no romper el layout
                 }
 
-                textoCompleto += "\nSeleccione la cita que desea gestionar:";
+                texto += "\nSeleccione una para gestionar:";
 
-                // 3. Devolvemos el objeto EXACTO que n8n espera encontrar en la tabla de matriz
-                // n8n buscará "mensajepregunta" y los botones según "numerobotones"
-                return Ok(new
-                {
-                    mensajepregunta = textoCompleto,
-                    numerobotones = listaBotones.Count,
-                    // Pasamos los botones en una propiedad que n8n pueda mapear a pr_1, pr_2...
-                    data = listaBotones
-                });
+                // 3. Añadimos los campos base que tu flujo n8n lee del nodo "Llamada API Clínica"
+                resultado.Add("mensajepregunta", texto);
+                resultado.Add("numerobotones", citas.Count());
+
+                return Ok(resultado);
             }
             catch (Exception ex)
             {
