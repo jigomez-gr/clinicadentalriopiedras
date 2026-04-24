@@ -1679,35 +1679,51 @@ LIMIT 1;
         [AllowAnonymous]
         public async Task<IActionResult> ListarPublicoTelegram(string chat_id)
         {
-            if (string.IsNullOrEmpty(chat_id))
-                return BadRequest("Falta chat_id");
+            if (string.IsNullOrEmpty(chat_id)) return BadRequest("Falta chat_id");
 
             try
             {
                 var citas = await _repositorioCita.ListarCitasTelegram(chat_id);
 
-                // Si no hay citas, devolvemos el objeto 'data' vacío
                 if (citas == null || !citas.Any())
                 {
-                    return Ok(new { data = new List<object>() });
+                    return Ok(new
+                    {
+                        mensajepregunta = "No tienes citas pendientes.",
+                        numerobotones = 0
+                    });
                 }
 
-                // Creamos la lista de objetos de la cita
-                var listaCitas = citas.Select(c => new {
-                    texto_mensaje = $"Cita: {c.NombreEspecialidad}\n" +
-                                    $"Fecha: {c.FechaCita} - {c.HoraCita}\n" +
-                                    $"Doctor: {c.NombreDoctor}\n" +
-                                    $"Motivo: {(string.IsNullOrEmpty(c.RazonCitaUsr) ? "Sin motivo" : c.RazonCitaUsr)}",
+                // 1. Construimos UN SOLO TEXTO con todas las citas numeradas
+                string textoCompleto = "📅 *Tus Citas Pendientes:*\n\n";
+                var listaBotones = new List<object>();
+                int contador = 1;
 
-                    botones = new[] {
-                new { text = "Detalle", callback_data = $"DETALLE_CITA_{c.IdCita}" },
-                new { text = "Modificar", callback_data = $"MODIFICAR_CITA_{c.IdCita}" }
-            }
-                }).ToList();
+                foreach (var c in citas)
+                {
+                    textoCompleto += $"{contador}. {c.NombreEspecialidad} - {c.FechaCita}\n";
 
-                // IMPORTANTE: Envolvemos todo en un objeto con la propiedad "data"
-                // Esto es lo que n8n espera para poder leer los elementos
-                return Ok(new { data = listaCitas });
+                    // 2. Creamos los botones siguiendo el formato que tu n8n ya entiende (pr_X)
+                    // Agregamos un botón de "Editar" por cada cita
+                    listaBotones.Add(new
+                    {
+                        text = $"✏️ Editar Cita {contador} ({c.FechaCita})",
+                        callback_data = $"MODIFICAR_CITA_{c.IdCita}"
+                    });
+                    contador++;
+                }
+
+                textoCompleto += "\nSeleccione la cita que desea gestionar:";
+
+                // 3. Devolvemos el objeto EXACTO que n8n espera encontrar en la tabla de matriz
+                // n8n buscará "mensajepregunta" y los botones según "numerobotones"
+                return Ok(new
+                {
+                    mensajepregunta = textoCompleto,
+                    numerobotones = listaBotones.Count,
+                    // Pasamos los botones en una propiedad que n8n pueda mapear a pr_1, pr_2...
+                    data = listaBotones
+                });
             }
             catch (Exception ex)
             {
