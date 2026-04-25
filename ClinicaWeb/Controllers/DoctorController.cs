@@ -417,15 +417,12 @@ namespace ClinicaWeb.Controllers
                 return BadRequest(new { msg = "Error interno: " + ex.Message });
             }
         }
-        // desde aqui los controladores para prototipo de telegram ..
-        // Endpoint para el Bot de Telegram
-
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> ListarPublicoTelegram(string chat_id)
         {
             if (string.IsNullOrEmpty(chat_id))
-                return Ok(new { error = true, MENSAJE = "Falta chat_id" });
+                return Ok(new { error = true, MENSAJE = "Chat ID vacío" });
 
             try
             {
