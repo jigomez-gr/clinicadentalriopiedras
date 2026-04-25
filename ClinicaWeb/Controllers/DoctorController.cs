@@ -422,7 +422,7 @@ namespace ClinicaWeb.Controllers
         public async Task<IActionResult> ListarPublicoTelegram(string chat_id)
         {
             if (string.IsNullOrEmpty(chat_id))
-                return Ok(new { error = true, MENSAJE = "Chat ID vacío" });
+                return Ok(new { error = true, MENSAJE = "Chat ID no proporcionado." });
 
             try
             {

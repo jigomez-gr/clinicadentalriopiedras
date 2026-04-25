@@ -1539,7 +1539,6 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
         }
         public async Task<object> ObtenerCitasPendientesTelegram(string telegramId)
         {
-            // Lista PLANA de botones, n8n los agrupará según la tabla
             var listaBotones = new List<BotonTelegram>();
             string mensajeHeader = "📋 *Gestión de sus Citas Pendientes*\nPulse 🔍 para ver detalles o 📝 para modificar:";
 
@@ -1551,7 +1550,8 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 c.fechacita,
                 dhd.turnohora,
                 e.nombre AS nombre_especialidad,
-                (d.nombres || ' ' || d.apellidos) AS nombre_doctor
+                (d.nombres || ' ' || d.apellidos) AS nombre_doctor,
+                COALESCE(c.razoncitausr, 'Sin motivo') AS razon
             FROM cita c
             INNER JOIN usuario u ON u.idusuario = c.idusuario
             INNER JOIN doctorhorariodetalle dhd ON dhd.iddoctorhorariodetalle = c.iddoctorhorariodetalle
@@ -1567,26 +1567,28 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
 
                 if (!citasRaw.Any())
                 {
-                    return new { MENSAJE = "No tienes citas pendientes.", DATA = new List<object>() };
+                    return new Dictionary<string, object>
+                    {
+                        ["MENSAJE"] = "No tienes citas pendientes.",
+                        ["DATA"] = new List<object>()
+                    };
                 }
 
                 foreach (var c in citasRaw)
                 {
-                    // BOTÓN 1: El texto informativo
+                    string fechaStr = c.fechacita.ToString("dd/MM");
+                    string horaStr = c.turnohora.ToString("HH:mm");
+
                     listaBotones.Add(new BotonTelegram
                     {
-                        text = $"{c.fechacita:dd/MM} {c.turnohora:HH:mm} - {c.nombre_especialidad}",
+                        text = $"{fechaStr} {horaStr} - {c.nombre_especialidad} (Dr. {c.nombre_doctor})",
                         callback_data = $"INFO_{c.idcita}"
                     });
-
-                    // BOTÓN 2: Lupa
                     listaBotones.Add(new BotonTelegram
                     {
                         text = "🔍",
                         callback_data = $"DETALLE_CITA_{c.idcita}"
                     });
-
-                    // BOTÓN 3: Lápiz
                     listaBotones.Add(new BotonTelegram
                     {
                         text = "📝",
@@ -1595,11 +1597,10 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 }
             }
 
-            // IMPORTANTE: Nombres en MAYÚSCULAS para que n8n los reconozca
-            return new
+            return new Dictionary<string, object>
             {
-                MENSAJE = mensajeHeader,
-                DATA = listaBotones
+                ["MENSAJE"] = mensajeHeader,
+                ["DATA"] = listaBotones
             };
         }
     }
