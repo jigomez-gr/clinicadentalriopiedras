@@ -1579,16 +1579,33 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                     string fechaStr = c.fechacita.ToString("dd/MM");
                     string horaStr = c.turnohora.ToString("HH:mm");
 
+                    // Acortar nombre doctor: solo último apellido
+                    string[] partesDoctor = (c.nombre_doctor ?? "").Split(' ');
+                    string apellidoDoctor = partesDoctor.Length > 1
+                        ? partesDoctor[partesDoctor.Length - 1]
+                        : c.nombre_doctor ?? "";
+
+                    // Acortar especialidad: máximo 10 caracteres
+                    string especialidad = c.nombre_especialidad ?? "";
+                    string especialidadCorta = especialidad.Length > 10
+                        ? especialidad.Substring(0, 10) + "."
+                        : especialidad;
+
+                    // Botón 1: Info resumida - cabe en el botón
                     listaBotones.Add(new BotonTelegram
                     {
-                        text = $"{fechaStr} {horaStr} - {c.nombre_especialidad} (Dr. {c.nombre_doctor})",
+                        text = $"{fechaStr} {horaStr} {especialidadCorta} Dr.{apellidoDoctor}",
                         callback_data = $"INFO_{c.idcita}"
                     });
+
+                    // Botón 2: Lupa - ver detalle completo
                     listaBotones.Add(new BotonTelegram
                     {
                         text = "🔍",
                         callback_data = $"DETALLE_CITA_{c.idcita}"
                     });
+
+                    // Botón 3: Lápiz - modificar cita
                     listaBotones.Add(new BotonTelegram
                     {
                         text = "📝",
