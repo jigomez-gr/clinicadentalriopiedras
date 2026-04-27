@@ -1540,7 +1540,7 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
         public async Task<object> ObtenerCitasPendientesTelegram(string telegramId)
         {
             var listaBotones = new List<BotonTelegram>();
-            string mensajeHeader = "📋 *Gestión de sus Citas Pendientes*\nPulse 🔍 para ver detalles o 📝 para modificar:";
+            string mensajeHeader = "📋 *Gestión de sus Citas Pendientes*\nPulse para ver detalles:";
 
             using (var conexion = new NpgsqlConnection(con.CadenaSQL))
             {
@@ -1576,40 +1576,16 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
 
                 foreach (var c in citasRaw)
                 {
-                    string fechaStr = c.fechacita.ToString("dd/MM");
+                    string fechaStr = c.fechacita.ToString("dd/MM/yyyy");
                     string horaStr = c.turnohora.ToString("HH:mm");
-
-                    // Acortar nombre doctor: solo último apellido
-                    string[] partesDoctor = (c.nombre_doctor ?? "").Split(' ');
-                    string apellidoDoctor = partesDoctor.Length > 1
-                        ? partesDoctor[partesDoctor.Length - 1]
-                        : c.nombre_doctor ?? "";
-
-                    // Acortar especialidad: máximo 10 caracteres
                     string especialidad = c.nombre_especialidad ?? "";
-                    string especialidadCorta = especialidad.Length > 10
-                        ? especialidad.Substring(0, 10) + "."
-                        : especialidad;
+                    string doctor = c.nombre_doctor ?? "";
 
-                    // Botón 1: Info resumida - cabe en el botón
+                    // Un solo botón por cita - al pulsar muestra el detalle completo
                     listaBotones.Add(new BotonTelegram
                     {
-                        text = $"{fechaStr} {horaStr} {especialidadCorta} Dr.{apellidoDoctor}",
-                        callback_data = $"INFO_{c.idcita}"
-                    });
-
-                    // Botón 2: Lupa - ver detalle completo
-                    listaBotones.Add(new BotonTelegram
-                    {
-                        text = "🔍",
+                        text = $"🔍 {fechaStr} {horaStr} - {especialidad} Dr.{doctor}",
                         callback_data = $"DETALLE_CITA_{c.idcita}"
-                    });
-
-                    // Botón 3: Lápiz - modificar cita
-                    listaBotones.Add(new BotonTelegram
-                    {
-                        text = "📝",
-                        callback_data = $"MODIFICAR_CITA_{c.idcita}"
                     });
                 }
             }
