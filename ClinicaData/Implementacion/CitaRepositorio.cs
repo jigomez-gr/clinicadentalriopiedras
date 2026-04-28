@@ -1397,9 +1397,9 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
 
                     // 6. Montamos los botones
                     string dataBotones = "[" +
-                        "{\"text\": \"✅ Confirmar y Reservar\", \"callback_data\": \"CONFIRMAR_FINAL\"}, " +
+                        "{\"text\": \"✅ Confirmar y Actualizar Base de Datos\", \"callback_data\": \"CONFIRMAR_FINAL\"}, " +
                         "{\"text\": \"🔙 Corregir datos\", \"web_app\": {\"url\": \"" + urlFormulario + "\"}}, " +
-                        "{\"text\": \"❌ Cancelar Alta\", \"callback_data\": \"CANCELAR_PROCESO\"}" +
+                        "{\"text\": \"❌ Cancelar \", \"callback_data\": \"CANCELAR_PROCESO\"}" +
                         "]";
 
                     return "{\"ESTADO\" : 2, \"MENSAJE\" : \"" + mensajeLimpio + "\", \"DATA\" : " + dataBotones + "}";

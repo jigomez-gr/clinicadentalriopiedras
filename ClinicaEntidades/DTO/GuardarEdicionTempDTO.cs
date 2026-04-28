@@ -9,9 +9,12 @@ namespace ClinicaEntidades.DTO
     public class GuardarEdicionTempDTO
     {
         public string ChatId { get; set; }
+        public int IdCita { get; set; } // Recomendado para validar integridad
         public string Notas { get; set; }
         public string ImagenBase64 { get; set; }
-        // Añadimos estos para la visualización en el HTML
+        public string ContentType { get; set; } // ¡IMPRESCINDIBLE! (ej: "image/jpeg")
+
+        // Para visualización en el HTML
         public string NombreDoctor { get; set; }
         public string Fecha { get; set; }
         public string Hora { get; set; }
