@@ -114,9 +114,18 @@ namespace ClinicaData.Contrato
         Task<Usuario> ObtenerPorChatId(string chatId);
         // (Opcional) Si vas a implementar la confirmación final:
         // ... otros métodos ...
-
+        // 1. Para el Login/Seguridad inicial
         Task<object> ObtenerCitasPendientesTelegram(string telegramId);
-      
 
+        // NUEVOS MÉTODOS PARA EL FLUJO GLOBAL (Sin DTOs, usando clase Cita)
+
+        // Obtiene la cita completa (incluyendo datos del doctor de solo consulta)
+        Task<Cita> ObtenerCitaGestionGlobal(string chat_id);
+
+        // Guarda solo los campos permitidos (Paciente + Valoración + Estado)
+        Task<bool> GuardarCambiosGestionGlobal(Cita objeto, string chat_id);
+
+        // Ejecuta el SP final
+        Task<string> ConfirmarGestionFinal(string chat_id);
     }
 }

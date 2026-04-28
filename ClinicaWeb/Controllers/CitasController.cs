@@ -1692,6 +1692,131 @@ LIMIT 1;
                 return Ok(new { error = true, mensajepregunta = "Error: " + ex.Message });
             }
         }
+        /// <summary>
+        /// Carga la WebApp de gestión global validando seguridad y cargando la clase Cita.
+        /// </summary>
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> EditarGestionGlobal(string chat_id, string token)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(chat_id) || string.IsNullOrEmpty(token))
+                    return Content("Faltan parámetros: chat_id o token.");
+
+                // 1. Validar Token MD5
+                string tokenEsperado = CalcularMd5(chat_id + "MiClaveSecreta2026");
+                if (!string.Equals(token, tokenEsperado, StringComparison.OrdinalIgnoreCase))
+                    return Content("Token incorrecto.");
+
+                // 2. Buscar Usuario y Login (Claims)
+                var usuario = await _repositorioCita.ObtenerPorChatId(chat_id);
+                if (usuario == null)
+                    return Content($"El usuario {chat_id} no existe.");
+
+                var claims = new List<Claim> {
+            new Claim(ClaimTypes.Name, usuario.Nombre ?? "Usuario"),
+            new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
+            new Claim(ClaimTypes.Role, usuario.NombreRol ?? "Usuario")
+        };
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
+                    new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)));
+
+                // 3. Cargar Datos desde la temporal directamente a la clase Cita
+                var modelo = await _repositorioCita.ObtenerCitaGestionGlobal(chat_id);
+                if (modelo == null)
+                    return Content("No hay datos pendientes en la tabla temporal.");
+
+                ViewBag.ChatId = chat_id;
+                return View(modelo);
+            }
+            catch (Exception ex)
+            {
+                return Content("ERROR: " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Guarda los cambios del WebApp en la tabla temporal usando la clase Cita.
+        /// </summary>
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> GuardarCambiosTemp([FromBody] Cita objeto, string chat_id)
+        {
+            try
+            {
+                if (objeto == null || string.IsNullOrEmpty(chat_id))
+                    return Json(new { success = false, mensaje = "Datos nulos" });
+
+                bool exito = await _repositorioCita.GuardarCambiosGestionGlobal(objeto, chat_id);
+                return Json(new { success = exito });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, mensaje = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Devuelve el JSON de resumen para Telegram (Operación 65 o similares).
+        /// </summary>
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResumenGestionGlobal(string chat_id)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(chat_id))
+                    return Json(new { ESTADO = 2, MENSAJE = "⚠️ chat_id vacío." });
+
+                string token = CalcularMd5(chat_id + "MiClaveSecreta2026");
+                string urlWeb = $"https://clinicadentalriopiedras.n8njigretera.cloud/Citas/EditarGestionGlobal?chat_id={chat_id}&token={token}";
+
+                var cita = await _repositorioCita.ObtenerCitaGestionGlobal(chat_id);
+
+                if (cita != null)
+                {
+                    string msg = $"🏁 *Resumen de Gestión*\n\n" +
+                                 $"👨‍⚕️ *Doctor:* {cita.OrigenCita}\n" +
+                                 $"📅 *Fecha:* {cita.FechaCita}\n" +
+                                 $"⏰ *Hora:* {cita.HoraCita}\n" +
+                                 $"📝 *Notas:* {cita.RazonCitaUsr}\n\n" +
+                                 "¿Confirmamos los cambios?";
+
+                    return Json(new
+                    {
+                        ESTADO = 2,
+                        MENSAJE = msg,
+                        DATA = new object[] {
+                    new { text = "✅ Confirmar", callback_data = "CONFIRMAR_FINAL" },
+                    new { text = "🔙 Corregir", url = urlWeb },
+                    new { text = "❌ Cancelar", callback_data = "TERMINAR_TODO" }
+                }
+                    });
+                }
+                return Json(new { ESTADO = 2, MENSAJE = "⚠️ No hay datos temporales." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { ESTADO = 2, MENSAJE = "🔥 Error: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Ejecuta el SP final para impactar los cambios en la tabla definitiva.
+        /// </summary>
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> ConfirmarGestionFinal(string chat_id)
+        {
+            if (string.IsNullOrEmpty(chat_id))
+                return Json(new { ESTADO = 3, MENSAJE = "Falta chat_id" });
+
+            string resultado = await _repositorioCita.ConfirmarGestionFinal(chat_id);
+            return Content(resultado, "application/json");
+        }
+
+  
     }
 }
    

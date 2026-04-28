@@ -1,0 +1,159 @@
+﻿@using ClinicaEntidades
+@model Cita
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --tg-orange: #ff8c00;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            font-size: 14px;
+        }
+
+        .header-orange {
+            background: var(--tg-orange);
+            color: white;
+            padding: 15px;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .btn-save {
+            background: var(--tg-orange);
+            color: white;
+            width: 100%;
+            font-weight: bold;
+            border-radius: 8px;
+            padding: 10px;
+            border: none;
+        }
+
+        .readonly-box {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ced4da;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-2">
+        <div class="card shadow-sm">
+            <div class="header-orange text-center"><h5><i class="fas fa-notes-medical"></i> Gestión de Cita</h5></div>
+            <div class="card-body">
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-primary">Indicaciones del Doctor</label>
+                    <div class="readonly-box">@Model.Indicaciones</div>
+                </div>
+
+                @if (Model.DocIndicacionesDoctor != null)
+                {
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-outline-primary btn-sm w-100" onclick="descargarDocDoctor()">
+                            <i class="fas fa-download"></i> Descargar Documento del Doctor
+                        </button>
+                    </div>
+                }
+
+                <hr />
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label">Estado Cita</label>
+                        <select class="form-select" id="IdEstadoCita">
+                            <option value="1" selected="@(Model.EstadoCita.IdEstadoCita == 1)">Activa</option>
+                            <option value="3" selected="@(Model.EstadoCita.IdEstadoCita == 3)">Cancelada</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Confirmar</label>
+                        <select class="form-select" id="CitaConfirmada">
+                            <option value="S" selected="@(Model.CitaConfirmada == "S")">SÍ</option>
+                            <option value="N" selected="@(Model.CitaConfirmada == "N")">NO</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Motivo de Cita (Paciente)</label>
+                    <textarea class="form-control" id="RazonCitaUsr" rows="2">@Model.RazonCitaUsr</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Adjuntar Mi Documento</label>
+                    <input type="file" class="form-control" id="filePaciente" accept="image/*,application/pdf">
+                </div>
+
+                <hr />
+
+                <div class="mb-3">
+                    <label class="form-label">Valoración Doctor</label>
+                    <select class="form-select" id="ValDoctorCita">
+                        <option value="5" selected="@(Model.ValDoctorCita == 5)">⭐⭐⭐⭐⭐</option>
+                        <option value="4" selected="@(Model.ValDoctorCita == 4)">⭐⭐⭐⭐</option>
+                        <option value="3" selected="@(Model.ValDoctorCita == 3)">⭐⭐⭐</option>
+                    </select>
+                </div>
+
+                <button class="btn-save" id="btnGuardar"><i class="fas fa-save"></i> GUARDAR</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        const tg = window.Telegram.WebApp;
+        let base64Pac = null;
+        let ctPac = "@Model.ContentType";
+
+        // Función para descargar el doc del doctor (readonly)
+        function descargarDocDoctor() {
+            const base64 = "@(Model.DocIndicacionesDoctor != null ? Convert.ToBase64String(Model.DocIndicacionesDoctor) : "")";
+            if(!base64) return;
+            const link = document.createElement("a");
+            link.href = "data:@Model.ContentTypeDoctor;base64," + base64;
+            link.download = "Indicaciones_Doctor.pdf";
+            link.click();
+        }
+
+        $("#filePaciente").on("change", function(e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                base64Pac = btoa(evt.target.result);
+                ctPac = file.type;
+            };
+            reader.readAsBinaryString(file);
+        });
+
+        $("#btnGuardar").on("click", function() {
+            const data = {
+                EstadoCita: { IdEstadoCita: parseInt($("#IdEstadoCita").val()) },
+                RazonCitaUsr: $("#RazonCitaUsr").val(),
+                CitaConfirmada: $("#CitaConfirmada").val(),
+                ValDoctorCita: parseInt($("#ValDoctorCita").val()),
+                ContentType: ctPac,
+                DocumentoCitaUsr: base64Pac
+            };
+
+            $.ajax({
+                url: '/Citas/GuardarCambiosTemp?chat_id=@ViewBag.ChatId',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(r) { if(r.success) tg.close(); }
+            });
+        });
+    </script>
+</body>
+</html>

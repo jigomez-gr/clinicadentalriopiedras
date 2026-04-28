@@ -4,11 +4,12 @@ using ClinicaEntidades;
 using ClinicaEntidades.DTO;
 using Dapper;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using Npgsql;
 using NpgsqlTypes;
 using System.Data;
-using Newtonsoft.Json;
 using System.Text.Json;
+using static ClinicaData.Implementacion.CitaRepositorio;
 namespace ClinicaData.Implementacion
 {
     public class CitaRepositorio : ICitaRepositorio
@@ -1596,5 +1597,115 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 ["DATA"] = listaBotones
             };
         }
+   
+            public async Task<Cita> ObtenerCitaGestionGlobal(string chat_id)
+            {
+                using (var conexion = new NpgsqlConnection(con.CadenaSQL))
+                {
+                    string query = @"
+                SELECT 
+                    id_temp AS IdCita,
+                    idusuario, 
+                    idestadocita,
+                    fechacita AS FechaCitaOrden,
+                    indicaciones AS Indicaciones,
+                    origencita AS OrigenCita,
+                    razoncitausr AS RazonCitaUsr,
+                    documentocitausr AS DocumentoCitaUsr,
+                    contenttype AS ContentType,
+                    docindicacionesdoctor AS DocIndicacionesDoctor,
+                    contenttype_doctor AS ContentTypeDoctor,
+                    citaconfirmada AS CitaConfirmada,
+                    fechaconfirmacion AS FechaConfirmacion,
+                    metodopeticion AS MetodoPeticion,
+                    valdoctorcita AS ValDoctorCita,
+                    opiniondoctoryclinica AS OpinionDoctorYClinica,
+                    fecha AS FechaCita,
+                    hora AS HoraCita
+                FROM public.telegramcitatemp 
+                WHERE chat_id = @chatId LIMIT 1";
+
+                    var res = await conexion.QueryFirstOrDefaultAsync<dynamic>(query, new { chatId = chat_id });
+                    if (res == null) return null;
+
+                    return new Cita
+                    {
+                        IdCita = (int)res.idcita,
+                        EstadoCita = new EstadoCita { IdEstadoCita = (int)res.idestadocita },
+                        FechaCitaOrden = res.fechacitaorden,
+                        Indicaciones = res.indicaciones ?? "", // Solo consulta
+                        OrigenCita = res.origencita ?? "",
+                        RazonCitaUsr = res.razoncitausr ?? "",
+                        DocumentoCitaUsr = res.documentocitausr,
+                        ContentType = res.contenttype,
+                        DocIndicacionesDoctor = res.docindicacionesdoctor, // Solo consulta
+                        ContentTypeDoctor = res.contenttype_doctor,       // Solo consulta
+                        CitaConfirmada = res.citaconfirmada,
+                        FechaConfirmacion = res.fechaconfirmacion,
+                        MetodoPeticion = res.metodopeticion,
+                        ValDoctorCita = res.valdoctorcita ?? 3,
+                        OpinionDoctorYClinica = res.opiniondoctoryclinica,
+                        FechaCita = res.fechacita,
+                        HoraCita = res.horacita
+                    };
+                }
+            }
+
+            public async Task<bool> GuardarCambiosGestionGlobal(Cita objeto, string chat_id)
+            {
+                using (var conexion = new NpgsqlConnection(con.CadenaSQL))
+                {
+                    // Nota: NO actualizamos 'indicaciones' ni 'docindicacionesdoctor' ya que son de consulta
+                    string sql = @"
+                UPDATE public.telegramcitatemp SET
+                    idestadocita = @IdEstadoCita,
+                    razoncitausr = @RazonCitaUsr,
+                    documentocitausr = @DocumentoCitaUsr,
+                    contenttype = @ContentType,
+                    valdoctorcita = @ValDoctorCita,
+                    opiniondoctoryclinica = @OpinionDoctorYClinica,
+                    citaconfirmada = @CitaConfirmada,
+                    fechaconfirmacion = @FechaConfirmacion,
+                    metodopeticion = @MetodoPeticion
+                WHERE chat_id = @chatId";
+
+                    var affectedRows = await conexion.ExecuteAsync(sql, new
+                    {
+                        IdEstadoCita = objeto.EstadoCita.IdEstadoCita,
+                        objeto.RazonCitaUsr,
+                        objeto.DocumentoCitaUsr,
+                        objeto.ContentType,
+                        objeto.ValDoctorCita,
+                        objeto.OpinionDoctorYClinica,
+                        objeto.CitaConfirmada,
+                        objeto.FechaConfirmacion,
+                        objeto.MetodoPeticion,
+                        chatId = chat_id
+                    });
+                    return affectedRows > 0;
+                }
+            }
+
+        public async Task<string> ConfirmarGestionFinal(string chat_id)
+        {
+            using (var conexion = new NpgsqlConnection(con.CadenaSQL))
+            {
+                try
+                {
+                    await conexion.OpenAsync();
+
+                    // IMPORTANTE: Ahora llamamos a sp_actualizarcita_telegram
+                    string sqlSP = "SELECT public.sp_actualizarcita_telegram(@chatId)";
+                    var resultado = await conexion.ExecuteScalarAsync<string>(sqlSP, new { chatId = chat_id });
+
+                    return resultado; // Retorna el JSON de éxito o error
+                }
+                catch (Exception ex)
+                {
+                    return "{\"ESTADO\":3, \"MENSAJE\":\"Error crítico en confirmación: " + ex.Message + "\"}";
+                }
+            }
+        }
+
     }
 }
