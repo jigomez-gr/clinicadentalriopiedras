@@ -1478,13 +1478,6 @@ LIMIT 1;
       
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> GuardarCambiosTemp([FromBody] GuardarEdicionTempDTO modelo)
-        {
-            bool exito = await _repositorioCita.ActualizarCitaTemporal(modelo);
-            return Ok(new { success = exito });
-        }
-        [HttpPost]
-        [AllowAnonymous]
         [DisableRequestSizeLimit]
         // Lo bajamos a ~25 MB (26214400 bytes) porque Telegram no da más de 20 MB por archivo.
         [RequestFormLimits(MultipartBodyLengthLimit = 26214400, ValueLengthLimit = 26214400)]
