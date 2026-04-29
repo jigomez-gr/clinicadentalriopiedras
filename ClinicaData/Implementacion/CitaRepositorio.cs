@@ -1638,7 +1638,7 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
         {
             using (var conexion = new NpgsqlConnection(con.CadenaSQL))
             {
-                // Hemos quitado "metodopeticion" de aquí para que no de error 42703
+                // SQL TOTALMENTE SINCRONIZADO CON TU TABLA
                 string sql = @"
             UPDATE public.telegramcitatemp SET
                 idestadocita = @IdEstadoCita,
@@ -1648,6 +1648,7 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 valdoctorcita = @ValDoctorCita,
                 opiniondoctoryclinica = @OpinionDoctorYClinica,
                 citaconfirmada = @CitaConfirmada,
+                metodopeticion = 'TELEGRAM',
                 fechaconfirmacion = NOW()
             WHERE chat_id = @chatId";
 

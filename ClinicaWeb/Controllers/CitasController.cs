@@ -1753,42 +1753,53 @@ LIMIT 1;
         /// </summary>
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> GuardarCambiosTemp([FromBody] Cita objeto, string chat_id)
+        [IgnoreAntiforgeryToken] // Crucial para evitar bloqueos de seguridad AJAX
+        public async Task<IActionResult> GuardarCambiosTemp([FromBody] Cita objeto, [FromQuery] string chat_id)
         {
             try
             {
-                // Traza inicial: ¿Llegan los datos?
+                // VERIFICACIÓN DE VERSIÓN: Si ves esto en el alert, es que el código nuevo está puesto.
+                string versionTag = "V1.1-DEBUG";
+
                 if (objeto == null)
-                    return Json(new { success = false, mensaje = "El objeto Cita llegó nulo al servidor." });
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        version = versionTag,
+                        mensaje = "El objeto Cita llegó nulo (Error de mapeo JSON)."
+                    });
+                }
 
                 if (string.IsNullOrEmpty(chat_id))
-                    return Json(new { success = false, mensaje = "El chat_id está vacío." });
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        version = versionTag,
+                        mensaje = "Falta chat_id en la URL."
+                    });
+                }
 
-                // Llamada al repositorio
                 bool exito = await _repositorioCita.GuardarCambiosGestionGlobal(objeto, chat_id);
 
-                if (exito)
+                return Json(new
                 {
-                    return Json(new { success = true });
-                }
-                else
-                {
-                    return Json(new { success = false, mensaje = "La base de datos no actualizó ninguna fila (posible chat_id no encontrado)." });
-                }
+                    success = exito,
+                    version = versionTag,
+                    mensaje = exito ? "" : "Registro no encontrado en temporal."
+                });
             }
             catch (Exception ex)
             {
-                // Traza de error: Enviamos la excepción real al cliente
-                // Esto aparecerá en el alert del Punto 1
-                return Json(new
+                return StatusCode(500, new
                 {
                     success = false,
-                    mensaje = "Error interno: " + ex.Message,
-                    stackTrace = ex.StackTrace
+                    version = "V1.1-DEBUG",
+                    mensaje = "Error: " + ex.Message
                 });
             }
         }
-
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> ResumenGestionGlobal(string chat_id)
