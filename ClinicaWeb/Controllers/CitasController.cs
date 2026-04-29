@@ -1751,19 +1751,41 @@ LIMIT 1;
         /// <summary>
         /// Guarda los cambios del WebApp en la tabla temporal usando la clase Cita.
         /// </summary>
-      
         [HttpPost]
-        [AllowAnonymous] // <--- ESTO EVITA QUE FALLE EL BOTÓN "GUARDAR"
+        [AllowAnonymous]
         public async Task<IActionResult> GuardarCambiosTemp([FromBody] Cita objeto, string chat_id)
         {
             try
             {
+                // Traza inicial: ¿Llegan los datos?
+                if (objeto == null)
+                    return Json(new { success = false, mensaje = "El objeto Cita llegó nulo al servidor." });
+
+                if (string.IsNullOrEmpty(chat_id))
+                    return Json(new { success = false, mensaje = "El chat_id está vacío." });
+
+                // Llamada al repositorio
                 bool exito = await _repositorioCita.GuardarCambiosGestionGlobal(objeto, chat_id);
-                return Json(new { success = exito });
+
+                if (exito)
+                {
+                    return Json(new { success = true });
+                }
+                else
+                {
+                    return Json(new { success = false, mensaje = "La base de datos no actualizó ninguna fila (posible chat_id no encontrado)." });
+                }
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, mensaje = ex.Message });
+                // Traza de error: Enviamos la excepción real al cliente
+                // Esto aparecerá en el alert del Punto 1
+                return Json(new
+                {
+                    success = false,
+                    mensaje = "Error interno: " + ex.Message,
+                    stackTrace = ex.StackTrace
+                });
             }
         }
 

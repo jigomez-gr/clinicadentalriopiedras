@@ -156,14 +156,13 @@
                 contentTypeArchivo = file.type;
                 const reader = new FileReader();
                 reader.onload = function(evt) {
-                    // Quitamos el prefijo "data:..." para enviar solo el Base64
                     base64Archivo = evt.target.result.split(',')[1];
                 };
                 reader.readAsDataURL(file);
             }
         });
 
-        // 2. Descarga del documento del doctor (Readonly)
+        // 2. Descarga del documento del doctor
         function descargarDocDoctor() {
             const b64 = "@docDoctorBase64";
             const ct = "@Model.ContentTypeDoctor";
@@ -174,7 +173,7 @@
             link.click();
         }
 
-        // 3. Envío de datos
+        // 3. Envío de datos con Traza de Error mejorada
         $("#btnGuardar").on("click", function() {
             const btn = $(this);
             btn.prop("disabled", true).html('<i class="fas fa-spinner fa-spin me-2"></i> GUARDANDO...');
@@ -186,7 +185,7 @@
                 ValDoctorCita: parseInt($("#ValDoctorCita").val()),
                 OpinionDoctorYClinica: $("#OpinionDoctorYClinica").val(),
                 ContentType: contentTypeArchivo,
-                DocumentoCitaUsr: base64Archivo // Se mapea a byte[] en C#
+                DocumentoCitaUsr: base64Archivo
             };
 
             $.ajax({
@@ -196,15 +195,19 @@
                 data: JSON.stringify(dataCita),
                 success: function(response) {
                     if (response.success) {
-                        // Cierra la WebApp y vuelve al bot
                         tg.close();
                     } else {
-                        alert("Error: " + response.mensaje);
+                        alert("Error del servidor: " + response.mensaje);
                         btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i> GUARDAR CAMBIOS');
                     }
                 },
-                error: function() {
-                    alert("Error de conexión.");
+                error: function(xhr, status, error) {
+                    // PUNTO 1: TRAZA DETALLADA
+                    let msgError = "FALLO DE CONEXIÓN / API:\n";
+                    msgError += "Status: " + xhr.status + " (" + error + ")\n";
+                    msgError += "Respuesta: " + xhr.responseText;
+
+                    alert(msgError); // Esto te dirá el error real (404, 500, etc.)
                     btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i> GUARDAR CAMBIOS');
                 }
             });
