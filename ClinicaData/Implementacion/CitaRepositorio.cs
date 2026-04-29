@@ -1638,16 +1638,18 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
         {
             using (var conexion = new NpgsqlConnection(con.CadenaSQL))
             {
+                // Solo actualizamos lo que el paciente puede cambiar + el estado
                 string sql = @"
-                UPDATE public.telegramcitatemp SET
-                    idestadocita = @IdEstadoCita,
-                    razoncitausr = @RazonCitaUsr,
-                    documentocitausr = @DocumentoCitaUsr,
-                    contenttype = @ContentType,
-                    valdoctorcita = @ValDoctorCita,
-                    opiniondoctoryclinica = @OpinionDoctorYClinica,
-                    citaconfirmada = @CitaConfirmada
-                WHERE chat_id = @chatId";
+            UPDATE public.telegramcitatemp SET
+                idestadocita = @IdEstadoCita,
+                razoncitausr = @RazonCitaUsr,
+                documentocitausr = @DocumentoCitaUsr,
+                contenttype = @ContentType,
+                valdoctorcita = @ValDoctorCita,
+                opiniondoctoryclinica = @OpinionDoctorYClinica,
+                citaconfirmada = @CitaConfirmada,
+                fechaconfirmacion = NOW()
+            WHERE chat_id = @chatId";
 
                 var affectedRows = await conexion.ExecuteAsync(sql, new
                 {

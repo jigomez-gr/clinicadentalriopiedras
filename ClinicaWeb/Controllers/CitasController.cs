@@ -1739,8 +1739,9 @@ LIMIT 1;
         /// <summary>
         /// Guarda los cambios del WebApp en la tabla temporal usando la clase Cita.
         /// </summary>
+      
         [HttpPost]
-        [AllowAnonymous] // <--- SOLUCIÓN AL ERROR 405
+        [AllowAnonymous] // <--- ESTO EVITA QUE FALLE EL BOTÓN "GUARDAR"
         public async Task<IActionResult> GuardarCambiosTemp([FromBody] Cita objeto, string chat_id)
         {
             try
@@ -1748,7 +1749,10 @@ LIMIT 1;
                 bool exito = await _repositorioCita.GuardarCambiosGestionGlobal(objeto, chat_id);
                 return Json(new { success = exito });
             }
-            catch (Exception ex) { return Json(new { success = false, mensaje = ex.Message }); }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, mensaje = ex.Message });
+            }
         }
 
         [HttpGet]
