@@ -1638,7 +1638,7 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
         {
             using (var conexion = new NpgsqlConnection(con.CadenaSQL))
             {
-                // Solo actualizamos lo que el paciente puede cambiar + el estado
+                // Hemos quitado "metodopeticion" de aquí para que no de error 42703
                 string sql = @"
             UPDATE public.telegramcitatemp SET
                 idestadocita = @IdEstadoCita,
@@ -1662,10 +1662,10 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                     objeto.CitaConfirmada,
                     chatId = chat_id
                 });
+
                 return affectedRows > 0;
             }
         }
-
         public async Task<string> ConfirmarGestionFinal(string chat_id)
         {
             using (var conexion = new NpgsqlConnection(con.CadenaSQL))
