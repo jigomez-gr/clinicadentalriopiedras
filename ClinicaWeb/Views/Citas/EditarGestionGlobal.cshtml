@@ -2,11 +2,16 @@
 @model Cita
 @{
     Layout = null;
+    // Convertimos el documento del doctor a Base64 para la descarga directa si existe
+    string docDoctorBase64 = Model.DocIndicacionesDoctor != null ? Convert.ToBase64String(Model.DocIndicacionesDoctor) : "";
 }
+
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+    <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Gestión de Cita - Clínica Dental</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -16,95 +21,121 @@
 
         body {
             background-color: #f0f2f5;
+            font-family: sans-serif;
             font-size: 14px;
+        }
+
+        .card-gestion {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
         .header-orange {
             background: var(--tg-orange);
             color: white;
             padding: 15px;
-            border-radius: 10px 10px 0 0;
+            border-radius: 15px 15px 0 0;
         }
 
         .btn-save {
             background: var(--tg-orange);
             color: white;
-            width: 100%;
-            font-weight: bold;
-            border-radius: 8px;
-            padding: 10px;
             border: none;
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: bold;
         }
 
-        .readonly-box {
-            background: #e9ecef;
+        .readonly-label {
+            color: #6c757d;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .box-consulta {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
             padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #ced4da;
+            border-radius: 8px;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
-    <div class="container py-2">
-        <div class="card shadow-sm">
-            <div class="header-orange text-center"><h5><i class="fas fa-notes-medical"></i> Gestión de Cita</h5></div>
+
+    <div class="container py-3">
+        <div class="card card-gestion">
+            <div class="header-orange text-center">
+                <h5 class="mb-0"><i class="fas fa-calendar-check me-2"></i> Gestión de Cita</h5>
+            </div>
             <div class="card-body">
 
                 <div class="mb-3">
-                    <label class="form-label fw-bold text-primary">Indicaciones del Doctor</label>
-                    <div class="readonly-box">@Model.Indicaciones</div>
-                </div>
-
-                @if (Model.DocIndicacionesDoctor != null)
-                {
-                    <div class="mb-3">
-                        <button type="button" class="btn btn-outline-primary btn-sm w-100" onclick="descargarDocDoctor()">
-                            <i class="fas fa-download"></i> Descargar Documento del Doctor
+                    <span class="readonly-label">Indicaciones del Especialista</span>
+                    <div class="box-consulta">
+                        @(string.IsNullOrEmpty(Model.Indicaciones) ? "Sin indicaciones registradas." : Model.Indicaciones)
+                    </div>
+                    @if (!string.IsNullOrEmpty(docDoctorBase64))
+                    {
+                        <button type="button" class="btn btn-sm btn-outline-primary w-100 mt-1" onclick="descargarDocDoctor()">
+                            <i class="fas fa-file-download me-1"></i> Descargar Anexo del Doctor
                         </button>
-                    </div>
-                }
-
-                <hr />
-
-                <div class="row g-2 mb-3">
-                    <div class="col-6">
-                        <label class="form-label">Estado Cita</label>
-                        <select class="form-select" id="IdEstadoCita">
-                            <option value="1" selected="@(Model.EstadoCita.IdEstadoCita == 1)">Activa</option>
-                            <option value="3" selected="@(Model.EstadoCita.IdEstadoCita == 3)">Cancelada</option>
-                        </select>
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label">Confirmar</label>
-                        <select class="form-select" id="CitaConfirmada">
-                            <option value="S" selected="@(Model.CitaConfirmada == "S")">SÍ</option>
-                            <option value="N" selected="@(Model.CitaConfirmada == "N")">NO</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Motivo de Cita (Paciente)</label>
-                    <textarea class="form-control" id="RazonCitaUsr" rows="2">@Model.RazonCitaUsr</textarea>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Adjuntar Mi Documento</label>
-                    <input type="file" class="form-control" id="filePaciente" accept="image/*,application/pdf">
+                    }
                 </div>
 
                 <hr />
 
-                <div class="mb-3">
-                    <label class="form-label">Valoración Doctor</label>
-                    <select class="form-select" id="ValDoctorCita">
-                        <option value="5" selected="@(Model.ValDoctorCita == 5)">⭐⭐⭐⭐⭐</option>
-                        <option value="4" selected="@(Model.ValDoctorCita == 4)">⭐⭐⭐⭐</option>
-                        <option value="3" selected="@(Model.ValDoctorCita == 3)">⭐⭐⭐</option>
-                    </select>
-                </div>
+                <form id="formGestion">
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-bold">Estado</label>
+                            <select class="form-select" id="IdEstadoCita">
+                                <option value="1" selected="@(Model.EstadoCita?.IdEstadoCita == 1)">Activa</option>
+                                <option value="3" selected="@(Model.EstadoCita?.IdEstadoCita == 3)">Cancelada</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold">Confirmar</label>
+                            <select class="form-select" id="CitaConfirmada">
+                                <option value="S" selected="@(Model.CitaConfirmada == "S")">SÍ</option>
+                                <option value="N" selected="@(Model.CitaConfirmada == "N")">NO</option>
+                            </select>
+                        </div>
+                    </div>
 
-                <button class="btn-save" id="btnGuardar"><i class="fas fa-save"></i> GUARDAR</button>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Mi Motivo / Notas</label>
+                        <textarea class="form-control" id="RazonCitaUsr" rows="2" placeholder="Escriba aquí sus observaciones...">@Model.RazonCitaUsr</textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Adjuntar Documento (Paciente)</label>
+                        <input type="file" class="form-control" id="fileInput" accept="image/*,application/pdf">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Valoración Clínica</label>
+                        <select class="form-select" id="ValDoctorCita">
+                            <option value="5" selected="@(Model.ValDoctorCita == 5)">⭐⭐⭐⭐⭐ (Excelente)</option>
+                            <option value="4" selected="@(Model.ValDoctorCita == 4)">⭐⭐⭐⭐ (Muy bueno)</option>
+                            <option value="3" selected="@(Model.ValDoctorCita == 3)">⭐⭐⭐ (Bueno)</option>
+                            <option value="2" selected="@(Model.ValDoctorCita == 2)">⭐⭐ (Regular)</option>
+                            <option value="1" selected="@(Model.ValDoctorCita == 1)">⭐ (Malo)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Opinión / Reseña</label>
+                        <textarea class="form-control" id="OpinionDoctorYClinica" rows="2">@Model.OpinionDoctorYClinica</textarea>
+                    </div>
+
+                    <button type="button" class="btn-save" id="btnGuardar">
+                        <i class="fas fa-save me-2"></i> GUARDAR CAMBIOS
+                    </button>
+                </form>
             </div>
         </div>
     </div>
@@ -113,45 +144,69 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         const tg = window.Telegram.WebApp;
-        let base64Pac = null;
-        let ctPac = "@Model.ContentType";
+        tg.expand();
 
-        // Función para descargar el doc del doctor (readonly)
+        let base64Archivo = null;
+        let contentTypeArchivo = "@Model.ContentType";
+
+        // 1. Manejo del archivo del paciente
+        $("#fileInput").on("change", function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                contentTypeArchivo = file.type;
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    // Quitamos el prefijo "data:..." para enviar solo el Base64
+                    base64Archivo = evt.target.result.split(',')[1];
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 2. Descarga del documento del doctor (Readonly)
         function descargarDocDoctor() {
-            const base64 = "@(Model.DocIndicacionesDoctor != null ? Convert.ToBase64String(Model.DocIndicacionesDoctor) : "")";
-            if(!base64) return;
+            const b64 = "@docDoctorBase64";
+            const ct = "@Model.ContentTypeDoctor";
+            if (!b64) return;
             const link = document.createElement("a");
-            link.href = "data:@Model.ContentTypeDoctor;base64," + base64;
-            link.download = "Indicaciones_Doctor.pdf";
+            link.href = `data:${ct};base64,${b64}`;
+            link.download = "Indicaciones_Especialista";
             link.click();
         }
 
-        $("#filePaciente").on("change", function(e) {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                base64Pac = btoa(evt.target.result);
-                ctPac = file.type;
-            };
-            reader.readAsBinaryString(file);
-        });
-
+        // 3. Envío de datos
         $("#btnGuardar").on("click", function() {
-            const data = {
+            const btn = $(this);
+            btn.prop("disabled", true).html('<i class="fas fa-spinner fa-spin me-2"></i> GUARDANDO...');
+
+            const dataCita = {
                 EstadoCita: { IdEstadoCita: parseInt($("#IdEstadoCita").val()) },
-                RazonCitaUsr: $("#RazonCitaUsr").val(),
                 CitaConfirmada: $("#CitaConfirmada").val(),
+                RazonCitaUsr: $("#RazonCitaUsr").val(),
                 ValDoctorCita: parseInt($("#ValDoctorCita").val()),
-                ContentType: ctPac,
-                DocumentoCitaUsr: base64Pac
+                OpinionDoctorYClinica: $("#OpinionDoctorYClinica").val(),
+                ContentType: contentTypeArchivo,
+                DocumentoCitaUsr: base64Archivo // Se mapea a byte[] en C#
             };
 
             $.ajax({
                 url: '/Citas/GuardarCambiosTemp?chat_id=@ViewBag.ChatId',
                 type: 'POST',
                 contentType: 'application/json',
-                data: JSON.stringify(data),
-                success: function(r) { if(r.success) tg.close(); }
+                data: JSON.stringify(dataCita),
+                success: function(response) {
+                    if (response.success) {
+                        // Cierra la WebApp y vuelve al bot
+                        tg.close();
+                    } else {
+                        alert("Error: " + response.mensaje);
+                        btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i> GUARDAR CAMBIOS');
+                    }
+                },
+                error: function() {
+                    alert("Error de conexión.");
+                    btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i> GUARDAR CAMBIOS');
+                }
             });
         });
     </script>
