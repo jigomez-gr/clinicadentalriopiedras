@@ -1762,7 +1762,6 @@ LIMIT 1;
         /// </summary>
         [HttpGet]
         [AllowAnonymous]
-       
         public async Task<IActionResult> ResumenGestionGlobal(string chat_id)
         {
             try
@@ -1770,18 +1769,13 @@ LIMIT 1;
                 if (string.IsNullOrEmpty(chat_id))
                     return Json(new { ESTADO = 2, MENSAJE = "⚠️ chat_id vacío." });
 
-                // 1. Generamos el Token de seguridad
                 string token = CalcularMd5(chat_id + "MiClaveSecreta2026");
-
-                // 2. Construimos la URL del Editor Global
                 string urlWeb = $"https://clinicadentalriopiedras.n8njigretera.cloud/Citas/EditarGestionGlobal?chat_id={chat_id}&token={token}";
 
-                // 3. Obtenemos los datos de la tabla temporal mapeados a la clase Cita
                 var cita = await _repositorioCita.ObtenerCitaGestionGlobal(chat_id);
 
                 if (cita != null)
                 {
-                    // 4. Preparamos el mensaje de resumen (Markdown)
                     string msg = $"🏁 *Resumen de Gestión*\n\n" +
                                  $"👨‍⚕️ *Doctor:* {cita.OrigenCita}\n" +
                                  $"📅 *Fecha:* {cita.FechaCita}\n" +
@@ -1789,26 +1783,22 @@ LIMIT 1;
                                  $"📝 *Notas:* {cita.RazonCitaUsr}\n\n" +
                                  "¿Confirmamos los cambios?";
 
-                    // 5. Devolvemos el JSON estructurado para n8n
                     return Json(new
                     {
                         ESTADO = 2,
                         MENSAJE = msg,
                         DATA = new object[] {
                     new { text = "✅ Confirmar", callback_data = "CONFIRMAR_FINAL" },
-                    // CAMBIO CLAVE: Usamos 'web_app' para que abra el editor integrado
                     new { text = "🔙 Corregir", web_app = new { url = urlWeb } },
-                    new { text = "❌ Cancelar", callback_data = "TERMINAR_TODO" }
+                    new { text = "❌ Cancelar", callback_data = "TERMINAR_TODO" } // Apunta a la lógica de cierre
                 }
                     });
                 }
-
-                return Json(new { ESTADO = 2, MENSAJE = "⚠️ No hay datos temporales para mostrar el resumen." });
+                return Json(new { ESTADO = 2, MENSAJE = "⚠️ No hay datos pendientes." });
             }
             catch (Exception ex)
             {
-                // El "paracaídas" para ver errores de base de datos o mapeo
-                return Json(new { ESTADO = 2, MENSAJE = "🔥 Error en Resumen: " + ex.Message });
+                return Json(new { ESTADO = 2, MENSAJE = "🔥 Error: " + ex.Message });
             }
         }
         /// <summary>
