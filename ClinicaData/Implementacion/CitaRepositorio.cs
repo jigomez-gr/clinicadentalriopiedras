@@ -1597,61 +1597,67 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 ["DATA"] = listaBotones
             };
         }
-   
-            public async Task<Cita> ObtenerCitaGestionGlobal(string chat_id)
+        public async Task<Cita> ObtenerCitaGestionGlobal(string chat_id)
+        {
+            using (var conexion = new NpgsqlConnection(con.CadenaSQL))
             {
-                using (var conexion = new NpgsqlConnection(con.CadenaSQL))
+                string query = @"
+            SELECT 
+                id_temp AS IdCita,
+                idusuario, 
+                idestadocita,
+                fechacita AS FechaCitaOrden,
+                archivocaption AS Indicaciones,
+                nombreyvaldoctor AS OrigenCita,
+                razoncitausr AS RazonCitaUsr,
+                documentocitausr AS DocumentoCitaUsr,
+                contenttype AS ContentType,
+                docindicacionesdoctor AS DocIndicacionesDoctor,
+                contenttype_doctor AS ContentTypeDoctor,
+                citaconfirmada AS CitaConfirmada,
+                fechaconfirmacion AS FechaConfirmacion,
+                metodopeticion AS MetodoPeticion,
+                valdoctorcita AS ValDoctorCita,
+                opiniondoctoryclinica AS OpinionDoctorYClinica,
+                fecha AS FechaCita,
+                hora AS HoraCita
+            FROM public.telegramcitatemp 
+            WHERE chat_id = @chatId LIMIT 1";
+
+                // Leemos como 'dynamic' para que Npgsql no intente mapear tipos todavía
+                var res = await conexion.QueryFirstOrDefaultAsync<dynamic>(query, new { chatId = chat_id });
+
+                if (res == null) return null;
+
+                // AQUÍ ESTÁ EL TRUCO: Controlamos los nulos antes de que lleguen a la clase
+                return new Cita
                 {
-                    string query = @"
-                SELECT 
-                    id_temp AS IdCita,
-                    idusuario, 
-                    idestadocita,
-                    fechacita AS FechaCitaOrden,
-                    indicaciones AS Indicaciones,
-                    origencita AS OrigenCita,
-                    razoncitausr AS RazonCitaUsr,
-                    documentocitausr AS DocumentoCitaUsr,
-                    contenttype AS ContentType,
-                    docindicacionesdoctor AS DocIndicacionesDoctor,
-                    contenttype_doctor AS ContentTypeDoctor,
-                    citaconfirmada AS CitaConfirmada,
-                    fechaconfirmacion AS FechaConfirmacion,
-                    metodopeticion AS MetodoPeticion,
-                    valdoctorcita AS ValDoctorCita,
-                    opiniondoctoryclinica AS OpinionDoctorYClinica,
-                    fecha AS FechaCita,
-                    hora AS HoraCita
-                FROM public.telegramcitatemp 
-                WHERE chat_id = @chatId LIMIT 1";
-
-                    var res = await conexion.QueryFirstOrDefaultAsync<dynamic>(query, new { chatId = chat_id });
-                    if (res == null) return null;
-
-                    return new Cita
+                    IdCita = res.idcita ?? 0,
+                    EstadoCita = new EstadoCita
                     {
-                        IdCita = (int)res.idcita,
-                        EstadoCita = new EstadoCita { IdEstadoCita = (int)res.idestadocita },
-                        FechaCitaOrden = res.fechacitaorden,
-                        Indicaciones = res.indicaciones ?? "", // Solo consulta
-                        OrigenCita = res.origencita ?? "",
-                        RazonCitaUsr = res.razoncitausr ?? "",
-                        DocumentoCitaUsr = res.documentocitausr,
-                        ContentType = res.contenttype,
-                        DocIndicacionesDoctor = res.docindicacionesdoctor, // Solo consulta
-                        ContentTypeDoctor = res.contenttype_doctor,       // Solo consulta
-                        CitaConfirmada = res.citaconfirmada,
-                        FechaConfirmacion = res.fechaconfirmacion,
-                        MetodoPeticion = res.metodopeticion,
-                        ValDoctorCita = res.valdoctorcita ?? 3,
-                        OpinionDoctorYClinica = res.opiniondoctoryclinica,
-                        FechaCita = res.fechacita,
-                        HoraCita = res.horacita
-                    };
-                }
+                        // Si idestadocita es nulo en BD, le ponemos 1 (Pendiente/Activa) por defecto
+                        IdEstadoCita = res.idestadocita ?? 1
+                    },
+                    FechaCitaOrden = res.fechacitaorden,
+                    Indicaciones = res.indicaciones ?? "",
+                    OrigenCita = res.origencita ?? "",
+                    RazonCitaUsr = res.razoncitausr ?? "",
+                    DocumentoCitaUsr = res.documentocitausr,
+                    ContentType = res.contenttype,
+                    DocIndicacionesDoctor = res.docindicacionesdoctor,
+                    ContentTypeDoctor = res.contenttype_doctor,
+                    CitaConfirmada = res.citaconfirmada ?? "N",
+                    FechaConfirmacion = res.fechaconfirmacion,
+                    // Si valdoctorcita es nulo, le ponemos 3 (estándar) por defecto
+                    ValDoctorCita = res.valdoctorcita ?? 3,
+                    OpinionDoctorYClinica = res.opiniondoctoryclinica,
+                    FechaCita = res.fechacita,
+                    HoraCita = res.horacita
+                };
             }
+        }
 
-            public async Task<bool> GuardarCambiosGestionGlobal(Cita objeto, string chat_id)
+        public async Task<bool> GuardarCambiosGestionGlobal(Cita objeto, string chat_id)
             {
                 using (var conexion = new NpgsqlConnection(con.CadenaSQL))
                 {
