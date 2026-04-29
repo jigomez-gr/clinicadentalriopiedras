@@ -1597,56 +1597,35 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 ["DATA"] = listaBotones
             };
         }
-        // 1. OBTENER DATOS (SELECT)
+
         public async Task<Cita> ObtenerCitaGestionGlobal(string chat_id)
         {
             using (var conexion = new NpgsqlConnection(con.CadenaSQL))
             {
-                // Mapeo ultra-explícito basado en tu CREATE TABLE
                 string query = @"
-            SELECT 
-                id_temp AS IdCita,
-                idusuario AS IdUsuario, 
-                idestadocita AS IdEstadoCita,
-                fechacita AS FechaCitaOrden,
-                indicaciones AS Indicaciones, 
-                origencita AS OrigenCita,
-                razoncitausr AS RazonCitaUsr,
-                documentocitausr AS DocumentoCitaUsr,
-                contenttype AS ContentType,
-                docindicacionesdoctor AS DocIndicacionesDoctor,
-                contenttype_doctor AS ContentTypeDoctor,
-                citaconfirmada AS CitaConfirmada,
-                fechaconfirmacion AS FechaConfirmacion,
-                metodopeticion AS MetodoPeticion,
-                valdoctorcita AS ValDoctorCita,
-                opiniondoctoryclinica AS OpinionDoctorYClinica,
-                fecha AS FechaCita,
-                hora AS HoraCita
-            FROM public.telegramcitatemp 
-            WHERE chat_id = @chatId 
-            ORDER BY id_temp DESC LIMIT 1";
+                SELECT 
+                    id_temp AS IdCita, idusuario, idestadocita, fechacita AS FechaCitaOrden,
+                    indicaciones, nombreespecialidad, razoncitausr, documentocitausr, 
+                    contenttype, docindicacionesdoctor, contenttype_doctor,
+                    citaconfirmada, valdoctorcita, opiniondoctoryclinica, fecha, hora
+                FROM public.telegramcitatemp 
+                WHERE chat_id = @chatId ORDER BY id_temp DESC LIMIT 1";
 
                 var res = await conexion.QueryFirstOrDefaultAsync<dynamic>(query, new { chatId = chat_id });
-
                 if (res == null) return null;
 
-                // Construcción manual para evitar errores de conversión de tipos (int?, etc)
                 return new Cita
                 {
-                    IdCita = res.idcita ?? 0,
+                    IdCita = res.id_temp ?? 0,
                     EstadoCita = new EstadoCita { IdEstadoCita = res.idestadocita ?? 1 },
-                    FechaCitaOrden = res.fechacitaorden,
                     Indicaciones = res.indicaciones ?? "",
-                    OrigenCita = res.origencita ?? "",
+                    OrigenCita = res.nombreespecialidad ?? "Especialista", // Cambio de nombre aquí
                     RazonCitaUsr = res.razoncitausr ?? "",
                     DocumentoCitaUsr = res.documentocitausr,
                     ContentType = res.contenttype,
                     DocIndicacionesDoctor = res.docindicacionesdoctor,
                     ContentTypeDoctor = res.contenttype_doctor,
                     CitaConfirmada = res.citaconfirmada ?? "N",
-                    FechaConfirmacion = res.fechaconfirmacion,
-                    MetodoPeticion = res.metodopeticion,
                     ValDoctorCita = res.valdoctorcita ?? 3,
                     OpinionDoctorYClinica = res.opiniondoctoryclinica ?? "",
                     FechaCita = res.fecha ?? "",
@@ -1655,24 +1634,20 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
             }
         }
 
-        // 2. GUARDAR DATOS (UPDATE)
         public async Task<bool> GuardarCambiosGestionGlobal(Cita objeto, string chat_id)
         {
             using (var conexion = new NpgsqlConnection(con.CadenaSQL))
             {
-                // NO incluimos 'indicaciones' en el SET para evitar el error 42703 si hay conflicto de tipos
                 string sql = @"
-            UPDATE public.telegramcitatemp SET
-                idestadocita = @IdEstadoCita,
-                razoncitausr = @RazonCitaUsr,
-                documentocitausr = @DocumentoCitaUsr,
-                contenttype = @ContentType,
-                valdoctorcita = @ValDoctorCita,
-                opiniondoctoryclinica = @OpinionDoctorYClinica,
-                citaconfirmada = @CitaConfirmada,
-                fechaconfirmacion = @FechaConfirmacion,
-                metodopeticion = @MetodoPeticion
-            WHERE chat_id = @chatId";
+                UPDATE public.telegramcitatemp SET
+                    idestadocita = @IdEstadoCita,
+                    razoncitausr = @RazonCitaUsr,
+                    documentocitausr = @DocumentoCitaUsr,
+                    contenttype = @ContentType,
+                    valdoctorcita = @ValDoctorCita,
+                    opiniondoctoryclinica = @OpinionDoctorYClinica,
+                    citaconfirmada = @CitaConfirmada
+                WHERE chat_id = @chatId";
 
                 var affectedRows = await conexion.ExecuteAsync(sql, new
                 {
@@ -1683,13 +1658,12 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                     objeto.ValDoctorCita,
                     objeto.OpinionDoctorYClinica,
                     objeto.CitaConfirmada,
-                    objeto.FechaConfirmacion,
-                    objeto.MetodoPeticion,
                     chatId = chat_id
                 });
                 return affectedRows > 0;
             }
         }
+
         public async Task<string> ConfirmarGestionFinal(string chat_id)
         {
             using (var conexion = new NpgsqlConnection(con.CadenaSQL))

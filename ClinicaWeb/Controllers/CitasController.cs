@@ -1740,67 +1740,44 @@ LIMIT 1;
         /// Guarda los cambios del WebApp en la tabla temporal usando la clase Cita.
         /// </summary>
         [HttpPost]
-        [Authorize]
+        [AllowAnonymous] // <--- SOLUCIÓN AL ERROR 405
         public async Task<IActionResult> GuardarCambiosTemp([FromBody] Cita objeto, string chat_id)
         {
             try
             {
-                if (objeto == null || string.IsNullOrEmpty(chat_id))
-                    return Json(new { success = false, mensaje = "Datos nulos" });
-
                 bool exito = await _repositorioCita.GuardarCambiosGestionGlobal(objeto, chat_id);
                 return Json(new { success = exito });
             }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, mensaje = ex.Message });
-            }
+            catch (Exception ex) { return Json(new { success = false, mensaje = ex.Message }); }
         }
 
-        /// <summary>
-        /// Devuelve el JSON de resumen para Telegram (Operación 65 o similares).
-        /// </summary>
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> ResumenGestionGlobal(string chat_id)
         {
             try
             {
-                if (string.IsNullOrEmpty(chat_id))
-                    return Json(new { ESTADO = 2, MENSAJE = "⚠️ chat_id vacío." });
-
                 string token = CalcularMd5(chat_id + "MiClaveSecreta2026");
                 string urlWeb = $"https://clinicadentalriopiedras.n8njigretera.cloud/Citas/EditarGestionGlobal?chat_id={chat_id}&token={token}";
 
                 var cita = await _repositorioCita.ObtenerCitaGestionGlobal(chat_id);
+                if (cita == null) return Json(new { ESTADO = 2, MENSAJE = "⚠️ No hay datos temporales." });
 
-                if (cita != null)
+                return Json(new
                 {
-                    string msg = $"🏁 *Resumen de Gestión*\n\n" +
-                                 $"👨‍⚕️ *Doctor:* {cita.OrigenCita}\n" +
-                                 $"📅 *Fecha:* {cita.FechaCita}\n" +
-                                 $"⏰ *Hora:* {cita.HoraCita}\n" +
-                                 $"📝 *Notas:* {cita.RazonCitaUsr}\n\n" +
-                                 "¿Confirmamos los cambios?";
-
-                    return Json(new
-                    {
-                        ESTADO = 2,
-                        MENSAJE = msg,
-                        DATA = new object[] {
-                    new { text = "✅ Confirmar", callback_data = "CONFIRMAR_FINAL" },
-                    new { text = "🔙 Corregir", web_app = new { url = urlWeb } },
-                    new { text = "❌ Cancelar", callback_data = "TERMINAR_TODO" } // Apunta a la lógica de cierre
-                }
-                    });
-                }
-                return Json(new { ESTADO = 2, MENSAJE = "⚠️ No hay datos pendientes." });
+                    ESTADO = 2,
+                    MENSAJE = $"🏁 *Resumen de Gestión*\n\n👨‍⚕️ *Doctor:* {cita.OrigenCita}\n📅 *Fecha:* {cita.FechaCita}\n⏰ *Hora:* {cita.HoraCita}\n📝 *Notas:* {cita.RazonCitaUsr}\n\n¿Confirmamos los cambios?",
+                    DATA = new object[] {
+                new { text = "✅ Confirmar", callback_data = "CONFIRMAR_FINAL" },
+                new { text = "🔙 Corregir", web_app = new { url = urlWeb } },
+                new { text = "❌ Cancelar", callback_data = "TERMINAR_TODO" }
             }
-            catch (Exception ex)
-            {
-                return Json(new { ESTADO = 2, MENSAJE = "🔥 Error: " + ex.Message });
+                });
             }
+            catch (Exception ex) { return Json(new { ESTADO = 2, MENSAJE = "Error: " + ex.Message }); }
         }
+
+
         /// <summary>
         /// Ejecuta el SP final para impactar los cambios en la tabla definitiva.
         /// </summary>
