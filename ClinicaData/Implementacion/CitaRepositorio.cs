@@ -4,6 +4,7 @@ using ClinicaEntidades;
 using ClinicaEntidades.DTO;
 using Dapper;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Npgsql;
 using NpgsqlTypes;
@@ -1222,13 +1223,19 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
         public async Task<string> ValidarOperacionDinamica(ChequeoRequest request)
         {
             string nombreFuncion = $"public.tg_{request.numerooperacion}_validaroperacion";
+
+            // SOLUCIÓN: Convert.ToString es seguro tanto para int como para string y evita el error del operador '?'
+            int.TryParse(Convert.ToString(request.id_operacion), out int idParaPostgres);
+
             using (var conexion = new NpgsqlConnection(con.CadenaSQL))
             {
                 await conexion.OpenAsync();
                 var jsonRaw = await conexion.ExecuteScalarAsync<string>(
                     $"SELECT {nombreFuncion}(@id, @valor)",
-                    new { id = request.id_operacion, valor = request.valor_recibido }
+                    new { id = idParaPostgres, valor = request.valor_recibido }
                 );
+
+                // Mantenemos las MAYÚSCULAS para la compatibilidad con n8n
                 return jsonRaw ?? "{\"ESTADO\":3,\"MENSAJE\":\"Error: DB nulo\"}";
             }
         }

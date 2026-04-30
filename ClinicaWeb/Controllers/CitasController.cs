@@ -1394,34 +1394,22 @@ LIMIT 1;
         {
             return Json(new { ESTADO = 1, MENSAJE = "Cita procesada" });
         }
-        
         [HttpPost]
         [AllowAnonymous]
         public async Task<IActionResult> Chequear_ValidarFlujo_unico([FromBody] ChequeoRequest request)
         {
             try
             {
-                // 1. LLAMADA AL REPOSITORIO
+                // LLAMADA A LA IMPLEMENTACIÓN
                 string jsonResultado = await _repositorioCita.ValidarOperacionDinamica(request);
-
-                // 2. Si la base de datos no devuelve nada, enviamos un error JSON formal
-                if (string.IsNullOrEmpty(jsonResultado))
-                {
-                    return Json(new { ESTADO = 3, MENSAJE = "La base de datos no devolvió ninguna respuesta." });
-                }
-
-                // 3. Como jsonResultado ya es un string JSON que viene de Postgres (json_build_object),
-                // lo enviamos como Content indicando que es application/json.
                 return Content(jsonResultado, "application/json");
             }
             catch (Exception ex)
             {
-                // 4. CORRECCIÓN CRÍTICA: No construyas el JSON con strings ("{...}").
-                // Al usar Json(), C# limpia el mensaje de error para que n8n lo entienda siempre.
-                return Json(new { ESTADO = 3, MENSAJE = ex.Message });
+                return Content("{\"ESTADO\":3,\"MENSAJE\":\"" + ex.Message + "\"}", "application/json");
             }
         }
-
+        
         [HttpPost]
         [AllowAnonymous]
         public async Task<IActionResult> Chequear_TraducirURL_unico([FromBody] ChequeoRequest request)
