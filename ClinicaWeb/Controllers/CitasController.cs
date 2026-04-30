@@ -1400,16 +1400,18 @@ LIMIT 1;
         {
             try
             {
-                // LLAMADA A LA IMPLEMENTACIÓN
+                // Si el repositorio devuelve un JSON string de la DB, lo mandamos como Content
                 string jsonResultado = await _repositorioCita.ValidarOperacionDinamica(request);
                 return Content(jsonResultado, "application/json");
             }
             catch (Exception ex)
             {
-                return Content("{\"ESTADO\":3,\"MENSAJE\":\"" + ex.Message + "\"}", "application/json");
+                // ¡IMPORTANTE! Usar Json() para que C# escape las comillas de ex.Message
+                // Esto evitará el error "Invalid JSON" en n8n
+                return Json(new { ESTADO = 3, MENSAJE = ex.Message });
             }
         }
-        
+
         [HttpPost]
         [AllowAnonymous]
         public async Task<IActionResult> Chequear_TraducirURL_unico([FromBody] ChequeoRequest request)

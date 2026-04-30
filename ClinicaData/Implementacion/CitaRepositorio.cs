@@ -1222,24 +1222,33 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
         }
         public async Task<string> ValidarOperacionDinamica(ChequeoRequest request)
         {
-            string nombreFuncion = $"public.tg_{request.numerooperacion}_validaroperacion";
-
-            // SOLUCIÓN: Convert.ToString es seguro tanto para int como para string y evita el error del operador '?'
-            int.TryParse(Convert.ToString(request.id_operacion), out int idParaPostgres);
-
-            using (var conexion = new NpgsqlConnection(con.CadenaSQL))
+            try
             {
-                await conexion.OpenAsync();
-                var jsonRaw = await conexion.ExecuteScalarAsync<string>(
-                    $"SELECT {nombreFuncion}(@id, @valor)",
-                    new { id = idParaPostgres, valor = request.valor_recibido }
-                );
+                string nombreFuncion = $"public.tg_{request.numerooperacion}_validaroperacion";
 
-                // Mantenemos las MAYÚSCULAS para la compatibilidad con n8n
-                return jsonRaw ?? "{\"ESTADO\":3,\"MENSAJE\":\"Error: DB nulo\"}";
+                // Convertimos de forma segura
+                int.TryParse(Convert.ToString(request.id_operacion), out int idParaPostgres);
+
+                using (var conexion = new NpgsqlConnection(con.CadenaSQL))
+                {
+                    await conexion.OpenAsync();
+
+                    // Los parámetros @id y @valor NO llevan comillas en el SELECT.
+                    // Npgsql se encarga de ponerlas si son necesarias.
+                    var jsonRaw = await conexion.ExecuteScalarAsync<string>(
+                        $"SELECT {nombreFuncion}(@id, @valor)",
+                        new { id = idParaPostgres, valor = request.valor_recibido }
+                    );
+
+                    return jsonRaw ?? "{\"ESTADO\":3,\"MENSAJE\":\"Error: DB nulo\"}";
+                }
+            }
+            catch (Exception ex)
+            {
+                // Si falla aquí, devolvemos un JSON serializado correctamente
+                return System.Text.Json.JsonSerializer.Serialize(new { ESTADO = 3, MENSAJE = "Repo: " + ex.Message });
             }
         }
-
         public async Task<string> TraducirOperacionDinamica(ChequeoRequest request)
         {
             string nombreFuncion = $"public.tg_{request.numerooperacion}_traducirurl";
