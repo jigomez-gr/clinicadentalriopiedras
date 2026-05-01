@@ -17,7 +17,15 @@ namespace ClinicaEntidades
         public string? TelefonoMovil { get; set; }
         public int? IdUsuario { get; set; }
         public int? IdDoctorHorarioDetalle { get; set; }
+
+        // El ID numérico del estado
         public int? IdEstadoCita { get; set; }
+
+        // --- ESTA ES LA LÍNEA QUE TE FALTA PARA QUE NO DE ERROR DE COMPILACIÓN ---
+        // Permite que la Vista acceda a @Model.EstadoCita.Nombre o similar
+        public EstadoCita? EstadoCita { get; set; }
+        // -----------------------------------------------------------------------
+
         public DateTime? FechaCita { get; set; }
         public string? Indicaciones { get; set; }
         public DateTime? FechaCreacion { get; set; }
