@@ -1,0 +1,156 @@
+﻿@using ClinicaEntidades
+@model TelegramCitaTemp
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Modificar Alta</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .star {
+            font-size: 2.5rem;
+            cursor: pointer;
+            color: #ccc;
+            transition: color 0.2s;
+        }
+
+            .star.selected {
+                color: #ffc107;
+            }
+
+            .star:hover {
+                color: #ffdb58;
+            }
+    </style>
+</head>
+<body class="bg-light p-4">
+    <div class="card shadow mx-auto" style="max-width: 500px;">
+        <div class="card-header bg-primary text-white text-center">
+            <h5 class="mb-0">✨ Gestión de Cita Temporal</h5>
+        </div>
+        <div class="card-body">
+            <!-- INFO BLOQUEADA (Solo lectura) -->
+            <div class="mb-3 p-2 bg-warning bg-opacity-10 border rounded" style="font-size: 0.9em;">
+                <strong>🩺 Doctor:</strong> @Model.NombreYValDoctor <br />
+                <strong>📅 Fecha/Hora:</strong> @Model.Fecha a las @Model.Hora
+            </div>
+
+            <input type="hidden" id="chatId" value="@Model.ChatId" />
+
+            <!-- MOTIVO DE LA CITA (Editable) -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">📝 Motivo de la cita (RazonCitaUsr):</label>
+                <textarea id="razonCitaUsr" class="form-control" rows="2">@Model.RazonCitaUsr</textarea>
+            </div>
+
+            <!-- VALORACIÓN DEL DOCTOR (Estrellas Interactivas) -->
+            <div class="mb-3 text-center">
+                <label class="form-label fw-bold d-block">⭐ Valoración del Doctor:</label>
+                <div id="starContainer">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        <span class="star @(i <= (Model.ValDoctorCita ?? 3) ? "selected" : "")" data-value="@i">@(i <= (Model.ValDoctorCita ?? 3) ? "★" : "☆")</span>
+                    }
+                </div>
+                <input type="hidden" id="valDoctorCita" value="@(Model.ValDoctorCita ?? 3)">
+            </div>
+
+            <!-- OPINIÓN Y CONFIRMACIÓN -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">💬 Opinión sobre el Doctor:</label>
+                <textarea id="opinionDoctor" class="form-control" rows="2">@Model.OpinionDoctorYClinica</textarea>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-12">
+                    <label class="form-label fw-bold">✅ Confirmar Cita (S/N):</label>
+                    <select id="citaConfirmada" class="form-select">
+                        <option value="S" selected="@(Model.CitaConfirmada == "S")">S - Confirmada</option>
+                        <option value="N" selected="@(Model.CitaConfirmada == "N")">N - Sin confirmar</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- DOCUMENTO (Editable) -->
+            <div class="mb-4">
+                <label class="form-label fw-bold">📁 Cambiar documento/foto:</label>
+                <input type="file" id="fileInput" class="form-control" accept="image/*">
+            </div>
+
+            <button type="button" id="btnGuardar" class="btn btn-success w-100 fw-bold shadow-sm">
+                💾 GUARDAR CAMBIOS Y VOLVER
+            </button>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Lógica para las estrellas ⭐
+            $(".star").click(function() {
+                const valor = $(this).data("value");
+                $("#valDoctorCita").val(valor);
+
+                $(".star").each(function(index) {
+                    if (index < valor) {
+                        $(this).text("★").addClass("selected");
+                    } else {
+                        $(this).text("☆").removeClass("selected");
+                    }
+                });
+            });
+
+            // Lógica para guardar 💾
+            $("#btnGuardar").click(function() {
+                const btn = $(this);
+                btn.prop("disabled", true).text("Procesando...");
+
+                const file = document.getElementById('fileInput').files[0];
+                const enviar = (base64) => {
+                    const data = {
+                        ChatId: $("#chatId").val(),
+                        RazonCitaUsr: $("#razonCitaUsr").val(),
+                        ValDoctorCita: parseInt($("#valDoctorCita").val()),
+                        CitaConfirmada: $("#citaConfirmada").val(),
+                        OpinionDoctorYClinica: $("#opinionDoctor").val(),
+                        ImagenBase64: base64
+                    };
+
+                    $.ajax({
+                        url: '/Citas/GuardarCambiosTempAltas',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(data),
+                        success: (r) => {
+                            if(r.success) {
+                                alert("¡Cambios guardados con éxito!");
+                                window.close();
+                            } else {
+                                alert("Error al guardar en el servidor.");
+                                btn.prop("disabled", false).text("💾 GUARDAR CAMBIOS");
+                            }
+                        },
+                        error: () => {
+                            alert("Error crítico de red.");
+                            btn.prop("disabled", false).text("💾 GUARDAR CAMBIOS");
+                        }
+                    });
+                };
+
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => enviar(e.target.result);
+                    reader.readAsDataURL(file);
+                } else {
+                    enviar(null);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -133,6 +133,7 @@ namespace ClinicaData.Contrato
        
         // ESTE ES EL NUEVO (Para el flujo de Altas que estamos arreglando)
         Task<bool> GuardarCambiosGestionGlobalAltas(TelegramCitaTemp objeto);
-       
+        Task<TelegramCitaTemp> ObtenerCitaGestionGlobalAltas(string chat_id);
+
     }
 }

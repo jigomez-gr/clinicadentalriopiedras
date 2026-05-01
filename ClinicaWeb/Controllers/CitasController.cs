@@ -1591,6 +1591,7 @@ LIMIT 1;
                 return Content("ERROR DETECTADO: " + ex.Message);
             }
         }
+
         // ESTA ES LA FUNCIÓN QUE TE FALTA EN EL CONTROLADOR PARA QUE TODO FUNCIONE
         private string CalcularMd5(string input)
         {
@@ -1904,7 +1905,25 @@ LIMIT 1;
             return Content(resultado, "application/json");
         }
 
-  
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> EditarTempAltas(string chat_id, string token)
+        {
+            try
+            {
+                // Buscamos los datos actuales de la cita temporal
+                var modelo = await _repositorioCita.ObtenerCitaGestionGlobalAltas(chat_id);
+
+                if (modelo == null) return Content("No se encontró la cita.");
+
+                // Pasamos el modelo a la vista específica de altas
+                return View("EditarTempAltas", modelo);
+            }
+            catch (Exception ex)
+            {
+                return Content("Error: " + ex.Message);
+            }
+        }
     }
 }
    

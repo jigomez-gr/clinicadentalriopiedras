@@ -1677,6 +1677,32 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 }
             }
         }
+        public async Task<TelegramCitaTemp> ObtenerCitaGestionGlobalAltas(string chat_id)
+        {
+            // Si el chat_id es nulo o es un comando de Telegram, ni preguntamos a la base de datos
+            if (string.IsNullOrEmpty(chat_id) || chat_id.StartsWith("/")) return null;
+
+            using (var conexion = new NpgsqlConnection(con.CadenaSQL))
+            {
+                // Usamos parámetros explícitos para evitar que Postgres intente adivinar el tipo
+                string query = @"
+            SELECT * 
+            FROM public.telegramcitatemp 
+            WHERE chat_id = @chatId::text 
+            ORDER BY id_temp DESC LIMIT 1";
+
+                try
+                {
+                    return await conexion.QueryFirstOrDefaultAsync<TelegramCitaTemp>(query, new { chatId = chat_id });
+                }
+                catch (Exception ex)
+                {
+                    // Si aquí da el 22P02, es porque alguna columna de la tabla temp 
+                    // no coincide con el tipo de la clase TelegramCitaTemp
+                    throw new Exception($"Error en Repo (ObtenerCita): {ex.Message}");
+                }
+            }
+        }
         public async Task<bool> GuardarCambiosGestionGlobalAltas(TelegramCitaTemp objeto)
         {
             try
