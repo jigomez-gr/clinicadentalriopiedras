@@ -41,6 +41,7 @@
                 <strong>📅 Fecha/Hora:</strong> @Model.Fecha a las @Model.Hora
             </div>
 
+            <!-- ID DEL CHAT (Oculto para el envío) -->
             <input type="hidden" id="chatId" value="@Model.ChatId" />
 
             <!-- MOTIVO DE LA CITA (Editable) -->
@@ -55,7 +56,9 @@
                 <div id="starContainer">
                     @for (int i = 1; i <= 5; i++)
                     {
-                        <span class="star @(i <= (Model.ValDoctorCita ?? 3) ? "selected" : "")" data-value="@i">@(i <= (Model.ValDoctorCita ?? 3) ? "★" : "☆")</span>
+                        <span class="star @(i <= (Model.ValDoctorCita ?? 3) ? "selected" : "")" data-value="@i">
+                            @(i <= (Model.ValDoctorCita ?? 3) ? "★" : "☆")
+                        </span>
                     }
                 </div>
                 <input type="hidden" id="valDoctorCita" value="@(Model.ValDoctorCita ?? 3)">
@@ -111,6 +114,7 @@
                 btn.prop("disabled", true).text("Procesando...");
 
                 const file = document.getElementById('fileInput').files[0];
+
                 const enviar = (base64) => {
                     const data = {
                         ChatId: $("#chatId").val(),
@@ -129,15 +133,17 @@
                         success: (r) => {
                             if(r.success) {
                                 alert("¡Cambios guardados con éxito!");
+                                // En WebApps de Telegram, window.close() cierra la ventana
                                 window.close();
                             } else {
-                                alert("Error al guardar en el servidor.");
-                                btn.prop("disabled", false).text("💾 GUARDAR CAMBIOS");
+                                alert("Error al guardar: " + (r.mensaje || "Error desconocido"));
+                                btn.prop("disabled", false).text("💾 GUARDAR CAMBIOS Y VOLVER");
                             }
                         },
-                        error: () => {
-                            alert("Error crítico de red.");
-                            btn.prop("disabled", false).text("💾 GUARDAR CAMBIOS");
+                        error: (xhr) => {
+                            console.error(xhr);
+                            alert("Error crítico de red o de servidor.");
+                            btn.prop("disabled", false).text("💾 GUARDAR CAMBIOS Y VOLVER");
                         }
                     });
                 };
@@ -145,6 +151,10 @@
                 if (file) {
                     const reader = new FileReader();
                     reader.onload = (e) => enviar(e.target.result);
+                    reader.onerror = () => {
+                        alert("Error al leer el archivo.");
+                        btn.prop("disabled", false).text("💾 GUARDAR CAMBIOS Y VOLVER");
+                    };
                     reader.readAsDataURL(file);
                 } else {
                     enviar(null);

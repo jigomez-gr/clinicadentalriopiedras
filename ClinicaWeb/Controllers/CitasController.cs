@@ -1159,10 +1159,11 @@ LIMIT 1;
             return Json(new { ok = true, url });
         }
         /* comienzo cambio */
+        /*
         [HttpPost]
         [Authorize(Roles = "Doctor,Administrador")]
 
-        public async Task<JsonResult> CancelarCitaPersonal(int idCita)
+       public async Task<JsonResult> CancelarCitaPersonal(int idCita)
         {
             try
             {
@@ -1183,6 +1184,7 @@ LIMIT 1;
                 return Json(new { ok = false, mensaje = ex.Message });
             }
         }
+     */
 
         [HttpPost]
         [Authorize(Roles = "Doctor,Administrador")]
@@ -1616,24 +1618,29 @@ LIMIT 1;
         {
             try
             {
-                // 1. Log de entrada para saber si el GET llega
-                await _repositorioCita.LogEnTexte("ENTRANDO A GET EDITARTEMP: " + chat_id);
+                // 1. Seguridad: Validamos el token igual que en tus otros métodos
+                string tokenEsperado = CalcularMd5(chat_id + "MiClaveSecreta2026");
+                if (!string.Equals(token, tokenEsperado, StringComparison.OrdinalIgnoreCase))
+                {
+                    await _repositorioCita.LogEnTexte("ACCESO DENEGADO: Token inválido");
+                    return Content("Acceso no autorizado.");
+                }
 
+                // 2. Buscamos los datos
                 var modelo = await _repositorioCita.ObtenerCitaGestionGlobalAltas(chat_id);
 
                 if (modelo == null)
                 {
-                    await _repositorioCita.LogEnTexte("ERROR: Modelo nulo para " + chat_id);
-                    return Content("No se encontró la cita.");
+                    return Content("No se encontraron datos para corregir.");
                 }
 
+                // 3. Pasamos el modelo a la vista
                 return View("EditarTempAltas", modelo);
             }
             catch (Exception ex)
             {
-                // 2. ESTO ES VITAL: Guardamos el error real en la DB
                 await _repositorioCita.LogEnTexte("CRASH EN GET: " + ex.Message);
-                return Content("Error detectado. Revisa la tabla texte.");
+                return Content("Ocurrió un error al cargar la vista.");
             }
         }
         [HttpGet]
