@@ -1613,6 +1613,44 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 ["DATA"] = listaBotones
             };
         }
+        // ============================================================
+        // MÉTODO PARA CITAS PENDIENTES (Usa la clase Cita original)
+        // ============================================================
+        public async Task<bool> GuardarCambiosGestionGlobal(Cita objeto, string chat_id)
+        {
+            using (var conexion = new NpgsqlConnection(con.CadenaSQL))
+            {
+                // SQL sincronizado con la tabla telegramcitatemp
+                string sql = @"
+            UPDATE public.telegramcitatemp SET
+                idestadocita = @IdEstadoCita,
+                razoncitausr = @RazonCitaUsr,
+                documentocitausr = @DocumentoCitaUsr,
+                contenttype = @ContentType,
+                valdoctorcita = @ValDoctorCita,
+                opiniondoctoryclinica = @OpinionDoctorYClinica,
+                citaconfirmada = @CitaConfirmada,
+                metodopeticion = 'TELEGRAM',
+                fechaconfirmacion = NOW()
+            WHERE chat_id = @chatId";
+
+                // Ejecución asíncrona con Dapper
+                var affectedRows = await conexion.ExecuteAsync(sql, new
+                {
+                    // Mapeo manual para asegurar que los nulos no rompan nada
+                    IdEstadoCita = objeto.EstadoCita?.IdEstadoCita ?? 1,
+                    RazonCitaUsr = objeto.RazonCitaUsr,
+                    DocumentoCitaUsr = objeto.DocumentoCitaUsr,
+                    ContentType = objeto.ContentType,
+                    ValDoctorCita = objeto.ValDoctorCita,
+                    OpinionDoctorYClinica = objeto.OpinionDoctorYClinica,
+                    CitaConfirmada = objeto.CitaConfirmada,
+                    chatId = chat_id
+                });
+
+                return affectedRows > 0;
+            }
+        }
         public async Task<TelegramCitaTemp> ObtenerCitaGestionGlobal(string chat_id)
         {
             // Si el chat_id es nulo o es un comando de Telegram, ni preguntamos a la base de datos
@@ -1639,11 +1677,10 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 }
             }
         }
-        public async Task<bool> GuardarCambiosGestionGlobal(Cita objeto, string chat_id)
+        public async Task<bool> GuardarCambiosGestionGlobalAltas(TelegramCitaTemp objeto)
         {
             using (var conexion = new NpgsqlConnection(con.CadenaSQL))
             {
-                // SQL TOTALMENTE SINCRONIZADO CON TU TABLA
                 string sql = @"
             UPDATE public.telegramcitatemp SET
                 idestadocita = @IdEstadoCita,
@@ -1655,23 +1692,26 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 citaconfirmada = @CitaConfirmada,
                 metodopeticion = 'TELEGRAM',
                 fechaconfirmacion = NOW()
-            WHERE chat_id = @chatId";
+            WHERE chat_id = @ChatId";
 
                 var affectedRows = await conexion.ExecuteAsync(sql, new
                 {
+                    // USAMOS TU LÓGICA: Prioridad al sub-objeto, si no, valor 1
                     IdEstadoCita = objeto.EstadoCita?.IdEstadoCita ?? 1,
+
                     objeto.RazonCitaUsr,
                     objeto.DocumentoCitaUsr,
                     objeto.ContentType,
-                    objeto.ValDoctorCita,
-                    objeto.OpinionDoctorYClinica,
-                    objeto.CitaConfirmada,
-                    chatId = chat_id
+                    ValDoctorCita = objeto.ValDoctorCita ?? 3,
+                    OpinionDoctorYClinica = objeto.OpinionDoctorYClinica ?? "",
+                    CitaConfirmada = objeto.CitaConfirmada ?? "N",
+                    objeto.ChatId
                 });
 
                 return affectedRows > 0;
             }
         }
+      
         public async Task<string> ConfirmarGestionFinal(string chat_id)
         {
             using (var conexion = new NpgsqlConnection(con.CadenaSQL))

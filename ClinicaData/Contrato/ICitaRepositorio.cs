@@ -129,5 +129,10 @@ namespace ClinicaData.Contrato
         Task<string> ConfirmarGestionFinal(string chat_id);
         // Añade esto a tu ICitaRepositorio.cs
         Task LogEnTexte(string msg);
+        // ESTE NO SE TOCA (El original que ya te funcionaba)
+       
+        // ESTE ES EL NUEVO (Para el flujo de Altas que estamos arreglando)
+        Task<bool> GuardarCambiosGestionGlobalAltas(TelegramCitaTemp objeto);
+       
     }
 }

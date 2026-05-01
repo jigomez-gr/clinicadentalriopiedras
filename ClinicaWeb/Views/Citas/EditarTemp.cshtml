@@ -1,5 +1,5 @@
-﻿@using ClinicaEntidades.DTO
-@model GuardarEdicionTempDTO
+﻿@using ClinicaEntidades
+@model TelegramCitaTemp
 @{
     Layout = null;
 }
@@ -38,7 +38,8 @@
         <h5 class="text-center mb-3">Modificar Cita</h5>
 
         <div class="alert alert-info py-2" style="font-size: 0.85em;">
-            <strong>Doctor:</strong> @Model.NombreDoctor<br />
+            @* Adaptación a las propiedades de TelegramCitaTemp *@
+            <strong>Doctor:</strong> @Model.NombreYValDoctor<br />
             <strong>Cita:</strong> @Model.Fecha a las @Model.Hora
         </div>
 
@@ -46,16 +47,18 @@
 
         <div class="mb-3">
             <label class="form-label fw-bold">Mis Notas:</label>
-            <textarea id="notasInput" class="form-control" rows="3">@Model.Notas</textarea>
+            @* Usamos RazonCitaUsr que es donde vienen las notas de la DB *@
+            <textarea id="notasInput" class="form-control" rows="3">@Model.RazonCitaUsr</textarea>
         </div>
 
         <div class="mb-3">
             <label class="form-label fw-bold">Cambiar Foto:</label>
             <input type="file" id="fileInput" class="form-control form-control-sm" accept="image/*">
             <div class="mt-2 text-center">
-                <img src="@(string.IsNullOrEmpty(Model.ImagenBase64) ? "#" : "data:image/jpeg;base64," + Model.ImagenBase64)"
+                @* Si ya existe un documento, lo mostramos; si no, permanece oculto *@
+                <img src="@(Model.DocumentoCitaUsr == null ? "#" : "data:image/jpeg;base64," + Convert.ToBase64String(Model.DocumentoCitaUsr))"
                      id="imgPreview"
-                     class="img-fluid rounded border @(string.IsNullOrEmpty(Model.ImagenBase64) ? "d-none" : "")"
+                     class="img-fluid rounded border @(Model.DocumentoCitaUsr == null ? "d-none" : "")"
                      style="max-height: 150px;">
             </div>
         </div>
@@ -89,20 +92,26 @@
                 const enviarDatos = (base64) => {
                     const payload = {
                         ChatId: $("#chatId").val(),
-                        Notas: $("#notasInput").val(),
-                        ImagenBase64: base64
+                        Notas: $("#notasInput").val(), // Esto mapea a la propiedad 'ayudante' que añadimos a la clase
+                        ImagenBase64: base64           // Esto mapea a la otra propiedad 'ayudante'
                     };
 
                     $.ajax({
-                        url: '/Citas/GuardarCambiosTemp',
+                        // CAMBIO CLAVE: Ahora apunta al método aislado de Altas
+                        url: '/Citas/GuardarCambiosTempAltas',
                         type: 'POST',
                         contentType: 'application/json',
                         data: JSON.stringify(payload),
                         success: function(r) {
-                            tg.close(); // Cerramos la ventana de Telegram
+                            if(r.success) {
+                                tg.close();
+                            } else {
+                                alert("Error: " + (r.mensaje || "No se pudo guardar"));
+                                btn.prop("disabled", false).text("💾 GUARDAR Y VOLVER");
+                            }
                         },
                         error: function() {
-                            alert("Error al guardar");
+                            alert("Error crítico al guardar");
                             btn.prop("disabled", false).text("💾 GUARDAR Y VOLVER");
                         }
                     });

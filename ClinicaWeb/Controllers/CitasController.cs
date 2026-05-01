@@ -1759,6 +1759,41 @@ LIMIT 1;
         /// <summary>
         /// Guarda los cambios del WebApp en la tabla temporal usando la clase Cita.
         /// </summary>
+        /// 
+        [HttpPost]
+        [AllowAnonymous]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> GuardarCambiosTempAltas([FromBody] TelegramCitaTemp objeto)
+        {
+            try
+            {
+                if (objeto == null || string.IsNullOrEmpty(objeto.ChatId))
+                    return BadRequest(new { success = false, mensaje = "Datos nulos o falta ChatId" });
+
+                // 1. Mapeo interno: Movemos 'Notas' a 'RazonCitaUsr'
+                objeto.RazonCitaUsr = objeto.Notas;
+
+                // 2. Procesamos la imagen si viene en el string ImagenBase64
+                if (!string.IsNullOrEmpty(objeto.ImagenBase64))
+                {
+                    string base64Data = objeto.ImagenBase64.Contains(",") ?
+                                        objeto.ImagenBase64.Split(',')[1] : objeto.ImagenBase64;
+                    objeto.DocumentoCitaUsr = Convert.FromBase64String(base64Data);
+                    objeto.ContentType = "image/jpeg";
+                }
+
+                // 3. Preparamos el EstadoCita por defecto para Altas
+                if (objeto.EstadoCita == null) objeto.EstadoCita = new EstadoCita { IdEstadoCita = 1 };
+
+                bool exito = await _repositorioCita.GuardarCambiosGestionGlobalAltas(objeto);
+
+                return Json(new { success = exito });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, mensaje = ex.Message });
+            }
+        }
         [HttpPost]
         [AllowAnonymous]
         [IgnoreAntiforgeryToken] // Crucial para evitar bloqueos de seguridad AJAX

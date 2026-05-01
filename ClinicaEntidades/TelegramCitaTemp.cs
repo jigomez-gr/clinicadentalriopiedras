@@ -54,5 +54,8 @@ namespace ClinicaEntidades
         public DateTimeOffset? CalLastSyncAt { get; set; } // Timestamp with time zone
         public string? CalLastError { get; set; }
         public long? CalLastOutboxId { get; set; } // Bigint
+                                                   // --- PROPIEDADES PARA MAPEO DIRECTO DESDE LA VISTA (SIN DTO) ---
+        public string? Notas { get; set; }        // Recibe lo que el JS envía como 'Notas'
+        public string? ImagenBase64 { get; set; } // Recibe lo que el JS envía como 'ImagenBase64'
     }
 }
