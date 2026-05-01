@@ -1692,6 +1692,12 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 }
             }
         }
-
+        public async Task LogEnTexte(string msg)
+        {
+            using (var conexion = new NpgsqlConnection(con.CadenaSQL))
+            {
+                await conexion.ExecuteAsync("INSERT INTO public.texte (mensaje) VALUES (@m)", new { m = "C#_LOG: " + msg });
+            }
+        }
     }
 }

@@ -127,5 +127,7 @@ namespace ClinicaData.Contrato
 
         // Ejecuta el SP final
         Task<string> ConfirmarGestionFinal(string chat_id);
+        // Añade esto a tu ICitaRepositorio.cs
+        Task LogEnTexte(string msg);
     }
 }

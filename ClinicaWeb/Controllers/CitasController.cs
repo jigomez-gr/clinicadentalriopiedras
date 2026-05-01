@@ -1696,19 +1696,31 @@ LIMIT 1;
         {
             try
             {
-                if (string.IsNullOrEmpty(chat_id) || string.IsNullOrEmpty(token))
-                    return Content("Faltan parámetros: chat_id o token.");
+                // LOG 1: Entrada
+                await _repositorioCita.LogEnTexte($"Entrando. Chat: {chat_id}, Token: {token}");
 
-                // 1. Validar Token MD5
+                if (string.IsNullOrEmpty(chat_id) || string.IsNullOrEmpty(token))
+                    return Content("Faltan parámetros.");
+
+                // 1. Validar Token
                 string tokenEsperado = CalcularMd5(chat_id + "MiClaveSecreta2026");
                 if (!string.Equals(token, tokenEsperado, StringComparison.OrdinalIgnoreCase))
+                {
+                    await _repositorioCita.LogEnTexte($"Token Erróneo. Esperado: {tokenEsperado}");
                     return Content("Token incorrecto.");
+                }
 
-                // 2. Buscar Usuario y Login (Claims)
+                // LOG 2: Token OK. Buscando usuario.
+                await _repositorioCita.LogEnTexte("Buscando usuario en ObtenerPorChatId...");
                 var usuario = await _repositorioCita.ObtenerPorChatId(chat_id);
-                if (usuario == null)
-                    return Content($"El usuario {chat_id} no existe.");
 
+                if (usuario == null)
+                {
+                    await _repositorioCita.LogEnTexte($"Usuario no encontrado para chat_id: {chat_id}");
+                    return Content($"El usuario {chat_id} no existe en la tabla de usuarios.");
+                }
+
+                // 2. Login (Claims)
                 var claims = new List<Claim> {
             new Claim(ClaimTypes.Name, usuario.Nombre ?? "Usuario"),
             new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
@@ -1717,20 +1729,33 @@ LIMIT 1;
                 await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
                     new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)));
 
-                // 3. Cargar Datos desde la temporal directamente a la clase Cita
+                // LOG 3: Login OK. Cargando datos temporales.
+                await _repositorioCita.LogEnTexte("Llamando a ObtenerCitaGestionGlobal...");
+
+                // AQUÍ ES DONDE SUELE DAR EL 22P02 si el SP o la Query están mal
                 var modelo = await _repositorioCita.ObtenerCitaGestionGlobal(chat_id);
+
                 if (modelo == null)
+                {
+                    await _repositorioCita.LogEnTexte("No se encontró nada en la tabla temporal para este chat.");
                     return Content("No hay datos pendientes en la tabla temporal.");
+                }
+
+                // LOG 4: Todo listo. Enviando a la Vista.
+                await _repositorioCita.LogEnTexte($"Éxito. Enviando a Vista con ID Temp: {modelo.IdTemp}");
 
                 ViewBag.ChatId = chat_id;
                 return View(modelo);
             }
             catch (Exception ex)
             {
-                return Content("ERROR: " + ex.Message);
+                // EL SALVAVIDAS: Si algo cruje, lo escribimos en la tabla texte
+                string errorCompleto = $"CRASH C#: {ex.Message} --> {ex.StackTrace}";
+                await _repositorioCita.LogEnTexte(errorCompleto);
+
+                return Content("ERROR CRÍTICO. Revisa la tabla 'texte' para ver el detalle.");
             }
         }
-
         /// <summary>
         /// Guarda los cambios del WebApp en la tabla temporal usando la clase Cita.
         /// </summary>
