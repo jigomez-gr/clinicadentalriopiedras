@@ -1789,26 +1789,33 @@ LIMIT 1;
         {
             try
             {
+                // 1. Validación de seguridad: Si no hay chat_id o es un comando, abortamos suavemente
+                if (string.IsNullOrEmpty(chat_id) || chat_id.StartsWith("/"))
+                {
+                    return Json(new { ESTADO = 3, MENSAJE = "⚠️ Sesión no válida o comando detectado." });
+                }
+
                 string token = CalcularMd5(chat_id + "MiClaveSecreta2026");
                 string urlWeb = $"https://clinicadentalriopiedras.n8njigretera.cloud/Citas/EditarGestionGlobal?chat_id={chat_id}&token={token}";
 
-                // Obtenemos el objeto directamente de la tabla temporal
-                TelegramCitaTemp cita = await _repositorioCita.ObtenerCitaGestionGlobal(chat_id);
+                // 2. Usamos 'objetoTemp' para que no haya dudas de qué clase estamos usando
+                TelegramCitaTemp objetoTemp = await _repositorioCita.ObtenerCitaGestionGlobal(chat_id);
 
-                if (cita == null)
+                if (objetoTemp == null)
                 {
-                    return Json(new { ESTADO = 3, MENSAJE = "⚠️ No hay datos temporales para esta gestión." });
+                    return Json(new { ESTADO = 3, MENSAJE = "⚠️ No hay datos pendientes de confirmar." });
                 }
 
+                // 3. Construcción del mensaje usando las columnas de texto de la tabla
                 return Json(new
                 {
-                    ESTADO = 3, // Usamos 3 para que n8n dispare el mensaje por el nodo de información
+                    ESTADO = 3,
                     MENSAJE = $"🏁 *Resumen de Gestión*\n\n" +
-                              $"👨‍⚕️ *Doctor:* {cita.NombreYValDoctor ?? "No asignado"}\n" +
-                              $"⚕️ *Especialidad:* {cita.NombreEspecialidad ?? "--"}\n" +
-                              $"📅 *Fecha:* {cita.Fecha ?? "--"}\n" + // Usamos la columna 'fecha' (string)
-                              $"⏰ *Hora:* {cita.Hora ?? "--"}\n" +   // Usamos la columna 'hora' (string)
-                              $"📝 *Notas:* {cita.RazonCitaUsr ?? "--"}\n\n" +
+                              $"👨‍⚕️ *Doctor:* {objetoTemp.NombreYValDoctor ?? "No asignado"}\n" +
+                              $"⚕️ *Especialidad:* {objetoTemp.NombreEspecialidad ?? "--"}\n" +
+                              $"📅 *Fecha:* {objetoTemp.Fecha ?? "--"}\n" +
+                              $"⏰ *Hora:* {objetoTemp.Hora ?? "--"}\n" +
+                              $"📝 *Notas:* {objetoTemp.RazonCitaUsr ?? "--"}\n\n" +
                               $"¿Confirmamos los cambios?",
                     DATA = new object[] {
                 new { text = "✅ Confirmar", callback_data = "CONFIRMAR_FINAL" },
@@ -1819,7 +1826,7 @@ LIMIT 1;
             }
             catch (Exception ex)
             {
-                return Json(new { ESTADO = 3, MENSAJE = "Error en Resumen Global: " + ex.Message });
+                return Json(new { ESTADO = 3, MENSAJE = "Error Crítico: " + ex.Message });
             }
         }
 
