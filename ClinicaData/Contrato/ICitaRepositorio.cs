@@ -119,8 +119,8 @@ namespace ClinicaData.Contrato
 
         // NUEVOS MÉTODOS PARA EL FLUJO GLOBAL (Sin DTOs, usando clase Cita)
 
-        // Obtiene la cita completa (incluyendo datos del doctor de solo consulta)
-        Task<Cita> ObtenerCitaGestionGlobal(string chat_id);
+      
+        Task<TelegramCitaTemp> ObtenerCitaGestionGlobal(string chat_id);
 
         // Guarda solo los campos permitidos (Paciente + Valoración + Estado)
         Task<bool> GuardarCambiosGestionGlobal(Cita objeto, string chat_id);

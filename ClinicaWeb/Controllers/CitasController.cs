@@ -1792,13 +1792,24 @@ LIMIT 1;
                 string token = CalcularMd5(chat_id + "MiClaveSecreta2026");
                 string urlWeb = $"https://clinicadentalriopiedras.n8njigretera.cloud/Citas/EditarGestionGlobal?chat_id={chat_id}&token={token}";
 
-                var cita = await _repositorioCita.ObtenerCitaGestionGlobal(chat_id);
-                if (cita == null) return Json(new { ESTADO = 2, MENSAJE = "⚠️ No hay datos temporales." });
+                // Obtenemos el objeto directamente de la tabla temporal
+                TelegramCitaTemp cita = await _repositorioCita.ObtenerCitaGestionGlobal(chat_id);
+
+                if (cita == null)
+                {
+                    return Json(new { ESTADO = 3, MENSAJE = "⚠️ No hay datos temporales para esta gestión." });
+                }
 
                 return Json(new
                 {
-                    ESTADO = 2,
-                    MENSAJE = $"🏁 *Resumen de Gestión*\n\n👨‍⚕️ *Doctor:* {cita.OrigenCita}\n📅 *Fecha:* {cita.FechaCita}\n⏰ *Hora:* {cita.HoraCita}\n📝 *Notas:* {cita.RazonCitaUsr}\n\n¿Confirmamos los cambios?",
+                    ESTADO = 3, // Usamos 3 para que n8n dispare el mensaje por el nodo de información
+                    MENSAJE = $"🏁 *Resumen de Gestión*\n\n" +
+                              $"👨‍⚕️ *Doctor:* {cita.NombreYValDoctor ?? "No asignado"}\n" +
+                              $"⚕️ *Especialidad:* {cita.NombreEspecialidad ?? "--"}\n" +
+                              $"📅 *Fecha:* {cita.Fecha ?? "--"}\n" + // Usamos la columna 'fecha' (string)
+                              $"⏰ *Hora:* {cita.Hora ?? "--"}\n" +   // Usamos la columna 'hora' (string)
+                              $"📝 *Notas:* {cita.RazonCitaUsr ?? "--"}\n\n" +
+                              $"¿Confirmamos los cambios?",
                     DATA = new object[] {
                 new { text = "✅ Confirmar", callback_data = "CONFIRMAR_FINAL" },
                 new { text = "🔙 Corregir", web_app = new { url = urlWeb } },
@@ -1806,9 +1817,11 @@ LIMIT 1;
             }
                 });
             }
-            catch (Exception ex) { return Json(new { ESTADO = 2, MENSAJE = "Error: " + ex.Message }); }
+            catch (Exception ex)
+            {
+                return Json(new { ESTADO = 3, MENSAJE = "Error en Resumen Global: " + ex.Message });
+            }
         }
-
 
         /// <summary>
         /// Ejecuta el SP final para impactar los cambios en la tabla definitiva.

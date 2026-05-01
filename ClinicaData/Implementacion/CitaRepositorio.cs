@@ -1613,43 +1613,21 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 ["DATA"] = listaBotones
             };
         }
-
-        public async Task<Cita> ObtenerCitaGestionGlobal(string chat_id)
+       
+        public async Task<TelegramCitaTemp> ObtenerCitaGestionGlobal(string chat_id)
         {
             using (var conexion = new NpgsqlConnection(con.CadenaSQL))
             {
                 string query = @"
-                SELECT 
-                    id_temp AS IdCita, idusuario, idestadocita, fechacita AS FechaCitaOrden,
-                    indicaciones, nombreespecialidad, razoncitausr, documentocitausr, 
-                    contenttype, docindicacionesdoctor, contenttype_doctor,
-                    citaconfirmada, valdoctorcita, opiniondoctoryclinica, fecha, hora
-                FROM public.telegramcitatemp 
-                WHERE chat_id = @chatId ORDER BY id_temp DESC LIMIT 1";
+            SELECT * 
+            FROM public.telegramcitatemp 
+            WHERE chat_id = @chatId 
+            ORDER BY id_temp DESC LIMIT 1";
 
-                var res = await conexion.QueryFirstOrDefaultAsync<dynamic>(query, new { chatId = chat_id });
-                if (res == null) return null;
-
-                return new Cita
-                {
-                    IdCita = res.id_temp ?? 0,
-                    EstadoCita = new EstadoCita { IdEstadoCita = res.idestadocita ?? 1 },
-                    Indicaciones = res.indicaciones ?? "",
-                    OrigenCita = res.nombreespecialidad ?? "Especialista", // Cambio de nombre aquí
-                    RazonCitaUsr = res.razoncitausr ?? "",
-                    DocumentoCitaUsr = res.documentocitausr,
-                    ContentType = res.contenttype,
-                    DocIndicacionesDoctor = res.docindicacionesdoctor,
-                    ContentTypeDoctor = res.contenttype_doctor,
-                    CitaConfirmada = res.citaconfirmada ?? "N",
-                    ValDoctorCita = res.valdoctorcita ?? 3,
-                    OpinionDoctorYClinica = res.opiniondoctoryclinica ?? "",
-                    FechaCita = res.fecha ?? "",
-                    HoraCita = res.hora ?? ""
-                };
+                // Dapper mapea directamente a la nueva clase que creamos
+                return await conexion.QueryFirstOrDefaultAsync<TelegramCitaTemp>(query, new { chatId = chat_id });
             }
         }
-
         public async Task<bool> GuardarCambiosGestionGlobal(Cita objeto, string chat_id)
         {
             using (var conexion = new NpgsqlConnection(con.CadenaSQL))
