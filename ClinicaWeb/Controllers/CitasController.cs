@@ -1611,6 +1611,32 @@ LIMIT 1;
         }
         [HttpGet]
         [AllowAnonymous]
+        public async Task<IActionResult> EditarTempAltas(string chat_id, string token)
+        {
+            try
+            {
+                // 1. Log de entrada para saber si el GET llega
+                await _repositorioCita.LogEnTexte("ENTRANDO A GET EDITARTEMP: " + chat_id);
+
+                var modelo = await _repositorioCita.ObtenerCitaGestionGlobalAltas(chat_id);
+
+                if (modelo == null)
+                {
+                    await _repositorioCita.LogEnTexte("ERROR: Modelo nulo para " + chat_id);
+                    return Content("No se encontró la cita.");
+                }
+
+                return View("EditarTempAltas", modelo);
+            }
+            catch (Exception ex)
+            {
+                // 2. ESTO ES VITAL: Guardamos el error real en la DB
+                await _repositorioCita.LogEnTexte("CRASH EN GET: " + ex.Message);
+                return Content("Error detectado. Revisa la tabla texte.");
+            }
+        }
+        [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> ConfirmarCitaFinal(string chat_id)
         {
             try
@@ -1905,25 +1931,7 @@ LIMIT 1;
             return Content(resultado, "application/json");
         }
 
-        [HttpGet]
-        [AllowAnonymous]
-        public async Task<IActionResult> EditarTempAltas(string chat_id, string token)
-        {
-            try
-            {
-                // Buscamos los datos actuales de la cita temporal
-                var modelo = await _repositorioCita.ObtenerCitaGestionGlobalAltas(chat_id);
-
-                if (modelo == null) return Content("No se encontró la cita.");
-
-                // Pasamos el modelo a la vista específica de altas
-                return View("EditarTempAltas", modelo);
-            }
-            catch (Exception ex)
-            {
-                return Content("Error: " + ex.Message);
-            }
-        }
+        
     }
 }
    
