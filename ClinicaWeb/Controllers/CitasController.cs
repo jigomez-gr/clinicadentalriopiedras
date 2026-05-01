@@ -1611,6 +1611,7 @@ LIMIT 1;
         }
         [HttpGet]
         [AllowAnonymous]
+        [IgnoreAntiforgeryToken] // Crucial para evitar bloqueos de seguridad AJAX
         public async Task<IActionResult> EditarTempAltas(string chat_id, string token)
         {
             try
