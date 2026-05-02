@@ -1410,7 +1410,7 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                     string mensajeLimpio = mensaje.Replace("\n", "\\n");
 
                     // 5. AQUI ESTÁ EL CAMBIO: URL con TOKEN
-                    string urlFormulario = $"https://clinicadentalriopiedras.n8njigretera.cloud/Citas/EditarTemp?chat_id={chat_id}&token={token}";
+                    string urlFormulario = $"https://clinicadentalriopiedras.n8njigretera.cloud/Citas/EditarTempAltas?chat_id={chat_id}&token={token}";
 
                     // 6. Montamos los botones
                     string dataBotones = "[" +
