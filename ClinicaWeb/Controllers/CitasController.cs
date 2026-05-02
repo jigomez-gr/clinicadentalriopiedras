@@ -1611,6 +1611,41 @@ LIMIT 1;
                 return sb.ToString();
             }
         }
+        /*
+        [HttpGet]
+        [AllowAnonymous]
+        [IgnoreAntiforgeryToken] // Crucial para evitar bloqueos de seguridad AJAX
+        
+         public async Task<IActionResult> EditarTempAltas(string chat_id, string token)
+         {
+             try
+             {
+                 // 1. Seguridad: Validamos el token igual que en tus otros métodos
+                 string tokenEsperado = CalcularMd5(chat_id + "MiClaveSecreta2026");
+                 if (!string.Equals(token, tokenEsperado, StringComparison.OrdinalIgnoreCase))
+                 {
+                     await _repositorioCita.LogEnTexte("ACCESO DENEGADO: Token inválido");
+                     return Content("Acceso no autorizado.");
+                 }
+
+                 // 2. Buscamos los datos
+                 var modelo = await _repositorioCita.ObtenerCitaGestionGlobalAltas(chat_id);
+
+                 if (modelo == null)
+                 {
+                     return Content("No se encontraron datos para corregir.");
+                 }
+
+                 // 3. Pasamos el modelo a la vista
+                 return View("EditarTempAltas", modelo);
+             }
+             catch (Exception ex)
+             {
+                 await _repositorioCita.LogEnTexte("CRASH EN GET: " + ex.Message);
+                 return Content("Ocurrió un error al cargar la vista.");
+             }
+         }
+        */
         [HttpGet]
         [AllowAnonymous]
         [IgnoreAntiforgeryToken] // Crucial para evitar bloqueos de seguridad AJAX
@@ -1618,7 +1653,11 @@ LIMIT 1;
         {
             try
             {
-                // 1. Seguridad: Validamos el token igual que en tus otros métodos
+                // 1. Validar parámetros
+                if (string.IsNullOrEmpty(chat_id) || string.IsNullOrEmpty(token))
+                    return Content("Faltan parámetros: chat_id o token.");
+
+                // 2. Validar Token
                 string tokenEsperado = CalcularMd5(chat_id + "MiClaveSecreta2026");
                 if (!string.Equals(token, tokenEsperado, StringComparison.OrdinalIgnoreCase))
                 {
@@ -1626,23 +1665,33 @@ LIMIT 1;
                     return Content("Acceso no autorizado.");
                 }
 
-                // 2. Buscamos los datos
+                // 3. Buscar Usuario
+                var usuario = await _repositorioCita.ObtenerPorChatId(chat_id);
+                if (usuario == null)
+                    return Content($"El usuario {chat_id} no existe en la tabla.");
+
+                // 4. Login (Claims)
+                var claims = new List<Claim> {
+      new Claim(ClaimTypes.Name, usuario.Nombre ?? "Usuario"),
+      new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
+      new Claim(ClaimTypes.Role, usuario.NombreRol ?? "Usuario")
+  };
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)));
+
+                // 5. Cargar Datos
                 var modelo = await _repositorioCita.ObtenerCitaGestionGlobalAltas(chat_id);
-
                 if (modelo == null)
-                {
-                    return Content("No se encontraron datos para corregir.");
-                }
+                    return Content("No hay datos en telegramcitatemp para este chat_id.");
 
-                // 3. Pasamos el modelo a la vista
                 return View("EditarTempAltas", modelo);
             }
             catch (Exception ex)
             {
-                await _repositorioCita.LogEnTexte("CRASH EN GET: " + ex.Message);
-                return Content("Ocurrió un error al cargar la vista.");
+                // ESTO es el paracaídas: si algo falla, verás el mensaje real aquí
+                return Content("ERROR DETECTADO: " + ex.Message);
             }
         }
+
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> ConfirmarCitaFinal(string chat_id)
