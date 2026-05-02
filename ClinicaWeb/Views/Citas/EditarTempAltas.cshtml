@@ -9,7 +9,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Modificar Alta</title>
+    <title>Gestión de Cita</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
@@ -24,38 +24,37 @@
                 color: #ffc107;
             }
 
-            .star:hover {
-                color: #ffdb58;
-            }
-
         .preview-img {
-            max-height: 200px;
+            max-height: 180px;
             object-fit: contain;
+            border: 2px solid #dee2e6;
         }
     </style>
 </head>
-<body class="bg-light p-4">
-    <div class="card shadow mx-auto" style="max-width: 500px;">
+<body class="bg-light p-3">
+    <div class="card shadow mx-auto" style="max-width: 480px;">
         <div class="card-header bg-primary text-white text-center">
-            <h5 class="mb-0">✨ Gestión de Cita Temporal</h5>
+            <h5 class="mb-0">✨ Corregir Datos de Cita</h5>
         </div>
         <div class="card-body">
-            <!-- Datos de solo lectura -->
-            <div class="mb-3 p-2 bg-warning bg-opacity-10 border rounded small">
+            <!-- Información de Referencia -->
+            <div class="mb-3 p-2 bg-info bg-opacity-10 border rounded small">
                 <strong>🩺 Doctor:</strong> @Model.NombreYValDoctor <br />
                 <strong>📅 Fecha:</strong> @Model.Fecha a las @Model.Hora
             </div>
 
+            <!-- Campo CRÍTICO: ChatId 🆔 -->
             <input type="hidden" id="chatId" value="@Model.ChatId" />
 
-            <!-- Campos Editables -->
+            <!-- Motivo / Notas -->
             <div class="mb-3">
-                <label class="form-label fw-bold">📝 Motivo de la cita:</label>
-                <textarea id="razonCitaUsr" class="form-control" rows="2">@Model.RazonCitaUsr</textarea>
+                <label class="form-label fw-bold">📝 Motivo de la consulta:</label>
+                <textarea id="txtNotas" class="form-control" rows="2">@Model.RazonCitaUsr</textarea>
             </div>
 
+            <!-- Valoración Estrellas -->
             <div class="mb-3 text-center">
-                <label class="form-label fw-bold d-block">⭐ Valoración del Doctor:</label>
+                <label class="form-label fw-bold d-block">⭐ Tu valoración:</label>
                 <div id="starContainer">
                     @for (int i = 1; i <= 5; i++)
                     {
@@ -67,63 +66,78 @@
                 <input type="hidden" id="valDoctorCita" value="@(Model.ValDoctorCita ?? 3)">
             </div>
 
+            <!-- Opinión -->
             <div class="mb-3">
-                <label class="form-label fw-bold">💬 Opinión:</label>
-                <textarea id="opinionDoctor" class="form-control" rows="2">@Model.OpinionDoctorYClinica</textarea>
+                <label class="form-label fw-bold">💬 Opinión adicional:</label>
+                <textarea id="txtOpinion" class="form-control" rows="2">@Model.OpinionDoctorYClinica</textarea>
             </div>
 
-            <!-- VISTA PREVIA DEL ANEXO ACTUAL 📎 -->
+            <!-- Confirmación ✅ -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">✅ ¿Confirmas la asistencia?</label>
+                <select id="selConfirmada" class="form-select">
+                    <option value="S" selected="@(Model.CitaConfirmada == "S")">Sí, confirmada</option>
+                    <option value="N" selected="@(Model.CitaConfirmada == "N" || string.IsNullOrEmpty(Model.CitaConfirmada))">No, pendiente</option>
+                </select>
+            </div>
+
+            <!-- Vista Previa de Imagen Actual -->
             @if (Model.DocumentoCitaUsr != null && Model.DocumentoCitaUsr.Length > 0)
             {
-                <div class="mb-3 border rounded p-2 bg-white text-center">
-                    <label class="form-label fw-bold d-block text-muted">📄 Archivo actual:</label>
-                    @if (Model.ContentType != null && Model.ContentType.Contains("image"))
-                    {
-                        <img src="data:@Model.ContentType;base64,@Convert.ToBase64String(Model.DocumentoCitaUsr)"
-                             class="img-fluid rounded shadow-sm preview-img" />
-                    }
-                    else
-                    {
-                        <div class="alert alert-secondary py-1 small">Documento: @Model.ContentType</div>
-                    }
+                <div class="mb-3 text-center">
+                    <label class="form-label fw-bold d-block text-muted">📎 Archivo adjunto actual:</label>
+                    <img src="data:@Model.ContentType;base64,@Convert.ToBase64String(Model.DocumentoCitaUsr)" class="img-fluid rounded preview-img" />
                 </div>
             }
 
+            <!-- Subida de Nuevo Archivo -->
             <div class="mb-4">
-                <label class="form-label fw-bold">📁 Cambiar documento/foto:</label>
+                <label class="form-label fw-bold">📁 Cambiar foto/documento:</label>
                 <input type="file" id="fileInput" class="form-control" accept="image/*">
             </div>
 
-            <button type="button" id="btnGuardar" class="btn btn-success w-100 fw-bold">💾 GUARDAR CAMBIOS</button>
+            <button type="button" id="btnGuardar" class="btn btn-success w-100 fw-bold shadow">
+                💾 GUARDAR CAMBIOS
+            </button>
         </div>
     </div>
 
     <script>
         $(document).ready(function() {
-            // Estrellas
+            // Manejo de Estrellas ⭐
             $(".star").click(function() {
-                const v = $(this).data("value");
-                $("#valDoctorCita").val(v);
+                const val = $(this).data("value");
+                $("#valDoctorCita").val(val);
                 $(".star").each(function(i) {
-                    $(this).text(i < v ? "★" : "☆").toggleClass("selected", i < v);
+                    $(this).text(i < val ? "★" : "☆").toggleClass("selected", i < val);
                 });
             });
 
-            // Guardar
+            // Acción de Guardar 💾
             $("#btnGuardar").click(function() {
                 const btn = $(this);
-                btn.prop("disabled", true).text("Enviando...");
+                const chatIdVal = $("#chatId").val();
+
+                // Validación preventiva
+                if (!chatIdVal) {
+                    alert("Error: No se detectó el ChatId.");
+                    return;
+                }
+
+                btn.prop("disabled", true).text("🚀 Enviando...");
                 const file = document.getElementById('fileInput').files[0];
 
-                const enviarForm = (base64) => {
+                const enviar = (base64) => {
                     const payload = {
-                        ChatId: $("#chatId").val(),
-                        RazonCitaUsr: $("#razonCitaUsr").val(),
+                        ChatId: chatIdVal,
+                        Notas: $("#txtNotas").val(), // Mapea a la propiedad 'Notas' de tu clase
                         ValDoctorCita: parseInt($("#valDoctorCita").val()),
-                        CitaConfirmada: "S", // Forzamos S al guardar
-                        OpinionDoctorYClinica: $("#opinionDoctor").val(),
+                        OpinionDoctorYClinica: $("#txtOpinion").val(),
+                        CitaConfirmada: $("#selConfirmada").val(),
                         ImagenBase64: base64
                     };
+
+                    console.log("Payload a enviar:", payload); // Depuración en consola 🔍
 
                     $.ajax({
                         url: '/Citas/GuardarCambiosTempAltas',
@@ -132,15 +146,16 @@
                         data: JSON.stringify(payload),
                         success: (r) => {
                             if(r.success) {
-                                alert("✅ ¡Listo! Datos actualizados.");
+                                alert("✅ ¡Datos actualizados!");
                                 window.close();
                             } else {
-                                alert("❌ Error: " + r.mensaje);
+                                alert("❌ Error: " + (r.mensaje || "El servidor rechazó los datos."));
                                 btn.prop("disabled", false).text("💾 GUARDAR CAMBIOS");
                             }
                         },
-                        error: () => {
-                            alert("📡 Error de conexión.");
+                        error: (xhr) => {
+                            console.error("Error servidor:", xhr.responseText);
+                            alert("📡 Error de comunicación con el servidor.");
                             btn.prop("disabled", false).text("💾 GUARDAR CAMBIOS");
                         }
                     });
@@ -148,10 +163,10 @@
 
                 if (file) {
                     const reader = new FileReader();
-                    reader.onload = (e) => enviarForm(e.target.result);
+                    reader.onload = (e) => enviar(e.target.result);
                     reader.readAsDataURL(file);
                 } else {
-                    enviarForm(null);
+                    enviar(null);
                 }
             });
         });
