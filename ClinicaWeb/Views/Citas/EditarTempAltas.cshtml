@@ -27,6 +27,11 @@
             .star:hover {
                 color: #ffdb58;
             }
+
+        .preview-img {
+            max-height: 200px;
+            object-fit: contain;
+        }
     </style>
 </head>
 <body class="bg-light p-4">
@@ -35,22 +40,20 @@
             <h5 class="mb-0">✨ Gestión de Cita Temporal</h5>
         </div>
         <div class="card-body">
-            <!-- INFO BLOQUEADA (Solo lectura) -->
-            <div class="mb-3 p-2 bg-warning bg-opacity-10 border rounded" style="font-size: 0.9em;">
+            <!-- Datos de solo lectura -->
+            <div class="mb-3 p-2 bg-warning bg-opacity-10 border rounded small">
                 <strong>🩺 Doctor:</strong> @Model.NombreYValDoctor <br />
-                <strong>📅 Fecha/Hora:</strong> @Model.Fecha a las @Model.Hora
+                <strong>📅 Fecha:</strong> @Model.Fecha a las @Model.Hora
             </div>
 
-            <!-- ID DEL CHAT (Oculto para el envío) -->
             <input type="hidden" id="chatId" value="@Model.ChatId" />
 
-            <!-- MOTIVO DE LA CITA (Editable) -->
+            <!-- Campos Editables -->
             <div class="mb-3">
-                <label class="form-label fw-bold">📝 Motivo de la cita (RazonCitaUsr):</label>
+                <label class="form-label fw-bold">📝 Motivo de la cita:</label>
                 <textarea id="razonCitaUsr" class="form-control" rows="2">@Model.RazonCitaUsr</textarea>
             </div>
 
-            <!-- VALORACIÓN DEL DOCTOR (Estrellas Interactivas) -->
             <div class="mb-3 text-center">
                 <label class="form-label fw-bold d-block">⭐ Valoración del Doctor:</label>
                 <div id="starContainer">
@@ -64,63 +67,60 @@
                 <input type="hidden" id="valDoctorCita" value="@(Model.ValDoctorCita ?? 3)">
             </div>
 
-            <!-- OPINIÓN Y CONFIRMACIÓN -->
             <div class="mb-3">
-                <label class="form-label fw-bold">💬 Opinión sobre el Doctor:</label>
+                <label class="form-label fw-bold">💬 Opinión:</label>
                 <textarea id="opinionDoctor" class="form-control" rows="2">@Model.OpinionDoctorYClinica</textarea>
             </div>
 
-            <div class="row mb-3">
-                <div class="col-12">
-                    <label class="form-label fw-bold">✅ Confirmar Cita (S/N):</label>
-                    <select id="citaConfirmada" class="form-select">
-                        <option value="S" selected="@(Model.CitaConfirmada == "S")">S - Confirmada</option>
-                        <option value="N" selected="@(Model.CitaConfirmada == "N")">N - Sin confirmar</option>
-                    </select>
+            <!-- VISTA PREVIA DEL ANEXO ACTUAL 📎 -->
+            @if (Model.DocumentoCitaUsr != null && Model.DocumentoCitaUsr.Length > 0)
+            {
+                <div class="mb-3 border rounded p-2 bg-white text-center">
+                    <label class="form-label fw-bold d-block text-muted">📄 Archivo actual:</label>
+                    @if (Model.ContentType != null && Model.ContentType.Contains("image"))
+                    {
+                        <img src="data:@Model.ContentType;base64,@Convert.ToBase64String(Model.DocumentoCitaUsr)"
+                             class="img-fluid rounded shadow-sm preview-img" />
+                    }
+                    else
+                    {
+                        <div class="alert alert-secondary py-1 small">Documento: @Model.ContentType</div>
+                    }
                 </div>
-            </div>
+            }
 
-            <!-- DOCUMENTO (Editable) -->
             <div class="mb-4">
                 <label class="form-label fw-bold">📁 Cambiar documento/foto:</label>
                 <input type="file" id="fileInput" class="form-control" accept="image/*">
             </div>
 
-            <button type="button" id="btnGuardar" class="btn btn-success w-100 fw-bold shadow-sm">
-                💾 GUARDAR CAMBIOS Y VOLVER
-            </button>
+            <button type="button" id="btnGuardar" class="btn btn-success w-100 fw-bold">💾 GUARDAR CAMBIOS</button>
         </div>
     </div>
 
     <script>
         $(document).ready(function() {
-            // Lógica para las estrellas ⭐
+            // Estrellas
             $(".star").click(function() {
-                const valor = $(this).data("value");
-                $("#valDoctorCita").val(valor);
-
-                $(".star").each(function(index) {
-                    if (index < valor) {
-                        $(this).text("★").addClass("selected");
-                    } else {
-                        $(this).text("☆").removeClass("selected");
-                    }
+                const v = $(this).data("value");
+                $("#valDoctorCita").val(v);
+                $(".star").each(function(i) {
+                    $(this).text(i < v ? "★" : "☆").toggleClass("selected", i < v);
                 });
             });
 
-            // Lógica para guardar 💾
+            // Guardar
             $("#btnGuardar").click(function() {
                 const btn = $(this);
-                btn.prop("disabled", true).text("Procesando...");
-
+                btn.prop("disabled", true).text("Enviando...");
                 const file = document.getElementById('fileInput').files[0];
 
-                const enviar = (base64) => {
-                    const data = {
+                const enviarForm = (base64) => {
+                    const payload = {
                         ChatId: $("#chatId").val(),
                         RazonCitaUsr: $("#razonCitaUsr").val(),
                         ValDoctorCita: parseInt($("#valDoctorCita").val()),
-                        CitaConfirmada: $("#citaConfirmada").val(),
+                        CitaConfirmada: "S", // Forzamos S al guardar
                         OpinionDoctorYClinica: $("#opinionDoctor").val(),
                         ImagenBase64: base64
                     };
@@ -129,35 +129,29 @@
                         url: '/Citas/GuardarCambiosTempAltas',
                         type: 'POST',
                         contentType: 'application/json',
-                        data: JSON.stringify(data),
+                        data: JSON.stringify(payload),
                         success: (r) => {
                             if(r.success) {
-                                alert("¡Cambios guardados con éxito!");
-                                // En WebApps de Telegram, window.close() cierra la ventana
+                                alert("✅ ¡Listo! Datos actualizados.");
                                 window.close();
                             } else {
-                                alert("Error al guardar: " + (r.mensaje || "Error desconocido"));
-                                btn.prop("disabled", false).text("💾 GUARDAR CAMBIOS Y VOLVER");
+                                alert("❌ Error: " + r.mensaje);
+                                btn.prop("disabled", false).text("💾 GUARDAR CAMBIOS");
                             }
                         },
-                        error: (xhr) => {
-                            console.error(xhr);
-                            alert("Error crítico de red o de servidor.");
-                            btn.prop("disabled", false).text("💾 GUARDAR CAMBIOS Y VOLVER");
+                        error: () => {
+                            alert("📡 Error de conexión.");
+                            btn.prop("disabled", false).text("💾 GUARDAR CAMBIOS");
                         }
                     });
                 };
 
                 if (file) {
                     const reader = new FileReader();
-                    reader.onload = (e) => enviar(e.target.result);
-                    reader.onerror = () => {
-                        alert("Error al leer el archivo.");
-                        btn.prop("disabled", false).text("💾 GUARDAR CAMBIOS Y VOLVER");
-                    };
+                    reader.onload = (e) => enviarForm(e.target.result);
                     reader.readAsDataURL(file);
                 } else {
-                    enviar(null);
+                    enviarForm(null);
                 }
             });
         });

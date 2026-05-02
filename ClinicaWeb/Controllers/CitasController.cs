@@ -1646,51 +1646,44 @@ LIMIT 1;
              }
          }
         */
+        // --- GET: Preparación de la vista con registros de seguridad ---
         [HttpGet]
         [AllowAnonymous]
-        [IgnoreAntiforgeryToken] // Crucial para evitar bloqueos de seguridad AJAX
         public async Task<IActionResult> EditarTempAltas(string chat_id, string token)
         {
             try
             {
-                // 1. Validar parámetros
-                if (string.IsNullOrEmpty(chat_id) || string.IsNullOrEmpty(token))
-                    return Content("Faltan parámetros: chat_id o token.");
+                // 1. Registro de entrada
+                await _repositorioCita.LogEnTexte($"[GET] Inicio EditarTempAltas para ChatId: {chat_id}");
 
-                // 2. Validar Token
+                // 2. Validación de Token
                 string tokenEsperado = CalcularMd5(chat_id + "MiClaveSecreta2026");
                 if (!string.Equals(token, tokenEsperado, StringComparison.OrdinalIgnoreCase))
                 {
-                    await _repositorioCita.LogEnTexte("ACCESO DENEGADO: Token inválido");
+                    await _repositorioCita.LogEnTexte($"[GET] ❌ TOKEN INVÁLIDO. Recibido: {token}, Esperado: {tokenEsperado}");
                     return Content("Acceso no autorizado.");
                 }
+                await _repositorioCita.LogEnTexte($"[GET] ✅ Token validado correctamente para {chat_id}");
 
-                // 3. Buscar Usuario
-                var usuario = await _repositorioCita.ObtenerPorChatId(chat_id);
-                if (usuario == null)
-                    return Content($"El usuario {chat_id} no existe en la tabla.");
-
-                // 4. Login (Claims)
-                var claims = new List<Claim> {
-      new Claim(ClaimTypes.Name, usuario.Nombre ?? "Usuario"),
-      new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
-      new Claim(ClaimTypes.Role, usuario.NombreRol ?? "Usuario")
-  };
-                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)));
-
-                // 5. Cargar Datos
+                // 3. Carga de datos
                 var modelo = await _repositorioCita.ObtenerCitaGestionGlobalAltas(chat_id);
                 if (modelo == null)
-                    return Content("No hay datos en telegramcitatemp para este chat_id.");
+                {
+                    await _repositorioCita.LogEnTexte($"[GET] ⚠️ No se encontraron datos en temporal para {chat_id}");
+                    return Content("No hay datos pendientes.");
+                }
 
+                await _repositorioCita.LogEnTexte($"[GET] 🏁 Vista cargada con éxito para {chat_id}");
                 return View("EditarTempAltas", modelo);
             }
             catch (Exception ex)
             {
-                // ESTO es el paracaídas: si algo falla, verás el mensaje real aquí
-                return Content("ERROR DETECTADO: " + ex.Message);
+                await _repositorioCita.LogEnTexte($"[GET] 🔥 ERROR CRÍTICO: {ex.Message}");
+                return Content("Error al cargar la página.");
             }
         }
+
+
 
         [HttpGet]
         [AllowAnonymous]
@@ -1844,6 +1837,8 @@ LIMIT 1;
         /// Guarda los cambios del WebApp en la tabla temporal usando la clase Cita.
         /// </summary>
         /// 
+        // --- POST: Guardado de cambios con trazabilidad total ---
+        
         [HttpPost]
         [AllowAnonymous]
         [IgnoreAntiforgeryToken]
@@ -1852,30 +1847,38 @@ LIMIT 1;
             try
             {
                 if (objeto == null || string.IsNullOrEmpty(objeto.ChatId))
-                    return BadRequest(new { success = false, mensaje = "Datos nulos o falta ChatId" });
+                    return Json(new { success = false, mensaje = "Datos incompletos" });
 
-                // 1. Mapeo interno: Movemos 'Notas' a 'RazonCitaUsr'
-                objeto.RazonCitaUsr = objeto.Notas;
+                // Sincronización de campos de texto
+                objeto.RazonCitaUsr = objeto.RazonCitaUsr ?? objeto.Notas;
+                objeto.Notas = objeto.RazonCitaUsr;
 
-                // 2. Procesamos la imagen si viene en el string ImagenBase64
+                // 🛠️ PROCESAMIENTO DINÁMICO DE IMAGEN
                 if (!string.IsNullOrEmpty(objeto.ImagenBase64))
                 {
-                    string base64Data = objeto.ImagenBase64.Contains(",") ?
-                                        objeto.ImagenBase64.Split(',')[1] : objeto.ImagenBase64;
-                    objeto.DocumentoCitaUsr = Convert.FromBase64String(base64Data);
-                    objeto.ContentType = "image/jpeg";
+                    // Ejemplo de cadena: "data:image/png;base64,iVBORw0KG..."
+                    var partes = objeto.ImagenBase64.Split(',');
+                    if (partes.Length > 1)
+                    {
+                        // Extraemos el ContentType: de "data:image/png;base64" obtenemos "image/png"
+                        string encabezado = partes[0];
+                        objeto.ContentType = encabezado.Split(':')[1].Split(';')[0];
+
+                        // Convertimos el resto a bytes
+                        objeto.DocumentoCitaUsr = Convert.FromBase64String(partes[1]);
+                    }
                 }
 
-                // 3. Preparamos el EstadoCita por defecto para Altas
-                if (objeto.EstadoCita == null) objeto.EstadoCita = new EstadoCita { IdEstadoCita = 1 };
-
                 bool exito = await _repositorioCita.GuardarCambiosGestionGlobalAltas(objeto);
+
+                await _repositorioCita.LogEnTexte($"[POST] Guardado {(exito ? "EXITOSO" : "FALLIDO")} para {objeto.ChatId}");
 
                 return Json(new { success = exito });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, mensaje = ex.Message });
+                await _repositorioCita.LogEnTexte($"[POST] 🔥 ERROR: {ex.Message}");
+                return Json(new { success = false, mensaje = ex.Message });
             }
         }
         [HttpPost]

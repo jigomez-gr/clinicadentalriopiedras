@@ -1709,19 +1709,23 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
             {
                 using (var conexion = new NpgsqlConnection(con.CadenaSQL))
                 {
+                    // 🛠️ Añadimos las columnas 'notas' e 'imagenbase64' al SET
                     string sql = @"
-                UPDATE public.telegramcitatemp SET
-                    idestadocita = @IdEstadoCita,
-                    razoncitausr = @RazonCitaUsr,
-                    documentocitausr = @DocumentoCitaUsr,
-                    contenttype = @ContentType,
-                    valdoctorcita = @ValDoctorCita,
-                    opiniondoctoryclinica = @OpinionDoctorYClinica,
-                    citaconfirmada = @CitaConfirmada,
-                    metodopeticion = 'TELEGRAM',
-                    fechaconfirmacion = NOW()
-                WHERE chat_id = @ChatId";
+            UPDATE public.telegramcitatemp SET
+                idestadocita = @IdEstadoCita,
+                razoncitausr = @RazonCitaUsr,
+                documentocitausr = @DocumentoCitaUsr,
+                contenttype = @ContentType,
+                valdoctorcita = @ValDoctorCita,
+                opiniondoctoryclinica = @OpinionDoctorYClinica,
+                citaconfirmada = @CitaConfirmada,
+                metodopeticion = 'TELEGRAM',
+                fechaconfirmacion = NOW(),
+                notas = @Notas,
+                imagenbase64 = @ImagenBase64
+            WHERE chat_id = @ChatId";
 
+                    // 🔄 Mapeamos las propiedades del objeto a los parámetros SQL
                     var affectedRows = await conexion.ExecuteAsync(sql, new
                     {
                         IdEstadoCita = objeto.EstadoCita?.IdEstadoCita ?? 1,
@@ -1731,7 +1735,9 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                         ValDoctorCita = objeto.ValDoctorCita ?? 3,
                         OpinionDoctorYClinica = objeto.OpinionDoctorYClinica ?? "",
                         CitaConfirmada = objeto.CitaConfirmada ?? "N",
-                        ChatId = objeto.ChatId
+                        ChatId = objeto.ChatId,
+                        Notas = objeto.Notas,        // 🆕 Nuevo dato
+                        ImagenBase64 = objeto.ImagenBase64 // 🆕 Nuevo dato
                     });
 
                     return affectedRows > 0;
@@ -1739,7 +1745,7 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
             }
             catch (Exception ex)
             {
-                // ESTO ES EL CHIVATO: Si falla el SQL, lo veremos en la tabla TEXTE
+                // 🚨 El chivato nos avisará si hay algún problema de nombres o tipos en la DB
                 await LogEnTexte("CRASH REPO: " + ex.Message);
                 return false;
             }
