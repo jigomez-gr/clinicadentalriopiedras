@@ -17,7 +17,6 @@
             font-size: 2.5rem;
             cursor: pointer;
             color: #ccc;
-            transition: color 0.2s;
         }
 
             .star.selected {
@@ -25,9 +24,10 @@
             }
 
         .preview-img {
-            max-height: 180px;
+            max-height: 200px;
             object-fit: contain;
-            border: 2px solid #dee2e6;
+            display: block;
+            margin: 10px auto;
         }
     </style>
 </head>
@@ -37,24 +37,17 @@
             <h5 class="mb-0">✨ Corregir Datos de Cita</h5>
         </div>
         <div class="card-body">
-            <!-- Información de Referencia -->
-            <div class="mb-3 p-2 bg-info bg-opacity-10 border rounded small">
-                <strong>🩺 Doctor:</strong> @Model.NombreYValDoctor <br />
-                <strong>📅 Fecha:</strong> @Model.Fecha a las @Model.Hora
-            </div>
 
-            <!-- Campo CRÍTICO: ChatId 🆔 -->
+            <!-- Guardamos el ChatId en un campo oculto -->
             <input type="hidden" id="chatId" value="@Model.ChatId" />
 
-            <!-- Motivo / Notas -->
             <div class="mb-3">
-                <label class="form-label fw-bold">📝 Motivo de la consulta:</label>
-                <textarea id="txtNotas" class="form-control" rows="2">@Model.RazonCitaUsr</textarea>
+                <label class="form-label fw-bold">📝 Notas / Motivo:</label>
+                <textarea id="txtNotas" class="form-control">@Model.RazonCitaUsr</textarea>
             </div>
 
-            <!-- Valoración Estrellas -->
             <div class="mb-3 text-center">
-                <label class="form-label fw-bold d-block">⭐ Tu valoración:</label>
+                <label class="form-label fw-bold d-block">⭐ Valoración:</label>
                 <div id="starContainer">
                     @for (int i = 1; i <= 5; i++)
                     {
@@ -66,45 +59,51 @@
                 <input type="hidden" id="valDoctorCita" value="@(Model.ValDoctorCita ?? 3)">
             </div>
 
-            <!-- Opinión -->
             <div class="mb-3">
-                <label class="form-label fw-bold">💬 Opinión adicional:</label>
-                <textarea id="txtOpinion" class="form-control" rows="2">@Model.OpinionDoctorYClinica</textarea>
-            </div>
-
-            <!-- Confirmación ✅ -->
-            <div class="mb-3">
-                <label class="form-label fw-bold">✅ ¿Confirmas la asistencia?</label>
+                <label class="form-label fw-bold">✅ Confirmación:</label>
                 <select id="selConfirmada" class="form-select">
-                    <option value="S" selected="@(Model.CitaConfirmada == "S")">Sí, confirmada</option>
-                    <option value="N" selected="@(Model.CitaConfirmada == "N" || string.IsNullOrEmpty(Model.CitaConfirmada))">No, pendiente</option>
+                    <option value="S" selected="@(Model.CitaConfirmada == "S")">Confirmada</option>
+                    <option value="N" selected="@(Model.CitaConfirmada == "N")">Pendiente</option>
                 </select>
             </div>
 
-            <!-- Vista Previa de Imagen Actual -->
-            @if (Model.DocumentoCitaUsr != null && Model.DocumentoCitaUsr.Length > 0)
-            {
-                <div class="mb-3 text-center">
-                    <label class="form-label fw-bold d-block text-muted">📎 Archivo adjunto actual:</label>
-                    <img src="data:@Model.ContentType;base64,@Convert.ToBase64String(Model.DocumentoCitaUsr)" class="img-fluid rounded preview-img" />
-                </div>
-            }
+            <!-- VISTA PREVIA DE IMAGEN 📸 -->
+            <div class="text-center">
+                <label class="form-label fw-bold">📎 Imagen adjunta:</label>
+                @if (Model.DocumentoCitaUsr != null)
+                {
+                    <img src="data:@Model.ContentType;base64,@Convert.ToBase64String(Model.DocumentoCitaUsr)" class="preview-img img-thumbnail" />
+                }
+                else
+                {
+                    <img src="" class="preview-img img-thumbnail" style="display:none;" />
+                }
+            </div>
 
-            <!-- Subida de Nuevo Archivo -->
             <div class="mb-4">
-                <label class="form-label fw-bold">📁 Cambiar foto/documento:</label>
+                <label class="form-label fw-bold">📁 Cambiar archivo:</label>
                 <input type="file" id="fileInput" class="form-control" accept="image/*">
             </div>
 
-            <button type="button" id="btnGuardar" class="btn btn-success w-100 fw-bold shadow">
-                💾 GUARDAR CAMBIOS
-            </button>
+            <button type="button" id="btnGuardar" class="btn btn-success w-100 fw-bold">💾 GUARDAR CAMBIOS</button>
         </div>
     </div>
 
     <script>
         $(document).ready(function() {
-            // Manejo de Estrellas ⭐
+            // 1. Refrescar imagen al seleccionar nuevo archivo 🖼️
+            $("#fileInput").change(function() {
+                const file = this.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        $(".preview-img").attr("src", e.target.result).show();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // 2. Manejo de estrellas ⭐
             $(".star").click(function() {
                 const val = $(this).data("value");
                 $("#valDoctorCita").val(val);
@@ -113,31 +112,26 @@
                 });
             });
 
-            // Acción de Guardar 💾
+            // 3. Guardar cambios 💾
             $("#btnGuardar").click(function() {
-                const btn = $(this);
-                const chatIdVal = $("#chatId").val();
-
-                // Validación preventiva
-                if (!chatIdVal) {
+                const chatId = $("#chatId").val();
+                if (!chatId) {
                     alert("Error: No se detectó el ChatId.");
                     return;
                 }
 
-                btn.prop("disabled", true).text("🚀 Enviando...");
-                const file = document.getElementById('fileInput').files[0];
+                const btn = $(this);
+                btn.prop("disabled", true).text("Guardando...");
 
+                const file = document.getElementById('fileInput').files[0];
                 const enviar = (base64) => {
                     const payload = {
-                        ChatId: chatIdVal,
-                        Notas: $("#txtNotas").val(), // Mapea a la propiedad 'Notas' de tu clase
+                        ChatId: chatId,
+                        Notas: $("#txtNotas").val(),
                         ValDoctorCita: parseInt($("#valDoctorCita").val()),
-                        OpinionDoctorYClinica: $("#txtOpinion").val(),
                         CitaConfirmada: $("#selConfirmada").val(),
                         ImagenBase64: base64
                     };
-
-                    console.log("Payload a enviar:", payload); // Depuración en consola 🔍
 
                     $.ajax({
                         url: '/Citas/GuardarCambiosTempAltas',
@@ -146,16 +140,15 @@
                         data: JSON.stringify(payload),
                         success: (r) => {
                             if(r.success) {
-                                alert("✅ ¡Datos actualizados!");
+                                alert("¡Éxito!");
                                 window.close();
                             } else {
-                                alert("❌ Error: " + (r.mensaje || "El servidor rechazó los datos."));
+                                alert("Error al guardar");
                                 btn.prop("disabled", false).text("💾 GUARDAR CAMBIOS");
                             }
                         },
-                        error: (xhr) => {
-                            console.error("Error servidor:", xhr.responseText);
-                            alert("📡 Error de comunicación con el servidor.");
+                        error: () => {
+                            alert("Error de red");
                             btn.prop("disabled", false).text("💾 GUARDAR CAMBIOS");
                         }
                     });

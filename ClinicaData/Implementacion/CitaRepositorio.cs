@@ -1679,14 +1679,27 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
         }
         public async Task<TelegramCitaTemp> ObtenerCitaGestionGlobalAltas(string chat_id)
         {
-            // Si el chat_id es nulo o es un comando de Telegram, ni preguntamos a la base de datos
             if (string.IsNullOrEmpty(chat_id) || chat_id.StartsWith("/")) return null;
 
             using (var conexion = new NpgsqlConnection(con.CadenaSQL))
             {
-                // Usamos parámetros explícitos para evitar que Postgres intente adivinar el tipo
+                // Usamos alias (AS) para que coincidan exactamente con tu clase C#
                 string query = @"
-            SELECT * 
+            SELECT 
+                id_temp AS IdTemp,
+                workflowid AS WorkflowId,
+                chat_id AS ChatId,
+                message_id AS MessageId,
+                telefonomovil AS TelefonoMovil,
+                razoncitausr AS RazonCitaUsr,
+                documentocitausr AS DocumentoCitaUsr,
+                contenttype AS ContentType,
+                nombreyvaldoctor AS NombreYValDoctor,
+                fecha AS Fecha,
+                hora AS Hora,
+                citaconfirmada AS CitaConfirmada,
+                valdoctorcita AS ValDoctorCita,
+                opiniondoctoryclinica AS OpinionDoctorYClinica
             FROM public.telegramcitatemp 
             WHERE chat_id = @chatId::text 
             ORDER BY id_temp DESC LIMIT 1";
@@ -1697,9 +1710,7 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 }
                 catch (Exception ex)
                 {
-                    // Si aquí da el 22P02, es porque alguna columna de la tabla temp 
-                    // no coincide con el tipo de la clase TelegramCitaTemp
-                    throw new Exception($"Error en Repo (ObtenerCita): {ex.Message}");
+                    throw new Exception($"Error en Repo: {ex.Message}");
                 }
             }
         }
