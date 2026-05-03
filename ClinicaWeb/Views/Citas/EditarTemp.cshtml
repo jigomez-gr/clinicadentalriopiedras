@@ -31,40 +31,76 @@
             border-radius: 10px;
             padding: 12px;
         }
+
+        .star {
+            font-size: 2rem;
+            cursor: pointer;
+            color: #ccc;
+        }
+
+            .star.selected {
+                color: #ffc107;
+            }
+
+        #imgPreview {
+            max-height: 200px;
+            object-fit: contain;
+        }
     </style>
 </head>
 <body>
-    <div class="card p-3">
-        <h5 class="text-center mb-3">Modificar Cita</h5>
+    <div class="card p-3 mx-auto" style="max-width: 500px;">
+        <h5 class="text-center mb-3">📋 Modificar Cita</h5>
 
         <div class="alert alert-info py-2" style="font-size: 0.85em;">
-            @* Adaptación a las propiedades de TelegramCitaTemp *@
-            <strong>Doctor:</strong> @Model.NombreYValDoctor<br />
-            <strong>Cita:</strong> @Model.Fecha a las @Model.Hora
+            <strong>🩺 Doctor:</strong> @Model.NombreYValDoctor<br />
+            <strong>📅 Cita:</strong> @Model.Fecha a las @Model.Hora
         </div>
 
         <input type="hidden" id="chatId" value="@Model.ChatId" />
 
+        <!-- Notas / Razón -->
         <div class="mb-3">
-            <label class="form-label fw-bold">Mis Notas:</label>
-            @* Usamos RazonCitaUsr que es donde vienen las notas de la DB *@
-            <textarea id="notasInput" class="form-control" rows="3">@Model.RazonCitaUsr</textarea>
+            <label class="form-label fw-bold">📝 Mis Notas:</label>
+            <textarea id="notasInput" class="form-control" rows="2">@Model.RazonCitaUsr</textarea>
         </div>
 
+        <!-- Valoración (Estrellas) -->
+        <div class="mb-3 text-center">
+            <label class="form-label fw-bold d-block">⭐ Valoración del Doctor:</label>
+            <div id="starRating">
+                @for (int i = 1; i <= 5; i++)
+                {
+                    <span class="star @(i <= (Model.ValDoctorCita ?? 3) ? "selected" : "")" data-value="@i">★</span>
+                }
+            </div>
+            <input type="hidden" id="valInput" value="@(Model.ValDoctorCita ?? 3)" />
+        </div>
+
+        <!-- Confirmación -->
         <div class="mb-3">
-            <label class="form-label fw-bold">Cambiar Foto:</label>
+            <label class="form-label fw-bold">✅ ¿Confirmas asistencia?</label>
+            <select id="confirmInput" class="form-select">
+                <option value="S" selected="@(Model.CitaConfirmada == "S")">S - Confirmada</option>
+                <option value="N" selected="@(Model.CitaConfirmada == "N")">N - No confirmada</option>
+            </select>
+        </div>
+
+        <!-- Imagen / Documento -->
+        <div class="mb-3">
+            <label class="form-label fw-bold">📷 Documento/Foto:</label>
             <input type="file" id="fileInput" class="form-control form-control-sm" accept="image/*">
             <div class="mt-2 text-center">
-                @* Si ya existe un documento, lo mostramos; si no, permanece oculto *@
-                <img src="@(Model.DocumentoCitaUsr == null ? "#" : "data:image/jpeg;base64," + Convert.ToBase64String(Model.DocumentoCitaUsr))"
-                     id="imgPreview"
-                     class="img-fluid rounded border @(Model.DocumentoCitaUsr == null ? "d-none" : "")"
-                     style="max-height: 150px;">
+                @{
+                    bool tieneImagen = Model.DocumentoCitaUsr != null && Model.DocumentoCitaUsr.Length > 0;
+                    string srcBase64 = tieneImagen ? $"data:{Model.ContentType};base64,{Convert.ToBase64String(Model.DocumentoCitaUsr)}" : "#";
+                }
+                <img src="@srcBase64" id="imgPreview" class="img-fluid rounded border @(tieneImagen ? "" : "d-none")">
             </div>
         </div>
 
         <button type="button" id="btnGuardar" class="btn btn-save w-100">
-            💾 GUARDAR Y VOLVER AL CHAT
+            💾 GUARDAR Y VOLVER
         </button>
     </div>
 
@@ -73,7 +109,17 @@
         tg.expand();
 
         $(document).ready(function() {
-            // Previsualización de imagen
+            // Lógica de estrellas ⭐
+            $(".star").click(function() {
+                const val = $(this).data("value");
+                $("#valInput").val(val);
+                $(".star").removeClass("selected");
+                $(".star").each(function() {
+                    if ($(this).data("value") <= val) $(this).addClass("selected");
+                });
+            });
+
+            // Refresco de imagen en pantalla 🔄
             $("#fileInput").change(function() {
                 const file = this.files[0];
                 if (file) {
@@ -87,43 +133,35 @@
 
             $("#btnGuardar").click(function() {
                 const btn = $(this);
-                btn.prop("disabled", true).text("Guardando...");
+                btn.prop("disabled", true).text("🚀 Guardando...");
 
-                const enviarDatos = (base64) => {
+                const enviar = (base64) => {
                     const payload = {
                         ChatId: $("#chatId").val(),
-                        Notas: $("#notasInput").val(), // Esto mapea a la propiedad 'ayudante' que añadimos a la clase
-                        ImagenBase64: base64           // Esto mapea a la otra propiedad 'ayudante'
+                        Notas: $("#notasInput").val(),
+                        ValDoctorCita: parseInt($("#valInput").val()),
+                        CitaConfirmada: $("#confirmInput").val(),
+                        ImagenBase64: base64
                     };
 
                     $.ajax({
-                        // CAMBIO CLAVE: Ahora apunta al método aislado de Altas
                         url: '/Citas/GuardarCambiosTempAltas',
                         type: 'POST',
                         contentType: 'application/json',
                         data: JSON.stringify(payload),
-                        success: function(r) {
-                            if(r.success) {
-                                tg.close();
-                            } else {
-                                alert("Error: " + (r.mensaje || "No se pudo guardar"));
-                                btn.prop("disabled", false).text("💾 GUARDAR Y VOLVER");
-                            }
-                        },
-                        error: function() {
-                            alert("Error crítico al guardar");
-                            btn.prop("disabled", false).text("💾 GUARDAR Y VOLVER");
-                        }
+                        success: (r) => { r.success ? tg.close() : alert("Error al guardar"); },
+                        error: () => alert("Error crítico"),
+                        complete: () => btn.prop("disabled", false).text("💾 GUARDAR Y VOLVER")
                     });
                 };
 
                 const file = document.getElementById('fileInput').files[0];
                 if (file) {
                     const reader = new FileReader();
-                    reader.onload = (e) => enviarDatos(e.target.result);
+                    reader.onload = (e) => enviar(e.target.result);
                     reader.readAsDataURL(file);
                 } else {
-                    enviarDatos(null);
+                    enviar(null);
                 }
             });
         });
