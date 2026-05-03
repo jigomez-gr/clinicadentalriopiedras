@@ -46,6 +46,11 @@
                 <textarea id="txtNotas" class="form-control">@Model.RazonCitaUsr</textarea>
             </div>
 
+            <div class="mb-3">
+                <label class="form-label fw-bold">📝 Opinion  / Doctor y Clínica :</label>
+                <textarea id="txtOpinionDoctorYClinica" class="form-control">@Model.OpinionDoctorYClinica</textarea>
+            </div>
+
             <div class="mb-3 text-center">
                 <label class="form-label fw-bold d-block">⭐ Valoración:</label>
                 <div id="starContainer">
@@ -128,6 +133,7 @@
                     const payload = {
                         ChatId: chatId,
                         Notas: $("#txtNotas").val(),
+                        OpinionDoctorYClinica: $("#txtOpinionDoctorYClinica").val(),
                         ValDoctorCita: parseInt($("#valDoctorCita").val()),
                         CitaConfirmada: $("#selConfirmada").val(),
                         ImagenBase64: base64
