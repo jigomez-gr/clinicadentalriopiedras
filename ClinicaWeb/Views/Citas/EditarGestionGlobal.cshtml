@@ -2,213 +2,164 @@
 @model TelegramCitaTemp
 @{
     Layout = null;
-    // Convertimos el documento del doctor a Base64 para la descarga directa si existe
-    string docDoctorBase64 = Model.DocIndicacionesDoctor != null ? Convert.ToBase64String(Model.DocIndicacionesDoctor) : "";
 }
 
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Gestión de Cita - Clínica Dental</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestión de Cita</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
-        :root {
-            --tg-orange: #ff8c00;
+        .star {
+            font-size: 2.5rem;
+            cursor: pointer;
+            color: #ccc;
         }
 
-        body {
-            background-color: #f0f2f5;
-            font-family: sans-serif;
-            font-size: 14px;
-        }
+            .star.selected {
+                color: #ffc107;
+            }
 
-        .card-gestion {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        .header-orange {
-            background: var(--tg-orange);
-            color: white;
-            padding: 15px;
-            border-radius: 15px 15px 0 0;
-        }
-
-        .btn-save {
-            background: var(--tg-orange);
-            color: white;
-            border: none;
-            width: 100%;
-            padding: 12px;
-            border-radius: 10px;
-            font-weight: bold;
-        }
-
-        .readonly-label {
-            color: #6c757d;
-            font-size: 0.8rem;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        .box-consulta {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 10px;
+        .preview-img {
+            max-height: 200px;
+            object-fit: contain;
+            display: block;
+            margin: 10px auto;
         }
     </style>
 </head>
-<body>
+<body class="bg-light p-3">
+    <div class="card shadow mx-auto" style="max-width: 480px;">
+        <div class="card-header bg-primary text-white text-center">
+            <h5 class="mb-0">✨ Corregir Datos de Cita</h5>
+        </div>
+        <div class="card-body">
 
-    <div class="container py-3">
-        <div class="card card-gestion">
-            <div class="header-orange text-center">
-                <h5 class="mb-0"><i class="fas fa-calendar-check me-2"></i> Gestión de Cita</h5>
+            <!-- Guardamos el ChatId en un campo oculto -->
+            <input type="hidden" id="chatId" value="@Model.ChatId" />
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">📝 Notas / Motivo:</label>
+                <textarea id="txtNotas" class="form-control">@Model.RazonCitaUsr</textarea>
             </div>
-            <div class="card-body">
 
-                <div class="mb-3">
-                    <span class="readonly-label">Indicaciones del Especialista</span>
-                    <div class="box-consulta">
-                        @(string.IsNullOrEmpty(Model.Indicaciones) ? "Sin indicaciones registradas." : Model.Indicaciones)
-                    </div>
-                    @if (!string.IsNullOrEmpty(docDoctorBase64))
+            <div class="mb-3 text-center">
+                <label class="form-label fw-bold d-block">⭐ Valoración:</label>
+                <div id="starContainer">
+                    @for (int i = 1; i <= 5; i++)
                     {
-                        <button type="button" class="btn btn-sm btn-outline-primary w-100 mt-1" onclick="descargarDocDoctor()">
-                            <i class="fas fa-file-download me-1"></i> Descargar Anexo del Doctor
-                        </button>
+                        <span class="star @(i <= (Model.ValDoctorCita ?? 3) ? "selected" : "")" data-value="@i">
+                            @(i <= (Model.ValDoctorCita ?? 3) ? "★" : "☆")
+                        </span>
                     }
                 </div>
-
-                <hr />
-
-                <form id="formGestion">
-                    <div class="row g-2 mb-3">
-                        <div class="col-6">
-                            <label class="form-label fw-bold">Estado</label>
-                            <select class="form-select" id="IdEstadoCita">
-                                <option value="1" selected="@(Model.EstadoCita?.IdEstadoCita == 1)">Activa</option>
-                                <option value="3" selected="@(Model.EstadoCita?.IdEstadoCita == 3)">Cancelada</option>
-                            </select>
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label fw-bold">Confirmar</label>
-                            <select class="form-select" id="CitaConfirmada">
-                                <option value="S" selected="@(Model.CitaConfirmada == "S")">SÍ</option>
-                                <option value="N" selected="@(Model.CitaConfirmada == "N")">NO</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Mi Motivo / Notas</label>
-                        <textarea class="form-control" id="RazonCitaUsr" rows="2" placeholder="Escriba aquí sus observaciones...">@Model.RazonCitaUsr</textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Adjuntar Documento (Paciente)</label>
-                        <input type="file" class="form-control" id="fileInput" accept="image/*,application/pdf">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Valoración Clínica</label>
-                        <select class="form-select" id="ValDoctorCita">
-                            <option value="5" selected="@(Model.ValDoctorCita == 5)">⭐⭐⭐⭐⭐ (Excelente)</option>
-                            <option value="4" selected="@(Model.ValDoctorCita == 4)">⭐⭐⭐⭐ (Muy bueno)</option>
-                            <option value="3" selected="@(Model.ValDoctorCita == 3)">⭐⭐⭐ (Bueno)</option>
-                            <option value="2" selected="@(Model.ValDoctorCita == 2)">⭐⭐ (Regular)</option>
-                            <option value="1" selected="@(Model.ValDoctorCita == 1)">⭐ (Malo)</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="form-label fw-bold">Opinión / Reseña</label>
-                        <textarea class="form-control" id="OpinionDoctorYClinica" rows="2">@Model.OpinionDoctorYClinica</textarea>
-                    </div>
-
-                    <button type="button" class="btn-save" id="btnGuardar">
-                        <i class="fas fa-save me-2"></i> GUARDAR CAMBIOS
-                    </button>
-                </form>
+                <input type="hidden" id="valDoctorCita" value="@(Model.ValDoctorCita ?? 3)">
             </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">✅ Confirmación:</label>
+                <select id="selConfirmada" class="form-select">
+                    <option value="S" selected="@(Model.CitaConfirmada == "S")">Confirmada</option>
+                    <option value="N" selected="@(Model.CitaConfirmada == "N")">Pendiente</option>
+                </select>
+            </div>
+
+            <!-- VISTA PREVIA DE IMAGEN 📸 -->
+            <div class="text-center">
+                <label class="form-label fw-bold">📎 Imagen adjunta:</label>
+                @if (Model.DocumentoCitaUsr != null)
+                {
+                    <img src="data:@Model.ContentType;base64,@Convert.ToBase64String(Model.DocumentoCitaUsr)" class="preview-img img-thumbnail" />
+                }
+                else
+                {
+                    <img src="" class="preview-img img-thumbnail" style="display:none;" />
+                }
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-bold">📁 Cambiar archivo:</label>
+                <input type="file" id="fileInput" class="form-control" accept="image/*">
+            </div>
+
+            <button type="button" id="btnGuardar" class="btn btn-success w-100 fw-bold">💾 GUARDAR CAMBIOS</button>
         </div>
     </div>
 
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+        $(document).ready(function() {
+            // 1. Refrescar imagen al seleccionar nuevo archivo 🖼️
+            $("#fileInput").change(function() {
+                const file = this.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        $(".preview-img").attr("src", e.target.result).show();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
 
-        let base64Archivo = null;
-        let contentTypeArchivo = "@Model.ContentType";
+            // 2. Manejo de estrellas ⭐
+            $(".star").click(function() {
+                const val = $(this).data("value");
+                $("#valDoctorCita").val(val);
+                $(".star").each(function(i) {
+                    $(this).text(i < val ? "★" : "☆").toggleClass("selected", i < val);
+                });
+            });
 
-        // 1. Manejo del archivo del paciente
-        $("#fileInput").on("change", function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                contentTypeArchivo = file.type;
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    base64Archivo = evt.target.result.split(',')[1];
+            // 3. Guardar cambios 💾
+            $("#btnGuardar").click(function() {
+                const chatId = $("#chatId").val();
+                if (!chatId) {
+                    alert("Error: No se detectó el ChatId.");
+                    return;
+                }
+
+                const btn = $(this);
+                btn.prop("disabled", true).text("Guardando...");
+
+                const file = document.getElementById('fileInput').files[0];
+                const enviar = (base64) => {
+                    const payload = {
+                        ChatId: chatId,
+                        Notas: $("#txtNotas").val(),
+                        ValDoctorCita: parseInt($("#valDoctorCita").val()),
+                        CitaConfirmada: $("#selConfirmada").val(),
+                        ImagenBase64: base64
+                    };
+
+                    $.ajax({
+                        url: '/Citas/GuardarCambiosTempAltas',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(payload),
+                        success: (r) => {
+                            if(r.success) {
+                                alert("¡Éxito!");
+                                window.close();
+                            } else {
+                                alert("Error al guardar");
+                                btn.prop("disabled", false).text("💾 GUARDAR CAMBIOS");
+                            }
+                        },
+                        error: () => {
+                            alert("Error de red");
+                            btn.prop("disabled", false).text("💾 GUARDAR CAMBIOS");
+                        }
+                    });
                 };
-                reader.readAsDataURL(file);
-            }
-        });
 
-        // 2. Descarga del documento del doctor
-        function descargarDocDoctor() {
-            const b64 = "@docDoctorBase64";
-            const ct = "@Model.ContentTypeDoctor";
-            if (!b64) return;
-            const link = document.createElement("a");
-            link.href = `data:${ct};base64,${b64}`;
-            link.download = "Indicaciones_Especialista";
-            link.click();
-        }
-
-        // 3. Envío de datos con Traza de Error mejorada
-        $("#btnGuardar").on("click", function() {
-            const btn = $(this);
-            btn.prop("disabled", true).html('<i class="fas fa-spinner fa-spin me-2"></i> GUARDANDO...');
-
-            const dataCita = {
-                EstadoCita: { IdEstadoCita: parseInt($("#IdEstadoCita").val()) },
-                CitaConfirmada: $("#CitaConfirmada").val(),
-                RazonCitaUsr: $("#RazonCitaUsr").val(),
-                ValDoctorCita: parseInt($("#ValDoctorCita").val()),
-                OpinionDoctorYClinica: $("#OpinionDoctorYClinica").val(),
-                ContentType: contentTypeArchivo,
-                DocumentoCitaUsr: base64Archivo
-            };
-
-            $.ajax({
-                url: '/Citas/GuardarCambiosTemp?chat_id=@ViewBag.ChatId',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(dataCita),
-                success: function(response) {
-                    if (response.success) {
-                        tg.close();
-                    } else {
-                        alert("Error del servidor: " + response.mensaje);
-                        btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i> GUARDAR CAMBIOS');
-                    }
-                },
-                error: function(xhr, status, error) {
-                    // PUNTO 1: TRAZA DETALLADA
-                    let msgError = "FALLO DE CONEXIÓN / API:\n";
-                    msgError += "Status: " + xhr.status + " (" + error + ")\n";
-                    msgError += "Respuesta: " + xhr.responseText;
-
-                    alert(msgError); // Esto te dirá el error real (404, 500, etc.)
-                    btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i> GUARDAR CAMBIOS');
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => enviar(e.target.result);
+                    reader.readAsDataURL(file);
+                } else {
+                    enviar(null);
                 }
             });
         });
