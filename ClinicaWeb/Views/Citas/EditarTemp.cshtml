@@ -9,31 +9,12 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Corregir Cita</title>
+    <title>Gestión de Cita</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body {
-            background-color: #f8f9fa;
-            padding: 15px;
-        }
-
-        .card {
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .btn-save {
-            background-color: #2481cc;
-            color: white;
-            font-weight: bold;
-            border-radius: 10px;
-            padding: 12px;
-        }
-
         .star {
-            font-size: 2rem;
+            font-size: 2.5rem;
             cursor: pointer;
             color: #ccc;
         }
@@ -42,105 +23,113 @@
                 color: #ffc107;
             }
 
-        #imgPreview {
+        .preview-img {
             max-height: 200px;
             object-fit: contain;
+            display: block;
+            margin: 10px auto;
         }
     </style>
 </head>
-<body>
-    <div class="card p-3 mx-auto" style="max-width: 500px;">
-        <h5 class="text-center mb-3">📋 Modificar Cita</h5>
-
-        <div class="alert alert-info py-2" style="font-size: 0.85em;">
-            <strong>🩺 Doctor:</strong> @Model.NombreYValDoctor<br />
-            <strong>📅 Cita:</strong> @Model.Fecha a las @Model.Hora
+<body class="bg-light p-3">
+    <div class="card shadow mx-auto" style="max-width: 480px;">
+        <div class="card-header bg-primary text-white text-center">
+            <h5 class="mb-0">✨ Corregir Datos de Cita</h5>
         </div>
+        <div class="card-body">
 
-        <input type="hidden" id="chatId" value="@Model.ChatId" />
+            <!-- Guardamos el ChatId en un campo oculto -->
+            <input type="hidden" id="chatId" value="@Model.ChatId" />
 
-        <!-- Notas / Razón -->
-        <div class="mb-3">
-            <label class="form-label fw-bold">📝 Mis Notas:</label>
-            <textarea id="notasInput" class="form-control" rows="2">@Model.RazonCitaUsr</textarea>
-        </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">📝 Notas / Motivo:</label>
+                <textarea id="txtNotas" class="form-control">@Model.RazonCitaUsr</textarea>
+            </div>
 
-        <!-- Valoración (Estrellas) -->
-        <div class="mb-3 text-center">
-            <label class="form-label fw-bold d-block">⭐ Valoración del Doctor:</label>
-            <div id="starRating">
-                @for (int i = 1; i <= 5; i++)
+            <div class="mb-3 text-center">
+                <label class="form-label fw-bold d-block">⭐ Valoración:</label>
+                <div id="starContainer">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        <span class="star @(i <= (Model.ValDoctorCita ?? 3) ? "selected" : "")" data-value="@i">
+                            @(i <= (Model.ValDoctorCita ?? 3) ? "★" : "☆")
+                        </span>
+                    }
+                </div>
+                <input type="hidden" id="valDoctorCita" value="@(Model.ValDoctorCita ?? 3)">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">✅ Confirmación:</label>
+                <select id="selConfirmada" class="form-select">
+                    <option value="S" selected="@(Model.CitaConfirmada == "S")">Confirmada</option>
+                    <option value="N" selected="@(Model.CitaConfirmada == "N")">Pendiente</option>
+                </select>
+            </div>
+
+            <!-- VISTA PREVIA DE IMAGEN 📸 -->
+            <div class="text-center">
+                <label class="form-label fw-bold">📎 Imagen adjunta:</label>
+                @if (Model.DocumentoCitaUsr != null)
                 {
-                    <span class="star @(i <= (Model.ValDoctorCita ?? 3) ? "selected" : "")" data-value="@i">★</span>
+                    <img src="data:@Model.ContentType;base64,@Convert.ToBase64String(Model.DocumentoCitaUsr)" class="preview-img img-thumbnail" />
+                }
+                else
+                {
+                    <img src="" class="preview-img img-thumbnail" style="display:none;" />
                 }
             </div>
-            <input type="hidden" id="valInput" value="@(Model.ValDoctorCita ?? 3)" />
-        </div>
 
-        <!-- Confirmación -->
-        <div class="mb-3">
-            <label class="form-label fw-bold">✅ ¿Confirmas asistencia?</label>
-            <select id="confirmInput" class="form-select">
-                <option value="S" selected="@(Model.CitaConfirmada == "S")">S - Confirmada</option>
-                <option value="N" selected="@(Model.CitaConfirmada == "N")">N - No confirmada</option>
-            </select>
-        </div>
-
-        <!-- Imagen / Documento -->
-        <div class="mb-3">
-            <label class="form-label fw-bold">📷 Documento/Foto:</label>
-            <input type="file" id="fileInput" class="form-control form-control-sm" accept="image/*">
-            <div class="mt-2 text-center">
-                @{
-                    bool tieneImagen = Model.DocumentoCitaUsr != null && Model.DocumentoCitaUsr.Length > 0;
-                    string srcBase64 = tieneImagen ? $"data:{Model.ContentType};base64,{Convert.ToBase64String(Model.DocumentoCitaUsr)}" : "#";
-                }
-                <img src="@srcBase64" id="imgPreview" class="img-fluid rounded border @(tieneImagen ? "" : "d-none")">
+            <div class="mb-4">
+                <label class="form-label fw-bold">📁 Cambiar archivo:</label>
+                <input type="file" id="fileInput" class="form-control" accept="image/*">
             </div>
-        </div>
 
-        <button type="button" id="btnGuardar" class="btn btn-save w-100">
-            💾 GUARDAR Y VOLVER
-        </button>
+            <button type="button" id="btnGuardar" class="btn btn-success w-100 fw-bold">💾 GUARDAR CAMBIOS</button>
+        </div>
     </div>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-
         $(document).ready(function() {
-            // Lógica de estrellas ⭐
-            $(".star").click(function() {
-                const val = $(this).data("value");
-                $("#valInput").val(val);
-                $(".star").removeClass("selected");
-                $(".star").each(function() {
-                    if ($(this).data("value") <= val) $(this).addClass("selected");
-                });
-            });
-
-            // Refresco de imagen en pantalla 🔄
+            // 1. Refrescar imagen al seleccionar nuevo archivo 🖼️
             $("#fileInput").change(function() {
                 const file = this.files[0];
                 if (file) {
-                    let reader = new FileReader();
+                    const reader = new FileReader();
                     reader.onload = function(e) {
-                        $("#imgPreview").attr("src", e.target.result).removeClass("d-none");
-                    }
+                        $(".preview-img").attr("src", e.target.result).show();
+                    };
                     reader.readAsDataURL(file);
                 }
             });
 
-            $("#btnGuardar").click(function() {
-                const btn = $(this);
-                btn.prop("disabled", true).text("🚀 Guardando...");
+            // 2. Manejo de estrellas ⭐
+            $(".star").click(function() {
+                const val = $(this).data("value");
+                $("#valDoctorCita").val(val);
+                $(".star").each(function(i) {
+                    $(this).text(i < val ? "★" : "☆").toggleClass("selected", i < val);
+                });
+            });
 
+            // 3. Guardar cambios 💾
+            $("#btnGuardar").click(function() {
+                const chatId = $("#chatId").val();
+                if (!chatId) {
+                    alert("Error: No se detectó el ChatId.");
+                    return;
+                }
+
+                const btn = $(this);
+                btn.prop("disabled", true).text("Guardando...");
+
+                const file = document.getElementById('fileInput').files[0];
                 const enviar = (base64) => {
                     const payload = {
-                        ChatId: $("#chatId").val(),
-                        Notas: $("#notasInput").val(),
-                        ValDoctorCita: parseInt($("#valInput").val()),
-                        CitaConfirmada: $("#confirmInput").val(),
+                        ChatId: chatId,
+                        Notas: $("#txtNotas").val(),
+                        ValDoctorCita: parseInt($("#valDoctorCita").val()),
+                        CitaConfirmada: $("#selConfirmada").val(),
                         ImagenBase64: base64
                     };
 
@@ -149,13 +138,22 @@
                         type: 'POST',
                         contentType: 'application/json',
                         data: JSON.stringify(payload),
-                        success: (r) => { r.success ? tg.close() : alert("Error al guardar"); },
-                        error: () => alert("Error crítico"),
-                        complete: () => btn.prop("disabled", false).text("💾 GUARDAR Y VOLVER")
+                        success: (r) => {
+                            if(r.success) {
+                                alert("¡Éxito!");
+                                window.close();
+                            } else {
+                                alert("Error al guardar");
+                                btn.prop("disabled", false).text("💾 GUARDAR CAMBIOS");
+                            }
+                        },
+                        error: () => {
+                            alert("Error de red");
+                            btn.prop("disabled", false).text("💾 GUARDAR CAMBIOS");
+                        }
                     });
                 };
 
-                const file = document.getElementById('fileInput').files[0];
                 if (file) {
                     const reader = new FileReader();
                     reader.onload = (e) => enviar(e.target.result);

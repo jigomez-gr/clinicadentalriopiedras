@@ -1810,7 +1810,7 @@ LIMIT 1;
             //  await _repositorioCita.LogEnTexte("Llamando a ObtenerCitaGestionGlobal...");
 
                 // AQUÍ ES DONDE SUELE DAR EL 22P02 si el SP o la Query están mal
-                var modelo = await _repositorioCita.ObtenerCitaGestionGlobal(chat_id);
+                var modelo = await _repositorioCita.ObtenerCitaGestionGlobalAltas(chat_id);
 
                 if (modelo == null)
                 {
