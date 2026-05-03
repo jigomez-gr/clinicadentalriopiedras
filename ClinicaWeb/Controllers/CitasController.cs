@@ -1774,7 +1774,7 @@ LIMIT 1;
             try
             {
                 // LOG 1: Entrada
-                await _repositorioCita.LogEnTexte($"Entrando. Chat: {chat_id}, Token: {token}");
+             // await _repositorioCita.LogEnTexte($"Entrando. Chat: {chat_id}, Token: {token}");
 
                 if (string.IsNullOrEmpty(chat_id) || string.IsNullOrEmpty(token))
                     return Content("Faltan parámetros.");
@@ -1788,7 +1788,7 @@ LIMIT 1;
                 }
 
                 // LOG 2: Token OK. Buscando usuario.
-                await _repositorioCita.LogEnTexte("Buscando usuario en ObtenerPorChatId...");
+             // await _repositorioCita.LogEnTexte("Buscando usuario en ObtenerPorChatId...");
                 var usuario = await _repositorioCita.ObtenerPorChatId(chat_id);
 
                 if (usuario == null)
@@ -1807,7 +1807,7 @@ LIMIT 1;
                     new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)));
 
                 // LOG 3: Login OK. Cargando datos temporales.
-                await _repositorioCita.LogEnTexte("Llamando a ObtenerCitaGestionGlobal...");
+            //  await _repositorioCita.LogEnTexte("Llamando a ObtenerCitaGestionGlobal...");
 
                 // AQUÍ ES DONDE SUELE DAR EL 22P02 si el SP o la Query están mal
                 var modelo = await _repositorioCita.ObtenerCitaGestionGlobal(chat_id);
@@ -1819,7 +1819,7 @@ LIMIT 1;
                 }
 
                 // LOG 4: Todo listo. Enviando a la Vista.
-                await _repositorioCita.LogEnTexte($"Éxito. Enviando a Vista con ID Temp: {modelo.IdTemp}");
+         //     await _repositorioCita.LogEnTexte($"Éxito. Enviando a Vista con ID Temp: {modelo.IdTemp}");
 
                 ViewBag.ChatId = chat_id;
                 return View(modelo);
@@ -1884,7 +1884,7 @@ LIMIT 1;
         [HttpPost]
         [AllowAnonymous]
         [IgnoreAntiforgeryToken] // Crucial para evitar bloqueos de seguridad AJAX
-        public async Task<IActionResult> GuardarCambiosTemp([FromBody] Cita objeto, [FromQuery] string chat_id)
+        public async Task<IActionResult> GuardarCambiosTemp([FromBody] TelegramCitaTemp objeto, [FromQuery] string chat_id)
         {
             try
             {

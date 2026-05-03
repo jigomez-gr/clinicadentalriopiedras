@@ -123,7 +123,7 @@ namespace ClinicaData.Contrato
         Task<TelegramCitaTemp> ObtenerCitaGestionGlobal(string chat_id);
 
         // Guarda solo los campos permitidos (Paciente + Valoración + Estado)
-        Task<bool> GuardarCambiosGestionGlobal(Cita objeto, string chat_id);
+        Task<bool> GuardarCambiosGestionGlobal(TelegramCitaTemp objeto, string chat_id);
 
         // Ejecuta el SP final
         Task<string> ConfirmarGestionFinal(string chat_id);
