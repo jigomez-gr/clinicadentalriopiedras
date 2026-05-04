@@ -68,11 +68,9 @@
                 background-color: #f0fdf4;
             }
 
-        
-            /* Mejora de contraste en la selección de la API  */
             .api-item.selected {
                 background-color: #d1e7dd !important;
-                color: #0f5132 !important; /* Texto oscuro para lectura fácil */
+                color: #0f5132 !important;
                 border: 1px solid #0f5132 !important;
                 font-weight: bold;
             }
@@ -85,7 +83,8 @@
             <div class="card-header d-flex align-items-center">
                 <i class="fa-solid fa-user-doctor me-2"></i>
                 <span>Lista de Doctores</span>
-                <button type="button" class="btn btn-success btn-sm ms-auto" onclick="openHelpVideo('Doctor_Horario.mp4')">
+                <button type="button" class="btn btn-success btn-sm ms-auto"
+                        onclick="openHelpVideo('Doctor_Horario.mp4')">
                     <i class="fa fa-circle-question me-1"></i> Ayuda
                 </button>
             </div>
@@ -99,7 +98,8 @@
                 <div class="row">
                     <div class="col-sm-12">
                         <div class="table-responsive">
-                            <table class="display table table-striped table-bordered table-hover nowrap" id="tbData" style="width:100%">
+                            <table class="display table table-striped table-bordered table-hover nowrap"
+                                   id="tbData" style="width:100%">
                                 <thead>
                                     <tr>
                                         <th>Acciones</th>
@@ -120,6 +120,7 @@
     </div>
 </div>
 
+<!-- ===================== MODAL DOCTOR ===================== -->
 <div class="modal fade" id="mdData" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -145,30 +146,28 @@
                         <label class="col-form-label small">Género:</label>
                         <select id="cboGenero" class="form-control form-control-sm"></select>
                     </div>
-
-                   
-                    
                     <div class="col-sm-5">
                         <label class="col-form-label small">Fotografía:</label>
                         <input type="file" class="form-control form-control-sm" id="txtFoto" accept="image/*">
-                        <a id="btnDescargarFoto" href="#" download="foto_doctor.jpg" class="btn btn-outline-secondary btn-sm mt-2" style="display:none;">
+                        <a id="btnDescargarFoto" href="#" download="foto_doctor.jpg"
+                           class="btn btn-outline-secondary btn-sm mt-2" style="display:none;">
                             <i class="fas fa-download"></i> Descargar Foto
                         </a>
                     </div>
                     <div class="col-sm-4 text-center">
                         <img id="imgFotoPreview" src="" class="img-thumbnail"
-                             style="width: 160px; height: 160px; display:none; border: 1px solid #ccc; object-fit: cover;">
+                             style="width:160px;height:160px;display:none;border:1px solid #ccc;object-fit:cover;">
                     </div>
-
                     <div class="col-sm-3">
                         <label class="col-form-label small">Valoración (User):</label>
-                        <input type="number" class="form-control form-control-sm" id="txtValoracion" min="1" max="5" step="0.1">
+                        <input type="number" class="form-control form-control-sm" id="txtValoracion"
+                               min="1" max="5" step="0.1">
                     </div>
                     <div class="col-sm-3">
                         <label class="col-form-label small">Valoración AI:</label>
-                        <input type="number" class="form-control form-control-sm" id="txtValoracionAi" min="1" max="5" step="0.1">
+                        <input type="number" class="form-control form-control-sm" id="txtValoracionAi"
+                               min="1" max="5" step="0.1">
                     </div>
-                   
                     <div class="col-sm-12">
                         <label class="col-form-label small">Resumen AI:</label>
                         <textarea class="form-control form-control-sm" id="txtResumenValoracion" rows="3"></textarea>
@@ -190,11 +189,14 @@
     </div>
 </div>
 
+<!-- ===================== MODAL ESPECIALIDADES ===================== -->
 <div class="modal fade" id="mdEspecialidades" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-light">
-                <h5 class="modal-title">Especialidades: <span id="lblDoctorEsp" class="badge bg-primary"></span></h5>
+                <h5 class="modal-title">
+                    Especialidades: <span id="lblDoctorEsp" class="badge bg-primary"></span>
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -218,23 +220,75 @@
     </div>
 </div>
 
+<!-- ===================== MODAL CAL.COM ===================== -->
 <div class="modal fade" id="mdCalcom" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Configuración Cal.com: <span id="lblDoctorCal" class="badge bg-info"></span></h5>
+                <h5 class="modal-title">
+                    Configuración Cal.com: <span id="lblDoctorCal" class="badge bg-info"></span>
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body text-start">
                 <div class="row g-2">
-                    <div class="col-md-6"><label class="small">API Key</label><input type="text" class="form-control" id="txtCalApiKey"></div>
-                    <div class="col-md-6"><label class="small">Cal Username</label><input type="text" class="form-control" id="txtCalUsername"></div>
-                    <div class="col-md-6"><label class="small">Event Type Id (Seleccionado)</label><input type="number" class="form-control" id="txtCalEventTypeId" readonly></div>
-                    <div class="col-md-6"><label class="small">Cal Public URL</label><input type="text" class="form-control" id="txtCalPublicUrl"></div>
-                    <div class="col-md-12"><label class="small">Nombre del Evento</label><input type="text" class="form-control" id="txtCalEventName" readonly></div>
-                    <div id="divApiInfo" class="col-12 mt-3 border p-2 bg-light" style="max-height: 250px; overflow-y: auto;">
+                    <div class="col-md-6">
+                        <label class="small">API Key</label>
+                        <input type="text" class="form-control" id="txtCalApiKey">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="small">Cal Username</label>
+                        <input type="text" class="form-control" id="txtCalUsername">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="small">Event Type Id (Seleccionado)</label>
+                        <input type="number" class="form-control" id="txtCalEventTypeId" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="small">Cal Public URL</label>
+                        <input type="text" class="form-control" id="txtCalPublicUrl">
+                    </div>
+                    <div class="col-md-12">
+                        <label class="small">Nombre del Evento</label>
+                        <input type="text" class="form-control" id="txtCalEventName" readonly>
+                    </div>
+
+                    <!-- Lista de eventos -->
+                    <div id="divApiInfo" class="col-12 mt-3 border p-2 bg-light"
+                         style="max-height:220px; overflow-y:auto;">
                         <p class="text-muted small">Pulsa "Consultar API" para cargar los eventos...</p>
                     </div>
+
+                    <!-- SECCIÓN BOOKING FIELDS -->
+                    <div class="col-12 mt-2" id="divBookingFields" style="display:none;">
+                        <hr class="my-2">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <strong class="small">
+                                <i class="fas fa-wpforms me-1"></i>
+                                Campos del formulario de reserva en Cal.com
+                            </strong>
+                            <button type="button" class="btn btn-sm btn-warning"
+                                    id="btnCrearCampos" style="display:none;">
+                                <i class="fas fa-magic me-1"></i> Crear campos faltantes en Cal.com
+                            </button>
+                        </div>
+
+                        <div class="mb-2">
+                            <small class="text-muted fw-bold text-uppercase" style="font-size:.72rem;">
+                                Estado campos requeridos por la clínica
+                            </small>
+                            <div id="divCamposRequeridos" class="d-flex flex-wrap gap-2 mt-1"></div>
+                        </div>
+
+                        <div>
+                            <small class="text-muted fw-bold text-uppercase" style="font-size:.72rem;">
+                                Campos actuales en el evento
+                            </small>
+                            <div id="divCamposExistentes" class="mt-1"
+                                 style="max-height:130px; overflow-y:auto; font-size:.82rem;"></div>
+                        </div>
+                    </div>
+
                     <div class="col-12 mt-2">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="chkCalIsActive">
@@ -244,9 +298,13 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-repro-verde" id="btnConsultarApi">Consultar API</button>
+                <button type="button" class="btn btn-repro-verde" id="btnConsultarApi">
+                    <i class="fas fa-plug me-1"></i> Consultar API
+                </button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-primary" id="btnGuardarCalcom">Guardar Cal</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarCalcom">
+                    <i class="fas fa-save me-1"></i> Guardar Cal
+                </button>
             </div>
         </div>
     </div>
@@ -258,93 +316,92 @@
     <script>
         (function () {
             "use strict";
+
             let tablaData;
             let idEditar = 0;
             const controlador = "Doctor";
             const modal = "mdData";
 
+            // ── Campos que la clínica necesita en Cal.com ─────────────────────────
+            const CAMPOS_REQUERIDOS = [
+                { slug: "title",         label: "Asunto de la cita", tipo: "text",     required: true  },
+                { slug: "apellido",      label: "Apellido",          tipo: "text",     required: true  },
+                { slug: "razoncitausr",  label: "Motivo de la cita", tipo: "textarea", required: false },
+                { slug: "email",         label: "Email",             tipo: "email",    required: false },
+                { slug: "telefonoMovil", label: "Teléfono móvil",    tipo: "phone",    required: false }
+            ];
+
+            // Slugs nativos de Cal.com (no se tratan como faltantes)
+            const SLUGS_NATIVOS = new Set([
+                "name","email","location","notes","guests",
+                "rescheduleReason","attendeePhoneNumber","smsReminderNumber"
+            ]);
+
+            // ── Helpers ───────────────────────────────────────────────────────────
             window.openHelpVideo = function (fileName) {
-                const url = "/helps/" + encodeURIComponent(fileName);
-                window.open(url, "helpVideo", "width=900,height=520");
+                window.open("/helps/" + encodeURIComponent(fileName), "helpVideo", "width=900,height=520");
             };
 
             function limpiarModal() {
                 idEditar = 0;
-                $("#txtNroDocumento, #txtNombres, #txtApellidos, #txtBiografia, #txtResumenValoracion, #txtFoto").val("");
+                $("#txtNroDocumento,#txtNombres,#txtApellidos,#txtBiografia,#txtResumenValoracion,#txtFoto").val("");
                 $("#cboGenero").val("M");
-                $("#txtValoracion, #txtValoracionAi").val("3.0");
+                $("#txtValoracion,#txtValoracionAi").val("3.0");
+                $("#imgFotoPreview,#btnDescargarFoto").hide();
             }
 
             function llenarModal(row) {
                 limpiarModal();
                 idEditar = row.idDoctor ?? row.IdDoctor ?? 0;
-                $("#txtNroDocumento").val(row.numeroDocumentoIdentidad ?? row.NumeroDocumentoIdentidad ?? "");
-                $("#txtNombres").val(row.nombres ?? row.Nombres ?? "");
-                $("#txtApellidos").val(row.apellidos ?? row.Apellidos ?? "");
-                $("#cboGenero").val(row.genero ?? row.Genero ?? "M");
-                $("#txtBiografia").val(row.biografia ?? row.Biografia ?? "");
-                $("#txtValoracion").val(row.valoracion ?? row.Valoracion ?? "3.0");
-                $("#txtValoracionAi").val(row.valoracionAi ?? row.ValoracionAi ?? "3.0");
-                $("#txtResumenValoracion").val(row.resumenValoracion ?? row.ResumenValoracion ?? "");
-                        // Dentro de llenarModal(row)
-   
-           // Mostramos la foto llamando al nuevo método del controlador
-           idEditar = row.idDoctor ?? row.IdDoctor ?? 0;
+                $("#txtNroDocumento").val(row.numeroDocumentoIdentidad ?? "");
+                $("#txtNombres").val(row.nombres ?? "");
+                $("#txtApellidos").val(row.apellidos ?? "");
+                $("#cboGenero").val(row.genero ?? "M");
+                $("#txtBiografia").val(row.biografia ?? "");
+                $("#txtValoracion").val(row.valoracion ?? "3.0");
+                $("#txtValoracionAi").val(row.valoracionAi ?? "3.0");
+                $("#txtResumenValoracion").val(row.resumenValoracion ?? "");
 
-        if (idEditar > 0) {
-            const urlFoto = `/Doctor/VerFoto?id=${idEditar}&t=${new Date().getTime()}`;
-
-            // 1. Muestra la foto automáticamente
-            $("#imgFotoPreview").attr("src", urlFoto).show();
-
-            // 2. Configura el botón de descargar
-            $("#btnDescargarFoto").attr("href", urlFoto).show();
-        } else {
-            $("#imgFotoPreview, #btnDescargarFoto").hide();
-        }
-            }
-
-            async function cargarGeneros() {
-                $("#cboGenero").html('<option value="M">M</option><option value="F">F</option>');
+                if (idEditar > 0) {
+                    const urlFoto = `/Doctor/VerFoto?id=${idEditar}&t=${Date.now()}`;
+                    $("#imgFotoPreview").attr("src", urlFoto).show();
+                    $("#btnDescargarFoto").attr("href", urlFoto).show();
+                }
             }
 
             async function cargarEspecialidades() {
-                const r = await fetch("/Especialidad/Lista");
-                const j = await r.json().catch(() => null);
-                const arr = (j && j.data) ? j.data : [];
-                const cboMul = document.getElementById("cboEspecialidadMultiple");
-                if (cboMul) {
-                    cboMul.innerHTML = "<option value=''>-- Seleccionar --</option>";
+                const r   = await fetch("/Especialidad/Lista");
+                const j   = await r.json().catch(() => null);
+                const arr = j?.data ?? [];
+                const cbo = document.getElementById("cboEspecialidadMultiple");
+                if (cbo) {
+                    cbo.innerHTML = "<option value=''>-- Seleccionar --</option>";
                     arr.forEach(e => {
                         const o = document.createElement("option");
                         o.value = e.idEspecialidad ?? e.IdEspecialidad;
                         o.textContent = e.nombre ?? e.Nombre;
-                        cboMul.appendChild(o);
+                        cbo.appendChild(o);
                     });
                 }
             }
 
             async function guardarDoctor() {
-                const formData = new FormData();
-                formData.append("IdDoctor", idEditar);
-                formData.append("NumeroDocumentoIdentidad", $("#txtNroDocumento").val());
-                formData.append("Nombres", $("#txtNombres").val());
-                formData.append("Apellidos", $("#txtApellidos").val());
-                formData.append("Genero", $("#cboGenero").val());
-                formData.append("Biografia", $("#txtBiografia").val());
-
-                // Corrección decimales (reemplazar . por , para C#)
-                formData.append("Valoracion", $("#txtValoracion").val().toString().replace('.', ','));
-                formData.append("ValoracionAi", $("#txtValoracionAi").val().toString().replace('.', ','));
-                formData.append("ResumenValoracion", $("#txtResumenValoracion").val());
+                const fd = new FormData();
+                fd.append("IdDoctor", idEditar);
+                fd.append("NumeroDocumentoIdentidad", $("#txtNroDocumento").val());
+                fd.append("Nombres",   $("#txtNombres").val());
+                fd.append("Apellidos", $("#txtApellidos").val());
+                fd.append("Genero",    $("#cboGenero").val());
+                fd.append("Biografia", $("#txtBiografia").val());
+                fd.append("Valoracion",   $("#txtValoracion").val().toString().replace('.', ','));
+                fd.append("ValoracionAi", $("#txtValoracionAi").val().toString().replace('.', ','));
+                fd.append("ResumenValoracion", $("#txtResumenValoracion").val());
 
                 const inputFoto = document.getElementById('txtFoto');
-                if (inputFoto && inputFoto.files.length > 0) {
-                    formData.append("FotoFile", inputFoto.files[0]);
-                }
+                if (inputFoto?.files.length > 0) fd.append("FotoFile", inputFoto.files[0]);
 
                 const url = `/${controlador}/${idEditar > 0 ? "Editar" : "Guardar"}`;
-                const r = await fetch(url, { method: idEditar > 0 ? "PUT" : "POST", body: formData });
+                const r   = await fetch(url, { method: idEditar > 0 ? "PUT" : "POST", body: fd });
                 if (r.ok) {
                     Swal.fire("OK", "Doctor guardado con éxito.", "success");
                     bootstrap.Modal.getOrCreateInstance(document.getElementById(modal)).hide();
@@ -352,15 +409,21 @@
                 }
             }
 
-            async function cargarCalcom(id) {
-                // Reset campos Calcom
-                $("#txtCalApiKey, #txtCalUsername, #txtCalEventTypeId, #txtCalPublicUrl, #txtCalEventName").val("");
+            // ── Cal.com: helpers ──────────────────────────────────────────────────
+            function resetCalcomModal() {
+                $("#txtCalApiKey,#txtCalUsername,#txtCalEventTypeId,#txtCalPublicUrl,#txtCalEventName").val("");
                 $("#chkCalIsActive").prop("checked", false);
                 $("#divApiInfo").html('<p class="text-muted small">Pulsa "Consultar API" para cargar los eventos...</p>');
+                $("#divBookingFields").hide();
+                $("#divCamposRequeridos,#divCamposExistentes").html("");
+                $("#btnCrearCampos").hide();
+            }
 
+            async function cargarCalcom(id) {
+                resetCalcomModal();
                 const r = await fetch(`/Doctor/ObtenerCalcom?idDoctor=${id}`);
                 const j = await r.json();
-                if (j && j.data) {
+                if (j?.data) {
                     const d = j.data;
                     $("#txtCalApiKey").val(d.apiKey);
                     $("#txtCalUsername").val(d.calUsername);
@@ -372,62 +435,80 @@
                 }
             }
 
-            async function consultarApiCal() {
-                const key = $("#txtCalApiKey").val();
-                if (!key) return Swal.fire("Aviso", "Ingresa la API Key", "warning");
-                $("#divApiInfo").html('<div class="spinner-border spinner-border-sm" role="status"></div> Buscando...');
+            async function cargarYAnalizarBookingFields(apiKey, eventTypeId) {
+                $("#divBookingFields").show();
+                $("#divCamposRequeridos").html('<div class="spinner-border spinner-border-sm"></div>');
+                $("#divCamposExistentes").html("");
+                $("#btnCrearCampos").hide();
 
-                const r = await fetch(`/Doctor/GetDetallesApiCal?apiKey=${encodeURIComponent(key)}`);
-                const j = await r.json();
+                try {
+                    const r = await fetch(
+                        `/Doctor/GetBookingFields?apiKey=${encodeURIComponent(apiKey)}&eventTypeId=${eventTypeId}`
+                    );
+                    const j = await r.json();
 
-                if (r.ok && j.data && j.data.length > 0) {
-                    let html = '<div class="list-group">';
-                    j.data.forEach(e => {
-                        html += `<a href="#" class="list-group-item list-group-item-action api-item" data-id="${e.id}" data-title="${e.title}" data-slug="${e.slug}">
-                                    <strong>${e.title}</strong><br><small>ID: ${e.id} | Slug: ${e.slug}</small>
-                                 </a>`;
+                    if (!j.ok) {
+                        $("#divCamposRequeridos").html('<span class="text-danger small">Error al cargar campos.</span>');
+                        return;
+                    }
+
+                    const existentes     = Array.isArray(j.data) ? j.data : [];
+                    const slugsExistentes = new Set(existentes.map(f => (f.slug || f.name || "").toLowerCase()));
+
+                    // Panel 1: estado por campo requerido
+                    let htmlReq  = "";
+                    const faltantes = [];
+                    CAMPOS_REQUERIDOS.forEach(campo => {
+                        const existe = slugsExistentes.has(campo.slug.toLowerCase());
+                        if (existe) {
+                            htmlReq += `<span class="badge bg-success" title="Existe en Cal.com">
+                                            <i class="fas fa-check me-1"></i>${campo.label}
+                                        </span>`;
+                        } else {
+                            faltantes.push(campo.slug);
+                            htmlReq += `<span class="badge bg-danger" title="Falta en Cal.com">
+                                            <i class="fas fa-times me-1"></i>${campo.label}
+                                        </span>`;
+                        }
                     });
-                    html += '</div>';
-                    $("#divApiInfo").html(html);
+                    $("#divCamposRequeridos").html(htmlReq);
 
-                    $(".api-item").on("click", function(e) {
-                        e.preventDefault();
-                        $(".api-item").removeClass("selected active");
-                        $(this).addClass("selected active");
-                        $("#txtCalEventTypeId").val($(this).data("id"));
-                        $("#txtCalEventName").val($(this).data("title"));
-                        $("#chkCalIsActive").prop("checked", true);
-                        const user = $("#txtCalUsername").val();
-                        if(user) $("#txtCalPublicUrl").val(`https://cal.com/${user}/${$(this).data("slug")}`);
+                    // Panel 2: tabla de todos los campos del evento
+                    let htmlEx = '<table class="table table-sm table-bordered mb-0">'
+                               + '<thead><tr><th>Slug</th><th>Tipo</th><th>Requerido</th><th>Oculto</th></tr></thead><tbody>';
+                    existentes.forEach(f => {
+                        const slug   = f.slug || f.name || "—";
+                        const tipo   = f.type || "—";
+                        const req    = f.required
+                            ? '<span class="badge bg-warning text-dark">Sí</span>'
+                            : '<span class="badge bg-secondary">No</span>';
+                        const hidden = f.hidden
+                            ? '<span class="badge bg-dark">Sí</span>'
+                            : '<span class="badge bg-light text-dark border">No</span>';
+                        const esNativo = SLUGS_NATIVOS.has(slug) ? ' class="table-light"' : '';
+                        htmlEx += `<tr${esNativo}><td>${slug}</td><td>${tipo}</td><td>${req}</td><td>${hidden}</td></tr>`;
                     });
-                } else {
-                    $("#divApiInfo").html('<p class="text-danger small">No se encontraron eventos o la clave es inválida.</p>');
+                    htmlEx += '</tbody></table>';
+                    if (!existentes.length) htmlEx = '<p class="text-muted small">Sin campos definidos aún.</p>';
+                    $("#divCamposExistentes").html(htmlEx);
+
+                    // Botón crear faltantes
+                    if (faltantes.length > 0) {
+                        $("#btnCrearCampos")
+                            .data("faltantes", faltantes)
+                            .data("eventid",   eventTypeId)
+                            .data("apikey",    apiKey)
+                            .show();
+                    }
+                } catch (err) {
+                    console.error("Error bookingFields:", err);
+                    $("#divCamposRequeridos").html('<span class="text-danger small">Error inesperado.</span>');
                 }
             }
 
-            async function guardarCalcom() {
-                const payload = {
-                    idDoctor: idEditar,
-                    apiKey: $("#txtCalApiKey").val(),
-                    calUsername: $("#txtCalUsername").val(),
-                    calEventTypeId: parseInt($("#txtCalEventTypeId").val()) || 0,
-                    calPublicUrl: $("#txtCalPublicUrl").val(),
-                    calEventName: $("#txtCalEventName").val(),
-                    isActive: $("#chkCalIsActive").is(":checked")
-                };
-                const r = await fetch("/Doctor/GuardarCalcom", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
-                if (r.ok) {
-                    Swal.fire("OK", "Configuración de Cal.com guardada.", "success");
-                    bootstrap.Modal.getOrCreateInstance(document.getElementById("mdCalcom")).hide();
-                }
-            }
-
+            // ── DOMContentLoaded ──────────────────────────────────────────────────
             $(document).ready(async function () {
-                await cargarGeneros();
+                $("#cboGenero").html('<option value="M">M</option><option value="F">F</option>');
                 await cargarEspecialidades();
 
                 tablaData = $("#tbData").DataTable({
@@ -447,41 +528,41 @@
                         { data: "nombres" },
                         { data: "apellidos" },
                         { data: "genero" },
-                         {
-            data: "especialidadesDoc",
-            render: function(data, type, row) {
-                // Generamos los badges si existen especialidades
-                let badges = (data && data.length > 0)
-                    ? data.map(e => `<span class="badge bg-secondary me-1">${e.nombreEspecialidad}</span>`).join("")
-                    : ''; // Si no hay datos, devolvemos una cadena vacía en lugar de "Sin especialidad"
-
-                // Retornamos el contenedor con los badges y el botón alineado a la izquierda
-                return `<div class="d-flex flex-column align-items-start">
-                            <div class="mb-1">${badges}</div>
-                            <button type="button" class="btn btn-outline-primary btn-sm btn-especialidades"
-                                    style="padding: 2px 8px; font-size: 12px;"
-                                    title="Gestionar Especialidades">
-                                <i class="fas fa-plus-circle me-1"></i> Especialidades
-                            </button>
-                        </div>`;
-            }
-        }
+                        {
+                            data: "especialidadesDoc",
+                            render: function (data, type, row) {
+                                const badges = (data?.length > 0)
+                                    ? data.map(e => `<span class="badge bg-secondary me-1">${e.nombreEspecialidad}</span>`).join("")
+                                    : "";
+                                return `<div class="d-flex flex-column align-items-start">
+                                            <div class="mb-1">${badges}</div>
+                                            <button type="button" class="btn btn-outline-primary btn-sm btn-especialidades"
+                                                    style="padding:2px 8px;font-size:12px;" title="Gestionar Especialidades">
+                                                <i class="fas fa-plus-circle me-1"></i> Especialidades
+                                            </button>
+                                        </div>`;
+                            }
+                        }
                     ],
                     language: { url: "https://cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json" }
                 });
-                        // Previsualización de la foto seleccionada localmente
-        $("#txtFoto").on("change", function () {
-            const file = this.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    $("#imgFotoPreview").attr("src", e.target.result).show();
-                };
-                reader.readAsDataURL(file);
-            }
-        });
+
+                // Preview foto local
+                $("#txtFoto").on("change", function () {
+                    const file = this.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = e => $("#imgFotoPreview").attr("src", e.target.result).show();
+                        reader.readAsDataURL(file);
+                    }
+                });
+
+                // Botones tabla
                 $("#btnGuardar").on("click", guardarDoctor);
-                $("#btnNuevo").on("click", () => { limpiarModal(); bootstrap.Modal.getOrCreateInstance(document.getElementById(modal)).show(); });
+                $("#btnNuevo").on("click", () => {
+                    limpiarModal();
+                    bootstrap.Modal.getOrCreateInstance(document.getElementById(modal)).show();
+                });
 
                 $("#tbData tbody").on("click", ".btn-editar", function () {
                     const row = tablaData.row($(this).closest("tr")).data();
@@ -489,53 +570,167 @@
                     bootstrap.Modal.getOrCreateInstance(document.getElementById(modal)).show();
                 });
 
-                $("#btnCalcom").on("click", () => {
+                $("#tbData tbody").on("click", ".btn-especialidades", function () {
+                    const row = tablaData.row($(this).closest("tr")).data();
+                    idEditar = row.idDoctor ?? row.IdDoctor;
+                    $("#lblDoctorEsp").text(`${row.nombres} ${row.apellidos}`.trim());
+                    cargarEspecialidadesDoctor(idEditar);
+                    bootstrap.Modal.getOrCreateInstance(document.getElementById("mdEspecialidades")).show();
+                });
+
+                $("#btnAsignarEspecialidad").on("click", async function () {
+                    const idEsp = $("#cboEspecialidadMultiple").val();
+                    if (!idEsp) return;
+                    await fetch(`/Doctor/AsignarEspecialidad?idDoctor=${idEditar}&idEspecialidad=${idEsp}`, { method: "POST" });
+                    cargarEspecialidadesDoctor(idEditar);
+                    tablaData.ajax.reload(null, false);
+                });
+
+                // ── Cal.com ───────────────────────────────────────────────────────
+                $("#btnCalcom").on("click", function () {
                     if (idEditar === 0) return Swal.fire("Aviso", "Primero guarda el doctor", "info");
                     cargarCalcom(idEditar);
                     bootstrap.Modal.getOrCreateInstance(document.getElementById("mdCalcom")).show();
                 });
 
-                $("#btnConsultarApi").on("click", consultarApiCal);
-                $("#btnGuardarCalcom").on("click", guardarCalcom);
-      
-        // Evento para abrir el modal de especialidades
-        $("#tbData tbody").on("click", ".btn-especialidades", function () {
-            const row = tablaData.row($(this).closest("tr")).data();
-            idEditar = row.idDoctor ?? row.IdDoctor;
+                $("#btnConsultarApi").on("click", async function () {
+                    const key = $("#txtCalApiKey").val().trim();
+                    if (!key) return Swal.fire("Aviso", "Ingresa la API Key", "warning");
 
-            // CONCATENAMOS NOMBRES Y APELLIDOS AQUÍ
-            const nombreCompleto = (row.nombres + " " + row.apellidos).trim();
-            $("#lblDoctorEsp").text(nombreCompleto);
+                    $("#divApiInfo").html('<div class="spinner-border spinner-border-sm text-success"></div> Buscando...');
+                    $("#divBookingFields").hide();
 
-            cargarEspecialidadesDoctor(idEditar);
-            bootstrap.Modal.getOrCreateInstance(document.getElementById("mdEspecialidades")).show();
-        });
+                    const r = await fetch(`/Doctor/GetDetallesApiCal?apiKey=${encodeURIComponent(key)}`);
+                    const j = await r.json();
 
-                $("#btnAsignarEspecialidad").on("click", async function () {
-                    const idEsp = $("#cboEspecialidadMultiple").val();
-                    if(!idEsp) return;
-                    await fetch(`/Doctor/AsignarEspecialidad?idDoctor=${idEditar}&idEspecialidad=${idEsp}`, { method: "POST" });
-                    cargarEspecialidadesDoctor(idEditar);
-                    tablaData.ajax.reload(null, false);
+                    if (r.ok && j.data) {
+                        let items = [];
+                        try {
+                            const raw = j.data;
+                            if (Array.isArray(raw)) {
+                                items = raw;
+                            } else if (raw.eventTypeGroups) {
+                                raw.eventTypeGroups.forEach(g => items.push(...(g.eventTypes || [])));
+                            }
+                        } catch { items = []; }
+
+                        if (!items.length) {
+                            $("#divApiInfo").html('<p class="text-danger small">No se encontraron eventos.</p>');
+                            return;
+                        }
+
+                        let html = '<div class="list-group">';
+                        items.forEach(e => {
+                            html += `<a href="#" class="list-group-item list-group-item-action api-item py-1"
+                                        data-id="${e.id}" data-title="${e.title}" data-slug="${e.slug}">
+                                        <strong>${e.title}</strong>
+                                        <small class="text-muted ms-2">ID: ${e.id} | Slug: ${e.slug}</small>
+                                     </a>`;
+                        });
+                        html += '</div>';
+                        $("#divApiInfo").html(html);
+
+                        $(".api-item").on("click", async function (e) {
+                            e.preventDefault();
+                            $(".api-item").removeClass("selected active");
+                            $(this).addClass("selected active");
+
+                            const evId   = $(this).data("id");
+                            const evSlug = $(this).data("slug");
+                            const user   = $("#txtCalUsername").val().trim();
+
+                            $("#txtCalEventTypeId").val(evId);
+                            $("#txtCalEventName").val($(this).data("title"));
+                            $("#chkCalIsActive").prop("checked", true);
+                            if (user) $("#txtCalPublicUrl").val(`https://cal.com/${user}/${evSlug}`);
+
+                            await cargarYAnalizarBookingFields(key, evId);
+                        });
+                    } else {
+                        $("#divApiInfo").html('<p class="text-danger small">No se encontraron eventos o la clave es inválida.</p>');
+                    }
+                });
+
+                $("#btnCrearCampos").on("click", async function () {
+                    const faltantes   = $(this).data("faltantes") || [];
+                    const eventTypeId = $(this).data("eventid");
+                    const apiKey      = $(this).data("apikey");
+                    if (!faltantes.length) return;
+
+                    const confirm = await Swal.fire({
+                        title: "¿Crear campos en Cal.com?",
+                        html:  `Se crearán los campos:<br><strong>${faltantes.join(", ")}</strong><br><br>
+                                Esto modifica el formulario de reserva del evento en Cal.com.`,
+                        icon:  "question",
+                        showCancelButton: true,
+                        confirmButtonText: "Sí, crear",
+                        cancelButtonText:  "Cancelar"
+                    });
+                    if (!confirm.isConfirmed) return;
+
+                    Swal.fire({ title: "Creando campos...", didOpen: () => Swal.showLoading() });
+
+                    try {
+                        const res = await fetch("/Doctor/CrearBookingFieldsFaltantes", {
+                            method:  "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body:    JSON.stringify({ apiKey, eventTypeId, camposFaltantes: faltantes })
+                        });
+                        const result = await res.json();
+
+                        if (result.ok) {
+                            Swal.fire("¡Hecho!", result.msg, "success");
+                            await cargarYAnalizarBookingFields(apiKey, eventTypeId);
+                        } else {
+                            Swal.fire("Error", result.msg || "No se pudieron crear los campos.", "error");
+                        }
+                    } catch {
+                        Swal.fire("Error", "Fallo de comunicación con el servidor.", "error");
+                    }
+                });
+
+                $("#btnGuardarCalcom").on("click", async function () {
+                    const payload = {
+                        idDoctor:       idEditar,
+                        apiKey:         $("#txtCalApiKey").val(),
+                        calUsername:    $("#txtCalUsername").val(),
+                        calEventTypeId: parseInt($("#txtCalEventTypeId").val()) || 0,
+                        calPublicUrl:   $("#txtCalPublicUrl").val(),
+                        calEventName:   $("#txtCalEventName").val(),
+                        isActive:       $("#chkCalIsActive").is(":checked")
+                    };
+                    const r = await fetch("/Doctor/GuardarCalcom", {
+                        method:  "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body:    JSON.stringify(payload)
+                    });
+                    if (r.ok) {
+                        Swal.fire("OK", "Configuración de Cal.com guardada.", "success");
+                        bootstrap.Modal.getOrCreateInstance(document.getElementById("mdCalcom")).hide();
+                    }
                 });
             });
 
-            window.cargarEspecialidadesDoctor = async function(id) {
-                if ($.fn.DataTable.isDataTable('#tbEspecialidadesDoc')) $('#tbEspecialidadesDoc').DataTable().destroy();
+            // ── Especialidades ────────────────────────────────────────────────────
+            window.cargarEspecialidadesDoctor = async function (id) {
+                if ($.fn.DataTable.isDataTable('#tbEspecialidadesDoc'))
+                    $('#tbEspecialidadesDoc').DataTable().destroy();
                 $('#tbEspecialidadesDoc').DataTable({
                     ajax: { url: `/Doctor/ListarEspecialidadesDoctor?idDoctor=${id}`, dataSrc: "data" },
                     columns: [
                         { data: "nombreEspecialidad" },
                         {
                             data: "idEspecialidadDoctor",
-                            render: data => `<button class="btn btn-danger btn-sm" onclick="eliminarEspecialidad(${data})"><i class="fas fa-trash"></i></button>`
+                            render: d => `<button class="btn btn-danger btn-sm" onclick="eliminarEspecialidad(${d})">
+                                              <i class="fas fa-trash"></i>
+                                          </button>`
                         }
                     ],
                     paging: false, dom: 't'
                 });
             };
 
-            window.eliminarEspecialidad = async function(id) {
+            window.eliminarEspecialidad = async function (id) {
                 const res = await Swal.fire({ title: "¿Quitar?", showCancelButton: true });
                 if (res.isConfirmed) {
                     await fetch(`/Doctor/EliminarEspecialidad?id=${id}`, { method: "DELETE" });
@@ -543,6 +738,7 @@
                     tablaData.ajax.reload(null, false);
                 }
             };
+
         })();
     </script>
 }

@@ -452,5 +452,150 @@ namespace ClinicaWeb.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
             }
         }
+        // Añade estos dos métodos dentro de DoctorController.cs
+        // No hay que tocar nada más: ni repositorio, ni BD, ni clases.
+
+        /// <summary>
+        /// Obtiene los bookingFields del event-type seleccionado en Cal.com
+        /// GET /Doctor/GetBookingFields?apiKey=...&eventTypeId=...
+        /// </summary>
+        [Authorize(Roles = "Doctor,Administrador")]
+        [HttpGet]
+        public async Task<IActionResult> GetBookingFields(string apiKey, int eventTypeId, string? apiBase)
+        {
+            try
+            {
+                string url = (string.IsNullOrEmpty(apiBase) ? "https://api.cal.eu/v2" : apiBase).TrimEnd('/');
+
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
+                client.DefaultRequestHeaders.Add("cal-api-version", "2024-06-14");
+
+                var res = await client.GetAsync($"{url}/event-types/{eventTypeId}");
+                if (!res.IsSuccessStatusCode)
+                    return BadRequest(new { ok = false, msg = $"Cal.com respondió: {res.StatusCode}" });
+
+                var json = await res.Content.ReadFromJsonAsync<JsonElement>();
+
+                JsonElement bookingFields = default;
+                try { bookingFields = json.GetProperty("data").GetProperty("bookingFields"); }
+                catch { return Ok(new { ok = true, data = Array.Empty<object>() }); }
+
+                return Ok(new { ok = true, data = bookingFields });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { ok = false, msg = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Crea los bookingFields faltantes haciendo PATCH al event-type en Cal.com
+        /// POST /Doctor/CrearBookingFieldsFaltantes
+        /// Body: { apiKey, apiBase, eventTypeId, camposFaltantes: ["apellido","razoncitausr",...] }
+        /// </summary>
+        [Authorize(Roles = "Doctor,Administrador")]
+        [HttpPost]
+        public async Task<IActionResult> CrearBookingFieldsFaltantes([FromBody] JsonElement body)
+        {
+            try
+            {
+                string apiKey = body.GetProperty("apiKey").GetString() ?? "";
+                string apiBase = body.TryGetProperty("apiBase", out var ab)
+                                      ? ab.GetString() ?? "https://api.cal.eu/v2"
+                                      : "https://api.cal.eu/v2";
+                int eventTypeId = body.GetProperty("eventTypeId").GetInt32();
+
+                var camposFaltantes = new List<string>();
+                if (body.TryGetProperty("camposFaltantes", out var cf))
+                    foreach (var item in cf.EnumerateArray())
+                        camposFaltantes.Add(item.GetString() ?? "");
+
+                if (!camposFaltantes.Any())
+                    return Ok(new { ok = true, msg = "No hay campos que crear." });
+
+                // Definición de todos los campos custom que maneja la clínica
+                var definiciones = new Dictionary<string, object>
+                {
+                    ["title"] = new
+                    {
+                        name = "title",
+                        type = "text",
+                        label = "Asunto de la cita",
+                        required = true,
+                        hidden = false
+                    },
+                    ["apellido"] = new
+                    {
+                        name = "apellido",
+                        type = "text",
+                        label = "Apellido",
+                        required = true,
+                        hidden = false
+                    },
+                    ["razoncitausr"] = new
+                    {
+                        name = "razoncitausr",
+                        type = "textarea",
+                        label = "Motivo de la cita",
+                        required = false,
+                        hidden = false
+                    },
+                    ["email"] = new
+                    {
+                        name = "email",
+                        type = "email",
+                        label = "Email",
+                        required = false,
+                        hidden = false
+                    },
+                    ["telefonoMovil"] = new
+                    {
+                        name = "telefonoMovil",
+                        type = "phone",
+                        label = "Teléfono móvil",
+                        required = false,
+                        hidden = false
+                    }
+                };
+
+                var nuevosFields = camposFaltantes
+                    .Where(c => definiciones.ContainsKey(c))
+                    .Select(c => definiciones[c])
+                    .ToList();
+
+                if (!nuevosFields.Any())
+                    return Ok(new { ok = false, msg = "Campos desconocidos." });
+
+                string url = apiBase.TrimEnd('/');
+
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
+                client.DefaultRequestHeaders.Add("cal-api-version", "2024-06-14");
+
+                var patch = new { bookingFields = nuevosFields };
+                var content = new StringContent(
+                    System.Text.Json.JsonSerializer.Serialize(patch),
+                    System.Text.Encoding.UTF8,
+                    "application/json");
+
+                var res = await client.PatchAsync($"{url}/event-types/{eventTypeId}", content);
+                var resBody = await res.Content.ReadAsStringAsync();
+
+                if (!res.IsSuccessStatusCode)
+                    return BadRequest(new
+                    {
+                        ok = false,
+                        msg = $"Cal.com respondió: {res.StatusCode}",
+                        detalle = resBody
+                    });
+
+                return Ok(new { ok = true, msg = $"Campos creados: {string.Join(", ", camposFaltantes)}" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { ok = false, msg = ex.Message });
+            }
+        }
     }
 }
