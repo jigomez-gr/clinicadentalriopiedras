@@ -272,14 +272,12 @@
                                 <i class="fas fa-magic me-1"></i> Crear campos faltantes en Cal.com
                             </button>
                         </div>
-
                         <div class="mb-2">
                             <small class="text-muted fw-bold text-uppercase" style="font-size:.72rem;">
                                 Estado campos requeridos por la clínica
                             </small>
                             <div id="divCamposRequeridos" class="d-flex flex-wrap gap-2 mt-1"></div>
                         </div>
-
                         <div>
                             <small class="text-muted fw-bold text-uppercase" style="font-size:.72rem;">
                                 Campos actuales en el evento
@@ -320,24 +318,23 @@
             let tablaData;
             let idEditar = 0;
             const controlador = "Doctor";
-            const modal = "mdData";
+            const modal       = "mdData";
 
-            // ── Campos que la clínica necesita en Cal.com ─────────────────────────
+            // ── Campos custom que la clínica necesita en Cal.com ──────────────────
+            // NO incluir nativos (email, title, attendeePhoneNumber...): Cal.com los tiene siempre
             const CAMPOS_REQUERIDOS = [
-                { slug: "title",         label: "Asunto de la cita", tipo: "text",     required: true  },
                 { slug: "apellido",      label: "Apellido",          tipo: "text",     required: true  },
                 { slug: "razoncitausr",  label: "Motivo de la cita", tipo: "textarea", required: false },
-                { slug: "email",         label: "Email",             tipo: "email",    required: false },
                 { slug: "telefonoMovil", label: "Teléfono móvil",    tipo: "phone",    required: false }
             ];
 
-            // Slugs nativos de Cal.com (no se tratan como faltantes)
+            // Slugs nativos de Cal.com — nunca se marcan como faltantes
             const SLUGS_NATIVOS = new Set([
-                "name","email","location","notes","guests",
+                "name","email","location","title","notes","guests",
                 "rescheduleReason","attendeePhoneNumber","smsReminderNumber"
             ]);
 
-            // ── Helpers ───────────────────────────────────────────────────────────
+            // ── Helpers generales ─────────────────────────────────────────────────
             window.openHelpVideo = function (fileName) {
                 window.open("/helps/" + encodeURIComponent(fileName), "helpVideo", "width=900,height=520");
             };
@@ -361,7 +358,6 @@
                 $("#txtValoracion").val(row.valoracion ?? "3.0");
                 $("#txtValoracionAi").val(row.valoracionAi ?? "3.0");
                 $("#txtResumenValoracion").val(row.resumenValoracion ?? "");
-
                 if (idEditar > 0) {
                     const urlFoto = `/Doctor/VerFoto?id=${idEditar}&t=${Date.now()}`;
                     $("#imgFotoPreview").attr("src", urlFoto).show();
@@ -378,7 +374,7 @@
                     cbo.innerHTML = "<option value=''>-- Seleccionar --</option>";
                     arr.forEach(e => {
                         const o = document.createElement("option");
-                        o.value = e.idEspecialidad ?? e.IdEspecialidad;
+                        o.value       = e.idEspecialidad ?? e.IdEspecialidad;
                         o.textContent = e.nombre ?? e.Nombre;
                         cbo.appendChild(o);
                     });
@@ -387,19 +383,17 @@
 
             async function guardarDoctor() {
                 const fd = new FormData();
-                fd.append("IdDoctor", idEditar);
-                fd.append("NumeroDocumentoIdentidad", $("#txtNroDocumento").val());
-                fd.append("Nombres",   $("#txtNombres").val());
-                fd.append("Apellidos", $("#txtApellidos").val());
-                fd.append("Genero",    $("#cboGenero").val());
-                fd.append("Biografia", $("#txtBiografia").val());
-                fd.append("Valoracion",   $("#txtValoracion").val().toString().replace('.', ','));
-                fd.append("ValoracionAi", $("#txtValoracionAi").val().toString().replace('.', ','));
-                fd.append("ResumenValoracion", $("#txtResumenValoracion").val());
-
+                fd.append("IdDoctor",                  idEditar);
+                fd.append("NumeroDocumentoIdentidad",  $("#txtNroDocumento").val());
+                fd.append("Nombres",                   $("#txtNombres").val());
+                fd.append("Apellidos",                 $("#txtApellidos").val());
+                fd.append("Genero",                    $("#cboGenero").val());
+                fd.append("Biografia",                 $("#txtBiografia").val());
+                fd.append("Valoracion",                $("#txtValoracion").val().toString().replace('.', ','));
+                fd.append("ValoracionAi",              $("#txtValoracionAi").val().toString().replace('.', ','));
+                fd.append("ResumenValoracion",         $("#txtResumenValoracion").val());
                 const inputFoto = document.getElementById('txtFoto');
                 if (inputFoto?.files.length > 0) fd.append("FotoFile", inputFoto.files[0]);
-
                 const url = `/${controlador}/${idEditar > 0 ? "Editar" : "Guardar"}`;
                 const r   = await fetch(url, { method: idEditar > 0 ? "PUT" : "POST", body: fd });
                 if (r.ok) {
@@ -409,7 +403,7 @@
                 }
             }
 
-            // ── Cal.com: helpers ──────────────────────────────────────────────────
+            // ── Cal.com ───────────────────────────────────────────────────────────
             function resetCalcomModal() {
                 $("#txtCalApiKey,#txtCalUsername,#txtCalEventTypeId,#txtCalPublicUrl,#txtCalEventName").val("");
                 $("#chkCalIsActive").prop("checked", false);
@@ -452,21 +446,21 @@
                         return;
                     }
 
-                    const existentes     = Array.isArray(j.data) ? j.data : [];
-                    const slugsExistentes = new Set(existentes.map(f => (f.slug || f.name || "").toLowerCase()));
+                    const existentes      = Array.isArray(j.data) ? j.data : [];
+                    const slugsExistentes = new Set(existentes.map(f => (f.slug || "").toLowerCase()));
 
-                    // Panel 1: estado por campo requerido
+                    // Panel 1: estado de cada campo requerido
                     let htmlReq  = "";
                     const faltantes = [];
                     CAMPOS_REQUERIDOS.forEach(campo => {
                         const existe = slugsExistentes.has(campo.slug.toLowerCase());
                         if (existe) {
-                            htmlReq += `<span class="badge bg-success" title="Existe en Cal.com">
+                            htmlReq += `<span class="badge bg-success">
                                             <i class="fas fa-check me-1"></i>${campo.label}
                                         </span>`;
                         } else {
                             faltantes.push(campo.slug);
-                            htmlReq += `<span class="badge bg-danger" title="Falta en Cal.com">
+                            htmlReq += `<span class="badge bg-danger">
                                             <i class="fas fa-times me-1"></i>${campo.label}
                                         </span>`;
                         }
@@ -477,7 +471,7 @@
                     let htmlEx = '<table class="table table-sm table-bordered mb-0">'
                                + '<thead><tr><th>Slug</th><th>Tipo</th><th>Requerido</th><th>Oculto</th></tr></thead><tbody>';
                     existentes.forEach(f => {
-                        const slug   = f.slug || f.name || "—";
+                        const slug   = f.slug || "—";
                         const tipo   = f.type || "—";
                         const req    = f.required
                             ? '<span class="badge bg-warning text-dark">Sí</span>'
@@ -530,14 +524,14 @@
                         { data: "genero" },
                         {
                             data: "especialidadesDoc",
-                            render: function (data, type, row) {
+                            render: function (data) {
                                 const badges = (data?.length > 0)
                                     ? data.map(e => `<span class="badge bg-secondary me-1">${e.nombreEspecialidad}</span>`).join("")
                                     : "";
                                 return `<div class="d-flex flex-column align-items-start">
                                             <div class="mb-1">${badges}</div>
                                             <button type="button" class="btn btn-outline-primary btn-sm btn-especialidades"
-                                                    style="padding:2px 8px;font-size:12px;" title="Gestionar Especialidades">
+                                                    style="padding:2px 8px;font-size:12px;">
                                                 <i class="fas fa-plus-circle me-1"></i> Especialidades
                                             </button>
                                         </div>`;
@@ -557,8 +551,9 @@
                     }
                 });
 
-                // Botones tabla
+                // ── Botones tabla ─────────────────────────────────────────────────
                 $("#btnGuardar").on("click", guardarDoctor);
+
                 $("#btnNuevo").on("click", () => {
                     limpiarModal();
                     bootstrap.Modal.getOrCreateInstance(document.getElementById(modal)).show();
@@ -572,7 +567,7 @@
 
                 $("#tbData tbody").on("click", ".btn-especialidades", function () {
                     const row = tablaData.row($(this).closest("tr")).data();
-                    idEditar = row.idDoctor ?? row.IdDoctor;
+                    idEditar  = row.idDoctor ?? row.IdDoctor;
                     $("#lblDoctorEsp").text(`${row.nombres} ${row.apellidos}`.trim());
                     cargarEspecialidadesDoctor(idEditar);
                     bootstrap.Modal.getOrCreateInstance(document.getElementById("mdEspecialidades")).show();
@@ -581,18 +576,20 @@
                 $("#btnAsignarEspecialidad").on("click", async function () {
                     const idEsp = $("#cboEspecialidadMultiple").val();
                     if (!idEsp) return;
-                    await fetch(`/Doctor/AsignarEspecialidad?idDoctor=${idEditar}&idEspecialidad=${idEsp}`, { method: "POST" });
+                    await fetch(`/Doctor/AsignarEspecialidad?idDoctor=${idEditar}&idEspecialidad=${idEsp}`,
+                                { method: "POST" });
                     cargarEspecialidadesDoctor(idEditar);
                     tablaData.ajax.reload(null, false);
                 });
 
-                // ── Cal.com ───────────────────────────────────────────────────────
+                // ── Cal.com: abrir modal ──────────────────────────────────────────
                 $("#btnCalcom").on("click", function () {
                     if (idEditar === 0) return Swal.fire("Aviso", "Primero guarda el doctor", "info");
                     cargarCalcom(idEditar);
                     bootstrap.Modal.getOrCreateInstance(document.getElementById("mdCalcom")).show();
                 });
 
+                // ── Cal.com: consultar API ────────────────────────────────────────
                 $("#btnConsultarApi").on("click", async function () {
                     const key = $("#txtCalApiKey").val().trim();
                     if (!key) return Swal.fire("Aviso", "Ingresa la API Key", "warning");
@@ -634,16 +631,13 @@
                             e.preventDefault();
                             $(".api-item").removeClass("selected active");
                             $(this).addClass("selected active");
-
                             const evId   = $(this).data("id");
                             const evSlug = $(this).data("slug");
                             const user   = $("#txtCalUsername").val().trim();
-
                             $("#txtCalEventTypeId").val(evId);
                             $("#txtCalEventName").val($(this).data("title"));
                             $("#chkCalIsActive").prop("checked", true);
                             if (user) $("#txtCalPublicUrl").val(`https://cal.com/${user}/${evSlug}`);
-
                             await cargarYAnalizarBookingFields(key, evId);
                         });
                     } else {
@@ -651,6 +645,7 @@
                     }
                 });
 
+                // ── Cal.com: crear campos faltantes ───────────────────────────────
                 $("#btnCrearCampos").on("click", async function () {
                     const faltantes   = $(this).data("faltantes") || [];
                     const eventTypeId = $(this).data("eventid");
@@ -662,7 +657,7 @@
                         html:  `Se crearán los campos:<br><strong>${faltantes.join(", ")}</strong><br><br>
                                 Esto modifica el formulario de reserva del evento en Cal.com.`,
                         icon:  "question",
-                        showCancelButton: true,
+                        showCancelButton:  true,
                         confirmButtonText: "Sí, crear",
                         cancelButtonText:  "Cancelar"
                     });
@@ -677,7 +672,6 @@
                             body:    JSON.stringify({ apiKey, eventTypeId, camposFaltantes: faltantes })
                         });
                         const result = await res.json();
-
                         if (result.ok) {
                             Swal.fire("¡Hecho!", result.msg, "success");
                             await cargarYAnalizarBookingFields(apiKey, eventTypeId);
@@ -689,6 +683,7 @@
                     }
                 });
 
+                // ── Cal.com: guardar configuración en BD ──────────────────────────
                 $("#btnGuardarCalcom").on("click", async function () {
                     const payload = {
                         idDoctor:       idEditar,
@@ -711,7 +706,7 @@
                 });
             });
 
-            // ── Especialidades ────────────────────────────────────────────────────
+            // ── Especialidades (globales) ─────────────────────────────────────────
             window.cargarEspecialidadesDoctor = async function (id) {
                 if ($.fn.DataTable.isDataTable('#tbEspecialidadesDoc'))
                     $('#tbEspecialidadesDoc').DataTable().destroy();
@@ -721,7 +716,8 @@
                         { data: "nombreEspecialidad" },
                         {
                             data: "idEspecialidadDoctor",
-                            render: d => `<button class="btn btn-danger btn-sm" onclick="eliminarEspecialidad(${d})">
+                            render: d => `<button class="btn btn-danger btn-sm"
+                                                  onclick="eliminarEspecialidad(${d})">
                                               <i class="fas fa-trash"></i>
                                           </button>`
                         }

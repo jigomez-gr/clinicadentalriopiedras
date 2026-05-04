@@ -455,8 +455,11 @@ namespace ClinicaWeb.Controllers
         // Añade estos dos métodos dentro de DoctorController.cs
         // No hay que tocar nada más: ni repositorio, ni BD, ni clases.
 
+        // ── Añadir estos dos métodos en DoctorController.cs ──────────────────────────
+        // No tocar nada más del controlador.
+
         /// <summary>
-        /// Obtiene los bookingFields del event-type seleccionado en Cal.com
+        /// Obtiene los bookingFields del event-type en Cal.com
         /// GET /Doctor/GetBookingFields?apiKey=...&eventTypeId=...
         /// </summary>
         [Authorize(Roles = "Doctor,Administrador")]
@@ -490,9 +493,9 @@ namespace ClinicaWeb.Controllers
         }
 
         /// <summary>
-        /// Crea los bookingFields faltantes haciendo PATCH al event-type en Cal.com
+        /// Crea en Cal.com los bookingFields custom que falten en el event-type
         /// POST /Doctor/CrearBookingFieldsFaltantes
-        /// Body: { apiKey, apiBase, eventTypeId, camposFaltantes: ["apellido","razoncitausr",...] }
+        /// Body: { apiKey, apiBase?, eventTypeId, camposFaltantes: ["apellido","razoncitausr","telefonoMovil"] }
         /// </summary>
         [Authorize(Roles = "Doctor,Administrador")]
         [HttpPost]
@@ -514,20 +517,12 @@ namespace ClinicaWeb.Controllers
                 if (!camposFaltantes.Any())
                     return Ok(new { ok = true, msg = "No hay campos que crear." });
 
-                // Definición de todos los campos custom que maneja la clínica
+                // Solo campos CUSTOM (Cal.com exige "slug"; los nativos name/email los gestiona él)
                 var definiciones = new Dictionary<string, object>
                 {
-                    ["title"] = new
-                    {
-                        name = "title",
-                        type = "text",
-                        label = "Asunto de la cita",
-                        required = true,
-                        hidden = false
-                    },
                     ["apellido"] = new
                     {
-                        name = "apellido",
+                        slug = "apellido",
                         type = "text",
                         label = "Apellido",
                         required = true,
@@ -535,25 +530,17 @@ namespace ClinicaWeb.Controllers
                     },
                     ["razoncitausr"] = new
                     {
-                        name = "razoncitausr",
+                        slug = "razoncitausr",
                         type = "textarea",
                         label = "Motivo de la cita",
                         required = false,
                         hidden = false
                     },
-                    ["email"] = new
-                    {
-                        name = "email",
-                        type = "email",
-                        label = "Email",
-                        required = false,
-                        hidden = false
-                    },
                     ["telefonoMovil"] = new
                     {
-                        name = "telefonoMovil",
+                        slug = "telefonoMovil",
                         type = "phone",
-                        label = "Teléfono móvil",
+                        label = "Telefono movil",
                         required = false,
                         hidden = false
                     }
