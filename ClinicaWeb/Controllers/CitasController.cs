@@ -217,31 +217,47 @@ namespace ClinicaWeb.Controllers
         public async Task<IActionResult> ActualizarMotivoPaciente([FromBody] JsonElement modelo)
         {
             if (modelo.ValueKind == JsonValueKind.Undefined)
-            {
                 return StatusCode(StatusCodes.Status400BadRequest,
                     new { data = "Modelo inválido en ActualizarMotivoPaciente" });
-            }
 
             int idCita = modelo.GetProperty("idCita").GetInt32();
             if (idCita <= 0)
-            {
                 return StatusCode(StatusCodes.Status400BadRequest,
                     new { data = "IdCita inválido" });
-            }
 
-            string razon = modelo.TryGetProperty("razonCitaUsr", out var r) ? r.GetString() ?? "" : "";
-            string? documentoBase64 = modelo.TryGetProperty("documentoBase64", out var d) ? d.GetString() : null;
-            string? contentType = modelo.TryGetProperty("contentType", out var ct) ? ct.GetString() : null;
-            int? valDoctorCita = modelo.TryGetProperty("valDoctorCita", out var v) && v.ValueKind == JsonValueKind.Number ? v.GetInt32() : null;
-            string? opinionDoctorYClinica = modelo.TryGetProperty("opinionDoctorYClinica", out var o) ? o.GetString() : null;
+            string razon = modelo.TryGetProperty("razonCitaUsr", out var r)
+                ? r.GetString() ?? "" : "";
+
+            string? documentoBase64 = modelo.TryGetProperty("documentoBase64", out var d)
+                ? d.GetString() : null;
+
+            string? contentType = modelo.TryGetProperty("contentType", out var ct)
+                ? ct.GetString() : null;
+
+            int? valDoctorCita = modelo.TryGetProperty("valDoctorCita", out var v)
+                && v.ValueKind == JsonValueKind.Number
+                ? v.GetInt32() : null;
+
+            string? opinionDoctorYClinica = modelo.TryGetProperty("opinionDoctorYClinica", out var o)
+                ? o.GetString() : null;
+
+            // NUEVOS CAMPOS
+            string? citaConfirmada = modelo.TryGetProperty("citaConfirmada", out var cc)
+                ? cc.GetString() : null;
+
+            DateTime? fechaConfirmacion = null;
+            if (modelo.TryGetProperty("fechaConfirmacion", out var fc)
+                && fc.ValueKind != JsonValueKind.Null
+                && fc.ValueKind != JsonValueKind.Undefined)
+            {
+                if (DateTime.TryParse(fc.GetString(), out var fechaParsed))
+                    fechaConfirmacion = fechaParsed;
+            }
 
             byte[]? docBytes = null;
             if (!string.IsNullOrWhiteSpace(documentoBase64))
             {
-                try
-                {
-                    docBytes = Convert.FromBase64String(documentoBase64);
-                }
+                try { docBytes = Convert.FromBase64String(documentoBase64); }
                 catch (FormatException ex)
                 {
                     return StatusCode(StatusCodes.Status400BadRequest,
@@ -255,12 +271,13 @@ namespace ClinicaWeb.Controllers
                 docBytes,
                 contentType,
                 valDoctorCita,
-                opinionDoctorYClinica
+                opinionDoctorYClinica,
+                citaConfirmada,
+                fechaConfirmacion
             );
 
             return StatusCode(StatusCodes.Status200OK, new { data = respuesta });
         }
-        
 
         // ===================== ADMIN: LISTADO Y ACTUALIZACIÓN COMPLETA =====================
 

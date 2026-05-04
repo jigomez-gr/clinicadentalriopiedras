@@ -27,13 +27,15 @@ namespace ClinicaData.Contrato
         Task<string> AdminActualizarCita(Cita objeto);
         Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfirmada);
         Task<string> ActualizarMotivoPaciente(
-            int idCita,
-            string razonCitaUsr,
-            byte[]? documento,
-            string? contentType,
-            int? valDoctorCita,
-            string? opinionDoctorYClinica
-        );
+     int idCita,
+     string razonCitaUsr,
+     byte[]? documento,
+     string? contentType,
+     int? valDoctorCita,
+     string? opinionDoctorYClinica,
+     string? citaConfirmada,
+     DateTime? fechaConfirmacion
+ );
         // ... lo que ya tengas ...
 
         Task<List<Cita>> ListaCitasAdmin(int idEstadoCita);

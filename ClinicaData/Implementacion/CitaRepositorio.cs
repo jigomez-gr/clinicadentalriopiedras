@@ -218,7 +218,6 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 return "Error al guardar la cita";
             }
         }
-
         public async Task<List<Cita>> ListaCitasPendiente(int IdUsuario)
         {
             var lista = new List<Cita>();
@@ -234,31 +233,58 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
             {
                 var cita = new Cita
                 {
-                    IdCita = Convert.ToInt32(dr["IdCita"]),
-                    FechaCita = dr["FechaCita"]?.ToString() ?? "",
-                    FechaCitaOrden = dr["FechaCitaOrden"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(dr["FechaCitaOrden"]),
-                    HoraCita = dr["HoraCita"]?.ToString() ?? "",
+                    IdCita = Convert.ToInt32(dr["idcita"]),
+                    FechaCita = dr["fechacita"]?.ToString() ?? "",
+                    FechaCitaOrden = dr["fechacitaorden"] == DBNull.Value
+                                         ? (DateTime?)null
+                                         : Convert.ToDateTime(dr["fechacitaorden"]),
+                    HoraCita = dr["horacita"]?.ToString() ?? "",
                     Especialidad = new Especialidad
                     {
-                        Nombre = dr["NombreEspecialidad"]?.ToString() ?? "",
+                        Nombre = dr["nombreespecialidad"]?.ToString() ?? ""
                     },
                     Doctor = new Doctor
                     {
-                        Nombres = dr["Nombres"]?.ToString() ?? "",
-                        Apellidos = dr["Apellidos"]?.ToString() ?? "",
+                        Nombres = dr["nombres"]?.ToString() ?? "",
+                        Apellidos = dr["apellidos"]?.ToString() ?? "",
                     },
                     // PACIENTE
-                    OrigenCita = dr["OrigenCita"]?.ToString() ?? "",
-                    RazonCitaUsr = dr["RazonCitaUsr"]?.ToString() ?? "",
-                    DocumentoCitaUsr = dr["DocumentoCitaUsr"] == DBNull.Value ? null : (byte[])dr["DocumentoCitaUsr"],
-                    ContentType = dr["ContentType"] == DBNull.Value ? null : dr["ContentType"]?.ToString(),
+                    OrigenCita = dr["origencita"]?.ToString() ?? "",
+                    RazonCitaUsr = dr["razoncitausr"]?.ToString() ?? "",
+                    DocumentoCitaUsr = dr["documentocitausr"] == DBNull.Value
+                                           ? null
+                                           : (byte[])dr["documentocitausr"],
+                    ContentType = dr["contenttype"] == DBNull.Value
+                                           ? null
+                                           : dr["contenttype"]?.ToString(),
                     // DOCTOR
-                    Indicaciones = dr["Indicaciones"] == DBNull.Value ? "" : dr["Indicaciones"]?.ToString() ?? "",
-                    DocIndicacionesDoctor = dr["DocIndicacionesDoctor"] == DBNull.Value ? null : (byte[])dr["DocIndicacionesDoctor"],
-                    ContentTypeDoctor = dr["ContentType_Doctor"] == DBNull.Value ? null : dr["ContentType_Doctor"]?.ToString(),
-                    // VALORACIÓN (NUEVOS)
-                    ValDoctorCita = dr["ValDoctorCita"] == DBNull.Value ? 3 : Convert.ToInt32(dr["ValDoctorCita"]),
-                    OpinionDoctorYClinica = dr["OpinionDoctorYClinica"] == DBNull.Value ? null : dr["OpinionDoctorYClinica"]?.ToString()
+                    Indicaciones = dr["indicaciones"] == DBNull.Value
+                                       ? ""
+                                       : dr["indicaciones"]?.ToString() ?? "",
+                    DocIndicacionesDoctor = dr["docindicacionesdoctor"] == DBNull.Value
+                                                ? null
+                                                : (byte[])dr["docindicacionesdoctor"],
+                    ContentTypeDoctor = dr["contenttype_doctor"] == DBNull.Value
+                                            ? null
+                                            : dr["contenttype_doctor"]?.ToString(),
+                    // VALORACIÓN
+                    ValDoctorCita = dr["valdoctorcita"] == DBNull.Value
+                                        ? 3
+                                        : Convert.ToInt32(dr["valdoctorcita"]),
+                    OpinionDoctorYClinica = dr["opiniondoctoryclinica"] == DBNull.Value
+                                                ? null
+                                                : dr["opiniondoctoryclinica"]?.ToString(),
+                    // NUEVOS CAMPOS
+                    EstadoCita = new EstadoCita
+                    {
+                        Nombre = dr["nombreestadocita"]?.ToString() ?? ""
+                    },
+                    CitaConfirmada = dr["citaconfirmada"] == DBNull.Value
+                                         ? null
+                                         : dr["citaconfirmada"]?.ToString(),
+                    FechaConfirmacion = dr["fechaconfirmacion"] == DBNull.Value
+                                            ? (DateTime?)null
+                                            : Convert.ToDateTime(dr["fechaconfirmacion"])
                 };
                 lista.Add(cita);
             }
@@ -420,34 +446,49 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
 
 
         public async Task<string> ActualizarMotivoPaciente(
-    int idCita,
-    string razonCitaUsr,
-    byte[]? documento,
-    string? contentType,
-    int? valDoctorCita,
-    string? opinionDoctorYClinica)
+     int idCita,
+     string razonCitaUsr,
+     byte[]? documento,
+     string? contentType,
+     int? valDoctorCita,
+     string? opinionDoctorYClinica,
+     string? citaConfirmada,
+     DateTime? fechaConfirmacion)
         {
             try
             {
                 await using var conexion = new NpgsqlConnection(con.CadenaSQL);
                 await conexion.OpenAsync();
                 await using var cmd = new NpgsqlCommand(
-                    "SELECT public.sp_actualizarmotivopaciente(@IdCita, @RazonCitaUsr, @DocumentoCitaUsr, @ContentType, @ValDoctorCita, @OpinionDoctorYClinica);",
+                    "SELECT public.sp_actualizarmotivopaciente(@IdCita, @RazonCitaUsr, @DocumentoCitaUsr, @ContentType, @ValDoctorCita, @OpinionDoctorYClinica, @CitaConfirmada, @FechaConfirmacion);",
                     conexion);
                 cmd.CommandType = CommandType.Text;
+
                 cmd.Parameters.AddWithValue("@IdCita", idCita);
+
                 cmd.Parameters.AddWithValue("@RazonCitaUsr",
                     string.IsNullOrWhiteSpace(razonCitaUsr) ? (object)DBNull.Value : razonCitaUsr);
+
                 var pDoc = cmd.Parameters.Add("@DocumentoCitaUsr", NpgsqlDbType.Bytea);
                 pDoc.Value = (documento != null && documento.Length > 0)
-                    ? (object)documento
-                    : DBNull.Value;
+                    ? (object)documento : DBNull.Value;
+
                 cmd.Parameters.AddWithValue("@ContentType",
                     string.IsNullOrWhiteSpace(contentType) ? (object)DBNull.Value : contentType);
+
                 cmd.Parameters.AddWithValue("@ValDoctorCita",
                     valDoctorCita.HasValue ? (object)valDoctorCita.Value : DBNull.Value);
+
                 cmd.Parameters.AddWithValue("@OpinionDoctorYClinica",
                     string.IsNullOrWhiteSpace(opinionDoctorYClinica) ? (object)DBNull.Value : opinionDoctorYClinica);
+
+                // NUEVOS
+                cmd.Parameters.AddWithValue("@CitaConfirmada",
+                    string.IsNullOrWhiteSpace(citaConfirmada) ? (object)DBNull.Value : citaConfirmada);
+
+                cmd.Parameters.AddWithValue("@FechaConfirmacion",
+                    fechaConfirmacion.HasValue ? (object)fechaConfirmacion.Value : DBNull.Value);
+
                 var result = await cmd.ExecuteScalarAsync();
                 return result?.ToString() ?? "";
             }
