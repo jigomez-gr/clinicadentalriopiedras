@@ -452,14 +452,11 @@ namespace ClinicaWeb.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
             }
         }
-        // Añade estos dos métodos dentro de DoctorController.cs
-        // No hay que tocar nada más: ni repositorio, ni BD, ni clases.
-
         // ── Añadir estos dos métodos en DoctorController.cs ──────────────────────────
-        // No tocar nada más del controlador.
 
         /// <summary>
-        /// Obtiene los bookingFields del event-type en Cal.com
+        /// Obtiene los bookingFields del event-type en Cal.com y devuelve además
+        /// el objeto data completo para el visor/descarga JSON.
         /// GET /Doctor/GetBookingFields?apiKey=...&eventTypeId=...
         /// </summary>
         [Authorize(Roles = "Doctor,Administrador")]
@@ -478,13 +475,30 @@ namespace ClinicaWeb.Controllers
                 if (!res.IsSuccessStatusCode)
                     return BadRequest(new { ok = false, msg = $"Cal.com respondió: {res.StatusCode}" });
 
-                var json = await res.Content.ReadFromJsonAsync<JsonElement>();
+                // Leer body como string primero para conservar el JSON íntegro
+                var rawBody = await res.Content.ReadAsStringAsync();
+                var json = System.Text.Json.JsonDocument.Parse(rawBody).RootElement;
 
                 JsonElement bookingFields = default;
-                try { bookingFields = json.GetProperty("data").GetProperty("bookingFields"); }
-                catch { return Ok(new { ok = true, data = Array.Empty<object>() }); }
+                JsonElement fullData = default;
+                try
+                {
+                    fullData = json.GetProperty("data");
+                    bookingFields = fullData.GetProperty("bookingFields");
+                }
+                catch
+                {
+                    return Ok(new { ok = true, data = Array.Empty<object>(), fullData = (object?)null });
+                }
 
-                return Ok(new { ok = true, data = bookingFields });
+                // data     = solo los bookingFields (para el análisis de campos)
+                // fullData = objeto data completo del evento (para visor y descarga JSON)
+                return Ok(new
+                {
+                    ok = true,
+                    data = bookingFields,
+                    fullData = fullData
+                });
             }
             catch (Exception ex)
             {
@@ -493,7 +507,8 @@ namespace ClinicaWeb.Controllers
         }
 
         /// <summary>
-        /// Crea en Cal.com los bookingFields custom que falten en el event-type
+        /// Crea en Cal.com los bookingFields custom que falten en el event-type.
+        /// Cal.com exige "slug" (no "name") para campos custom.
         /// POST /Doctor/CrearBookingFieldsFaltantes
         /// Body: { apiKey, apiBase?, eventTypeId, camposFaltantes: ["apellido","razoncitausr","telefonoMovil"] }
         /// </summary>
@@ -517,7 +532,7 @@ namespace ClinicaWeb.Controllers
                 if (!camposFaltantes.Any())
                     return Ok(new { ok = true, msg = "No hay campos que crear." });
 
-                // Solo campos CUSTOM (Cal.com exige "slug"; los nativos name/email los gestiona él)
+                // Solo campos CUSTOM — Cal.com exige "slug" para todos excepto name/email
                 var definiciones = new Dictionary<string, object>
                 {
                     ["apellido"] = new

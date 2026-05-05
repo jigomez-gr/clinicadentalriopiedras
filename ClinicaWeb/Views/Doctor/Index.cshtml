@@ -259,6 +259,23 @@
                         <p class="text-muted small">Pulsa "Consultar API" para cargar los eventos...</p>
                     </div>
 
+                    <!-- Botones JSON -->
+                    <div class="col-12 mt-1" id="divJsonBotones" style="display:none;">
+                        <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="btnDescargarJson">
+                            <i class="fas fa-download me-1"></i> Descargar JSON
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-info" id="btnVerJson">
+                            <i class="fas fa-eye me-1"></i> Ver JSON
+                        </button>
+                    </div>
+
+                    <!-- Visor JSON -->
+                    <div class="col-12" id="divVisorJson" style="display:none;">
+                        <pre id="preJson"
+                             style="background:#1e1e1e;color:#d4d4d4;padding:12px;border-radius:6px;
+                                    font-size:.78rem;max-height:300px;overflow:auto;white-space:pre-wrap;"></pre>
+                    </div>
+
                     <!-- SECCIÓN BOOKING FIELDS -->
                     <div class="col-12 mt-2" id="divBookingFields" style="display:none;">
                         <hr class="my-2">
@@ -312,429 +329,535 @@
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
     <script>
-        (function () {
-            "use strict";
+            (function () {
+                "use strict";
 
-            let tablaData;
-            let idEditar = 0;
-            const controlador = "Doctor";
-            const modal       = "mdData";
+                let tablaData;
+                let idEditar = 0;
+                const controlador = "Doctor";
+                const modal       = "mdData";
 
-            // ── Campos custom que la clínica necesita en Cal.com ──────────────────
-            // NO incluir nativos (email, title, attendeePhoneNumber...): Cal.com los tiene siempre
-            const CAMPOS_REQUERIDOS = [
-                { slug: "apellido",      label: "Apellido",          tipo: "text",     required: true  },
-                { slug: "razoncitausr",  label: "Motivo de la cita", tipo: "textarea", required: false },
-                { slug: "telefonoMovil", label: "Teléfono móvil",    tipo: "phone",    required: false }
-            ];
+                const CAMPOS_REQUERIDOS = [
+                    { slug: "apellido",      label: "Apellido",          tipo: "text",     required: true  },
+                    { slug: "razoncitausr",  label: "Motivo de la cita", tipo: "textarea", required: false },
+                    { slug: "telefonoMovil", label: "Teléfono móvil",    tipo: "phone",    required: false }
+                ];
 
-            // Slugs nativos de Cal.com — nunca se marcan como faltantes
-            const SLUGS_NATIVOS = new Set([
-                "name","email","location","title","notes","guests",
-                "rescheduleReason","attendeePhoneNumber","smsReminderNumber"
-            ]);
+                const SLUGS_NATIVOS = new Set([
+                    "name","email","location","title","notes","guests",
+                    "rescheduleReason","attendeePhoneNumber","smsReminderNumber"
+                ]);
 
-            // ── Helpers generales ─────────────────────────────────────────────────
-            window.openHelpVideo = function (fileName) {
-                window.open("/helps/" + encodeURIComponent(fileName), "helpVideo", "width=900,height=520");
-            };
+                // ── Helpers generales ─────────────────────────────────────────────────
+                window.openHelpVideo = function (fileName) {
+                    window.open("/helps/" + encodeURIComponent(fileName), "helpVideo", "width=900,height=520");
+                };
 
-            function limpiarModal() {
-                idEditar = 0;
-                $("#txtNroDocumento,#txtNombres,#txtApellidos,#txtBiografia,#txtResumenValoracion,#txtFoto").val("");
-                $("#cboGenero").val("M");
-                $("#txtValoracion,#txtValoracionAi").val("3.0");
-                $("#imgFotoPreview,#btnDescargarFoto").hide();
-            }
-
-            function llenarModal(row) {
-                limpiarModal();
-                idEditar = row.idDoctor ?? row.IdDoctor ?? 0;
-                $("#txtNroDocumento").val(row.numeroDocumentoIdentidad ?? "");
-                $("#txtNombres").val(row.nombres ?? "");
-                $("#txtApellidos").val(row.apellidos ?? "");
-                $("#cboGenero").val(row.genero ?? "M");
-                $("#txtBiografia").val(row.biografia ?? "");
-                $("#txtValoracion").val(row.valoracion ?? "3.0");
-                $("#txtValoracionAi").val(row.valoracionAi ?? "3.0");
-                $("#txtResumenValoracion").val(row.resumenValoracion ?? "");
-                if (idEditar > 0) {
-                    const urlFoto = `/Doctor/VerFoto?id=${idEditar}&t=${Date.now()}`;
-                    $("#imgFotoPreview").attr("src", urlFoto).show();
-                    $("#btnDescargarFoto").attr("href", urlFoto).show();
+                function limpiarModal() {
+                    idEditar = 0;
+                    $("#txtNroDocumento,#txtNombres,#txtApellidos,#txtBiografia,#txtResumenValoracion,#txtFoto").val("");
+                    $("#cboGenero").val("M");
+                    $("#txtValoracion,#txtValoracionAi").val("3.0");
+                    $("#imgFotoPreview,#btnDescargarFoto").hide();
                 }
-            }
 
-            async function cargarEspecialidades() {
-                const r   = await fetch("/Especialidad/Lista");
-                const j   = await r.json().catch(() => null);
-                const arr = j?.data ?? [];
-                const cbo = document.getElementById("cboEspecialidadMultiple");
-                if (cbo) {
-                    cbo.innerHTML = "<option value=''>-- Seleccionar --</option>";
-                    arr.forEach(e => {
-                        const o = document.createElement("option");
-                        o.value       = e.idEspecialidad ?? e.IdEspecialidad;
-                        o.textContent = e.nombre ?? e.Nombre;
-                        cbo.appendChild(o);
-                    });
-                }
-            }
-
-            async function guardarDoctor() {
-                const fd = new FormData();
-                fd.append("IdDoctor",                  idEditar);
-                fd.append("NumeroDocumentoIdentidad",  $("#txtNroDocumento").val());
-                fd.append("Nombres",                   $("#txtNombres").val());
-                fd.append("Apellidos",                 $("#txtApellidos").val());
-                fd.append("Genero",                    $("#cboGenero").val());
-                fd.append("Biografia",                 $("#txtBiografia").val());
-                fd.append("Valoracion",                $("#txtValoracion").val().toString().replace('.', ','));
-                fd.append("ValoracionAi",              $("#txtValoracionAi").val().toString().replace('.', ','));
-                fd.append("ResumenValoracion",         $("#txtResumenValoracion").val());
-                const inputFoto = document.getElementById('txtFoto');
-                if (inputFoto?.files.length > 0) fd.append("FotoFile", inputFoto.files[0]);
-                const url = `/${controlador}/${idEditar > 0 ? "Editar" : "Guardar"}`;
-                const r   = await fetch(url, { method: idEditar > 0 ? "PUT" : "POST", body: fd });
-                if (r.ok) {
-                    Swal.fire("OK", "Doctor guardado con éxito.", "success");
-                    bootstrap.Modal.getOrCreateInstance(document.getElementById(modal)).hide();
-                    tablaData.ajax.reload(null, false);
-                }
-            }
-
-            // ── Cal.com ───────────────────────────────────────────────────────────
-            function resetCalcomModal() {
-                $("#txtCalApiKey,#txtCalUsername,#txtCalEventTypeId,#txtCalPublicUrl,#txtCalEventName").val("");
-                $("#chkCalIsActive").prop("checked", false);
-                $("#divApiInfo").html('<p class="text-muted small">Pulsa "Consultar API" para cargar los eventos...</p>');
-                $("#divBookingFields").hide();
-                $("#divCamposRequeridos,#divCamposExistentes").html("");
-                $("#btnCrearCampos").hide();
-            }
-
-            async function cargarCalcom(id) {
-                resetCalcomModal();
-                const r = await fetch(`/Doctor/ObtenerCalcom?idDoctor=${id}`);
-                const j = await r.json();
-                if (j?.data) {
-                    const d = j.data;
-                    $("#txtCalApiKey").val(d.apiKey);
-                    $("#txtCalUsername").val(d.calUsername);
-                    $("#txtCalEventTypeId").val(d.calEventTypeId);
-                    $("#txtCalPublicUrl").val(d.calPublicUrl);
-                    $("#txtCalEventName").val(d.calEventName || "");
-                    $("#chkCalIsActive").prop("checked", d.isActive !== false);
-                    $("#lblDoctorCal").text($("#txtNombres").val());
-                }
-            }
-
-            async function cargarYAnalizarBookingFields(apiKey, eventTypeId) {
-                $("#divBookingFields").show();
-                $("#divCamposRequeridos").html('<div class="spinner-border spinner-border-sm"></div>');
-                $("#divCamposExistentes").html("");
-                $("#btnCrearCampos").hide();
-
-                try {
-                    const r = await fetch(
-                        `/Doctor/GetBookingFields?apiKey=${encodeURIComponent(apiKey)}&eventTypeId=${eventTypeId}`
-                    );
-                    const j = await r.json();
-
-                    if (!j.ok) {
-                        $("#divCamposRequeridos").html('<span class="text-danger small">Error al cargar campos.</span>');
-                        return;
-                    }
-
-                    const existentes      = Array.isArray(j.data) ? j.data : [];
-                    const slugsExistentes = new Set(existentes.map(f => (f.slug || "").toLowerCase()));
-
-                    // Panel 1: estado de cada campo requerido
-                    let htmlReq  = "";
-                    const faltantes = [];
-                    CAMPOS_REQUERIDOS.forEach(campo => {
-                        const existe = slugsExistentes.has(campo.slug.toLowerCase());
-                        if (existe) {
-                            htmlReq += `<span class="badge bg-success">
-                                            <i class="fas fa-check me-1"></i>${campo.label}
-                                        </span>`;
-                        } else {
-                            faltantes.push(campo.slug);
-                            htmlReq += `<span class="badge bg-danger">
-                                            <i class="fas fa-times me-1"></i>${campo.label}
-                                        </span>`;
-                        }
-                    });
-                    $("#divCamposRequeridos").html(htmlReq);
-
-                    // Panel 2: tabla de todos los campos del evento
-                    let htmlEx = '<table class="table table-sm table-bordered mb-0">'
-                               + '<thead><tr><th>Slug</th><th>Tipo</th><th>Requerido</th><th>Oculto</th></tr></thead><tbody>';
-                    existentes.forEach(f => {
-                        const slug   = f.slug || "—";
-                        const tipo   = f.type || "—";
-                        const req    = f.required
-                            ? '<span class="badge bg-warning text-dark">Sí</span>'
-                            : '<span class="badge bg-secondary">No</span>';
-                        const hidden = f.hidden
-                            ? '<span class="badge bg-dark">Sí</span>'
-                            : '<span class="badge bg-light text-dark border">No</span>';
-                        const esNativo = SLUGS_NATIVOS.has(slug) ? ' class="table-light"' : '';
-                        htmlEx += `<tr${esNativo}><td>${slug}</td><td>${tipo}</td><td>${req}</td><td>${hidden}</td></tr>`;
-                    });
-                    htmlEx += '</tbody></table>';
-                    if (!existentes.length) htmlEx = '<p class="text-muted small">Sin campos definidos aún.</p>';
-                    $("#divCamposExistentes").html(htmlEx);
-
-                    // Botón crear faltantes
-                    if (faltantes.length > 0) {
-                        $("#btnCrearCampos")
-                            .data("faltantes", faltantes)
-                            .data("eventid",   eventTypeId)
-                            .data("apikey",    apiKey)
-                            .show();
-                    }
-                } catch (err) {
-                    console.error("Error bookingFields:", err);
-                    $("#divCamposRequeridos").html('<span class="text-danger small">Error inesperado.</span>');
-                }
-            }
-
-            // ── DOMContentLoaded ──────────────────────────────────────────────────
-            $(document).ready(async function () {
-                $("#cboGenero").html('<option value="M">M</option><option value="F">F</option>');
-                await cargarEspecialidades();
-
-                tablaData = $("#tbData").DataTable({
-                    ajax: { url: `/${controlador}/Lista`, dataSrc: "data" },
-                    columns: [
-                        {
-                            data: null,
-                            render: function () {
-                                return `<div class="acciones-container">
-                                    <button class="btn btn-primary btn-circle btn-editar"><i class="fas fa-edit"></i></button>
-                                    <button class="btn btn-info btn-circle btn-especialidades"><i class="fas fa-graduation-cap"></i></button>
-                                    <button class="btn btn-danger btn-circle btn-eliminar"><i class="fas fa-trash-alt"></i></button>
-                                </div>`;
-                            }
-                        },
-                        { data: "numeroDocumentoIdentidad" },
-                        { data: "nombres" },
-                        { data: "apellidos" },
-                        { data: "genero" },
-                        {
-                            data: "especialidadesDoc",
-                            render: function (data) {
-                                const badges = (data?.length > 0)
-                                    ? data.map(e => `<span class="badge bg-secondary me-1">${e.nombreEspecialidad}</span>`).join("")
-                                    : "";
-                                return `<div class="d-flex flex-column align-items-start">
-                                            <div class="mb-1">${badges}</div>
-                                            <button type="button" class="btn btn-outline-primary btn-sm btn-especialidades"
-                                                    style="padding:2px 8px;font-size:12px;">
-                                                <i class="fas fa-plus-circle me-1"></i> Especialidades
-                                            </button>
-                                        </div>`;
-                            }
-                        }
-                    ],
-                    language: { url: "https://cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json" }
-                });
-
-                // Preview foto local
-                $("#txtFoto").on("change", function () {
-                    const file = this.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = e => $("#imgFotoPreview").attr("src", e.target.result).show();
-                        reader.readAsDataURL(file);
-                    }
-                });
-
-                // ── Botones tabla ─────────────────────────────────────────────────
-                $("#btnGuardar").on("click", guardarDoctor);
-
-                $("#btnNuevo").on("click", () => {
+                function llenarModal(row) {
                     limpiarModal();
-                    bootstrap.Modal.getOrCreateInstance(document.getElementById(modal)).show();
-                });
+                    idEditar = row.idDoctor ?? row.IdDoctor ?? 0;
+                    $("#txtNroDocumento").val(row.numeroDocumentoIdentidad ?? "");
+                    $("#txtNombres").val(row.nombres ?? "");
+                    $("#txtApellidos").val(row.apellidos ?? "");
+                    $("#cboGenero").val(row.genero ?? "M");
+                    $("#txtBiografia").val(row.biografia ?? "");
+                    $("#txtValoracion").val(row.valoracion ?? "3.0");
+                    $("#txtValoracionAi").val(row.valoracionAi ?? "3.0");
+                    $("#txtResumenValoracion").val(row.resumenValoracion ?? "");
+                    if (idEditar > 0) {
+                        const urlFoto = `/Doctor/VerFoto?id=${idEditar}&t=${Date.now()}`;
+                        $("#imgFotoPreview").attr("src", urlFoto).show();
+                        $("#btnDescargarFoto").attr("href", urlFoto).show();
+                    }
+                }
 
-                $("#tbData tbody").on("click", ".btn-editar", function () {
-                    const row = tablaData.row($(this).closest("tr")).data();
-                    llenarModal(row);
-                    bootstrap.Modal.getOrCreateInstance(document.getElementById(modal)).show();
-                });
+                async function cargarEspecialidades() {
+                    const r   = await fetch("/Especialidad/Lista");
+                    const j   = await r.json().catch(() => null);
+                    const arr = j?.data ?? [];
+                    const cbo = document.getElementById("cboEspecialidadMultiple");
+                    if (cbo) {
+                        cbo.innerHTML = "<option value=''>-- Seleccionar --</option>";
+                        arr.forEach(e => {
+                            const o       = document.createElement("option");
+                            o.value       = e.idEspecialidad ?? e.IdEspecialidad;
+                            o.textContent = e.nombre ?? e.Nombre;
+                            cbo.appendChild(o);
+                        });
+                    }
+                }
 
-                $("#tbData tbody").on("click", ".btn-especialidades", function () {
-                    const row = tablaData.row($(this).closest("tr")).data();
-                    idEditar  = row.idDoctor ?? row.IdDoctor;
-                    $("#lblDoctorEsp").text(`${row.nombres} ${row.apellidos}`.trim());
-                    cargarEspecialidadesDoctor(idEditar);
-                    bootstrap.Modal.getOrCreateInstance(document.getElementById("mdEspecialidades")).show();
-                });
+                async function guardarDoctor() {
+                    const fd = new FormData();
+                    fd.append("IdDoctor",                 idEditar);
+                    fd.append("NumeroDocumentoIdentidad", $("#txtNroDocumento").val());
+                    fd.append("Nombres",                  $("#txtNombres").val());
+                    fd.append("Apellidos",                $("#txtApellidos").val());
+                    fd.append("Genero",                   $("#cboGenero").val());
+                    fd.append("Biografia",                $("#txtBiografia").val());
+                    fd.append("Valoracion",               $("#txtValoracion").val().toString().replace('.', ','));
+                    fd.append("ValoracionAi",             $("#txtValoracionAi").val().toString().replace('.', ','));
+                    fd.append("ResumenValoracion",        $("#txtResumenValoracion").val());
+                    const inputFoto = document.getElementById('txtFoto');
+                    if (inputFoto?.files.length > 0) fd.append("FotoFile", inputFoto.files[0]);
+                    const url = `/${controlador}/${idEditar > 0 ? "Editar" : "Guardar"}`;
+                    const r   = await fetch(url, { method: idEditar > 0 ? "PUT" : "POST", body: fd });
+                    if (r.ok) {
+                        Swal.fire("OK", "Doctor guardado con éxito.", "success");
+                        bootstrap.Modal.getOrCreateInstance(document.getElementById(modal)).hide();
+                        tablaData.ajax.reload(null, false);
+                    }
+                }
 
-                $("#btnAsignarEspecialidad").on("click", async function () {
-                    const idEsp = $("#cboEspecialidadMultiple").val();
-                    if (!idEsp) return;
-                    await fetch(`/Doctor/AsignarEspecialidad?idDoctor=${idEditar}&idEspecialidad=${idEsp}`,
-                                { method: "POST" });
-                    cargarEspecialidadesDoctor(idEditar);
-                    tablaData.ajax.reload(null, false);
-                });
+                // ── Cal.com ───────────────────────────────────────────────────────────
+                function resetCalcomModal() {
+                    $("#txtCalApiKey,#txtCalUsername,#txtCalEventTypeId,#txtCalPublicUrl,#txtCalEventName").val("");
+                    $("#chkCalIsActive").prop("checked", false);
+                    $("#divApiInfo").html('<p class="text-muted small">Pulsa "Consultar API" para cargar los eventos...</p>');
+                    $("#divBookingFields,#divJsonBotones,#divVisorJson").hide();
+                    $("#divCamposRequeridos,#divCamposExistentes").html("");
+                    $("#preJson").text("");
+                    $("#btnCrearCampos").hide();
+                    $("#btnVerJson").html('<i class="fas fa-eye me-1"></i> Ver JSON');
+                    window._calEventJson = null;
+                }
 
-                // ── Cal.com: abrir modal ──────────────────────────────────────────
-                $("#btnCalcom").on("click", function () {
-                    if (idEditar === 0) return Swal.fire("Aviso", "Primero guarda el doctor", "info");
-                    cargarCalcom(idEditar);
-                    bootstrap.Modal.getOrCreateInstance(document.getElementById("mdCalcom")).show();
-                });
-
-                // ── Cal.com: consultar API ────────────────────────────────────────
-                $("#btnConsultarApi").on("click", async function () {
-                    const key = $("#txtCalApiKey").val().trim();
-                    if (!key) return Swal.fire("Aviso", "Ingresa la API Key", "warning");
-
-                    $("#divApiInfo").html('<div class="spinner-border spinner-border-sm text-success"></div> Buscando...');
-                    $("#divBookingFields").hide();
-
-                    const r = await fetch(`/Doctor/GetDetallesApiCal?apiKey=${encodeURIComponent(key)}`);
+                async function cargarCalcom(id) {
+                    resetCalcomModal();
+                    const r = await fetch(`/Doctor/ObtenerCalcom?idDoctor=${id}`);
                     const j = await r.json();
+                    if (j?.data) {
+                        const d = j.data;
+                        $("#txtCalApiKey").val(d.apiKey);
+                        $("#txtCalUsername").val(d.calUsername);
+                        $("#txtCalEventTypeId").val(d.calEventTypeId);
+                        $("#txtCalPublicUrl").val(d.calPublicUrl);
+                        $("#txtCalEventName").val(d.calEventName || "");
+                        $("#chkCalIsActive").prop("checked", d.isActive !== false);
+                        $("#lblDoctorCal").text($("#txtNombres").val());
+                    }
+                }
 
-                    if (r.ok && j.data) {
-                        let items = [];
-                        try {
-                            const raw = j.data;
-                            if (Array.isArray(raw)) {
-                                items = raw;
-                            } else if (raw.eventTypeGroups) {
-                                raw.eventTypeGroups.forEach(g => items.push(...(g.eventTypes || [])));
-                            }
-                        } catch { items = []; }
+                async function cargarYAnalizarBookingFields(apiKey, eventTypeId) {
+                    $("#divBookingFields").show();
+                    $("#divCamposRequeridos").html('<div class="spinner-border spinner-border-sm"></div>');
+                    $("#divCamposExistentes").html("");
+                    $("#btnCrearCampos").hide();
+                    $("#divVisorJson").hide();
+                    $("#btnVerJson").html('<i class="fas fa-eye me-1"></i> Ver JSON');
 
-                        if (!items.length) {
-                            $("#divApiInfo").html('<p class="text-danger small">No se encontraron eventos.</p>');
+                    try {
+                        const r = await fetch(
+                            `/Doctor/GetBookingFields?apiKey=${encodeURIComponent(apiKey)}&eventTypeId=${eventTypeId}`
+                        );
+                        const j = await r.json();
+
+                        if (!j.ok) {
+                            $("#divCamposRequeridos").html('<span class="text-danger small">Error al cargar campos.</span>');
                             return;
                         }
 
-                        let html = '<div class="list-group">';
-                        items.forEach(e => {
-                            html += `<a href="#" class="list-group-item list-group-item-action api-item py-1"
-                                        data-id="${e.id}" data-title="${e.title}" data-slug="${e.slug}">
-                                        <strong>${e.title}</strong>
-                                        <small class="text-muted ms-2">ID: ${e.id} | Slug: ${e.slug}</small>
-                                     </a>`;
-                        });
-                        html += '</div>';
-                        $("#divApiInfo").html(html);
+                        // JSON completo del evento para descarga/visor
+                        window._calEventJson = j.fullData ?? j.data ?? null;
+                        $("#divJsonBotones").show();
 
-                        $(".api-item").on("click", async function (e) {
-                            e.preventDefault();
-                            $(".api-item").removeClass("selected active");
-                            $(this).addClass("selected active");
-                            const evId   = $(this).data("id");
-                            const evSlug = $(this).data("slug");
-                            const user   = $("#txtCalUsername").val().trim();
-                            $("#txtCalEventTypeId").val(evId);
-                            $("#txtCalEventName").val($(this).data("title"));
-                            $("#chkCalIsActive").prop("checked", true);
-                            if (user) $("#txtCalPublicUrl").val(`https://cal.com/${user}/${evSlug}`);
-                            await cargarYAnalizarBookingFields(key, evId);
+                        // Actualizar Cal Public URL con el valor real de Cal.com
+                        if (window._calEventJson) {
+                            const bookingUrl = window._calEventJson.bookingUrl
+                                            ?? window._calEventJson.BookingUrl
+                                            ?? null;
+                            if (bookingUrl) $("#txtCalPublicUrl").val(bookingUrl);
+                        }
+
+                        const existentes      = Array.isArray(j.data) ? j.data : [];
+                        const slugsExistentes = new Set(existentes.map(f => (f.slug || "").toLowerCase()));
+
+                        // Panel 1: estado de cada campo requerido
+                        let htmlReq     = "";
+                        const faltantes = [];
+                        CAMPOS_REQUERIDOS.forEach(campo => {
+                            const existe = slugsExistentes.has(campo.slug.toLowerCase());
+                            if (existe) {
+                                htmlReq += `<span class="badge bg-success">
+                                                <i class="fas fa-check me-1"></i>${campo.label}
+                                            </span>`;
+                            } else {
+                                faltantes.push(campo.slug);
+                                htmlReq += `<span class="badge bg-danger">
+                                                <i class="fas fa-times me-1"></i>${campo.label}
+                                            </span>`;
+                            }
                         });
-                    } else {
-                        $("#divApiInfo").html('<p class="text-danger small">No se encontraron eventos o la clave es inválida.</p>');
+                        $("#divCamposRequeridos").html(htmlReq);
+
+                        // Panel 2: tabla de todos los campos del evento
+                        let htmlEx = '<table class="table table-sm table-bordered mb-0">'
+                                   + '<thead><tr><th>Slug</th><th>Tipo</th><th>Requerido</th><th>Oculto</th></tr></thead><tbody>';
+                        existentes.forEach(f => {
+                            const slug   = f.slug || "—";
+                            const tipo   = f.type || "—";
+                            const req    = f.required
+                                ? '<span class="badge bg-warning text-dark">Sí</span>'
+                                : '<span class="badge bg-secondary">No</span>';
+                            const hidden = f.hidden
+                                ? '<span class="badge bg-dark">Sí</span>'
+                                : '<span class="badge bg-light text-dark border">No</span>';
+                            const esNativo = SLUGS_NATIVOS.has(slug) ? ' class="table-light"' : '';
+                            htmlEx += `<tr${esNativo}><td>${slug}</td><td>${tipo}</td><td>${req}</td><td>${hidden}</td></tr>`;
+                        });
+                        htmlEx += '</tbody></table>';
+                        if (!existentes.length) htmlEx = '<p class="text-muted small">Sin campos definidos aún.</p>';
+                        $("#divCamposExistentes").html(htmlEx);
+
+                        // Botón crear faltantes
+                        if (faltantes.length > 0) {
+                            $("#btnCrearCampos")
+                                .data("faltantes", faltantes)
+                                .data("eventid",   eventTypeId)
+                                .data("apikey",    apiKey)
+                                .show();
+                        }
+                    } catch (err) {
+                        console.error("Error bookingFields:", err);
+                        $("#divCamposRequeridos").html('<span class="text-danger small">Error inesperado.</span>');
                     }
-                });
+                }
 
-                // ── Cal.com: crear campos faltantes ───────────────────────────────
-                $("#btnCrearCampos").on("click", async function () {
-                    const faltantes   = $(this).data("faltantes") || [];
-                    const eventTypeId = $(this).data("eventid");
-                    const apiKey      = $(this).data("apikey");
-                    if (!faltantes.length) return;
+                // ── DOMContentLoaded ──────────────────────────────────────────────────
+                $(document).ready(async function () {
+                    $("#cboGenero").html('<option value="M">M</option><option value="F">F</option>');
+                    await cargarEspecialidades();
 
-                    const confirm = await Swal.fire({
-                        title: "¿Crear campos en Cal.com?",
-                        html:  `Se crearán los campos:<br><strong>${faltantes.join(", ")}</strong><br><br>
-                                Esto modifica el formulario de reserva del evento en Cal.com.`,
-                        icon:  "question",
-                        showCancelButton:  true,
-                        confirmButtonText: "Sí, crear",
-                        cancelButtonText:  "Cancelar"
+                    tablaData = $("#tbData").DataTable({
+                        ajax: { url: `/${controlador}/Lista`, dataSrc: "data" },
+                        columns: [
+                            {
+                                data: null,
+                                render: function () {
+                                    return `<div class="acciones-container">
+                                        <button class="btn btn-primary btn-circle btn-editar"><i class="fas fa-edit"></i></button>
+                                        <button class="btn btn-info btn-circle btn-especialidades"><i class="fas fa-graduation-cap"></i></button>
+                                        <button class="btn btn-danger btn-circle btn-eliminar"><i class="fas fa-trash-alt"></i></button>
+                                    </div>`;
+                                }
+                            },
+                            { data: "numeroDocumentoIdentidad" },
+                            { data: "nombres" },
+                            { data: "apellidos" },
+                            { data: "genero" },
+                            {
+                                data: "especialidadesDoc",
+                                render: function (data) {
+                                    const badges = (data?.length > 0)
+                                        ? data.map(e => `<span class="badge bg-secondary me-1">${e.nombreEspecialidad}</span>`).join("")
+                                        : "";
+                                    return `<div class="d-flex flex-column align-items-start">
+                                                <div class="mb-1">${badges}</div>
+                                                <button type="button" class="btn btn-outline-primary btn-sm btn-especialidades"
+                                                        style="padding:2px 8px;font-size:12px;">
+                                                    <i class="fas fa-plus-circle me-1"></i> Especialidades
+                                                </button>
+                                            </div>`;
+                                }
+                            }
+                        ],
+                        language: { url: "https://cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json" }
                     });
-                    if (!confirm.isConfirmed) return;
 
-                    Swal.fire({ title: "Creando campos...", didOpen: () => Swal.showLoading() });
+                    $("#txtFoto").on("change", function () {
+                        const file = this.files[0];
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = e => $("#imgFotoPreview").attr("src", e.target.result).show();
+                            reader.readAsDataURL(file);
+                        }
+                    });
 
-                    try {
-                        const res = await fetch("/Doctor/CrearBookingFieldsFaltantes", {
+                    // ── Botones tabla ─────────────────────────────────────────────────
+                    $("#btnGuardar").on("click", guardarDoctor);
+
+                    $("#btnNuevo").on("click", () => {
+                        limpiarModal();
+                        bootstrap.Modal.getOrCreateInstance(document.getElementById(modal)).show();
+                    });
+
+                    $("#tbData tbody").on("click", ".btn-editar", function () {
+                        const row = tablaData.row($(this).closest("tr")).data();
+                        llenarModal(row);
+                        bootstrap.Modal.getOrCreateInstance(document.getElementById(modal)).show();
+                    });
+
+                    $("#tbData tbody").on("click", ".btn-especialidades", function () {
+                        const row = tablaData.row($(this).closest("tr")).data();
+                        idEditar  = row.idDoctor ?? row.IdDoctor;
+                        $("#lblDoctorEsp").text(`${row.nombres} ${row.apellidos}`.trim());
+                        cargarEspecialidadesDoctor(idEditar);
+                        bootstrap.Modal.getOrCreateInstance(document.getElementById("mdEspecialidades")).show();
+                    });
+
+                    $("#btnAsignarEspecialidad").on("click", async function () {
+                        const idEsp = $("#cboEspecialidadMultiple").val();
+                        if (!idEsp) return;
+                        await fetch(`/Doctor/AsignarEspecialidad?idDoctor=${idEditar}&idEspecialidad=${idEsp}`,
+                                    { method: "POST" });
+                        cargarEspecialidadesDoctor(idEditar);
+                        tablaData.ajax.reload(null, false);
+                    });
+
+                    // ── Cal.com: abrir modal ──────────────────────────────────────────
+                    $("#btnCalcom").on("click", function () {
+                        if (idEditar === 0) return Swal.fire("Aviso", "Primero guarda el doctor", "info");
+                        cargarCalcom(idEditar);
+                        bootstrap.Modal.getOrCreateInstance(document.getElementById("mdCalcom")).show();
+                    });
+
+                    // ── Cal.com: consultar API ────────────────────────────────────────
+                    $("#btnConsultarApi").on("click", async function () {
+                        const key = $("#txtCalApiKey").val().trim();
+                        if (!key) return Swal.fire("Aviso", "Ingresa la API Key", "warning");
+
+                        $("#divApiInfo").html('<div class="spinner-border spinner-border-sm text-success"></div> Buscando...');
+                        $("#divBookingFields,#divJsonBotones,#divVisorJson").hide();
+                        $("#btnVerJson").html('<i class="fas fa-eye me-1"></i> Ver JSON');
+                        window._calEventJson = null;
+
+                        const r = await fetch(`/Doctor/GetDetallesApiCal?apiKey=${encodeURIComponent(key)}`);
+                        const j = await r.json();
+
+                        if (r.ok && j.data) {
+                            let items = [];
+                            try {
+                                const raw = j.data;
+                                if (Array.isArray(raw)) {
+                                    items = raw;
+                                } else if (raw.eventTypeGroups) {
+                                    raw.eventTypeGroups.forEach(g => items.push(...(g.eventTypes || [])));
+                                }
+                            } catch { items = []; }
+
+                            if (!items.length) {
+                                $("#divApiInfo").html('<p class="text-danger small">No se encontraron eventos.</p>');
+                                return;
+                            }
+
+                            let html = '<div class="list-group">';
+                            items.forEach(e => {
+                                html += `<a href="#" class="list-group-item list-group-item-action api-item py-1"
+                                            data-id="${e.id}" data-title="${e.title}" data-slug="${e.slug}">
+                                            <strong>${e.title}</strong>
+                                            <small class="text-muted ms-2">ID: ${e.id} | Slug: ${e.slug}</small>
+                                         </a>`;
+                            });
+                            html += '</div>';
+                            $("#divApiInfo").html(html);
+
+                            $(".api-item").on("click", async function (e) {
+                                e.preventDefault();
+                                $(".api-item").removeClass("selected active");
+                                $(this).addClass("selected active");
+                                const evId   = $(this).data("id");
+                                const evSlug = $(this).data("slug");
+                                const user   = $("#txtCalUsername").val().trim();
+                                $("#txtCalEventTypeId").val(evId);
+                                $("#txtCalEventName").val($(this).data("title"));
+                                $("#chkCalIsActive").prop("checked", true);
+                                if (user) $("#txtCalPublicUrl").val(`https://cal.com/${user}/${evSlug}`);
+                                await cargarYAnalizarBookingFields(key, evId);
+                            });
+                        } else {
+                            $("#divApiInfo").html('<p class="text-danger small">No se encontraron eventos o la clave es inválida.</p>');
+                        }
+                    });
+
+                    // ── Cal.com: descargar JSON ───────────────────────────────────────
+                    $("#btnDescargarJson").on("click", function () {
+                        if (!window._calEventJson) return;
+                        const nombre = ($("#txtCalEventName").val() || "evento_cal").replace(/[^a-z0-9]/gi, "_");
+                        const blob   = new Blob(
+                            [JSON.stringify(window._calEventJson, null, 2)],
+                            { type: "application/json" }
+                        );
+                        const link    = document.createElement("a");
+                        link.href     = URL.createObjectURL(blob);
+                        link.download = `${nombre}.json`;
+                        link.click();
+                        URL.revokeObjectURL(link.href);
+                    });
+
+                    // ── Cal.com: ver / ocultar JSON ───────────────────────────────────
+                    $("#btnVerJson").on("click", function () {
+                        if (!window._calEventJson) return;
+                        const visible = $("#divVisorJson").is(":visible");
+                        if (visible) {
+                            $("#divVisorJson").hide();
+                            $(this).html('<i class="fas fa-eye me-1"></i> Ver JSON');
+                        } else {
+                            const d = window._calEventJson;
+
+                            // Campos custom = los que no son slugs nativos
+                            const camposCustom = (d.bookingFields ?? [])
+                                .filter(f => !SLUGS_NATIVOS.has((f.slug || "").toLowerCase()))
+                                .map(f => `  • ${f.slug} (${f.type}) – ${f.label ?? "sin label"} – requerido: ${f.required}`)
+                                .join("\n") || "  (ninguno)";
+
+                            // Datos del doctor desde el modal (BD clínica)
+                            const doctorNombre = ($("#txtNombres").val() + " " + $("#txtApellidos").val()).trim();
+                            const calApiKey    = $("#txtCalApiKey").val();
+                            const calUsername  = $("#txtCalUsername").val();
+                            const calPublicUrl = $("#txtCalPublicUrl").val();
+                            const calEventName = $("#txtCalEventName").val();
+
+                            // Usuario del evento (viene del JSON de Cal.com)
+                            const user = (d.users && d.users.length > 0) ? d.users[0] : null;
+
+                            const resumen =
+        `╔══════════════════════════════════════════════╗
+          DATOS DEL DOCTOR (BD clínica)
+        ╠══════════════════════════════════════════════╣
+          Nombre      : ${doctorNombre}
+          API Key     : ${calApiKey}
+          Username    : ${calUsername}
+          Evento      : ${calEventName}
+          URL pública : ${calPublicUrl}
+
+        ╠══════════════════════════════════════════════╣
+          DATOS DEL DOCTOR EN CAL.COM
+        ╠══════════════════════════════════════════════╣
+          ID Cal.com  : ${user?.id ?? "—"}
+          Nombre      : ${user?.name ?? "—"}
+          Username    : ${user?.username ?? "—"}
+          Email       : ${user?.email ?? "— (no expuesto en este endpoint)"}
+          Avatar      : ${user?.avatarUrl ?? "—"}
+          Semana ini  : ${user?.weekStart ?? "—"}
+
+        ╠══════════════════════════════════════════════╣
+          DATOS GENERALES DEL EVENTO
+        ╠══════════════════════════════════════════════╣
+          ID          : ${d.id ?? "—"}
+          Título      : ${d.title ?? "—"}
+          Slug        : ${d.slug ?? "—"}
+          Duración    : ${d.lengthInMinutes ?? "—"} min
+          Descripción : ${d.description ?? "—"}
+          Booking URL : ${d.bookingUrl ?? "—"}
+          Aviso mín.  : ${d.minimumBookingNotice ?? "—"} min
+          Buffer pre  : ${d.beforeEventBuffer ?? 0} min
+          Buffer post : ${d.afterEventBuffer ?? 0} min
+          Oculto      : ${d.hidden ?? false}
+
+        ╠══════════════════════════════════════════════╣
+          CAMPOS CUSTOM DE LA CLÍNICA
+        ╠══════════════════════════════════════════════╣
+        ${camposCustom}
+
+        ╠══════════════════════════════════════════════╣
+          JSON COMPLETO DEL EVENTO
+        ╚══════════════════════════════════════════════╝
+        ${JSON.stringify(d, null, 2)}`;
+
+                            $("#preJson").text(resumen);
+                            $("#divVisorJson").show();
+                            $(this).html('<i class="fas fa-eye-slash me-1"></i> Ocultar JSON');
+                        }
+                    });
+
+                    // ── Cal.com: crear campos faltantes ───────────────────────────────
+                    $("#btnCrearCampos").on("click", async function () {
+                        const faltantes   = $(this).data("faltantes") || [];
+                        const eventTypeId = $(this).data("eventid");
+                        const apiKey      = $(this).data("apikey");
+                        if (!faltantes.length) return;
+
+                        const confirm = await Swal.fire({
+                            title: "¿Crear campos en Cal.com?",
+                            html:  `Se crearán los campos:<br><strong>${faltantes.join(", ")}</strong><br><br>
+                                    Esto modifica el formulario de reserva del evento en Cal.com.`,
+                            icon:  "question",
+                            showCancelButton:  true,
+                            confirmButtonText: "Sí, crear",
+                            cancelButtonText:  "Cancelar"
+                        });
+                        if (!confirm.isConfirmed) return;
+
+                        Swal.fire({ title: "Creando campos...", didOpen: () => Swal.showLoading() });
+
+                        try {
+                            const res = await fetch("/Doctor/CrearBookingFieldsFaltantes", {
+                                method:  "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body:    JSON.stringify({ apiKey, eventTypeId, camposFaltantes: faltantes })
+                            });
+                            const result = await res.json();
+                            if (result.ok) {
+                                Swal.fire("¡Hecho!", result.msg, "success");
+                                await cargarYAnalizarBookingFields(apiKey, eventTypeId);
+                            } else {
+                                Swal.fire("Error", result.msg || "No se pudieron crear los campos.", "error");
+                            }
+                        } catch {
+                            Swal.fire("Error", "Fallo de comunicación con el servidor.", "error");
+                        }
+                    });
+
+                    // ── Cal.com: guardar en BD ────────────────────────────────────────
+                    $("#btnGuardarCalcom").on("click", async function () {
+                        const payload = {
+                            idDoctor:       idEditar,
+                            apiKey:         $("#txtCalApiKey").val(),
+                            calUsername:    $("#txtCalUsername").val(),
+                            calEventTypeId: parseInt($("#txtCalEventTypeId").val()) || 0,
+                            calPublicUrl:   $("#txtCalPublicUrl").val(),
+                            calEventName:   $("#txtCalEventName").val(),
+                            isActive:       $("#chkCalIsActive").is(":checked")
+                        };
+                        const r = await fetch("/Doctor/GuardarCalcom", {
                             method:  "POST",
                             headers: { "Content-Type": "application/json" },
-                            body:    JSON.stringify({ apiKey, eventTypeId, camposFaltantes: faltantes })
+                            body:    JSON.stringify(payload)
                         });
-                        const result = await res.json();
-                        if (result.ok) {
-                            Swal.fire("¡Hecho!", result.msg, "success");
-                            await cargarYAnalizarBookingFields(apiKey, eventTypeId);
-                        } else {
-                            Swal.fire("Error", result.msg || "No se pudieron crear los campos.", "error");
+                        if (r.ok) {
+                            Swal.fire("OK", "Configuración de Cal.com guardada.", "success");
+                            bootstrap.Modal.getOrCreateInstance(document.getElementById("mdCalcom")).hide();
                         }
-                    } catch {
-                        Swal.fire("Error", "Fallo de comunicación con el servidor.", "error");
-                    }
-                });
-
-                // ── Cal.com: guardar configuración en BD ──────────────────────────
-                $("#btnGuardarCalcom").on("click", async function () {
-                    const payload = {
-                        idDoctor:       idEditar,
-                        apiKey:         $("#txtCalApiKey").val(),
-                        calUsername:    $("#txtCalUsername").val(),
-                        calEventTypeId: parseInt($("#txtCalEventTypeId").val()) || 0,
-                        calPublicUrl:   $("#txtCalPublicUrl").val(),
-                        calEventName:   $("#txtCalEventName").val(),
-                        isActive:       $("#chkCalIsActive").is(":checked")
-                    };
-                    const r = await fetch("/Doctor/GuardarCalcom", {
-                        method:  "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body:    JSON.stringify(payload)
                     });
-                    if (r.ok) {
-                        Swal.fire("OK", "Configuración de Cal.com guardada.", "success");
-                        bootstrap.Modal.getOrCreateInstance(document.getElementById("mdCalcom")).hide();
+                });
+
+                // ── Especialidades (globales) ─────────────────────────────────────────
+                window.cargarEspecialidadesDoctor = async function (id) {
+                    if ($.fn.DataTable.isDataTable('#tbEspecialidadesDoc'))
+                        $('#tbEspecialidadesDoc').DataTable().destroy();
+                    $('#tbEspecialidadesDoc').DataTable({
+                        ajax: { url: `/Doctor/ListarEspecialidadesDoctor?idDoctor=${id}`, dataSrc: "data" },
+                        columns: [
+                            { data: "nombreEspecialidad" },
+                            {
+                                data: "idEspecialidadDoctor",
+                                render: d => `<button class="btn btn-danger btn-sm"
+                                                      onclick="eliminarEspecialidad(${d})">
+                                                  <i class="fas fa-trash"></i>
+                                              </button>`
+                            }
+                        ],
+                        paging: false, dom: 't'
+                    });
+                };
+
+                window.eliminarEspecialidad = async function (id) {
+                    const res = await Swal.fire({ title: "¿Quitar?", showCancelButton: true });
+                    if (res.isConfirmed) {
+                        await fetch(`/Doctor/EliminarEspecialidad?id=${id}`, { method: "DELETE" });
+                        cargarEspecialidadesDoctor(idEditar);
+                        tablaData.ajax.reload(null, false);
                     }
-                });
-            });
+                };
 
-            // ── Especialidades (globales) ─────────────────────────────────────────
-            window.cargarEspecialidadesDoctor = async function (id) {
-                if ($.fn.DataTable.isDataTable('#tbEspecialidadesDoc'))
-                    $('#tbEspecialidadesDoc').DataTable().destroy();
-                $('#tbEspecialidadesDoc').DataTable({
-                    ajax: { url: `/Doctor/ListarEspecialidadesDoctor?idDoctor=${id}`, dataSrc: "data" },
-                    columns: [
-                        { data: "nombreEspecialidad" },
-                        {
-                            data: "idEspecialidadDoctor",
-                            render: d => `<button class="btn btn-danger btn-sm"
-                                                  onclick="eliminarEspecialidad(${d})">
-                                              <i class="fas fa-trash"></i>
-                                          </button>`
-                        }
-                    ],
-                    paging: false, dom: 't'
-                });
-            };
-
-            window.eliminarEspecialidad = async function (id) {
-                const res = await Swal.fire({ title: "¿Quitar?", showCancelButton: true });
-                if (res.isConfirmed) {
-                    await fetch(`/Doctor/EliminarEspecialidad?id=${id}`, { method: "DELETE" });
-                    cargarEspecialidadesDoctor(idEditar);
-                    tablaData.ajax.reload(null, false);
-                }
-            };
-
-        })();
+            })();
     </script>
 }
