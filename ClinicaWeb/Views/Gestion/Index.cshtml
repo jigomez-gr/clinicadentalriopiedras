@@ -186,10 +186,18 @@
             <div class="modal-body">
                 <input type="hidden" id="hdIdCita" />
                 <div class="row g-2 mb-2">
-                    <div class="col-12 col-md-3">
-                        <label class="form-label" data-bs-toggle="tooltip" title="Fecha">Fecha</label>
-                        <input type="text" id="txtFechaCitaAdmin" class="form-control" disabled />
-                    </div>
+                  
+                    <div class="row g-2 mb-2">
+                        <div class="col-12 col-md-2">
+                            <label class="form-label" data-bs-toggle="tooltip" title="Número de cita">Nº Cita</label>
+                            <input type="text" id="txtNumeroCitaAdmin"
+                                   class="form-control fw-bold text-center" disabled />
+                        </div>
+                        <div class="col-12 col-md-2">
+                            <label class="form-label" data-bs-toggle="tooltip" title="Fecha">Fecha</label>
+                            <input type="text" id="txtFechaCitaAdmin" class="form-control" disabled />
+                        </div>
+
                     <div class="col-12 col-md-3">
                         <label class="form-label" data-bs-toggle="tooltip" title="Hora">Hora</label>
                         <input type="text" id="txtHoraCitaAdmin" class="form-control" disabled />
@@ -433,7 +441,9 @@
             const data = tablaGestion.row($(this).closest('tr')).data();
             idCitaEditar = data.idCita;
             limpiarModalAdmin();
-            $('#hdIdCita').val(data.idCita);
+            const idCitaActual = data.idCita ?? data.IdCita ?? 0;
+            $('#hdIdCita').val(idCitaActual);
+            $('#txtNumeroCitaAdmin').val(idCitaActual > 0 ? idCitaActual : '');
             $('#txtFechaCitaAdmin').val(data.fechaCita || '');
             $('#txtHoraCitaAdmin').val(data.horaCita || '');
             $('#txtPacienteAdmin').val(((data.usuario?.nombre || '') + ' ' + (data.usuario?.apellido || '')).trim());

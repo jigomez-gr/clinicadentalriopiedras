@@ -269,7 +269,18 @@
                 <div class="cita-box">
                     <div class="row g-2">
 
-                        <div class="col-12 col-md-3">
+                        <!-- DESPUÉS (sustitúyelo por esto): -->
+                        <div class="col-12 col-md-2">
+                            <label class="form-label"
+                                   data-bs-toggle="tooltip" data-bs-placement="top"
+                                   data-bs-custom-class="tooltip-agenda"
+                                   title="Número identificador de la cita">Nº Cita</label>
+                            <input id="citaIdCita" class="form-control fw-bold text-center" readonly
+                                   data-bs-toggle="tooltip" data-bs-placement="top"
+                                   data-bs-custom-class="tooltip-agenda"
+                                   title="Número identificador de la cita" />
+                        </div>
+                        <div class="col-12 col-md-2">
                             <label class="form-label"
                                    data-bs-toggle="tooltip" data-bs-placement="top"
                                    data-bs-custom-class="tooltip-agenda"
@@ -279,6 +290,7 @@
                                    data-bs-custom-class="tooltip-agenda"
                                    title="Hora de la cita" />
                         </div>
+
 
                         <div class="col-12 col-md-5">
                             <label class="form-label"
@@ -1185,6 +1197,7 @@
 
         // 2) Datos básicos de la cita
         const cita = (slot && slot.cita) ? slot.cita : {};
+        setVal("#citaIdCita", cita.idCita || slot.idCita || 0);
         setVal("#citaHora", normHora(cita.hora || slot.hora || ""));
         setVal("#citaPaciente", (cita.paciente || slot.paciente || "").trim());
         setVal("#citaEstado", (cita.estado || "").trim());
