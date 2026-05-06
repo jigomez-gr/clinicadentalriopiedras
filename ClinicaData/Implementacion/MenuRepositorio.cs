@@ -25,7 +25,6 @@ namespace ClinicaData.Implementacion
             await using var conexion = new NpgsqlConnection(con.CadenaSQL);
             await conexion.OpenAsync();
 
-            // Consulta única con LEFT JOIN para traer la jerarquía completa de una vez
             string query = @"
         SELECT m.idmenu, m.nombre as nombre_menu, m.icono as icono_menu, 
                s.idsubmenu, s.nombre as nombre_submenu, s.icono as icono_submenu, s.opcion
@@ -41,9 +40,7 @@ namespace ClinicaData.Implementacion
 
             while (await dr.ReadAsync())
             {
-                int idMenuActual = dr.GetInt32(dr.GetOrdinal("idmenu"));
-
-                // Buscamos si ya hemos procesado la raíz de este menú
+                int idMenuActual = Convert.ToInt32(dr["idmenu"]);
                 var menu = lista.FirstOrDefault(m => m.IdMenu == idMenuActual);
 
                 if (menu == null)
@@ -51,7 +48,7 @@ namespace ClinicaData.Implementacion
                     menu = new TgMenu
                     {
                         IdMenu = idMenuActual,
-                        // Usamos Trim() y Coalesce para evitar textos vacíos o con espacios fantasmas
+                        // Trim() para asegurar que el icono y el texto se peguen correctamente
                         Nombre = dr["nombre_menu"]?.ToString()?.Trim() ?? string.Empty,
                         Icono = dr["icono_menu"]?.ToString()?.Trim() ?? string.Empty,
                         Submenus = new List<TgSubmenu>()
@@ -59,7 +56,6 @@ namespace ClinicaData.Implementacion
                     lista.Add(menu);
                 }
 
-                // Si la fila actual contiene un submenú, lo añadimos a su padre
                 if (dr["idsubmenu"] != DBNull.Value)
                 {
                     menu.Submenus.Add(new TgSubmenu

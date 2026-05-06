@@ -15,22 +15,22 @@ namespace SistemaClinica.Controllers
             _repositorio = repositorio;
         }
 
-        // 1. Lista las categorías principales (Operación 70)
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> ListarMenuPorRol(int idrol)
         {
             var todoElMenu = await _repositorio.Lista(idrol);
-            // Formateamos para que n8n lea una lista simple de botones
+
+            // Formateamos los botones: icono y nombre pegados 👤
             var categorias = todoElMenu.Select(m => new {
-                text = $"{m.Icono} {m.Nombre}",
+                text = $"{m.Icono}{m.Nombre}", // Sin espacio intermedio
                 callback_data = m.IdMenu.ToString()
             }).ToList();
 
+            // Devolvemos DATA en mayúsculas para n8n ⬆️
             return StatusCode(StatusCodes.Status200OK, new { DATA = categorias });
         }
 
-        // 2. Lista las opciones de un menú específico (Operación 80)
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> ListarSubmenu(int idmenu, int idrol = 3)
@@ -41,8 +41,8 @@ namespace SistemaClinica.Controllers
             if (menuSeleccionado == null) return NotFound();
 
             var submenus = menuSeleccionado.Submenus.Select(s => new {
-                text = $"{s.Icono} {s.Nombre}",
-                callback_data = s.Opcion // Aquí va 'alta_cita', 'citas_pendientes', etc.
+                text = $"{s.Icono}{s.Nombre}", // Icono y nombre pegados
+                callback_data = s.Opcion
             }).ToList();
 
             return StatusCode(StatusCodes.Status200OK, new { DATA = submenus });
