@@ -27,6 +27,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 builder.Services.AddControllersWithViews();
 
 builder.Services.Configure<ConnectionStrings>(builder.Configuration.GetSection("ConnectionStrings"));
+builder.Services.AddScoped<IMenuRepositorio, MenuRepositorio>();
 builder.Services.AddScoped<ICitaRepositorio, CitaRepositorio>();
 builder.Services.AddScoped<IDoctorRepositorio, DoctorRepositorio>();
 builder.Services.AddScoped<IEspecialidadRepositorio, EspecialidadRepositorio>();
