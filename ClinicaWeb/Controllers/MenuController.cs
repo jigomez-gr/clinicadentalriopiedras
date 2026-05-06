@@ -27,7 +27,7 @@ namespace SistemaClinica.Controllers
                 callback_data = m.IdMenu.ToString()
             }).ToList();
 
-            return StatusCode(StatusCodes.Status200OK, new { data = categorias });
+            return StatusCode(StatusCodes.Status200OK, new { DATA = categorias });
         }
 
         // 2. Lista las opciones de un menú específico (Operación 80)
@@ -45,7 +45,7 @@ namespace SistemaClinica.Controllers
                 callback_data = s.Opcion // Aquí va 'alta_cita', 'citas_pendientes', etc.
             }).ToList();
 
-            return StatusCode(StatusCodes.Status200OK, new { data = submenus });
+            return StatusCode(StatusCodes.Status200OK, new { DATA = submenus });
         }
     }
 }

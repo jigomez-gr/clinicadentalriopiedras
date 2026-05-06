@@ -18,7 +18,6 @@ namespace ClinicaData.Implementacion
         {
             con = options.Value;
         }
-
         public async Task<List<TgMenu>> Lista(int IdRolUsuario)
         {
             var lista = new List<TgMenu>();
@@ -26,7 +25,7 @@ namespace ClinicaData.Implementacion
             await using var conexion = new NpgsqlConnection(con.CadenaSQL);
             await conexion.OpenAsync();
 
-            // Traemos todo en una sola consulta ordenada
+            // Consulta única con LEFT JOIN para traer la jerarquía completa de una vez
             string query = @"
         SELECT m.idmenu, m.nombre as nombre_menu, m.icono as icono_menu, 
                s.idsubmenu, s.nombre as nombre_submenu, s.icono as icono_submenu, s.opcion
@@ -42,9 +41,9 @@ namespace ClinicaData.Implementacion
 
             while (await dr.ReadAsync())
             {
-                int idMenuActual = Convert.ToInt32(dr["idmenu"]);
+                int idMenuActual = dr.GetInt32(dr.GetOrdinal("idmenu"));
 
-                // ¿Ya existe este menú en nuestra lista?
+                // Buscamos si ya hemos procesado la raíz de este menú
                 var menu = lista.FirstOrDefault(m => m.IdMenu == idMenuActual);
 
                 if (menu == null)
@@ -52,23 +51,24 @@ namespace ClinicaData.Implementacion
                     menu = new TgMenu
                     {
                         IdMenu = idMenuActual,
-                        Nombre = dr["nombre_menu"].ToString(),
-                        Icono = dr["icono_menu"].ToString(),
+                        // Usamos Trim() y Coalesce para evitar textos vacíos o con espacios fantasmas
+                        Nombre = dr["nombre_menu"]?.ToString()?.Trim() ?? string.Empty,
+                        Icono = dr["icono_menu"]?.ToString()?.Trim() ?? string.Empty,
                         Submenus = new List<TgSubmenu>()
                     };
                     lista.Add(menu);
                 }
 
-                // Si la fila trae un submenú, lo añadimos al menú correspondiente
+                // Si la fila actual contiene un submenú, lo añadimos a su padre
                 if (dr["idsubmenu"] != DBNull.Value)
                 {
                     menu.Submenus.Add(new TgSubmenu
                     {
                         IdSubmenu = Convert.ToInt32(dr["idsubmenu"]),
                         IdMenu = idMenuActual,
-                        Nombre = dr["nombre_submenu"].ToString(),
-                        Icono = dr["icono_submenu"].ToString(),
-                        Opcion = dr["opcion"].ToString()
+                        Nombre = dr["nombre_submenu"]?.ToString()?.Trim() ?? string.Empty,
+                        Icono = dr["icono_submenu"]?.ToString()?.Trim() ?? string.Empty,
+                        Opcion = dr["opcion"]?.ToString()?.Trim() ?? string.Empty
                     });
                 }
             }
