@@ -124,6 +124,7 @@
                     <thead>
                         <tr>
                             <th>Acciones</th>
+                            <th>Nº Cita</th>
                             <th>Fecha Cita</th>
                             <th>Hora Cita</th>
                             <th>Paciente</th>
@@ -149,7 +150,7 @@
 
             <div class="modal-body">
 
-                <!-- ── Fila: Nº Cita + Paciente ── -->
+                <!-- ── Nº Cita + Paciente ── -->
                 <div class="row g-2 mb-2">
                     <div class="col-12 col-md-3">
                         <label class="form-label">Nº Cita</label>
@@ -162,7 +163,7 @@
                     </div>
                 </div>
 
-                <!-- ── Fila: Fecha + Hora ── -->
+                <!-- ── Fecha + Hora ── -->
                 <div class="row g-2 mb-2">
                     <div class="col-12 col-md-6">
                         <label class="form-label">Fecha cita</label>
@@ -203,6 +204,12 @@
                         <div class="mt-1">
                             <small id="lblDocPacienteSin" class="text-muted d-none">El paciente no adjuntó ningún documento.</small>
                             <small id="lblDocPacienteCon" class="text-success d-none">✔ Documento del paciente disponible.</small>
+                        </div>
+                        <!-- Vista previa imagen si el documento es una imagen -->
+                        <div class="mt-2" id="divImgPaciente" style="display:none;">
+                            <img id="imgDocPaciente" src=""
+                                 class="img-fluid rounded border"
+                                 style="max-height:250px; object-fit:contain;" />
                         </div>
                     </div>
                 </div>
@@ -351,6 +358,7 @@
                                 </div>`;
                             }
                         },
+                        { data: "idCita",     width: "80px",  title: "Nº Cita" },
                         { data: "fechaCita",  width: "150px" },
                         { data: "horaCita",   width: "150px" },
                         {
@@ -367,7 +375,7 @@
                             }
                         }
                     ],
-                    order: [[1, "desc"], [2, "asc"]],
+                    order: [[2, "desc"], [3, "asc"]],
                     language: { url: "https://cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json" },
                     drawCallback: function () { initTooltips(document.getElementById("tbData")); }
                 });
@@ -379,9 +387,7 @@
                     const data = tablaData.row($(this).closest('tr')).data();
                     idCitaSeleccionada = data.idCita;
 
-                    // NUEVO: Nº Cita
                     $("#txtNumeroCita").val(data.idCita || "");
-
                     $("#txtPaciente").val(((data.usuario?.nombre) || "") + " " + ((data.usuario?.apellido) || ""));
                     $("#txtFechaCitaResumen").val(data.fechaCita  || "");
                     $("#txtHoraCitaResumen").val(data.horaCita    || "");
@@ -389,32 +395,49 @@
                     $("#txtRazonCitaUsr").val(data.razonCitaUsr   || "");
                     $("#txtIndicaciones").val(data.indicaciones   || "");
 
-                    // Valoración y opinión (solo lectura)
                     mostrarValoracion(data.valDoctorCita ?? 3);
                     $("#txtOpinionDoctorYClinica").val(data.opinionDoctorYClinica || "");
 
-                    // Documento paciente
+                    // ── Documento paciente ────────────────────────────────────
                     docPacienteBase64      = data.documentoCitaUsr;
                     docPacienteContentType = data.contentType || "application/octet-stream";
+
                     if (docPacienteBase64) {
-                        $("#btnVerDocPaciente").prop("disabled", false).addClass("btn-outline-success").removeClass("btn-outline-secondary");
+                        $("#btnVerDocPaciente").prop("disabled", false)
+                            .addClass("btn-outline-success").removeClass("btn-outline-secondary");
                         $("#lblDocPacienteSin").addClass("d-none");
                         $("#lblDocPacienteCon").removeClass("d-none");
+
+                        // Mostrar imagen inline si el contenido es una imagen
+                        const ct = (data.contentType || "").toLowerCase();
+                        if (ct.includes("image")) {
+                            $("#imgDocPaciente").attr("src",
+                                `data:${data.contentType};base64,${data.documentoCitaUsr}`);
+                            $("#divImgPaciente").show();
+                        } else {
+                            $("#divImgPaciente").hide();
+                            $("#imgDocPaciente").attr("src", "");
+                        }
                     } else {
-                        $("#btnVerDocPaciente").prop("disabled", true).removeClass("btn-outline-success").addClass("btn-outline-secondary");
+                        $("#btnVerDocPaciente").prop("disabled", true)
+                            .removeClass("btn-outline-success").addClass("btn-outline-secondary");
                         $("#lblDocPacienteSin").removeClass("d-none");
                         $("#lblDocPacienteCon").addClass("d-none");
+                        $("#divImgPaciente").hide();
+                        $("#imgDocPaciente").attr("src", "");
                     }
 
-                    // Documento doctor
+                    // ── Documento doctor ──────────────────────────────────────
                     docDoctorBase64      = data.docIndicacionesDoctor;
                     docDoctorContentType = data.contentTypeDoctor || "application/octet-stream";
                     if (docDoctorBase64) {
-                        $("#btnVerDocDoctor").prop("disabled", false).addClass("btn-outline-success").removeClass("btn-outline-secondary");
+                        $("#btnVerDocDoctor").prop("disabled", false)
+                            .addClass("btn-outline-success").removeClass("btn-outline-secondary");
                         $("#lblDocDoctorSin").addClass("d-none");
                         $("#lblDocDoctorCon").removeClass("d-none");
                     } else {
-                        $("#btnVerDocDoctor").prop("disabled", true).removeClass("btn-outline-success").addClass("btn-outline-secondary");
+                        $("#btnVerDocDoctor").prop("disabled", true)
+                            .removeClass("btn-outline-success").addClass("btn-outline-secondary");
                         $("#lblDocDoctorSin").removeClass("d-none");
                         $("#lblDocDoctorCon").addClass("d-none");
                     }
@@ -435,7 +458,9 @@
                     const bytes = atob(docPacienteBase64);
                     const arr   = new Uint8Array(bytes.length);
                     for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
-                    window.open(URL.createObjectURL(new Blob([arr], { type: docPacienteContentType || "application/octet-stream" })), "_blank");
+                    window.open(URL.createObjectURL(
+                        new Blob([arr], { type: docPacienteContentType || "application/octet-stream" })
+                    ), "_blank");
                 });
 
                 $("#btnVerDocDoctor").on("click", function () {
@@ -443,7 +468,9 @@
                     const bytes = atob(docDoctorBase64);
                     const arr   = new Uint8Array(bytes.length);
                     for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
-                    window.open(URL.createObjectURL(new Blob([arr], { type: docDoctorContentType || "application/octet-stream" })), "_blank");
+                    window.open(URL.createObjectURL(
+                        new Blob([arr], { type: docDoctorContentType || "application/octet-stream" })
+                    ), "_blank");
                 });
 
                 // ── Guardar / marcar atendida ─────────────────────────────────
@@ -452,8 +479,8 @@
                         return Swal.fire("Importante", "Debe ingresar las indicaciones.", "warning");
 
                     const objeto = {
-                        IdCita:     idCitaSeleccionada,
-                        EstadoCita: { IdEstadoCita: 2 },
+                        IdCita:       idCitaSeleccionada,
+                        EstadoCita:   { IdEstadoCita: 2 },
                         Indicaciones: $("#txtIndicaciones").val().trim()
                     };
 
@@ -470,9 +497,9 @@
                                 const reader = new FileReader();
                                 reader.onload = function (e) {
                                     const objDoc = {
-                                        IdCita:              idCitaSeleccionada,
+                                        IdCita:               idCitaSeleccionada,
                                         DocIndicacionesDoctor: e.target.result.split(",")[1],
-                                        ContentTypeDoctor:   file.type
+                                        ContentTypeDoctor:    file.type
                                     };
                                     fetch("/" + controlador + "/GuardarDocumentoDoctor", {
                                         method:  "POST",

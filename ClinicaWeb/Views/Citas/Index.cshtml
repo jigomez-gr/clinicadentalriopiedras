@@ -155,6 +155,7 @@
                         <thead>
                             <tr>
                                 <th>Acciones</th>
+                                <th>Nº Cita</th>
                                 <th>Fecha Cita</th>
                                 <th>Hora Cita</th>
                                 <th>Especialidad</th>
@@ -423,6 +424,7 @@
                         orderable: false,
                         width: "115px"
                     },
+                     { data: "idCita", width: "80px" },   // ← AÑADIR
                     { data: "fechaCita" },
                     { data: "horaCita" },
                     { data: "especialidad", render: d => d ? d.nombre : "" },
