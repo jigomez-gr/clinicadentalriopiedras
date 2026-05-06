@@ -2,10 +2,17 @@
 using ClinicaEntidades;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json.Serialization; // 👈 Fundamental para usar JsonPropertyName
 
 namespace SistemaClinica.Controllers
 {
-    // No usamos [Authorize] aquí para que el bot/n8n pueda consultar sin problemas de sesión
+    // 🏷️ Esta clase actúa como un "molde" que protege el nombre del campo
+    public class RespuestaWrapper
+    {
+        [JsonPropertyName("DATA")]
+        public object DATA { get; set; }
+    }
+
     public class MenuController : Controller
     {
         private readonly IMenuRepositorio _repositorio;
@@ -21,14 +28,14 @@ namespace SistemaClinica.Controllers
         {
             var todoElMenu = await _repositorio.Lista(idrol);
 
-            // Formateamos los botones: icono y nombre pegados 👤
             var categorias = todoElMenu.Select(m => new {
-                text = $"{m.Icono}{m.Nombre}", // Sin espacio intermedio
+                text = $"{m.Icono}{m.Nombre}",
                 callback_data = m.IdMenu.ToString()
             }).ToList();
 
-            // Devolvemos DATA en mayúsculas para n8n ⬆️
-            return StatusCode(StatusCodes.Status200OK, new { DATA = categorias });
+            // 🚀 Usamos el Wrapper en lugar del objeto anónimo 'new { ... }'
+            var respuesta = new RespuestaWrapper { DATA = categorias };
+            return StatusCode(StatusCodes.Status200OK, respuesta);
         }
 
         [HttpGet]
@@ -41,11 +48,13 @@ namespace SistemaClinica.Controllers
             if (menuSeleccionado == null) return NotFound();
 
             var submenus = menuSeleccionado.Submenus.Select(s => new {
-                text = $"{s.Icono}{s.Nombre}", // Icono y nombre pegados
+                text = $"{s.Icono}{s.Nombre}",
                 callback_data = s.Opcion
             }).ToList();
 
-            return StatusCode(StatusCodes.Status200OK, new { DATA = submenus });
+            // 🚀 Aquí también aplicamos el Wrapper para mantener la consistencia
+            var respuesta = new RespuestaWrapper { DATA = submenus };
+            return StatusCode(StatusCodes.Status200OK, respuesta);
         }
     }
 }
