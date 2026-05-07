@@ -2,11 +2,10 @@
 using ClinicaEntidades;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Text.Json.Serialization; // 👈 Fundamental para usar JsonPropertyName
+using System.Text.Json.Serialization;
 
 namespace SistemaClinica.Controllers
 {
-    // 🏷️ Esta clase actúa como un "molde" que protege el nombre del campo
     public class RespuestaWrapper
     {
         [JsonPropertyName("DATA")]
@@ -29,11 +28,10 @@ namespace SistemaClinica.Controllers
             var todoElMenu = await _repositorio.Lista(idrol);
 
             var categorias = todoElMenu.Select(m => new {
-                text = $"{m.Icono}{m.Nombre}",
+                text = $"{m.Icono} {m.Nombre}".Trim(),
                 callback_data = m.IdMenu.ToString()
             }).ToList();
 
-            // 🚀 Usamos el Wrapper en lugar del objeto anónimo 'new { ... }'
             var respuesta = new RespuestaWrapper { DATA = categorias };
             return StatusCode(StatusCodes.Status200OK, respuesta);
         }
@@ -48,11 +46,10 @@ namespace SistemaClinica.Controllers
             if (menuSeleccionado == null) return NotFound();
 
             var submenus = menuSeleccionado.Submenus.Select(s => new {
-                text = $"{s.Icono}{s.Nombre}",
+                text = $"{s.Icono} {s.Nombre}".Trim(),
                 callback_data = s.Opcion
             }).ToList();
 
-            // 🚀 Aquí también aplicamos el Wrapper para mantener la consistencia
             var respuesta = new RespuestaWrapper { DATA = submenus };
             return StatusCode(StatusCodes.Status200OK, respuesta);
         }
