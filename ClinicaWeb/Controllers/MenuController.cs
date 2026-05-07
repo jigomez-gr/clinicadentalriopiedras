@@ -28,7 +28,7 @@ namespace SistemaClinica.Controllers
             var todoElMenu = await _repositorio.Lista(idrol);
 
             var categorias = todoElMenu.Select(m => new {
-                text = $"{m.Icono} {m.Nombre}".Trim(),
+                text = m.Nombre,
                 callback_data = m.IdMenu.ToString()
             }).ToList();
 
@@ -46,7 +46,7 @@ namespace SistemaClinica.Controllers
             if (menuSeleccionado == null) return NotFound();
 
             var submenus = menuSeleccionado.Submenus.Select(s => new {
-                text = $"{s.Icono} {s.Nombre}".Trim(),
+                text = s.Nombre,
                 callback_data = s.Opcion
             }).ToList();
 
