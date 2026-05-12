@@ -10,7 +10,7 @@ namespace ClinicaEntidades
     {
         // ID es el único no nulable según el esquema identity
         public int IdTemp { get; set; }
-
+        public int IdCita { get; set; }
         public string? WorkflowId { get; set; }
         public string? ChatId { get; set; }
         public string? MessageId { get; set; }

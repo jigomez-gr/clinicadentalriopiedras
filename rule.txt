@@ -2,11 +2,17 @@ git add .
 git commit -m "Fix final: escritura cadena conexión proc batch"
 git push origin main
 
+SELECT id, procedimiento, paso, mensaje 
+FROM public.texte 
+ORDER BY id DESC 
+LIMIT 20;Para eje
+
 SELECT * FROM public.matrizesworkflowoperaciones
 ORDER BY id_operacion ASC ;
 
 delete from public.matrizesworkflowoperaciones;
 delete from public.trc_matrizesworkflowoperaciones;
+delete from  telegramcitatemp;
 delete from texte;
 select * from texte
 select * from opcionseleccionada;

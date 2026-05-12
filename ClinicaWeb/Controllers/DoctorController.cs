@@ -532,7 +532,6 @@ namespace ClinicaWeb.Controllers
                 if (!camposFaltantes.Any())
                     return Ok(new { ok = true, msg = "No hay campos que crear." });
 
-                // Solo campos CUSTOM — Cal.com exige "slug" para todos excepto name/email
                 var definiciones = new Dictionary<string, object>
                 {
                     ["apellido"] = new
@@ -575,7 +574,49 @@ namespace ClinicaWeb.Controllers
                 client.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
                 client.DefaultRequestHeaders.Add("cal-api-version", "2024-06-14");
 
-                var patch = new { bookingFields = nuevosFields };
+                // ── PASO 1: Obtener los bookingFields ACTUALES del evento ──────────────
+                var getRes = await client.GetAsync($"{url}/event-types/{eventTypeId}");
+                if (!getRes.IsSuccessStatusCode)
+                    return BadRequest(new { ok = false, msg = $"Error al obtener evento: {getRes.StatusCode}" });
+
+                var getBody = await getRes.Content.ReadAsStringAsync();
+                var getJson = System.Text.Json.JsonDocument.Parse(getBody).RootElement;
+
+                // Extraer bookingFields existentes como lista de JsonElement
+                var camposExistentes = new List<System.Text.Json.JsonElement>();
+                try
+                {
+                    var fields = getJson.GetProperty("data").GetProperty("bookingFields");
+                    foreach (var f in fields.EnumerateArray())
+                        camposExistentes.Add(f);
+                }
+                catch { /* si no hay campos previos, continuamos con lista vacía */ }
+
+                // ── PASO 2: Fusionar — existentes + nuevos ─────────────────────────────
+                // Convertimos existentes a objetos anónimos para poder serializar junto a los nuevos
+                var slugsExistentes = camposExistentes
+                    .Select(f => f.TryGetProperty("slug", out var s) ? s.GetString() ?? "" : "")
+                    .ToHashSet();
+
+                // Solo añadimos los que realmente no existen ya
+                var fieldsParaEnviar = new List<object>();
+
+                // Primero los existentes (como JsonElement se serializan tal cual)
+                foreach (var campo in camposExistentes)
+                    fieldsParaEnviar.Add(campo);
+
+                // Luego los nuevos que faltan
+                foreach (var nuevo in nuevosFields)
+                {
+                    // Obtenemos el slug del objeto anónimo mediante reflexión
+                    var slugProp = nuevo.GetType().GetProperty("slug");
+                    var slugVal = slugProp?.GetValue(nuevo)?.ToString() ?? "";
+                    if (!slugsExistentes.Contains(slugVal))
+                        fieldsParaEnviar.Add(nuevo);
+                }
+
+                // ── PASO 3: PATCH con el array fusionado ───────────────────────────────
+                var patch = new { bookingFields = fieldsParaEnviar };
                 var content = new StringContent(
                     System.Text.Json.JsonSerializer.Serialize(patch),
                     System.Text.Encoding.UTF8,
@@ -592,7 +633,7 @@ namespace ClinicaWeb.Controllers
                         detalle = resBody
                     });
 
-                return Ok(new { ok = true, msg = $"Campos creados: {string.Join(", ", camposFaltantes)}" });
+                return Ok(new { ok = true, msg = $"Campos añadidos: {string.Join(", ", camposFaltantes)}" });
             }
             catch (Exception ex)
             {
