@@ -3,14 +3,11 @@
 }
 
 @section Styles {
-    @* cambio 99 comzo *@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
-    @* cambio 99 fin *@
 
     <style>
-        
         .acciones-container {
             display: flex;
             gap: 4px;
@@ -33,8 +30,7 @@
         }
 
         @@media (max-width: 768px) {
-            #tbCita thead th:first-child,
-            #tbCita tbody td:first-child {
+            #tbCita thead th:first-child, #tbCita tbody td:first-child {
                 position: sticky;
                 left: 0;
                 background-color: #f8f9fa !important;
@@ -42,7 +38,6 @@
                 border-right: 2px solid #dee2e6;
             }
         }
-       
 
         .dataTables_processing {
             background-color: #ffcccc !important;
@@ -55,18 +50,37 @@
             height: auto !important;
             padding: 20px !important;
         }
+        /* Estrellas (solo lectura) */
+        .star-display {
+            color: #ffc107;
+            font-size: 1.4rem;
+        }
+
+            .star-display .empty {
+                color: #ddd;
+            }
+        /* Imagen doc doctor */
+        #imgDocDoctor {
+            max-width: 100%;
+            max-height: 320px;
+            border: 1px solid #dee2e6;
+            border-radius: .375rem;
+            object-fit: contain;
+            display: none;
+        }
+
+        #divDocDoctorPreview {
+            display: none;
+        }
     </style>
 }
 
 <h2 class="mt-4 mb-4 d-flex align-items-center">
     <span>Historial de Citas</span>
-
-    <button type="button"
-            class="btn btn-sm ms-auto"
+    <button type="button" class="btn btn-sm ms-auto"
             style="background-color:#ff8c00;color:#fff;border-color:#ff8c00;"
             onclick="openHelpVideo('Doctor_Horario.mp4')"
-            data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-citas"
-            title="Ayuda">
+            data-bs-toggle="tooltip" title="Ayuda">
         <i class="fa fa-circle-question me-1"></i> Ayuda
     </button>
 </h2>
@@ -78,180 +92,169 @@
                 <i class="fas fa-chart-bar me-1"></i>
                 Lista de citas atendidas (histórico) y pendientes de indicación doctor pero caducadas
             </div>
-
             <div class="card-body">
-                <div class="row">
-                    <div class="col-sm-12">
-                        <div class="table-responsive">
-                            <table class="display table table-striped table-bordered table-hover nowrap"
-                                   id="tbCita"
-                                   cellspacing="0"
-                                   style="width:100%">
-                                <thead>
-                                    <tr>
-                                        
-                                        <th>Acciones</th>
-                                       
-                                        <th class="d-none">FechaCitaOrden</th>
-                                        <th>Fecha</th>
-                                        <th>Hora</th>
-                                        <th>Especialidad</th>
-                                        <th>Doctor</th>
-                                        <th>Origen</th>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
-                        </div>
-                    </div>
+                <div class="table-responsive">
+                    <table class="display table table-striped table-bordered table-hover nowrap"
+                           id="tbCita" cellspacing="0" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Acciones</th>
+                                <th>Nº Cita</th>
+                                <th class="d-none">FechaCitaOrden</th>
+                                <th>Fecha</th>
+                                <th>Hora</th>
+                                <th>Especialidad</th>
+                                <th>Doctor</th>
+                                <th>Origen</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="mdData"
-     data-bs-backdrop="static"
-     data-bs-keyboard="false"
-     tabindex="-1"
-     aria-labelledby="mdDataLabel"
-     aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+<!-- ===================== MODAL DETALLE ===================== -->
+<div class="modal fade" id="mdData" data-bs-backdrop="static" data-bs-keyboard="false"
+     tabindex="-1" aria-labelledby="mdDataLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
         <div class="modal-content">
 
             <div class="modal-header">
                 <h5 class="modal-title" id="mdDataLabel">Detalle de la cita (solo lectura)</h5>
-                <button type="button"
-                        class="btn-close"
-                        data-bs-dismiss="modal"
-                        aria-label="Cerrar"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
 
             <div class="modal-body">
-
                 <input type="hidden" id="hdIdCita" />
 
+                <!-- Fila 1: Nº Cita / Fecha / Hora / Origen -->
                 <div class="row g-2 mb-2">
-                    <div class="col-12 col-md-4">
+                    <div class="col-6 col-md-2">
+                        <label class="form-label fw-bold">Nº Cita</label>
+                        <input type="text" class="form-control fw-bold text-center" id="txtIdCitaModal" disabled />
+                    </div>
+                    <div class="col-6 col-md-3">
                         <label class="form-label">Fecha cita</label>
-                        <input type="text"
-                               class="form-control"
-                               id="txtFechaCitaResumen"
-                               disabled />
+                        <input type="text" class="form-control" id="txtFechaCitaResumen" disabled />
                     </div>
-                    <div class="col-12 col-md-4">
+                    <div class="col-6 col-md-2">
                         <label class="form-label">Hora cita</label>
-                        <input type="text"
-                               class="form-control"
-                               id="txtHoraCitaResumen"
-                               disabled />
+                        <input type="text" class="form-control" id="txtHoraCitaResumen" disabled />
                     </div>
-                    <div class="col-12 col-md-4">
+                    <div class="col-6 col-md-2">
+                        <label class="form-label">Estado</label>
+                        <input type="text" class="form-control" id="txtEstadoCitaModal" disabled />
+                    </div>
+                    <div class="col-12 col-md-3">
                         <label class="form-label">Origen cita</label>
-                        <input type="text"
-                               class="form-control"
-                               id="txtOrigenCita"
-                               disabled />
+                        <input type="text" class="form-control" id="txtOrigenCita" disabled />
                     </div>
                 </div>
 
+                <!-- Fila 2: Especialidad / Doctor -->
                 <div class="row g-2 mb-2">
                     <div class="col-12 col-md-6">
                         <label class="form-label">Especialidad</label>
-                        <input type="text"
-                               class="form-control"
-                               id="txtEspecialidad"
-                               disabled />
+                        <input type="text" class="form-control" id="txtEspecialidad" disabled />
                     </div>
                     <div class="col-12 col-md-6">
                         <label class="form-label">Doctor</label>
-                        <input type="text"
-                               class="form-control"
-                               id="txtDoctor"
-                               disabled />
+                        <input type="text" class="form-control" id="txtDoctor" disabled />
+                    </div>
+                </div>
+
+                <!-- Fila 3: Confirmación -->
+                <div class="row g-2 mb-2">
+                    <div class="col-6 col-md-3">
+                        <label class="form-label">Confirmada</label>
+                        <input type="text" class="form-control" id="txtCitaConfirmada" disabled />
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label class="form-label">Fecha confirmación</label>
+                        <input type="text" class="form-control" id="txtFechaConfirmacion" disabled />
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Método petición</label>
+                        <input type="text" class="form-control" id="txtMetodoPeticion" disabled />
                     </div>
                 </div>
 
                 <hr />
 
-                <div class="row g-2 mb-3">
-                    <div class="col-12">
-                        <label class="form-label">Motivo de la cita (paciente)</label>
-                        <textarea class="form-control"
-                                  id="txtRazonCitaUsr"
-                                  rows="3"
-                                  readonly></textarea>
-                    </div>
+                <!-- Motivo paciente -->
+                <div class="mb-3">
+                    <label class="form-label">Motivo de la cita (paciente)</label>
+                    <textarea class="form-control" id="txtRazonCitaUsr" rows="3" readonly></textarea>
                 </div>
 
-                <div class="row g-2 mb-3">
-                    <div class="col-12">
-                        <label class="form-label d-block">Documento aportado por el paciente</label>
-                        <button type="button"
-                                id="btnVerDocPaciente"
-                                class="btn btn-warning btn-sm"
-                                disabled>
-                            Descargar doc. paciente
-                        </button>
-                        <div class="mt-1">
-                            <small id="lblHayDocPaciente"
-                                   class="form-text text-success d-none">
-                                ✔ Hay un documento adjuntado por el paciente.
-                            </small>
-                            <small id="lblSinDocPaciente"
-                                   class="form-text text-muted">
-                                No hay documento adjuntado por el paciente.
-                            </small>
-                        </div>
+                <!-- Documento paciente -->
+                <div class="mb-3">
+                    <label class="form-label d-block">Documento aportado por el paciente</label>
+                    <button type="button" id="btnVerDocPaciente" class="btn btn-warning btn-sm" disabled>
+                        Descargar doc. paciente
+                    </button>
+                    <div class="mt-1">
+                        <small id="lblHayDocPaciente" class="form-text text-success d-none">✔ Hay un documento adjuntado por el paciente.</small>
+                        <small id="lblSinDocPaciente" class="form-text text-muted">No hay documento adjuntado por el paciente.</small>
                     </div>
                 </div>
 
                 <hr />
 
-                <div class="alert alert-info" role="alert">
+                <div class="alert alert-info py-2" role="alert">
                     A continuación puede consultar las indicaciones y el documento registrados por el doctor para esta cita.
                 </div>
 
-                <div class="row g-2 mb-3">
-                    <div class="col-12">
-                        <label class="form-label">Indicaciones del doctor</label>
-                        <textarea class="form-control"
-                                  id="txtIndicacionesDoctor"
-                                  rows="3"
-                                  readonly></textarea>
+                <!-- Indicaciones doctor -->
+                <div class="mb-3">
+                    <label class="form-label">Indicaciones del doctor</label>
+                    <textarea class="form-control" id="txtIndicacionesDoctor" rows="3" readonly></textarea>
+                </div>
+
+                <!-- Documento doctor: botón + preview imagen inline -->
+                <div class="mb-3">
+                    <label class="form-label d-block">Documento del doctor</label>
+                    <button type="button" id="btnVerDocDoctor" class="btn btn-warning btn-sm" disabled>
+                        Descargar doc. doctor
+                    </button>
+                    <div class="mt-1">
+                        <small id="lblHayDocDoctor" class="form-text text-success d-none">✔ Hay un documento del doctor para esta cita.</small>
+                        <small id="lblSinDocDoctor" class="form-text text-muted">No hay documento del doctor para esta cita.</small>
+                    </div>
+                    <!-- Preview imagen doc doctor -->
+                    <div id="divDocDoctorPreview" class="mt-3">
+                        <label class="form-label text-muted small">Vista previa del documento del doctor:</label>
+                        <div>
+                            <img id="imgDocDoctor" src="" alt="Documento doctor" class="img-fluid" />
+                        </div>
+                        <div id="divDocDoctorNoimagen" class="text-muted small mt-1" style="display:none;">
+                            <i class="fas fa-file me-1"></i> El documento es un archivo no previsualizable (PDF u otro). Use el botón de descarga.
+                        </div>
                     </div>
                 </div>
 
-                <div class="row g-2 mb-2">
-                    <div class="col-12">
-                        <label class="form-label d-block">Documento del doctor</label>
-                        <button type="button"
-                                id="btnVerDocDoctor"
-                                class="btn btn-warning btn-sm"
-                                disabled>
-                            Descargar doc. doctor
-                        </button>
-                        <div class="mt-1">
-                            <small id="lblHayDocDoctor"
-                                   class="form-text text-success d-none">
-                                ✔ Hay un documento del doctor para esta cita.
-                            </small>
-                            <small id="lblSinDocDoctor"
-                                   class="form-text text-muted">
-                                No hay documento del doctor para esta cita.
-                            </small>
-                        </div>
-                    </div>
+                <hr />
+
+                <!-- Valoración -->
+                <div class="mb-2">
+                    <label class="form-label fw-bold">Valoración del doctor</label>
+                    <div id="divStarsDisplay" class="star-display mb-1"></div>
+                    <small id="lblValoracion" class="text-muted"></small>
+                </div>
+
+                <!-- Opinión -->
+                <div class="mb-3">
+                    <label class="form-label">Opinión sobre el doctor y la clínica</label>
+                    <textarea class="form-control" id="txtOpinionDoctorYClinica" rows="3" readonly></textarea>
                 </div>
 
             </div>
 
             <div class="modal-footer">
-                <button type="button"
-                        class="btn btn-secondary"
-                        data-bs-dismiss="modal">
-                    Cerrar
-                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
 
         </div>
@@ -266,63 +269,69 @@
 
     <script>
         (function () {
-          "use strict";
-          window.openHelpVideo = function (fileName) {
-            const w = 900, h = 520;
-            const left = Math.max(0, (screen.width - w) / 2);
-            const top = Math.max(0, (screen.height - h) / 2);
-            const url = "/helps/" + encodeURIComponent(fileName);
-
-            window.open(
-              url,
-              "helpVideo",
-              `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no`
-            );
-          };
+            "use strict";
+            window.openHelpVideo = function (fileName) {
+                const w = 900, h = 520;
+                const left = Math.max(0, (screen.width - w) / 2);
+                const top  = Math.max(0, (screen.height - h) / 2);
+                window.open("/helps/" + encodeURIComponent(fileName), "helpVideo",
+                    `width=${w},height=${h},left=${left},top=${top},resizable=yes`);
+            };
         })();
 
         let tablaHistorial = null;
         let filaActual = null;
 
-        function safe(v) {
-            return (v === undefined || v === null) ? "" : String(v);
-        }
+        function safe(v) { return (v === undefined || v === null) ? "" : String(v); }
 
         function normHora(v) {
             const s = safe(v).trim();
             return s.length >= 5 ? s.substring(0, 5) : s;
         }
 
+        function formatFecha(val) {
+            if (!val) return "";
+            const d = (val instanceof Date) ? val : new Date(val);
+            if (isNaN(d)) return String(val);
+            return d.toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit', year:'numeric' })
+                 + " " + d.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' });
+        }
+
         function getEspecialidadNombre(cita) {
-            return safe(cita?.especialidad?.nombre ?? cita?.Especialidad?.Nombre ?? cita?.nombreEspecialidad ?? cita?.NombreEspecialidad);
+            return safe(cita?.especialidad?.nombre ?? cita?.Especialidad?.Nombre
+                     ?? cita?.nombreEspecialidad ?? cita?.NombreEspecialidad);
         }
 
         function getDoctorNombre(cita) {
-            const nom = safe(cita?.doctor?.nombres ?? cita?.Doctor?.Nombres ?? cita?.nombres ?? cita?.Nombres);
+            const nom = safe(cita?.doctor?.nombres   ?? cita?.Doctor?.Nombres   ?? cita?.nombres   ?? cita?.Nombres);
             const ape = safe(cita?.doctor?.apellidos ?? cita?.Doctor?.Apellidos ?? cita?.apellidos ?? cita?.Apellidos);
             return (nom + " " + ape).trim();
+        }
+
+        function renderStars(val) {
+            const n = parseInt(val) || 0;
+            let html = "";
+            for (let i = 1; i <= 5; i++)
+                html += `<span class="${i <= n ? '' : 'empty'}">★</span>`;
+            return html;
         }
 
         function base64ToBlob(base64, contentType) {
             if (!base64) return null;
             const clean = String(base64).includes(",") ? String(base64).split(",")[1] : String(base64);
-            const byteChars = atob(clean);
-            const byteNumbers = new Array(byteChars.length);
-            for (let i = 0; i < byteChars.length; i++) {
-                byteNumbers[i] = byteChars.charCodeAt(i);
-            }
-            const byteArray = new Uint8Array(byteNumbers);
-            return new Blob([byteArray], { type: contentType || "application/octet-stream" });
+            try {
+                const byteChars   = atob(clean);
+                const byteNumbers = new Array(byteChars.length);
+                for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+                return new Blob([new Uint8Array(byteNumbers)], { type: contentType || "application/octet-stream" });
+            } catch { return null; }
         }
 
         function downloadBlob(blob, filename) {
             const url = window.URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
+            const a   = document.createElement("a");
+            a.href = url; a.download = filename;
+            document.body.appendChild(a); a.click(); a.remove();
             setTimeout(() => window.URL.revokeObjectURL(url), 1000);
         }
 
@@ -332,14 +341,11 @@
         }
 
         function limpiarModal() {
-            $("#hdIdCita").val("");
-            $("#txtFechaCitaResumen").val("");
-            $("#txtHoraCitaResumen").val("");
-            $("#txtOrigenCita").val("");
-            $("#txtEspecialidad").val("");
-            $("#txtDoctor").val("");
-            $("#txtRazonCitaUsr").val("");
-            $("#txtIndicacionesDoctor").val("");
+            $("#hdIdCita, #txtIdCitaModal, #txtFechaCitaResumen, #txtHoraCitaResumen").val("");
+            $("#txtOrigenCita, #txtEspecialidad, #txtDoctor, #txtEstadoCitaModal").val("");
+            $("#txtCitaConfirmada, #txtFechaConfirmacion, #txtMetodoPeticion").val("");
+            $("#txtRazonCitaUsr, #txtIndicacionesDoctor, #txtOpinionDoctorYClinica").val("");
+            $("#divStarsDisplay").html(""); $("#lblValoracion").text("");
 
             filaActual = null;
 
@@ -350,6 +356,25 @@
             $("#btnVerDocDoctor").prop("disabled", true);
             $("#lblHayDocDoctor").addClass("d-none");
             $("#lblSinDocDoctor").removeClass("d-none");
+
+            // Reset preview doc doctor
+            $("#imgDocDoctor").attr("src", "").hide();
+            $("#divDocDoctorNoimagen").hide();
+            $("#divDocDoctorPreview").hide();
+        }
+
+        function mostrarPreviewDocDoctor(base64, ct) {
+            const esImagen = ct && (ct.includes("image/") || ct.includes("png")
+                             || ct.includes("jpeg") || ct.includes("jpg"));
+            if (esImagen && base64) {
+                const src = base64.startsWith("data:") ? base64 : `data:${ct};base64,${base64}`;
+                $("#imgDocDoctor").attr("src", src).show();
+                $("#divDocDoctorNoimagen").hide();
+            } else {
+                $("#imgDocDoctor").hide();
+                $("#divDocDoctorNoimagen").show();
+            }
+            $("#divDocDoctorPreview").show();
         }
 
         function abrirModalDetalle(cita) {
@@ -357,134 +382,119 @@
             filaActual = cita;
 
             const id = cita?.idCita ?? cita?.IdCita ?? 0;
-
             $("#hdIdCita").val(id);
-            $("#txtFechaCitaResumen").val(safe(cita?.fechaCita ?? cita?.FechaCita));
-            $("#txtHoraCitaResumen").val(normHora(cita?.horaCita ?? cita?.HoraCita));
-            $("#txtOrigenCita").val(safe(cita?.origenCita ?? cita?.OrigenCita));
+            $("#txtIdCitaModal").val(id);
+            $("#txtFechaCitaResumen").val(safe(cita?.fechaCita    ?? cita?.FechaCita));
+            $("#txtHoraCitaResumen").val(normHora(cita?.horaCita  ?? cita?.HoraCita));
+            $("#txtOrigenCita").val(safe(cita?.origenCita         ?? cita?.OrigenCita));
             $("#txtEspecialidad").val(getEspecialidadNombre(cita));
             $("#txtDoctor").val(getDoctorNombre(cita));
+            $("#txtEstadoCitaModal").val(safe(cita?.estadoCita?.nombre ?? cita?.EstadoCita?.Nombre ?? ""));
 
-            $("#txtRazonCitaUsr").val(safe(cita?.razonCitaUsr ?? cita?.RazonCitaUsr));
-            $("#txtIndicacionesDoctor").val(safe(cita?.indicaciones ?? cita?.Indicaciones));
+            // Confirmación
+            const conf = safe(cita?.citaConfirmada ?? cita?.CitaConfirmada);
+            $("#txtCitaConfirmada").val(conf === "S" ? "S – Confirmada" : conf === "N" ? "N – Pendiente" : conf);
+            const fConf = cita?.fechaConfirmacion ?? cita?.FechaConfirmacion;
+            $("#txtFechaConfirmacion").val(fConf ? formatFecha(fConf) : "");
+            $("#txtMetodoPeticion").val(safe(cita?.metodoPeticion ?? cita?.MetodoPeticion));
 
+            // Textos
+            $("#txtRazonCitaUsr").val(safe(cita?.razonCitaUsr       ?? cita?.RazonCitaUsr));
+            $("#txtIndicacionesDoctor").val(safe(cita?.indicaciones  ?? cita?.Indicaciones));
+            $("#txtOpinionDoctorYClinica").val(safe(cita?.opinionDoctorYClinica ?? cita?.OpinionDoctorYClinica));
+
+            // Valoración estrellas
+            const val = parseInt(cita?.valDoctorCita ?? cita?.ValDoctorCita) || 0;
+            $("#divStarsDisplay").html(renderStars(val));
+            $("#lblValoracion").text(val > 0 ? `${val} de 5 estrellas` : "Sin valoración");
+
+            // Doc paciente
             const docPac = cita?.documentoCitaUsr ?? cita?.DocumentoCitaUsr;
-            const docDoc = cita?.docIndicacionesDoctor ?? cita?.DocIndicacionesDoctor;
-
             if (docPac) {
                 $("#btnVerDocPaciente").prop("disabled", false);
                 $("#lblHayDocPaciente").removeClass("d-none");
                 $("#lblSinDocPaciente").addClass("d-none");
             }
 
+            // Doc doctor
+            const docDoc = cita?.docIndicacionesDoctor ?? cita?.DocIndicacionesDoctor;
+            const ctDoc  = cita?.contentTypeDoctor     ?? cita?.ContentTypeDoctor ?? "";
             if (docDoc) {
                 $("#btnVerDocDoctor").prop("disabled", false);
                 $("#lblHayDocDoctor").removeClass("d-none");
                 $("#lblSinDocDoctor").addClass("d-none");
+                mostrarPreviewDocDoctor(docDoc, ctDoc);
             }
 
-            const modal = new bootstrap.Modal(document.getElementById("mdData"));
-            modal.show();
+            new bootstrap.Modal(document.getElementById("mdData")).show();
         }
 
         function descargarDocPaciente() {
             if (!filaActual) return;
-            const id = filaActual?.idCita ?? filaActual?.IdCita ?? 0;
+            const id     = filaActual?.idCita   ?? filaActual?.IdCita   ?? 0;
             const base64 = filaActual?.documentoCitaUsr ?? filaActual?.DocumentoCitaUsr;
-            const ct = filaActual?.contentType ?? filaActual?.ContentType ?? "application/octet-stream";
-
+            const ct     = filaActual?.contentType      ?? filaActual?.ContentType ?? "application/octet-stream";
             if (!base64) return info("Esta cita no tiene documento del paciente.");
-
             const blob = base64ToBlob(base64, ct);
-            if (!blob) return info("No se pudo preparar el documento del paciente.");
-
-            const ext = (ct && ct.includes("pdf")) ? ".pdf" : (ct && ct.includes("png")) ? ".png" : (ct && (ct.includes("jpeg") || ct.includes("jpg"))) ? ".jpg" : "";
+            if (!blob)  return info("No se pudo preparar el documento.");
+            const ext = ct.includes("pdf") ? ".pdf" : ct.includes("png") ? ".png"
+                      : (ct.includes("jpeg") || ct.includes("jpg")) ? ".jpg" : "";
             downloadBlob(blob, `documento_paciente_cita_${id}${ext}`);
         }
 
         function descargarDocDoctor() {
             if (!filaActual) return;
-            const id = filaActual?.idCita ?? filaActual?.IdCita ?? 0;
+            const id     = filaActual?.idCita            ?? filaActual?.IdCita            ?? 0;
             const base64 = filaActual?.docIndicacionesDoctor ?? filaActual?.DocIndicacionesDoctor;
-            const ct = filaActual?.contentTypeDoctor ?? filaActual?.ContentTypeDoctor ?? "application/octet-stream";
-
+            const ct     = filaActual?.contentTypeDoctor ?? filaActual?.ContentTypeDoctor ?? "application/octet-stream";
             if (!base64) return info("Esta cita no tiene documento del doctor.");
-
             const blob = base64ToBlob(base64, ct);
-            if (!blob) return info("No se pudo preparar el documento del doctor.");
-
-            const ext = (ct && ct.includes("pdf")) ? ".pdf" : (ct && ct.includes("png")) ? ".png" : (ct && (ct.includes("jpeg") || ct.includes("jpg"))) ? ".jpg" : "";
+            if (!blob)  return info("No se pudo preparar el documento.");
+            const ext = ct.includes("pdf") ? ".pdf" : ct.includes("png") ? ".png"
+                      : (ct.includes("jpeg") || ct.includes("jpg")) ? ".jpg" : "";
             downloadBlob(blob, `documento_doctor_cita_${id}${ext}`);
         }
 
         $(document).ready(function () {
-
-            if ($.fn.DataTable.isDataTable("#tbCita")) {
+            if ($.fn.DataTable.isDataTable("#tbCita"))
                 $("#tbCita").DataTable().clear().destroy();
-            }
 
             tablaHistorial = $("#tbCita").DataTable({
-                "processing": true,
-                "serverSide": false,
+                processing: true,
+                serverSide: false,
                 responsive: false,
                 scrollX: true,
-                ajax: {
-                    url: "/HistorialCitas/ListaHistorialCitas",
-                    type: "GET",
-                    datatype: "json"
-                },
+                ajax: { url: "/HistorialCitas/ListaHistorialCitas", type: "GET", datatype: "json" },
                 columns: [
-                   
                     {
-                        title: "Acciones",
-                        data: null,
-                        orderable: false,
-                        searchable: false,
-                        width: "80px",
-                        render: function () {
-                            return `<div class="acciones-container">
-                                        <button type="button" class="btn btn-primary btn-circle btn-detalle" title="Ver Detalle">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </div>`;
-                        }
+                        title: "Acciones", data: null, orderable: false, searchable: false, width: "60px",
+                        render: () => `<div class="acciones-container">
+                            <button type="button" class="btn btn-primary btn-circle btn-detalle" title="Ver Detalle">
+                                <i class="fas fa-eye"></i>
+                            </button></div>`
                     },
-                   
+                    {
+                        title: "Nº Cita", data: "idCita", width: "80px",
+                        render: d => `<span class="fw-bold">${safe(d)}</span>`
+                    },
                     { data: "fechaCitaOrden", visible: false },
-
-                    { title: "Fecha", data: "fechaCita", width: "150px" },
-                    { title: "Hora", data: "horaCita", width: "120px", render: function (d) { return normHora(d); } },
-                    {
-                        title: "Especialidad",
-                        data: "especialidad",
-                        render: function (d, type, row) { return getEspecialidadNombre(row); }
-                    },
-                    {
-                        title: "Doctor",
-                        data: "doctor",
-                        render: function (d, type, row) { return getDoctorNombre(row); }
-                    },
-                    {
-                        title: "Origen",
-                        data: "origenCita",
-                        render: function (d, type, row) { return safe(row?.origenCita ?? row?.OrigenCita); }
-                    }
+                    { title: "Fecha",      data: "fechaCita",  width: "120px" },
+                    { title: "Hora",       data: "horaCita",   width: "80px",  render: d => normHora(d) },
+                    { title: "Especialidad", data: "especialidad", render: (d, t, row) => getEspecialidadNombre(row) },
+                    { title: "Doctor",     data: "doctor",     render: (d, t, row) => getDoctorNombre(row) },
+                    { title: "Origen",     data: "origenCita", render: (d, t, row) => safe(row?.origenCita ?? row?.OrigenCita) }
                 ],
-                order: [[1, "desc"], [3, "asc"]],
-                language: {
-                    url: "https://cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json"
-                }
+                order: [[2, "desc"], [4, "asc"]],
+                language: { url: "https://cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json" }
             });
 
             $("#tbCita tbody").on("click", ".btn-detalle", function () {
-                const fila = $(this).closest("tr");
-                const data = tablaHistorial.row(fila).data();
-                if (!data) return;
-                abrirModalDetalle(data);
+                const data = tablaHistorial.row($(this).closest("tr")).data();
+                if (data) abrirModalDetalle(data);
             });
 
-            $("#btnVerDocPaciente").on("click", function () { descargarDocPaciente(); });
-            $("#btnVerDocDoctor").on("click", function () { descargarDocDoctor(); });
+            $("#btnVerDocPaciente").on("click", descargarDocPaciente);
+            $("#btnVerDocDoctor").on("click",   descargarDocDoctor);
         });
     </script>
-}
+} 

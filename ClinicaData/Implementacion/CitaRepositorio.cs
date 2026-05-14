@@ -1840,5 +1840,15 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 await conexion.ExecuteAsync("INSERT INTO public.texte (mensaje) VALUES (@m)", new { m = "C#_LOG: " + msg });
             }
         }
+        public async Task<string> ObtenerMensajeError(string chat_id)
+        {
+            using (var conexion = new NpgsqlConnection(con.CadenaSQL))
+            {
+                await conexion.OpenAsync();
+                return await conexion.ExecuteScalarAsync<string>(
+                    "SELECT mensaje FROM public.mensajes_error WHERE chat_id = @chat_id ORDER BY id DESC LIMIT 1",
+                    new { chat_id });
+            }
+        }
     }
 }

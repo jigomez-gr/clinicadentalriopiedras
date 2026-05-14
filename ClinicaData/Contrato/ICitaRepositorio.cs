@@ -137,5 +137,7 @@ namespace ClinicaData.Contrato
         Task<bool> GuardarCambiosGestionGlobalAltas(TelegramCitaTemp objeto);
         Task<TelegramCitaTemp> ObtenerCitaGestionGlobalAltas(string chat_id);
 
+        Task<string> ObtenerMensajeError(string chat_id);
+
     }
 }

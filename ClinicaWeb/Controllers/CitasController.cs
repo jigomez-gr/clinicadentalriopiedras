@@ -2007,8 +2007,24 @@ LIMIT 1;
             string resultado = await _repositorioCita.ConfirmarGestionFinal(chat_id);
             return Content(resultado, "application/json");
         }
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> Noop(string chat_id)
+        {
+            if (string.IsNullOrEmpty(chat_id))
+                return Content("{\"DATA\":[], \"MENSAJE\":null}", "application/json");
 
-        
+            string mensaje = await _repositorioCita.ObtenerMensajeError(chat_id);
+
+            return Content(
+                Newtonsoft.Json.JsonConvert.SerializeObject(new
+                {
+                    DATA = new object[] { },
+                    MENSAJE = mensaje
+                }),
+                "application/json");
+        }
+
     }
 }
    
