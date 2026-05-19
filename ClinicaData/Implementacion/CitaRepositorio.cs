@@ -1850,5 +1850,67 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                     new { chat_id });
             }
         }
+        public async Task<object> ObtenerCitasPendientesConfirmarTelegram(string telegramId)
+        {
+            var listaBotones = new List<BotonTelegram>();
+            // Cambiamos el encabezado para reflejar que están pendientes de confirmar
+            string mensajeHeader = "⚠️ *Citas Pendientes de Confirmar*\nPulse sobre la cita para gestionarla:";
+
+            using (var conexion = new NpgsqlConnection(con.CadenaSQL))
+            {
+                // Partimos de tu SQL base y añadimos la condición "AND c.citaconfirmada IS NULL" 🛠️
+                string sql = @"
+    SELECT
+        c.idcita,
+        c.fechacita,
+        dhd.turnohora,
+        e.nombre AS nombre_especialidad,
+        (d.nombres || ' ' || d.apellidos) AS nombre_doctor,
+        COALESCE(c.razoncitausr, 'Sin motivo') AS razon
+    FROM cita c
+    INNER JOIN usuario u ON u.idusuario = c.idusuario
+    INNER JOIN doctorhorariodetalle dhd ON dhd.iddoctorhorariodetalle = c.iddoctorhorariodetalle
+    INNER JOIN doctorhorario dh ON dh.iddoctorhorario = dhd.iddoctorhorario
+    INNER JOIN doctor d ON d.iddoctor = dh.iddoctor
+    INNER JOIN especialidad e ON e.idespecialidad = d.idespecialidad
+    WHERE c.idestadocita = 1              -- Estado: Pendiente
+      AND ( c.citaconfirmada IS NULL or fechaconfirmacion is NULL )        -- 👈 No confirmada todavía
+      AND u.telegram_id = @tId
+      AND c.fechacita::date >= CURRENT_DATE
+    ORDER BY c.fechacita ASC, dhd.turnohora ASC";
+
+                var citasRaw = await conexion.QueryAsync<CitaPendienteSQL>(sql, new { tId = telegramId });
+
+                if (!citasRaw.Any())
+                {
+                    return new Dictionary<string, object>
+                    {
+                        ["MENSAJE"] = "No tienes citas pendientes de confirmación.",
+                        ["DATA"] = new List<object>()
+                    };
+                }
+
+                foreach (var c in citasRaw)
+                {
+                    string fechaStr = c.fechacita.ToString("dd/MM/yyyy");
+                    string horaStr = c.turnohora.ToString("HH:mm");
+                    string especialidad = c.nombre_especialidad ?? "";
+                    string doctor = c.nombre_doctor ?? "";
+
+                    // Cambiamos el icono de la lupa por un reloj de arena (⏳) para marcar la espera de confirmación
+                    listaBotones.Add(new BotonTelegram
+                    {
+                        text = $"⏳ {fechaStr} {horaStr} - {especialidad} Dr.{doctor}",
+                        callback_data = $"DETALLE_CITA_{c.idcita}" // Mismo patrón compatible con tu tg_100
+                    });
+                }
+            }
+
+            return new Dictionary<string, object>
+            {
+                ["MENSAJE"] = mensajeHeader,
+                ["DATA"] = listaBotones
+            };
+        }
     }
 }

@@ -118,10 +118,11 @@ namespace ClinicaData.Contrato
         // ... otros métodos ...
         // 1. Para el Login/Seguridad inicial
         Task<object> ObtenerCitasPendientesTelegram(string telegramId);
+        Task<object> ObtenerCitasPendientesConfirmarTelegram(string telegramId);
 
         // NUEVOS MÉTODOS PARA EL FLUJO GLOBAL (Sin DTOs, usando clase Cita)
 
-      
+
         Task<TelegramCitaTemp> ObtenerCitaGestionGlobal(string chat_id);
 
         // Guarda solo los campos permitidos (Paciente + Valoración + Estado)

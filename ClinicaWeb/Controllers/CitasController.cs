@@ -1781,6 +1781,23 @@ LIMIT 1;
                 return Ok(new { error = true, mensajepregunta = "Error: " + ex.Message });
             }
         }
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> ListarPublicoPendientesTelegram(string chat_id)
+        {
+            if (string.IsNullOrEmpty(chat_id))
+                return Ok(new { error = true, mensajepregunta = "ID de chat no proporcionado." });
+
+            try
+            {
+                var resultado = await _repositorioCita.ObtenerCitasPendientesConfirmarTelegram(chat_id);
+                return Ok(resultado);
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { error = true, mensajepregunta = "Error: " + ex.Message });
+            }
+        }
         /// <summary>
         /// Carga la WebApp de gestión global validando seguridad y cargando la clase Cita.
         /// </summary>
