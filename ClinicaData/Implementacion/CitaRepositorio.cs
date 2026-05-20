@@ -1876,7 +1876,8 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
     WHERE c.idestadocita = 1              -- Estado: Pendiente
       AND ( c.citaconfirmada IS NULL or fechaconfirmacion is NULL )        -- 👈 No confirmada todavía
       AND u.telegram_id = @tId
-      AND c.fechacita::date >= CURRENT_DATE
+AND c.fechacita >= NOW() 
+AND c.fechacita <= NOW() + INTERVAL '48 hours'
     ORDER BY c.fechacita ASC, dhd.turnohora ASC";
 
                 var citasRaw = await conexion.QueryAsync<CitaPendienteSQL>(sql, new { tId = telegramId });
