@@ -2038,7 +2038,7 @@ LIMIT 1;
                 return Json(new
                 {
                     ESTADO = 3,
-                    MENSAJE = $"🏁 *Resumen de Gestión*\n\n" +
+                    MENSAJE = $"🏁 *Resumen de Reconfirmar una Cita*\n\n" +
                               $"👨‍⚕️ *Doctor:* {objetoTemp.NombreYValDoctor ?? "No asignado"}\n" +
                               $"⚕️ *Especialidad:* {objetoTemp.NombreEspecialidad ?? "--"}\n" +
                               $"📅 *Fecha:* {objetoTemp.Fecha ?? "--"}\n" +
