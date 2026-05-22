@@ -1977,7 +1977,7 @@ LIMIT 1;
                 }
 
                 string token = CalcularMd5(chat_id + "MiClaveSecreta2026");
-                string urlWeb = $"https://clinicadentalriopiedras.n8njigretera.cloud/Citas/EditarGestionGlobalConfirmar?chat_id={chat_id}&token={token}";
+                string urlWeb = $"https://clinicadentalriopiedras.n8njigretera.cloud/Citas/EditarGestionGlobal?chat_id={chat_id}&token={token}";
 
                 // 2. Usamos 'objetoTemp' para que no haya dudas de qué clase estamos usando
                 TelegramCitaTemp objetoTemp = await _repositorioCita.ObtenerCitaGestionGlobal(chat_id);
@@ -2024,7 +2024,7 @@ LIMIT 1;
                 }
 
                 string token = CalcularMd5(chat_id + "MiClaveSecreta2026");
-                string urlWeb = $"https://clinicadentalriopiedras.n8njigretera.cloud/Citas/EditarGestionGlobal?chat_id={chat_id}&token={token}";
+                string urlWeb = $"https://clinicadentalriopiedras.n8njigretera.cloud/Citas/EditarGestionGlobalConfirmar?chat_id={chat_id}&token={token}";
 
                 // 2. Usamos 'objetoTemp' para que no haya dudas de qué clase estamos usando
                 TelegramCitaTemp objetoTemp = await _repositorioCita.ObtenerCitaGestionGlobal(chat_id);
