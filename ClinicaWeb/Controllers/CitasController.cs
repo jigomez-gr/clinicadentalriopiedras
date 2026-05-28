@@ -2094,7 +2094,12 @@ LIMIT 1;
         {
             return View("~/Views/Citas/ReconfirmarCita.cshtml");
         }
-
+        [HttpGet]
+        [Authorize(Roles = "Paciente")]
+        public IActionResult CancelarCita()
+        {
+            return View("~/Views/Citas/CancelarCita.cshtml");
+        }
         [HttpGet]
         [Authorize(Roles = "Paciente")]
         public async Task<IActionResult> ListaCitasPendiente48h()

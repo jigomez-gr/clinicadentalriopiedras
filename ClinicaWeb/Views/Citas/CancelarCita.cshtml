@@ -1,0 +1,233 @@
+﻿@{
+    ViewData["Title"] = "Cancelar Cita";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .acciones-container {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-circle {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 14px;
+            line-height: 32px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        #tbData {
+            border-collapse: collapse !important;
+        }
+
+        @@media (max-width: 768px) {
+            #tbData thead th:first-child,
+            #tbData tbody td:first-child {
+                position: sticky;
+                left: 0;
+                background-color: #f8f9fa !important;
+                z-index: 5;
+                border-right: 2px solid #dee2e6;
+            }
+        }
+
+        table.dataTable td, table.dataTable th {
+            white-space: normal !important;
+        }
+
+        .cita-modal-compact .modal-body {
+            padding: .75rem;
+        }
+
+        .dataTables_processing {
+            background-color: #ffcccc !important;
+            color: #d9534f !important;
+            font-weight: bold !important;
+            font-size: 1.2rem !important;
+            border: 2px solid #d9534f !important;
+            z-index: 9999 !important;
+            top: 50% !important;
+            height: auto !important;
+            padding: 20px !important;
+        }
+    </style>
+}
+
+<h2 class="mt-4 mb-4 d-flex align-items-center">
+    <span>Cancelar Cita</span>
+    <button type="button" class="btn btn-sm ms-auto" style="background-color:#ff8c00;color:#fff;"
+            onclick="openHelpVideo('Cancelar_Cita.mp4')" data-bs-toggle="tooltip" title="Ayuda">
+        <i class="fa fa-circle-question me-1"></i> Ayuda
+    </button>
+</h2>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header"><i class="fas fa-trash me-1"></i> Citas pendientes</div>
+            <div class="card-body">
+                <div class="alert alert-danger small py-2 mb-3">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    La cancelación es <strong>irreversible</strong> y liberará su turno inmediatamente.
+                </div>
+                <div class="table-responsive">
+                    <table class="display table table-striped table-bordered table-hover nowrap"
+                           id="tbData" cellspacing="0" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Acciones</th>
+                                <th>Nº Cita</th>
+                                <th>Fecha Cita</th>
+                                <th>Hora Cita</th>
+                                <th>Especialidad</th>
+                                <th>Doctor</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== MODAL CANCELAR ===================== -->
+<div class="modal fade" id="mdCancelarPaciente" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-trash me-2"></i>Cancelar mi Cita</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="cancelarIdCitaPac" value="0">
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-danger">Motivo de la cancelación (Obligatorio):</label>
+                    <textarea id="cancelarMotivoPac" class="form-control border-danger" rows="3"
+                              placeholder="Indique brevemente el motivo..."></textarea>
+                </div>
+                <div class="alert alert-warning small py-2">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    Esta acción es irreversible y liberará su turno inmediatamente.
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" id="btnConfirmarCancelPac" class="btn btn-danger px-4">Confirmar Cancelación</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            "use strict";
+            window.openHelpVideo = function (fileName) {
+                const w = 900, h = 520;
+                const left = Math.max(0, (screen.width - w) / 2);
+                const top  = Math.max(0, (screen.height - h) / 2);
+                window.open("/helps/" + encodeURIComponent(fileName), "helpVideo",
+                    `width=${w},height=${h},left=${left},top=${top},resizable=yes`);
+            };
+        })();
+
+        let tablaData;
+        const controlador = "Citas";
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+            tablaData = $('#tbData').DataTable({
+                processing: true,
+                serverSide: false,
+                ajax: { url: `/${controlador}/ListaCitasPendiente`, type: "GET", datatype: "json" },
+                columns: [
+                    {
+                        data: null,
+                        render: function (data, type, row) {
+                            return `<div class="acciones-container">
+                                <button class="btn btn-danger btn-circle btn-cancelar" title="Cancelar">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>`;
+                        },
+                        orderable: false,
+                        width: "60px"
+                    },
+                    { data: "idCita",       width: "80px" },
+                    { data: "fechaCita" },
+                    { data: "horaCita" },
+                    { data: "especialidad", render: d => d ? d.nombre : "" },
+                    { data: "doctor",       render: d => d ? `${d.nombres} ${d.apellidos}`.trim() : "" }
+                ],
+                scrollX: true,
+                language: { url: "//cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json" }
+            });
+
+            // ── Abrir modal cancelar ──────────────────────────────────────────
+            $("#tbData tbody").on("click", ".btn-cancelar", function () {
+                const data = tablaData.row($(this).closest("tr")).data();
+                $("#cancelarIdCitaPac").val(data.idCita);
+                $("#cancelarMotivoPac").val("");
+                new bootstrap.Modal(document.getElementById('mdCancelarPaciente')).show();
+            });
+
+            // ── Confirmar cancelación ─────────────────────────────────────────
+            $("#btnConfirmarCancelPac").on("click", async function (e) {
+                e.preventDefault();
+                const idCita = $("#cancelarIdCitaPac").val();
+                const motivo = $("#cancelarMotivoPac").val().trim();
+                if (!motivo) {
+                    Swal.fire("Atención", "Debe indicar un motivo para cancelar.", "warning");
+                    return;
+                }
+                Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                try {
+                    const response = await fetch(
+                        `/Citas/CancelarCitaAgenda?idCita=${idCita}&motivo=${encodeURIComponent(motivo)}`,
+                        { method: "POST" });
+                    const result = await response.json();
+                    if (result.ok) {
+                        bootstrap.Modal.getInstance(document.getElementById('mdCancelarPaciente'))?.hide();
+                        iniciarPolling(result.idAccion || result.IdAccion);
+                    } else {
+                        Swal.fire("Error", result.mensaje, "error");
+                    }
+                } catch (error) {
+                    console.error("Error en la cancelación:", error);
+                    Swal.fire("Error", "Fallo de comunicación con el servidor.", "error");
+                }
+            });
+        });
+
+        // ── Polling ───────────────────────────────────────────────────────────
+        function iniciarPolling(idAccion) {
+            let intentos = 0;
+            const intervalo = setInterval(async () => {
+                intentos++;
+                try {
+                    const check  = await fetch(`/Citas/ConsultarEstadoAccion?id=${idAccion}`);
+                    const res    = await check.json();
+                    const estado = (res.status || "").trim().toUpperCase();
+                    if (estado === 'S') {
+                        clearInterval(intervalo);
+                        Swal.fire("Éxito", "Cita cancelada correctamente.", "success")
+                            .then(() => tablaData.ajax.reload());
+                    } else if (estado === 'Z' || intentos > 15) {
+                        clearInterval(intervalo);
+                        Swal.fire("Info", "El proceso está terminando.", "info")
+                            .then(() => tablaData.ajax.reload());
+                    }
+                } catch (err) {
+                    console.error("Error en polling:", err);
+                }
+            }, 3000);
+        }
+    </script>
+}
