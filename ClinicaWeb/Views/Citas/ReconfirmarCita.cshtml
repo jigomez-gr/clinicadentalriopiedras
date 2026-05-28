@@ -1,0 +1,286 @@
+﻿@{
+    ViewData["Title"] = "Reconfirmar Cita";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .acciones-container {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-circle {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 14px;
+            line-height: 32px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        #tbData {
+            border-collapse: collapse !important;
+        }
+
+        @@media (max-width: 768px) {
+            #tbData thead th:first-child,
+            #tbData tbody td:first-child {
+                position: sticky;
+                left: 0;
+                background-color: #f8f9fa !important;
+                z-index: 5;
+                border-right: 2px solid #dee2e6;
+            }
+        }
+
+        table.dataTable td, table.dataTable th {
+            white-space: normal !important;
+        }
+
+        .cita-modal-compact .modal-body {
+            padding: .75rem;
+        }
+
+        .dataTables_processing {
+            background-color: #ffcccc !important;
+            color: #d9534f !important;
+            font-weight: bold !important;
+            font-size: 1.2rem !important;
+            border: 2px solid #d9534f !important;
+            z-index: 9999 !important;
+            top: 50% !important;
+            height: auto !important;
+            padding: 20px !important;
+        }
+    </style>
+}
+
+<h2 class="mt-4 mb-4 d-flex align-items-center">
+    <span>Reconfirmar Cita</span>
+    <button type="button" class="btn btn-sm ms-auto" style="background-color:#ff8c00;color:#fff;"
+            onclick="openHelpVideo('Reconfirmar_Cita.mp4')" data-bs-toggle="tooltip" title="Ayuda">
+        <i class="fa fa-circle-question me-1"></i> Ayuda
+    </button>
+</h2>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header"><i class="fas fa-check-circle me-1"></i> Citas pendientes de confirmación (próximas 48 h)</div>
+            <div class="card-body">
+                <div class="alert alert-info small py-2 mb-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Se muestran únicamente las citas en estado <strong>Pendiente</strong> que ocurren en las
+                    <strong>próximas 48 horas</strong> y que aún no han sido confirmadas.
+                </div>
+                <div class="table-responsive">
+                    <table class="display table table-striped table-bordered table-hover nowrap"
+                           id="tbData" cellspacing="0" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Acciones</th>
+                                <th>Nº Cita</th>
+                                <th>Fecha Cita</th>
+                                <th>Hora Cita</th>
+                                <th>Especialidad</th>
+                                <th>Doctor</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== MODAL RECONFIRMAR ===================== -->
+<div class="modal fade" id="mdReconfirmar" data-bs-backdrop="static" data-bs-keyboard="false"
+     tabindex="-1" aria-labelledby="mdReconfirmarLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md modal-dialog-scrollable">
+        <div class="modal-content cita-modal-compact">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="mdReconfirmarLabel">
+                    <i class="bi bi-patch-check me-2"></i>Reconfirmar Cita
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <!-- Nº Cita / Doctor -->
+                <div class="row g-2 mb-2">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label fw-bold">Nº Cita</label>
+                        <input type="text" class="form-control" id="rcIdCita" disabled />
+                    </div>
+                    <div class="col-12 col-md-8">
+                        <label class="form-label fw-bold">Doctor</label>
+                        <input type="text" class="form-control" id="rcDoctor" disabled />
+                    </div>
+                </div>
+
+                <!-- Especialidad -->
+                <div class="row g-2 mb-2">
+                    <div class="col-12">
+                        <label class="form-label fw-bold">Especialidad</label>
+                        <input type="text" class="form-control" id="rcEspecialidad" disabled />
+                    </div>
+                </div>
+
+                <!-- Fecha / Hora -->
+                <div class="row g-2 mb-2">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label fw-bold">Fecha Cita</label>
+                        <input type="text" class="form-control" id="rcFechaCita" disabled />
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label fw-bold">Hora Cita</label>
+                        <input type="text" class="form-control" id="rcHoraCita" disabled />
+                    </div>
+                </div>
+
+                <hr />
+
+                <!-- Confirmación -->
+                <div class="row g-2 mb-2">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label fw-bold">Confirmada</label>
+                        <input type="text" class="form-control" id="rcCitaConfirmada" disabled />
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label fw-bold">Fecha confirmación</label>
+                        <input type="text" class="form-control" id="rcFechaConfirmacion" disabled
+                               placeholder="Se rellena al confirmar" />
+                    </div>
+                </div>
+
+                <div class="alert alert-warning small py-2 mt-3 mb-0">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    Al pulsar <strong>Confirmar asistencia</strong> se registrará la cita como confirmada
+                    con la fecha y hora actuales.
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary px-4" id="btnConfirmarAsistencia">
+                    <i class="bi bi-patch-check me-1"></i>Confirmar asistencia
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            "use strict";
+            window.openHelpVideo = function (fileName) {
+                const w = 900, h = 520;
+                const left = Math.max(0, (screen.width  - w) / 2);
+                const top  = Math.max(0, (screen.height - h) / 2);
+                window.open("/helps/" + encodeURIComponent(fileName), "helpVideo",
+                    `width=${w},height=${h},left=${left},top=${top},resizable=yes`);
+            };
+        })();
+
+        let tablaData;
+        let idConfirmar = 0;
+        const controlador = "Citas";
+
+        function formatFecha(val) {
+            if (!val) return "";
+            const d = (val instanceof Date) ? val : new Date(val);
+            if (isNaN(d)) return String(val);
+            return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                 + " " + d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+            tablaData = $('#tbData').DataTable({
+                processing: true,
+                serverSide: false,
+                ajax: { url: `/${controlador}/ListaCitasPendiente48h`, type: "GET", datatype: "json" },
+                columns: [
+                    {
+                        data: null,
+                        render: function (data, type, row) {
+                            return `<div class="acciones-container">
+                                <button class="btn btn-primary btn-circle text-white btn-reconfirmar"
+                                        title="Reconfirmar cita">
+                                    <i class="bi bi-patch-check"></i>
+                                </button>
+                            </div>`;
+                        },
+                        orderable: false,
+                        width: "60px"
+                    },
+                    { data: "idCita",       width: "80px" },
+                    { data: "fechaCita" },
+                    { data: "horaCita" },
+                    { data: "especialidad", render: d => d ? d.nombre : "" },
+                    { data: "doctor",       render: d => d ? `${d.nombres} ${d.apellidos}`.trim() : "" }
+                ],
+                scrollX: true,
+                language: { url: "//cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json" }
+            });
+
+            // Abrir modal
+            $("#tbData tbody").on("click", ".btn-reconfirmar", function () {
+                const data = tablaData.row($(this).closest("tr")).data();
+                idConfirmar = data.idCita;
+
+                $("#rcIdCita").val(data.idCita);
+                $("#rcDoctor").val(data.doctor
+                    ? `${data.doctor.nombres} ${data.doctor.apellidos}`.trim()
+                    : "");
+                $("#rcEspecialidad").val(data.especialidad ? data.especialidad.nombre : "");
+                $("#rcFechaCita").val(data.fechaCita ?? "");
+                $("#rcHoraCita").val(data.horaCita ?? "");
+
+                const conf = (data.citaConfirmada || "N").toUpperCase();
+                $("#rcCitaConfirmada").val(conf === "S" ? "S - Confirmada" : "N - Pendiente");
+                $("#rcFechaConfirmacion").val(formatFecha(data.fechaConfirmacion));
+
+                new bootstrap.Modal(document.getElementById('mdReconfirmar')).show();
+            });
+
+            // Confirmar asistencia
+            $("#btnConfirmarAsistencia").on("click", async function () {
+                if (!idConfirmar) return;
+
+                Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+                try {
+                    const response = await fetch(`/${controlador}/ConfirmarCita`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            idCita:            idConfirmar,
+                            citaConfirmada:    "S",
+                            fechaConfirmacion: new Date().toISOString()
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.ok) {
+                        bootstrap.Modal.getInstance(document.getElementById('mdReconfirmar'))?.hide();
+                        Swal.fire("Confirmado!", "Su asistencia ha sido registrada correctamente.", "success")
+                            .then(() => tablaData.ajax.reload());
+                    } else {
+                        Swal.fire("Error", result.mensaje ?? "No se pudo confirmar la cita.", "error");
+                    }
+                } catch (err) {
+                    console.error("Error al confirmar:", err);
+                    Swal.fire("Error", "Fallo de comunicacion con el servidor.", "error");
+                }
+            });
+        });
+    </script>
+}

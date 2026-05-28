@@ -27,10 +27,10 @@ using System.Threading.Tasks;
 namespace ClinicaWeb.Controllers
 {
 
- //   public class Conexion
- //   {
- //       public static string CN = "Host=localhost;Port=5432;Database=dbclinica;Username=postgres;Password=W39xlpS9;Pooling=true;Maximum Pool Size=20;Minimum Pool Size=0;Timeout=15;";
- //   }
+    //   public class Conexion
+    //   {
+    //       public static string CN = "Host=localhost;Port=5432;Database=dbclinica;Username=postgres;Password=W39xlpS9;Pooling=true;Maximum Pool Size=20;Minimum Pool Size=0;Timeout=15;";
+    //   }
     public class Conexion
     {
         // Dejamos la variable vacía para que se llene desde Program.cs
@@ -39,7 +39,7 @@ namespace ClinicaWeb.Controllers
     public class CitasController : Controller
     {
 
-        
+
         private readonly IDoctorRepositorio _repositorioDoctor;
         private readonly ICitaRepositorio _repositorioCita;
 
@@ -1393,7 +1393,7 @@ LIMIT 1;
         }
         // desde aqui los controladores de istagram
         // Ruta: /Citas/Chequear_SolicitudCita
-       
+
         [HttpPost]
         [AllowAnonymous] // <--- IMPORTANTE: Esto permite que n8n entre sin cookies de sesión
         public async Task<JsonResult> Chequear_SolicitudCita([FromBody] ChequeoRequest request)
@@ -1462,7 +1462,7 @@ LIMIT 1;
                 return Content("{\"ESTADO\":0, \"MENSAJE\":\"" + ex.Message + "\"}", "application/json");
             }
         }
-      
+
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> ObtenerResumen([FromQuery] string chat_id)
@@ -1484,7 +1484,7 @@ LIMIT 1;
                 return Content(jsonError, "application/json");
             }
         }
-      
+
         [HttpPost]
         [AllowAnonymous]
         [DisableRequestSizeLimit]
@@ -1808,7 +1808,7 @@ LIMIT 1;
             try
             {
                 // LOG 1: Entrada
-             // await _repositorioCita.LogEnTexte($"Entrando. Chat: {chat_id}, Token: {token}");
+                // await _repositorioCita.LogEnTexte($"Entrando. Chat: {chat_id}, Token: {token}");
 
                 if (string.IsNullOrEmpty(chat_id) || string.IsNullOrEmpty(token))
                     return Content("Faltan parámetros.");
@@ -1822,7 +1822,7 @@ LIMIT 1;
                 }
 
                 // LOG 2: Token OK. Buscando usuario.
-             // await _repositorioCita.LogEnTexte("Buscando usuario en ObtenerPorChatId...");
+                // await _repositorioCita.LogEnTexte("Buscando usuario en ObtenerPorChatId...");
                 var usuario = await _repositorioCita.ObtenerPorChatId(chat_id);
 
                 if (usuario == null)
@@ -1841,7 +1841,7 @@ LIMIT 1;
                     new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)));
 
                 // LOG 3: Login OK. Cargando datos temporales.
-            //  await _repositorioCita.LogEnTexte("Llamando a ObtenerCitaGestionGlobal...");
+                //  await _repositorioCita.LogEnTexte("Llamando a ObtenerCitaGestionGlobal...");
 
                 // AQUÍ ES DONDE SUELE DAR EL 22P02 si el SP o la Query están mal
                 var modelo = await _repositorioCita.ObtenerCitaGestionGlobalAltas(chat_id);
@@ -1853,7 +1853,7 @@ LIMIT 1;
                 }
 
                 // LOG 4: Todo listo. Enviando a la Vista.
-         //     await _repositorioCita.LogEnTexte($"Éxito. Enviando a Vista con ID Temp: {modelo.IdTemp}");
+                //     await _repositorioCita.LogEnTexte($"Éxito. Enviando a Vista con ID Temp: {modelo.IdTemp}");
 
                 ViewBag.ChatId = chat_id;
                 return View(modelo);
@@ -1872,7 +1872,7 @@ LIMIT 1;
         /// </summary>
         /// 
         // --- POST: Guardado de cambios con trazabilidad total ---
-        
+
         [HttpPost]
         [AllowAnonymous]
         [IgnoreAntiforgeryToken]
@@ -2088,7 +2088,58 @@ LIMIT 1;
                 }),
                 "application/json");
         }
+        [HttpGet]
+        [Authorize(Roles = "Paciente")]
+        public IActionResult ReconfirmarCita()
+        {
+            return View("~/Views/Citas/ReconfirmarCita.cshtml");
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Paciente")]
+        public async Task<IActionResult> ListaCitasPendiente48h()
+        {
+            ClaimsPrincipal claimuser = HttpContext.User;
+            string idUsuario = claimuser.Claims
+                .Where(c => c.Type == ClaimTypes.NameIdentifier)
+                .Select(c => c.Value)
+                .SingleOrDefault()!;
+            List<Cita> lista = await _repositorioCita.ListaCitasPendiente48h(int.Parse(idUsuario));
+            return StatusCode(StatusCodes.Status200OK, new { data = lista });
+        }
+        [HttpGet]
+        [Authorize(Roles = "Paciente")]
+        public IActionResult ReprogramarCita()
+        {
+            return View("~/Views/Citas/ReprogramarCita.cshtml");
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Paciente")]
+        public async Task<IActionResult> ConfirmarCita([FromBody] ConfirmarCitaRequest request)
+        {
+            if (request == null || request.IdCita <= 0)
+                return BadRequest(new { ok = false, mensaje = "Datos invalidos." });
+
+            DateTime fecha = request.FechaConfirmacion != default
+                ? request.FechaConfirmacion
+                : DateTime.UtcNow;
+
+            bool ok = await _repositorioCita.ConfirmarCita(request.IdCita, fecha);
+
+            if (ok)
+                return Ok(new { ok = true, mensaje = "Cita confirmada correctamente." });
+
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                new { ok = false, mensaje = "No se pudo confirmar la cita." });
+        }
+
+        public class ConfirmarCitaRequest
+        {
+            public int IdCita { get; set; }
+            public string CitaConfirmada { get; set; } = "S";
+            public DateTime FechaConfirmacion { get; set; }
+        }
 
     }
-}
-   
+}   

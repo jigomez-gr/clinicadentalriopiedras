@@ -246,7 +246,7 @@
 
     <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
         <a class="clinic-top-logo" href="/Home/Index" title="Clínica">
-            <img src="~/images/logo.jpg" alt="Logo" />
+            <img src="~/images/logo6.jpg" alt="Logo" />
         </a>
 
         <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!">
@@ -293,7 +293,14 @@
                         @if (User.IsInRole("Paciente"))
                         {
                             <a class="nav-link" asp-controller="Citas" asp-action="Index"><div class="sb-nav-link-icon"><i class="fas fa-table"></i></div> Mis Citas</a>
+                            <a class="nav-link" asp-controller="Citas" asp-action="ReconfirmarCita">
+                                <div class="sb-nav-link-icon"><i class="fas fa-calendar-check"></i></div> Reconfirmar Citas
+                            </a>
+                            <a class="nav-link" asp-controller="Citas" asp-action="ReprogramarCita">
+                                <div class="sb-nav-link-icon"><i class="fas fa-calendar-alt"></i></div> Reprogramar Cita
+                            </a>
                             <a class="nav-link" asp-controller="HistorialCitas" asp-action="Index"><div class="sb-nav-link-icon"><i class="fas fa-table"></i></div> Historial Citas</a>
+
                         }
 
                         @if (User.IsInRole("Doctor"))

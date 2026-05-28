@@ -1913,5 +1913,69 @@ AND c.fechacita <= NOW() + INTERVAL '48 hours'
                 ["DATA"] = listaBotones
             };
         }
+        public async Task<List<Cita>> ListaCitasPendiente48h(int idUsuario)
+        {
+            var lista = new List<Cita>();
+            await using var conexion = new NpgsqlConnection(con.CadenaSQL);
+            await conexion.OpenAsync();
+            const string sql = @"
+                SELECT
+                    c.idcita,
+                    c.fechacita,
+                    dhd.turnohora,
+                    e.nombre                               AS nombreespecialidad,
+                    d.nombres,
+                    d.apellidos,
+                    COALESCE(c.razoncitausr, 'Sin motivo') AS razoncitausr,
+                    c.citaconfirmada,
+                    c.fechaconfirmacion
+                FROM cita c
+                INNER JOIN usuario              u   ON u.idusuario               = c.idusuario
+                INNER JOIN doctorhorariodetalle dhd ON dhd.iddoctorhorariodetalle = c.iddoctorhorariodetalle
+                INNER JOIN doctorhorario        dh  ON dh.iddoctorhorario         = dhd.iddoctorhorario
+                INNER JOIN doctor               d   ON d.iddoctor                 = dh.iddoctor
+                INNER JOIN especialidad         e   ON e.idespecialidad           = d.idespecialidad
+                WHERE c.idestadocita = 1
+                  AND (c.citaconfirmada IS NULL OR c.fechaconfirmacion IS NULL)
+                  AND u.idusuario = @idUsuario
+                  AND c.fechacita >= NOW()
+                  AND c.fechacita <= NOW() + INTERVAL '48 hours'
+                ORDER BY c.fechacita ASC, dhd.turnohora ASC";
+            await using var cmd = new NpgsqlCommand(sql, conexion);
+            cmd.CommandType = CommandType.Text;
+            cmd.Parameters.AddWithValue("@idUsuario", idUsuario);
+            await using var dr = await cmd.ExecuteReaderAsync();
+            while (await dr.ReadAsync())
+            {
+                var cita = new Cita
+                {
+                    IdCita = Convert.ToInt32(dr["idcita"]),
+                    FechaCita = dr["fechacita"]?.ToString() ?? "",
+                    HoraCita = dr["turnohora"]?.ToString() ?? "",
+                    Especialidad = new Especialidad { Nombre = dr["nombreespecialidad"]?.ToString() ?? "" },
+                    Doctor = new Doctor { Nombres = dr["nombres"]?.ToString() ?? "", Apellidos = dr["apellidos"]?.ToString() ?? "" },
+                    RazonCitaUsr = dr["razoncitausr"]?.ToString() ?? "",
+                    CitaConfirmada = dr["citaconfirmada"] == DBNull.Value ? null : dr["citaconfirmada"]?.ToString(),
+                    FechaConfirmacion = dr["fechaconfirmacion"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(dr["fechaconfirmacion"])
+                };
+                lista.Add(cita);
+            }
+            return lista;
+        }
+
+        public async Task<bool> ConfirmarCita(int idCita, DateTime fechaConfirmacion)
+        {
+            await using var conexion = new NpgsqlConnection(con.CadenaSQL);
+            await conexion.OpenAsync();
+            const string sql = @"UPDATE cita SET citaconfirmada = 'S', fechaconfirmacion = @fechaConfirmacion WHERE idcita = @idCita";
+            await using var cmd = new NpgsqlCommand(sql, conexion);
+            cmd.CommandType = CommandType.Text;
+            cmd.Parameters.AddWithValue("@idCita", idCita);
+            cmd.Parameters.AddWithValue("@fechaConfirmacion", fechaConfirmacion);
+            int filas = await cmd.ExecuteNonQueryAsync();
+            return filas > 0;
+        }
+
+
     }
 }

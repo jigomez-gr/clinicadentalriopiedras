@@ -1,0 +1,360 @@
+﻿@{
+    ViewData["Title"] = "Reprogramar Cita";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <style>
+        .acciones-container {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-circle {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 14px;
+            line-height: 32px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        #tbData {
+            border-collapse: collapse !important;
+        }
+
+        @@media (max-width: 768px) {
+            #tbData thead th:first-child,
+            #tbData tbody td:first-child {
+                position: sticky;
+                left: 0;
+                background-color: #f8f9fa !important;
+                z-index: 5;
+                border-right: 2px solid #dee2e6;
+            }
+        }
+
+        #ui-datepicker-div {
+            z-index: 999999 !important;
+        }
+
+        .slot-btn-pac {
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-radius: 0.375rem;
+            padding: 10px;
+            text-align: center;
+            background: #fff;
+            min-width: 80px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+            .slot-btn-pac:hover {
+                background: #f8f9fa;
+                border-color: #198754;
+            }
+
+            .slot-btn-pac.active-slot {
+                background-color: #198754 !important;
+                color: #fff !important;
+                border-color: #198754 !important;
+            }
+
+        table.dataTable td, table.dataTable th {
+            white-space: normal !important;
+        }
+
+        .cita-modal-compact .modal-body {
+            padding: .75rem;
+        }
+
+        .dataTables_processing {
+            background-color: #ffcccc !important;
+            color: #d9534f !important;
+            font-weight: bold !important;
+            font-size: 1.2rem !important;
+            border: 2px solid #d9534f !important;
+            z-index: 9999 !important;
+            top: 50% !important;
+            height: auto !important;
+            padding: 20px !important;
+        }
+    </style>
+}
+
+<h2 class="mt-4 mb-4 d-flex align-items-center">
+    <span>Reprogramar Cita</span>
+    <button type="button" class="btn btn-sm ms-auto" style="background-color:#ff8c00;color:#fff;"
+            onclick="openHelpVideo('Reprogramar_Cita.mp4')" data-bs-toggle="tooltip" title="Ayuda">
+        <i class="fa fa-circle-question me-1"></i> Ayuda
+    </button>
+</h2>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header"><i class="fas fa-calendar-alt me-1"></i> Citas pendientes</div>
+            <div class="card-body">
+                <div class="alert alert-info small py-2 mb-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Seleccione la cita que desea reprogramar y elija una nueva fecha y horario.
+                </div>
+                <div class="table-responsive">
+                    <table class="display table table-striped table-bordered table-hover nowrap"
+                           id="tbData" cellspacing="0" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Acciones</th>
+                                <th>Nº Cita</th>
+                                <th>Fecha Cita</th>
+                                <th>Hora Cita</th>
+                                <th>Especialidad</th>
+                                <th>Doctor</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== MODAL REPROGRAMAR ===================== -->
+<div class="modal fade" id="mdReproPaciente" tabindex="-1" aria-hidden="true" data-bs-focus="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-calendar-check me-2"></i>Reprogramar Cita</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="reproIdCita" value="0">
+                <div class="row g-3 mb-3">
+                    <div class="col-12">
+                        <label class="form-label fw-bold text-success">1. Nueva Fecha</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">
+                                <i class="bi bi-calendar-event text-success"></i>
+                            </span>
+                            <input type="text" id="reproFechaPac" class="form-control" readonly
+                                   style="background:#fff; cursor:pointer;" placeholder="Elegir día...">
+                        </div>
+                    </div>
+                    <input type="text" id="reproHoraPac" style="display:none;" value="">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-success">2. Horarios Disponibles</label>
+                    <div class="border rounded p-3 bg-light">
+                        <div class="mb-2">
+                            <small class="text-muted fw-bold text-uppercase" style="font-size:.75rem;">
+                                <i class="bi bi-brightness-high me-1"></i>Turno Mañana
+                            </small>
+                            <div id="containerSlotsAM" class="d-flex flex-wrap gap-2 mt-1" style="min-height:30px;">
+                                <small class="text-muted italic">Seleccione una fecha...</small>
+                            </div>
+                        </div>
+                        <hr class="my-2">
+                        <div>
+                            <small class="text-muted fw-bold text-uppercase" style="font-size:.75rem;">
+                                <i class="bi bi-moon-stars me-1"></i>Turno Tarde
+                            </small>
+                            <div id="containerSlotsPM" class="d-flex flex-wrap gap-2 mt-1" style="min-height:30px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-success">3. Motivo del cambio (Obligatorio)</label>
+                    <textarea id="reproMotivoPac" class="form-control" rows="2"
+                              placeholder="Escriba aquí por qué cambia la cita..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" id="btnConfirmarReproPac" class="btn btn-success px-4 shadow-sm">
+                    <i class="bi bi-check-circle me-1"></i>Confirmar Cambio
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/i18n/datepicker-es.min.js"></script>
+    <script>
+        (function () {
+            "use strict";
+            window.openHelpVideo = function (fileName) {
+                const w = 900, h = 520;
+                const left = Math.max(0, (screen.width - w) / 2);
+                const top  = Math.max(0, (screen.height - h) / 2);
+                window.open("/helps/" + encodeURIComponent(fileName), "helpVideo",
+                    `width=${w},height=${h},left=${left},top=${top},resizable=yes`);
+            };
+        })();
+
+        let tablaData, modalReproObj;
+        const controlador = "Citas";
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+            modalReproObj = new bootstrap.Modal(document.getElementById('mdReproPaciente'));
+
+            $.datepicker.setDefaults($.datepicker.regional['es']);
+            $("#reproFechaPac").datepicker({
+                dateFormat: "dd-mm-yy",
+                minDate: 0,
+                beforeShow: function () {
+                    setTimeout(() => { $('#ui-datepicker-div').css('z-index', 999999); }, 0);
+                },
+                onSelect: function (dateText) {
+                    $("#reproHoraPac").val("");
+                    fetchSlots(dateText);
+                }
+            });
+
+            tablaData = $('#tbData').DataTable({
+                processing: true,
+                serverSide: false,
+                ajax: { url: `/${controlador}/ListaCitasPendiente`, type: "GET", datatype: "json" },
+                columns: [
+                    {
+                        data: null,
+                        render: function (data, type, row) {
+                            return `<div class="acciones-container">
+                                <button class="btn btn-warning btn-circle text-white btn-repro-pac"
+                                        onclick="abrirModalRepro(${row.idCita})" title="Reprogramar">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </button>
+                            </div>`;
+                        },
+                        orderable: false,
+                        width: "60px"
+                    },
+                    { data: "idCita",       width: "80px" },
+                    { data: "fechaCita" },
+                    { data: "horaCita" },
+                    { data: "especialidad", render: d => d ? d.nombre : "" },
+                    { data: "doctor",       render: d => d ? `${d.nombres} ${d.apellidos}`.trim() : "" }
+                ],
+                scrollX: true,
+                language: { url: "//cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json" }
+            });
+
+            $(document).on("click", ".slot-btn-pac", function () {
+                $(".slot-btn-pac").removeClass("active-slot");
+                $(this).addClass("active-slot");
+                $("#reproHoraPac").val($(this).data("hora"));
+            });
+        });
+
+        // ── Abrir modal ───────────────────────────────────────────────────────
+        window.abrirModalRepro = function (idCita) {
+            $("#reproIdCita").val(idCita);
+            $("#reproFechaPac, #reproHoraPac, #reproMotivoPac").val("");
+            $("#containerSlotsAM, #containerSlotsPM").html('<small class="text-muted">Elija una fecha primero...</small>');
+            modalReproObj.show();
+        };
+
+        // ── Cargar slots ──────────────────────────────────────────────────────
+        async function fetchSlots(fecha) {
+            const idCita = $("#reproIdCita").val();
+            $("#reproHoraPac").val("");
+            $("#containerSlotsAM, #containerSlotsPM").html('<div class="spinner-border spinner-border-sm text-success"></div>');
+            try {
+                const r    = await fetch(`/Citas/GetSlotsLibres?idCitaVieja=${idCita}&fecha=${encodeURIComponent(fecha)}`);
+                const data = await r.json();
+                let am = "", pm = "";
+                if (!data || data.length === 0) {
+                    $("#containerSlotsAM").html('<small class="text-danger">Sin turnos disponibles</small>');
+                    $("#containerSlotsPM").html('');
+                    return;
+                }
+                data.forEach(s => {
+                    const h = s.turnoHora || s.TurnoHora || "";
+                    if (h) {
+                        const btn = `<div class="slot-btn-pac" onclick="llenarHoraFinal('${h}', this)">${h}</div>`;
+                        parseInt(h.split(':')[0]) < 14 ? am += btn : pm += btn;
+                    }
+                });
+                $("#containerSlotsAM").html(am);
+                $("#containerSlotsPM").html(pm);
+            } catch {
+                $("#containerSlotsAM").html('<span class="text-danger">Error al cargar horarios</span>');
+            }
+        }
+
+        function llenarHoraFinal(hora, elemento) {
+            $(".slot-btn-pac").removeClass("active-slot bg-success text-white");
+            $(elemento).addClass("active-slot bg-success text-white");
+            document.getElementById("reproHoraPac").value = hora;
+        }
+
+        // ── Confirmar reprogramación ──────────────────────────────────────────
+        $("#btnConfirmarReproPac").on("click", async function (e) {
+            e.preventDefault();
+            const f      = document.getElementById("reproFechaPac").value;
+            const m      = document.getElementById("reproMotivoPac").value.trim();
+            const idCita = document.getElementById("reproIdCita").value;
+            const boton  = document.querySelector(".slot-btn-pac.active-slot");
+            const h      = boton ? boton.innerText.trim() : "";
+            if (!f || !h || !m) {
+                Swal.fire({ icon: "warning", title: "Atención", text: "Debe completar la fecha, seleccionar un horario e indicar el motivo." });
+                return;
+            }
+            Swal.fire({ title: 'Sincronizando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            try {
+                const res    = await fetch("/Citas/ReprogramarCita", {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ idCitaVieja: parseInt(idCita), nuevaFecha: f, nuevaHora: h, motivo: m })
+                });
+                const result = await res.json();
+                if (result.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('mdReproPaciente'))?.hide();
+                    const idAccion = result.idAccion || result.IdAccion;
+                    if (idAccion) iniciarPolling(idAccion);
+                    else Swal.fire("¡Éxito!", "Cita reprogramada correctamente.", "success")
+                             .then(() => tablaData.ajax.reload());
+                } else {
+                    bootstrap.Modal.getInstance(document.getElementById('mdReproPaciente'))?.hide();
+                    Swal.fire("Info", result.data || result.mensaje || "Verifique en unos minutos.", "info")
+                        .then(() => tablaData.ajax.reload());
+                }
+            } catch {
+                Swal.fire("Error", "Vuelva a entrar y salir de la aplicación y verifique el resultado.", "error");
+            }
+        });
+
+        // ── Polling ───────────────────────────────────────────────────────────
+        function iniciarPolling(idAccion) {
+            let intentos = 0;
+            const intervalo = setInterval(async () => {
+                intentos++;
+                try {
+                    const check  = await fetch(`/Citas/ConsultarEstadoAccion?id=${idAccion}`);
+                    const res    = await check.json();
+                    const estado = (res.status || "").trim().toUpperCase();
+                    if (estado === 'S') {
+                        clearInterval(intervalo);
+                        Swal.fire("Éxito", "Operación completada correctamente.", "success")
+                            .then(() => tablaData.ajax.reload());
+                    } else if (estado === 'Z' || intentos > 15) {
+                        clearInterval(intervalo);
+                        Swal.fire("Info", "El proceso está terminando.", "info")
+                            .then(() => tablaData.ajax.reload());
+                    }
+                } catch (err) {
+                    console.error("Error en polling:", err);
+                }
+            }, 3000);
+        }
+    </script>
+}

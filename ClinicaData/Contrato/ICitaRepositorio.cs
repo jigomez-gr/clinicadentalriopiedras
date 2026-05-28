@@ -139,6 +139,9 @@ namespace ClinicaData.Contrato
         Task<TelegramCitaTemp> ObtenerCitaGestionGlobalAltas(string chat_id);
 
         Task<string> ObtenerMensajeError(string chat_id);
+        Task<List<Cita>> ListaCitasPendiente48h(int idUsuario);
+        Task<bool> ConfirmarCita(int idCita, DateTime fechaConfirmacion);
+
 
     }
 }
