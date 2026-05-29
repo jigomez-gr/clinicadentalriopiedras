@@ -292,7 +292,10 @@
 
                         @if (User.IsInRole("Paciente"))
                         {
-                            <a class="nav-link" asp-controller="Citas" asp-action="Index"><div class="sb-nav-link-icon"><i class="fas fa-table"></i></div> Mis Citas</a>
+                            <a class="nav-link" asp-controller="Citas" asp-action="AltaCita">
+                                <div class="sb-nav-link-icon"><i class="fas fa-calendar-plus"></i></div> Nueva Cita
+                            </a>
+                            <a class="nav-link" asp-controller="Citas" asp-action="Index"><div class="sb-nav-link-icon"><i class="fas fa-table"></i></div> Citas Pendientes </a>
                             <a class="nav-link" asp-controller="Citas" asp-action="ReconfirmarCita">
                                 <div class="sb-nav-link-icon"><i class="fas fa-calendar-check"></i></div> Reconfirmar Citas
                             </a>
@@ -302,8 +305,14 @@
                             <a class="nav-link" asp-controller="Citas" asp-action="CancelarCita">
                                 <div class="sb-nav-link-icon"><i class="fas fa-trash"></i></div> Cancelar Cita
                             </a>
-                            <a class="nav-link" asp-controller="HistorialCitas" asp-action="Index"><div class="sb-nav-link-icon"><i class="fas fa-table"></i></div> Historial Citas</a>
-
+                           
+                            <a class="nav-link" asp-controller="HistorialCitas" asp-action="Index"><div class="sb-nav-link-icon"><i class="fas fa-notes-medical"></i></div> Citas Atendidas</a>
+                            <a class="nav-link" asp-controller="Citas" asp-action="IndicacionesDoctor">
+                                <div class="sb-nav-link-icon"><i class="fas fa-notes-medical"></i></div> Indicaciones Doctor
+                            </a>
+                            <a class="nav-link" asp-controller="Citas" asp-action="ValoracionDoctor">
+                                <div class="sb-nav-link-icon"><i class="fas fa-star"></i></div> Valoración Doctor
+                            </a>
                         }
 
                         @if (User.IsInRole("Doctor"))

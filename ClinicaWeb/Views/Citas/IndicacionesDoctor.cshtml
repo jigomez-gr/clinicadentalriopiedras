@@ -1,0 +1,322 @@
+﻿@{
+    ViewData["Title"] = "Indicaciones del Doctor";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .acciones-container {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-circle {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 14px;
+            line-height: 32px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        #tbData {
+            border-collapse: collapse !important;
+        }
+
+        @@media (max-width: 768px) {
+            #tbData thead th:first-child,
+            #tbData tbody td:first-child {
+                position: sticky;
+                left: 0;
+                background-color: #f8f9fa !important;
+                z-index: 5;
+                border-right: 2px solid #dee2e6;
+            }
+        }
+
+        table.dataTable td, table.dataTable th {
+            white-space: normal !important;
+        }
+
+        .cita-modal-compact .modal-body {
+            padding: .75rem;
+        }
+
+        .dataTables_processing {
+            background-color: #ffcccc !important;
+            color: #d9534f !important;
+            font-weight: bold !important;
+            font-size: 1.2rem !important;
+            border: 2px solid #d9534f !important;
+            z-index: 9999 !important;
+            top: 50% !important;
+            height: auto !important;
+            padding: 20px !important;
+        }
+
+        .indicaciones-box {
+            background: #f0f7ff;
+            border: 1px solid #b8d4f0;
+            border-radius: .375rem;
+            padding: .75rem;
+            min-height: 60px;
+            white-space: pre-wrap;
+            font-size: .95rem;
+        }
+
+        .razon-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: .375rem;
+            padding: .75rem;
+            min-height: 60px;
+            white-space: pre-wrap;
+            font-size: .95rem;
+        }
+    </style>
+}
+
+<h2 class="mt-4 mb-4 d-flex align-items-center">
+    <span>Indicaciones del Doctor</span>
+    <button type="button" class="btn btn-sm ms-auto" style="background-color:#ff8c00;color:#fff;"
+            onclick="openHelpVideo('Indicaciones_Doctor.mp4')" data-bs-toggle="tooltip" title="Ayuda">
+        <i class="fa fa-circle-question me-1"></i> Ayuda
+    </button>
+</h2>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header"><i class="fas fa-notes-medical me-1"></i> Citas con indicaciones médicas</div>
+            <div class="card-body">
+                <div class="alert alert-info small py-2 mb-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Se muestran las citas ya realizadas que tienen indicaciones del doctor.
+                </div>
+                <div class="table-responsive">
+                    <table class="display table table-striped table-bordered table-hover nowrap"
+                           id="tbData" cellspacing="0" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Acciones</th>
+                                <th>Nº Cita</th>
+                                <th>Fecha Cita</th>
+                                <th>Hora Cita</th>
+                                <th>Especialidad</th>
+                                <th>Doctor</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== MODAL INDICACIONES ===================== -->
+<div class="modal fade" id="mdIndicaciones" data-bs-backdrop="static" data-bs-keyboard="false"
+     tabindex="-1" aria-labelledby="mdIndicacionesLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content cita-modal-compact">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="mdIndicacionesLabel">
+                    <i class="fas fa-notes-medical me-2"></i>Indicaciones del Doctor
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <!-- Datos identificativos -->
+                <div class="row g-2 mb-2">
+                    <div class="col-12 col-md-3">
+                        <label class="form-label fw-bold">Nº Cita</label>
+                        <input type="text" class="form-control" id="iIdCita" disabled />
+                    </div>
+                    <div class="col-12 col-md-5">
+                        <label class="form-label fw-bold">Doctor</label>
+                        <input type="text" class="form-control" id="iDoctor" disabled />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label fw-bold">Especialidad</label>
+                        <input type="text" class="form-control" id="iEspecialidad" disabled />
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label fw-bold">Fecha Cita</label>
+                        <input type="text" class="form-control" id="iFechaCita" disabled />
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label fw-bold">Hora Cita</label>
+                        <input type="text" class="form-control" id="iHoraCita" disabled />
+                    </div>
+                </div>
+
+                <hr />
+
+                <!-- Indicaciones del doctor -->
+                <div class="mb-2">
+                    <label class="form-label fw-bold text-primary">
+                        <i class="fas fa-stethoscope me-1"></i>Indicaciones del Doctor
+                    </label>
+                    <div class="indicaciones-box" id="iIndicaciones">Sin indicaciones.</div>
+                </div>
+
+                <!-- Documento del doctor -->
+                <div class="mb-3">
+                    <button type="button" id="btnVerDocDoctor" class="btn btn-outline-primary btn-sm" disabled>
+                        <i class="fas fa-file-medical me-1"></i> Ver documento de instrucciones
+                    </button>
+                    <small id="lblSinDocDoctor" class="form-text text-muted ms-2">No hay documento adjunto.</small>
+                    <small id="lblHayDocDoctor" class="form-text text-success ms-2 d-none">
+                        <i class="fas fa-check me-1"></i>Hay un documento adjunto.
+                    </small>
+                </div>
+
+                <hr />
+
+                <!-- Motivo del paciente -->
+                <div class="mb-2">
+                    <label class="form-label fw-bold text-secondary">
+                        <i class="fas fa-comment-medical me-1"></i>Motivo de la cita (Paciente)
+                    </label>
+                    <div class="razon-box" id="iRazonCitaUsr">Sin motivo indicado.</div>
+                </div>
+
+                <!-- Documento del paciente -->
+                <div class="mb-2">
+                    <button type="button" id="btnVerDocPaciente" class="btn btn-outline-secondary btn-sm" disabled>
+                        <i class="fas fa-file me-1"></i> Ver documento del paciente
+                    </button>
+                    <small id="lblSinDocPaciente" class="form-text text-muted ms-2">No hay documento adjunto.</small>
+                    <small id="lblHayDocPaciente" class="form-text text-success ms-2 d-none">
+                        <i class="fas fa-check me-1"></i>Hay un documento adjunto.
+                    </small>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            "use strict";
+            window.openHelpVideo = function (fileName) {
+                const w = 900, h = 520;
+                const left = Math.max(0, (screen.width - w) / 2);
+                const top  = Math.max(0, (screen.height - h) / 2);
+                window.open("/helps/" + encodeURIComponent(fileName), "helpVideo",
+                    `width=${w},height=${h},left=${left},top=${top},resizable=yes`);
+            };
+        })();
+
+        let tablaData;
+        let docDoctorBase64    = null, docDoctorContentType    = null;
+        let docPacienteBase64  = null, docPacienteContentType  = null;
+        const controlador = "Citas";
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+            tablaData = $('#tbData').DataTable({
+                processing: true,
+                serverSide: false,
+                ajax: { url: `/${controlador}/ListaCitasConIndicaciones`, type: "GET", datatype: "json" },
+                columns: [
+                    {
+                        data: null,
+                        render: function (data, type, row) {
+                            return `<div class="acciones-container">
+                                <button class="btn btn-primary btn-circle btn-ver-indicaciones" title="Ver indicaciones">
+                                    <i class="fas fa-notes-medical"></i>
+                                </button>
+                            </div>`;
+                        },
+                        orderable: false,
+                        width: "60px"
+                    },
+                    { data: "idCita",       width: "80px" },
+                    { data: "fechaCita" },
+                    { data: "horaCita" },
+                    { data: "especialidad", render: d => d ? d.nombre : "" },
+                    { data: "doctor",       render: d => d ? `${d.nombres} ${d.apellidos}`.trim() : "" }
+                ],
+                scrollX: true,
+                language: { url: "//cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json" }
+            });
+
+            // ── Abrir modal ──────────────────────────────────────────────────
+            $("#tbData tbody").on("click", ".btn-ver-indicaciones", function () {
+                const data = tablaData.row($(this).closest("tr")).data();
+
+                // Datos identificativos
+                $("#iIdCita").val(data.idCita);
+                $("#iDoctor").val(data.doctor ? `${data.doctor.nombres} ${data.doctor.apellidos}`.trim() : "");
+                $("#iEspecialidad").val(data.especialidad ? data.especialidad.nombre : "");
+                $("#iFechaCita").val(data.fechaCita ?? "");
+                $("#iHoraCita").val(data.horaCita ?? "");
+
+                // Indicaciones doctor
+                $("#iIndicaciones").text(data.indicaciones || "Sin indicaciones.");
+
+                // Documento doctor
+                docDoctorBase64      = data.docIndicacionesDoctor ?? null;
+                docDoctorContentType = data.contentTypeDoctor ?? "application/octet-stream";
+                if (docDoctorBase64) {
+                    $("#btnVerDocDoctor").prop("disabled", false);
+                    $("#lblHayDocDoctor").removeClass("d-none");
+                    $("#lblSinDocDoctor").addClass("d-none");
+                } else {
+                    $("#btnVerDocDoctor").prop("disabled", true);
+                    $("#lblHayDocDoctor").addClass("d-none");
+                    $("#lblSinDocDoctor").removeClass("d-none");
+                }
+
+                // Motivo paciente
+                $("#iRazonCitaUsr").text(data.razonCitaUsr || "Sin motivo indicado.");
+
+                // Documento paciente
+                docPacienteBase64      = data.documentoCitaUsr ?? null;
+                docPacienteContentType = data.contentType ?? "application/octet-stream";
+                if (docPacienteBase64) {
+                    $("#btnVerDocPaciente").prop("disabled", false);
+                    $("#lblHayDocPaciente").removeClass("d-none");
+                    $("#lblSinDocPaciente").addClass("d-none");
+                } else {
+                    $("#btnVerDocPaciente").prop("disabled", true);
+                    $("#lblHayDocPaciente").addClass("d-none");
+                    $("#lblSinDocPaciente").removeClass("d-none");
+                }
+
+                new bootstrap.Modal(document.getElementById('mdIndicaciones')).show();
+            });
+
+            // ── Ver documento doctor ─────────────────────────────────────────
+            $("#btnVerDocDoctor").on("click", function () {
+                if (!docDoctorBase64) return;
+                abrirDocumento(docDoctorBase64, docDoctorContentType);
+            });
+
+            // ── Ver documento paciente ───────────────────────────────────────
+            $("#btnVerDocPaciente").on("click", function () {
+                if (!docPacienteBase64) return;
+                abrirDocumento(docPacienteBase64, docPacienteContentType);
+            });
+
+            function abrirDocumento(base64, contentType) {
+                const bin = atob(base64), arr = new Uint8Array(bin.length);
+                for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+                window.open(URL.createObjectURL(new Blob([arr], { type: contentType })), "_blank");
+            }
+        });
+    </script>
+}

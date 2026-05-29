@@ -142,6 +142,16 @@ namespace ClinicaData.Contrato
         Task<List<Cita>> ListaCitasPendiente48h(int idUsuario);
         Task<bool> ConfirmarCita(int idCita, DateTime fechaConfirmacion);
 
+        // ============================================================
+        // 1. AÑADIR EN ICitaRepositorio.cs  (al final, antes del cierre)
+        // ============================================================
+        Task<List<Cita>> ListaCitasParaValorar(int idUsuario);
+
+        // ============================================================
+        // 1. AÑADIR EN ICitaRepositorio.cs  (al final, antes del cierre)
+        // ============================================================
+        Task<List<Cita>> ListaCitasConIndicaciones(int idUsuario);
+
 
     }
 }

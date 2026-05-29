@@ -2145,6 +2145,64 @@ LIMIT 1;
             public string CitaConfirmada { get; set; } = "S";
             public DateTime FechaConfirmacion { get; set; }
         }
+        // ============================================================
+        // 3. AÑADIR EN CitasController.cs  (junto a los otros métodos de Paciente)
+        // ============================================================
+
+        [HttpGet]
+        [Authorize(Roles = "Paciente")]
+        public IActionResult ValoracionDoctor()
+        {
+            return View("~/Views/Citas/ValoracionDoctor.cshtml");
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Paciente")]
+        public async Task<IActionResult> ListaCitasParaValorar()
+        {
+            ClaimsPrincipal claimuser = HttpContext.User;
+            string idUsuario = claimuser.Claims
+                .Where(c => c.Type == ClaimTypes.NameIdentifier)
+                .Select(c => c.Value)
+                .SingleOrDefault()!;
+            List<Cita> lista = await _repositorioCita.ListaCitasParaValorar(int.Parse(idUsuario));
+            return StatusCode(StatusCodes.Status200OK, new { data = lista });
+        }
+
+        // ============================================================
+        // 3. AÑADIR EN CitasController.cs
+        // ============================================================
+
+        [HttpGet]
+        [Authorize(Roles = "Paciente")]
+        public IActionResult IndicacionesDoctor()
+        {
+            return View("~/Views/Citas/IndicacionesDoctor.cshtml");
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Paciente")]
+        public async Task<IActionResult> ListaCitasConIndicaciones()
+        {
+            ClaimsPrincipal claimuser = HttpContext.User;
+            string idUsuario = claimuser.Claims
+                .Where(c => c.Type == ClaimTypes.NameIdentifier)
+                .Select(c => c.Value)
+                .SingleOrDefault()!;
+            List<Cita> lista = await _repositorioCita.ListaCitasConIndicaciones(int.Parse(idUsuario));
+            return StatusCode(StatusCodes.Status200OK, new { data = lista });
+        }
+        // ============================================================
+        // AÑADIR EN CitasController.cs  (junto a los otros métodos de Paciente)
+        // ============================================================
+
+        [HttpGet]
+        [Authorize(Roles = "Paciente")]
+        public IActionResult AltaCita()
+        {
+            ViewBag.IdUsuarioPaciente = 0;
+            return View("~/Views/Citas/AltaCita.cshtml");
+        }
 
     }
 }   

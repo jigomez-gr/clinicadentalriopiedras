@@ -1,0 +1,373 @@
+﻿@{
+    ViewData["Title"] = "Valoración del Doctor";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .acciones-container {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-circle {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 14px;
+            line-height: 32px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        #tbData {
+            border-collapse: collapse !important;
+        }
+
+        @@media (max-width: 768px) {
+            #tbData thead th:first-child,
+            #tbData tbody td:first-child {
+                position: sticky;
+                left: 0;
+                background-color: #f8f9fa !important;
+                z-index: 5;
+                border-right: 2px solid #dee2e6;
+            }
+        }
+
+        table.dataTable td, table.dataTable th {
+            white-space: normal !important;
+        }
+
+        .cita-modal-compact .modal-body {
+            padding: .75rem;
+        }
+
+        .dataTables_processing {
+            background-color: #ffcccc !important;
+            color: #d9534f !important;
+            font-weight: bold !important;
+            font-size: 1.2rem !important;
+            border: 2px solid #d9534f !important;
+            z-index: 9999 !important;
+            top: 50% !important;
+            height: auto !important;
+            padding: 20px !important;
+        }
+
+        /* Estrellas */
+        .star-rating {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+            gap: 2px;
+        }
+
+            .star-rating input {
+                display: none;
+            }
+
+            .star-rating label {
+                cursor: pointer;
+                font-size: 2rem;
+                color: #ddd;
+                transition: color 0.15s;
+            }
+
+                .star-rating label:hover,
+                .star-rating label:hover ~ label,
+                .star-rating input:checked ~ label {
+                    color: #ffc107;
+                }
+
+            .star-rating .star-zero {
+                font-size: 1rem;
+                color: #999;
+                align-self: center;
+                margin-right: 5px;
+            }
+
+        .indicaciones-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: .375rem;
+            padding: .75rem;
+            min-height: 60px;
+            white-space: pre-wrap;
+        }
+    </style>
+}
+
+<h2 class="mt-4 mb-4 d-flex align-items-center">
+    <span>Valoración del Doctor</span>
+    <button type="button" class="btn btn-sm ms-auto" style="background-color:#ff8c00;color:#fff;"
+            onclick="openHelpVideo('Valoracion_Doctor.mp4')" data-bs-toggle="tooltip" title="Ayuda">
+        <i class="fa fa-circle-question me-1"></i> Ayuda
+    </button>
+</h2>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header"><i class="fas fa-star me-1"></i> Citas pendientes de valorar</div>
+            <div class="card-body">
+                <div class="alert alert-info small py-2 mb-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Se muestran las citas ya realizadas que aún no han recibido valoración.
+                </div>
+                <div class="table-responsive">
+                    <table class="display table table-striped table-bordered table-hover nowrap"
+                           id="tbData" cellspacing="0" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Acciones</th>
+                                <th>Nº Cita</th>
+                                <th>Fecha Cita</th>
+                                <th>Hora Cita</th>
+                                <th>Especialidad</th>
+                                <th>Doctor</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== MODAL VALORACIÓN ===================== -->
+<div class="modal fade" id="mdValoracion" data-bs-backdrop="static" data-bs-keyboard="false"
+     tabindex="-1" aria-labelledby="mdValoracionLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content cita-modal-compact">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="mdValoracionLabel">
+                    <i class="fas fa-star me-2"></i>Valorar Doctor
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <!-- Datos de la cita (solo lectura) -->
+                <div class="row g-2 mb-2">
+                    <div class="col-12 col-md-3">
+                        <label class="form-label fw-bold">Nº Cita</label>
+                        <input type="text" class="form-control" id="vIdCita" disabled />
+                    </div>
+                    <div class="col-12 col-md-5">
+                        <label class="form-label fw-bold">Doctor</label>
+                        <input type="text" class="form-control" id="vDoctor" disabled />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label fw-bold">Especialidad</label>
+                        <input type="text" class="form-control" id="vEspecialidad" disabled />
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label fw-bold">Fecha Cita</label>
+                        <input type="text" class="form-control" id="vFechaCita" disabled />
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label fw-bold">Hora Cita</label>
+                        <input type="text" class="form-control" id="vHoraCita" disabled />
+                    </div>
+                </div>
+
+                <hr />
+
+                <!-- Indicaciones del doctor (solo lectura, visible) -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Indicaciones del Doctor</label>
+                    <div class="indicaciones-box" id="vIndicaciones">Sin indicaciones.</div>
+                </div>
+
+                <!-- Documento del doctor -->
+                <div class="mb-3">
+                    <button type="button" id="btnVerDocDoctor" class="btn btn-outline-secondary btn-sm" disabled>
+                        <i class="fas fa-file me-1"></i> Ver documento del doctor
+                    </button>
+                    <small id="lblSinDocDoctor" class="form-text text-muted ms-2">No hay documento adjunto.</small>
+                    <small id="lblHayDocDoctor" class="form-text text-success ms-2 d-none">✔ Hay un documento adjunto.</small>
+                </div>
+
+                <hr />
+
+                <!-- Valoración (editable) -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Valoración del Doctor (0-5 estrellas)</label>
+                    <div class="star-rating">
+                        <input type="radio" id="vStar5" name="valDoctorCita" value="5"><label for="vStar5" title="5 estrellas">★</label>
+                        <input type="radio" id="vStar4" name="valDoctorCita" value="4"><label for="vStar4" title="4 estrellas">★</label>
+                        <input type="radio" id="vStar3" name="valDoctorCita" value="3"><label for="vStar3" title="3 estrellas">★</label>
+                        <input type="radio" id="vStar2" name="valDoctorCita" value="2"><label for="vStar2" title="2 estrellas">★</label>
+                        <input type="radio" id="vStar1" name="valDoctorCita" value="1"><label for="vStar1" title="1 estrella">★</label>
+                        <input type="radio" id="vStar0" name="valDoctorCita" value="0"><label for="vStar0" title="0 estrellas" class="star-zero">✕</label>
+                    </div>
+                </div>
+
+                <!-- Opinión (editable) -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Opinión sobre el doctor y la clínica</label>
+                    <textarea class="form-control" id="vOpinionDoctorYClinica" rows="4"
+                              placeholder="Escribe tu opinión..."></textarea>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-warning px-4" id="btnGuardarValoracion">
+                    <i class="fas fa-save me-1"></i>Guardar Valoración
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            "use strict";
+            window.openHelpVideo = function (fileName) {
+                const w = 900, h = 520;
+                const left = Math.max(0, (screen.width - w) / 2);
+                const top  = Math.max(0, (screen.height - h) / 2);
+                window.open("/helps/" + encodeURIComponent(fileName), "helpVideo",
+                    `width=${w},height=${h},left=${left},top=${top},resizable=yes`);
+            };
+        })();
+
+        let tablaData;
+        let idEditar = 0;
+        let docDoctorBase64 = null, docDoctorContentType = null;
+        const controlador = "Citas";
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+            tablaData = $('#tbData').DataTable({
+                processing: true,
+                serverSide: false,
+                ajax: { url: `/${controlador}/ListaCitasParaValorar`, type: "GET", datatype: "json" },
+                columns: [
+                    {
+                        data: null,
+                        render: function (data, type, row) {
+                            return `<div class="acciones-container">
+                                <button class="btn btn-warning btn-circle text-dark btn-valorar" title="Valorar">
+                                    <i class="fas fa-star"></i>
+                                </button>
+                            </div>`;
+                        },
+                        orderable: false,
+                        width: "60px"
+                    },
+                    { data: "idCita",       width: "80px" },
+                    { data: "fechaCita" },
+                    { data: "horaCita" },
+                    { data: "especialidad", render: d => d ? d.nombre : "" },
+                    { data: "doctor",       render: d => d ? `${d.nombres} ${d.apellidos}`.trim() : "" }
+                ],
+                scrollX: true,
+                language: { url: "//cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json" }
+            });
+
+            // ── Abrir modal ──────────────────────────────────────────────────
+            $("#tbData tbody").on("click", ".btn-valorar", function () {
+                const data = tablaData.row($(this).closest("tr")).data();
+                idEditar = data.idCita;
+
+                // Datos solo lectura
+                $("#vIdCita").val(data.idCita);
+                $("#vDoctor").val(data.doctor ? `${data.doctor.nombres} ${data.doctor.apellidos}`.trim() : "");
+                $("#vEspecialidad").val(data.especialidad ? data.especialidad.nombre : "");
+                $("#vFechaCita").val(data.fechaCita ?? "");
+                $("#vHoraCita").val(data.horaCita ?? "");
+
+                // Indicaciones
+                $("#vIndicaciones").text(data.indicaciones || "Sin indicaciones.");
+
+                // Documento doctor
+                docDoctorBase64     = data.docIndicacionesDoctor ?? null;
+                docDoctorContentType = data.contentTypeDoctor ?? "application/octet-stream";
+                if (docDoctorBase64) {
+                    $("#btnVerDocDoctor").prop("disabled", false);
+                    $("#lblHayDocDoctor").removeClass("d-none");
+                    $("#lblSinDocDoctor").addClass("d-none");
+                } else {
+                    $("#btnVerDocDoctor").prop("disabled", true);
+                    $("#lblHayDocDoctor").addClass("d-none");
+                    $("#lblSinDocDoctor").removeClass("d-none");
+                }
+
+                // Valoración inicial
+                const val = data.valDoctorCita ?? 3;
+                $("input[name='valDoctorCita']").prop("checked", false);
+                $(`input[name='valDoctorCita'][value='${val}']`).prop("checked", true);
+
+                // Opinión
+                $("#vOpinionDoctorYClinica").val(data.opinionDoctorYClinica || "");
+
+                new bootstrap.Modal(document.getElementById('mdValoracion')).show();
+            });
+
+            // ── Ver documento doctor ─────────────────────────────────────────
+            $("#btnVerDocDoctor").on("click", function () {
+                if (!docDoctorBase64) return;
+                const bin = atob(docDoctorBase64), arr = new Uint8Array(bin.length);
+                for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+                window.open(URL.createObjectURL(new Blob([arr], { type: docDoctorContentType })), "_blank");
+            });
+
+            // ── Guardar valoración ───────────────────────────────────────────
+            $("#btnGuardarValoracion").on("click", async function () {
+                const opinion = $("#vOpinionDoctorYClinica").val().trim();
+                if (!opinion) {
+                    Swal.fire("Atención", "Por favor escribe tu opinión antes de guardar.", "warning");
+                    return;
+                }
+
+                const valDoctorCita = parseInt($("input[name='valDoctorCita']:checked").val());
+                if (isNaN(valDoctorCita)) {
+                    Swal.fire("Atención", "Por favor selecciona una valoración.", "warning");
+                    return;
+                }
+
+                Swal.fire({ title: 'Guardando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+                try {
+                    const response = await fetch(`/${controlador}/ActualizarMotivoPaciente`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            idCita:               idEditar,
+                            razonCitaUsr:         null,
+                            documentoBase64:      null,
+                            contentType:          null,
+                            valDoctorCita:        valDoctorCita,
+                            opinionDoctorYClinica: opinion,
+                            citaConfirmada:       null,
+                            fechaConfirmacion:    null
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        bootstrap.Modal.getInstance(document.getElementById('mdValoracion'))?.hide();
+                        Swal.fire("¡Gracias!", "Tu valoración ha sido guardada correctamente.", "success")
+                            .then(() => tablaData.ajax.reload());
+                    } else {
+                        Swal.fire("Error", result.data ?? "No se pudo guardar la valoración.", "error");
+                    }
+                } catch (err) {
+                    console.error("Error al guardar valoración:", err);
+                    Swal.fire("Error", "Fallo de comunicación con el servidor.", "error");
+                }
+            });
+        });
+    </script>
+}

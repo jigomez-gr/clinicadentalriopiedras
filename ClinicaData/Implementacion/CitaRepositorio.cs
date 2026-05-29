@@ -1976,6 +1976,144 @@ AND c.fechacita <= NOW() + INTERVAL '48 hours'
             return filas > 0;
         }
 
+        // ============================================================
+        // 2. AÑADIR EN CitaRepositorio.cs  (al final, antes del cierre)
+        // ============================================================
+        public async Task<List<Cita>> ListaCitasParaValorar(int idUsuario)
+        {
+            var lista = new List<Cita>();
+
+            await using var conexion = new NpgsqlConnection(con.CadenaSQL);
+            await conexion.OpenAsync();
+
+            const string sql = @"
+        SELECT
+            c.idcita,
+            c.fechacita,
+            dhd.turnohora,
+            e.nombre                               AS nombreespecialidad,
+            d.nombres,
+            d.apellidos,
+            c.indicaciones,
+            c.docindicacionesdoctor,
+            c.contenttype_doctor,
+            c.valdoctorcita,
+            c.opiniondoctoryclinica
+        FROM cita c
+        INNER JOIN usuario              u   ON u.idusuario               = c.idusuario
+        INNER JOIN doctorhorariodetalle dhd ON dhd.iddoctorhorariodetalle = c.iddoctorhorariodetalle
+        INNER JOIN doctorhorario        dh  ON dh.iddoctorhorario         = dhd.iddoctorhorario
+        INNER JOIN doctor               d   ON d.iddoctor                 = dh.iddoctor
+        INNER JOIN especialidad         e   ON e.idespecialidad           = d.idespecialidad
+        WHERE u.idusuario = @idUsuario
+          AND c.opiniondoctoryclinica IS NULL
+          AND (c.fechacita + dhd.turnohora::interval) < NOW()
+        ORDER BY c.fechacita DESC, dhd.turnohora DESC";
+
+            await using var cmd = new NpgsqlCommand(sql, conexion);
+            cmd.CommandType = CommandType.Text;
+            cmd.Parameters.AddWithValue("@idUsuario", idUsuario);
+
+            await using var dr = await cmd.ExecuteReaderAsync();
+            while (await dr.ReadAsync())
+            {
+                var cita = new Cita
+                {
+                    IdCita = Convert.ToInt32(dr["idcita"]),
+                    FechaCita = dr["fechacita"]?.ToString() ?? "",
+                    HoraCita = dr["turnohora"]?.ToString() ?? "",
+                    Especialidad = new Especialidad
+                    {
+                        Nombre = dr["nombreespecialidad"]?.ToString() ?? ""
+                    },
+                    Doctor = new Doctor
+                    {
+                        Nombres = dr["nombres"]?.ToString() ?? "",
+                        Apellidos = dr["apellidos"]?.ToString() ?? ""
+                    },
+                    Indicaciones = dr["indicaciones"] == DBNull.Value ? "" : dr["indicaciones"]?.ToString() ?? "",
+                    DocIndicacionesDoctor = dr["docindicacionesdoctor"] == DBNull.Value ? null : (byte[])dr["docindicacionesdoctor"],
+                    ContentTypeDoctor = dr["contenttype_doctor"] == DBNull.Value ? null : dr["contenttype_doctor"]?.ToString(),
+                    ValDoctorCita = dr["valdoctorcita"] == DBNull.Value ? 3 : Convert.ToInt32(dr["valdoctorcita"]),
+                    OpinionDoctorYClinica = dr["opiniondoctoryclinica"] == DBNull.Value ? null : dr["opiniondoctoryclinica"]?.ToString()
+                };
+                lista.Add(cita);
+            }
+
+            return lista;
+        }
+
+
+        // ============================================================
+        // 2. AÑADIR EN CitaRepositorio.cs  (al final, antes del cierre)
+        // ============================================================
+        public async Task<List<Cita>> ListaCitasConIndicaciones(int idUsuario)
+        {
+            var lista = new List<Cita>();
+
+            await using var conexion = new NpgsqlConnection(con.CadenaSQL);
+            await conexion.OpenAsync();
+
+            const string sql = @"
+        SELECT
+            c.idcita,
+            c.fechacita,
+            dhd.turnohora,
+            e.nombre                               AS nombreespecialidad,
+            d.nombres,
+            d.apellidos,
+            c.indicaciones,
+            c.docindicacionesdoctor,
+            c.contenttype_doctor,
+            c.razoncitausr,
+            c.documentocitausr,
+            c.contenttype
+        FROM cita c
+        INNER JOIN usuario              u   ON u.idusuario               = c.idusuario
+        INNER JOIN doctorhorariodetalle dhd ON dhd.iddoctorhorariodetalle = c.iddoctorhorariodetalle
+        INNER JOIN doctorhorario        dh  ON dh.iddoctorhorario         = dhd.iddoctorhorario
+        INNER JOIN doctor               d   ON d.iddoctor                 = dh.iddoctor
+        INNER JOIN especialidad         e   ON e.idespecialidad           = d.idespecialidad
+        WHERE u.idusuario = @idUsuario
+          AND c.indicaciones IS NOT NULL
+          AND c.indicaciones <> ''
+          AND (c.fechacita + dhd.turnohora::interval) < NOW()
+        ORDER BY c.fechacita DESC, dhd.turnohora DESC";
+
+            await using var cmd = new NpgsqlCommand(sql, conexion);
+            cmd.CommandType = CommandType.Text;
+            cmd.Parameters.AddWithValue("@idUsuario", idUsuario);
+
+            await using var dr = await cmd.ExecuteReaderAsync();
+            while (await dr.ReadAsync())
+            {
+                var cita = new Cita
+                {
+                    IdCita = Convert.ToInt32(dr["idcita"]),
+                    FechaCita = dr["fechacita"]?.ToString() ?? "",
+                    HoraCita = dr["turnohora"]?.ToString() ?? "",
+                    Especialidad = new Especialidad
+                    {
+                        Nombre = dr["nombreespecialidad"]?.ToString() ?? ""
+                    },
+                    Doctor = new Doctor
+                    {
+                        Nombres = dr["nombres"]?.ToString() ?? "",
+                        Apellidos = dr["apellidos"]?.ToString() ?? ""
+                    },
+                    Indicaciones = dr["indicaciones"]?.ToString() ?? "",
+                    DocIndicacionesDoctor = dr["docindicacionesdoctor"] == DBNull.Value ? null : (byte[])dr["docindicacionesdoctor"],
+                    ContentTypeDoctor = dr["contenttype_doctor"] == DBNull.Value ? null : dr["contenttype_doctor"]?.ToString(),
+                    RazonCitaUsr = dr["razoncitausr"] == DBNull.Value ? null : dr["razoncitausr"]?.ToString(),
+                    DocumentoCitaUsr = dr["documentocitausr"] == DBNull.Value ? null : (byte[])dr["documentocitausr"],
+                    ContentType = dr["contenttype"] == DBNull.Value ? null : dr["contenttype"]?.ToString()
+                };
+                lista.Add(cita);
+            }
+
+            return lista;
+        }
+
 
     }
 }
