@@ -2203,6 +2203,13 @@ LIMIT 1;
             ViewBag.IdUsuarioPaciente = 0;
             return View("~/Views/Citas/AltaCita.cshtml");
         }
+        // ── AÑADIR EN CitasController.cs ──────────────────────────────
+        [HttpGet]
+        [Authorize(Roles = "Paciente")]
+        public IActionResult ReenviarFoto()
+        {
+            return View("~/Views/Citas/ReenviarFoto.cshtml");
+        }
 
     }
 }   

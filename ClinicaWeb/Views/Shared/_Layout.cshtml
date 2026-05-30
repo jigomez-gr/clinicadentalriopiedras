@@ -249,8 +249,9 @@
             <img src="~/images/logo6.jpg" alt="Logo" />
         </a>
 
-        <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!">
+        <button class="btn btn-sm order-1 order-lg-0 me-4 me-lg-0 d-flex align-items-center gap-2" id="sidebarToggle" style="background-color:#ff8c00;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-weight:600;">
             <i class="fas fa-bars"></i>
+            <span class="d-none d-sm-inline" style="font-size:0.85rem;white-space:nowrap;">&#9776; Clic para desplegar opciones menú</span>
         </button>
 
         <ul class="navbar-nav ms-auto me-0 me-md-3 my-2 my-md-0">
@@ -296,6 +297,9 @@
                                 <div class="sb-nav-link-icon"><i class="fas fa-calendar-plus"></i></div> Nueva Cita
                             </a>
                             <a class="nav-link" asp-controller="Citas" asp-action="Index"><div class="sb-nav-link-icon"><i class="fas fa-table"></i></div> Citas Pendientes </a>
+                            <a class="nav-link" asp-controller="Citas" asp-action="ReenviarFoto">
+                                <div class="sb-nav-link-icon"><i class="fas fa-file-upload"></i></div> Reenviar Foto
+                            </a>
                             <a class="nav-link" asp-controller="Citas" asp-action="ReconfirmarCita">
                                 <div class="sb-nav-link-icon"><i class="fas fa-calendar-check"></i></div> Reconfirmar Citas
                             </a>
@@ -305,7 +309,7 @@
                             <a class="nav-link" asp-controller="Citas" asp-action="CancelarCita">
                                 <div class="sb-nav-link-icon"><i class="fas fa-trash"></i></div> Cancelar Cita
                             </a>
-                           
+
                             <a class="nav-link" asp-controller="HistorialCitas" asp-action="Index"><div class="sb-nav-link-icon"><i class="fas fa-notes-medical"></i></div> Citas Atendidas</a>
                             <a class="nav-link" asp-controller="Citas" asp-action="IndicacionesDoctor">
                                 <div class="sb-nav-link-icon"><i class="fas fa-notes-medical"></i></div> Indicaciones Doctor

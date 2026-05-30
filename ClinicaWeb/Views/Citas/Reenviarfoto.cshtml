@@ -1,0 +1,357 @@
+﻿@{
+    ViewData["Title"] = "Reenviar Foto / Documentos";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .acciones-container {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-circle {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 14px;
+            line-height: 32px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        #tbData {
+            border-collapse: collapse !important;
+        }
+
+        @@media (max-width: 768px) {
+            #tbData thead th:first-child,
+            #tbData tbody td:first-child {
+                position: sticky;
+                left: 0;
+                background-color: #f8f9fa !important;
+                z-index: 5;
+                border-right: 2px solid #dee2e6;
+            }
+        }
+
+        table.dataTable td, table.dataTable th {
+            white-space: normal !important;
+        }
+
+        .cita-modal-compact .modal-body {
+            padding: .75rem;
+        }
+
+        .dataTables_processing {
+            background-color: #ffcccc !important;
+            color: #d9534f !important;
+            font-weight: bold !important;
+            font-size: 1.2rem !important;
+            border: 2px solid #d9534f !important;
+            z-index: 9999 !important;
+            top: 50% !important;
+            height: auto !important;
+            padding: 20px !important;
+        }
+
+        .doc-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: .375rem;
+            padding: .5rem .75rem;
+        }
+    </style>
+}
+
+<h2 class="mt-4 mb-4 d-flex align-items-center">
+    <span>Reenviar Foto / Documentos</span>
+    <button type="button" class="btn btn-sm ms-auto" style="background-color:#ff8c00;color:#fff;"
+            onclick="openHelpVideo('ReenviarFoto.mp4')" data-bs-toggle="tooltip" title="Ayuda">
+        <i class="fa fa-circle-question me-1"></i> Ayuda
+    </button>
+</h2>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header"><i class="fas fa-file-upload me-1"></i> Citas pendientes</div>
+            <div class="card-body">
+                <div class="alert alert-info small py-2 mb-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Puede actualizar el motivo y el documento adjunto de sus citas pendientes.
+                </div>
+                <div class="table-responsive">
+                    <table class="display table table-striped table-bordered table-hover nowrap"
+                           id="tbData" cellspacing="0" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Acciones</th>
+                                <th>Nº Cita</th>
+                                <th>Fecha Cita</th>
+                                <th>Hora Cita</th>
+                                <th>Especialidad</th>
+                                <th>Doctor</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== MODAL REENVIAR FOTO ===================== -->
+<div class="modal fade" id="mdReenviarFoto" data-bs-backdrop="static" data-bs-keyboard="false"
+     tabindex="-1" aria-labelledby="mdReenviarFotoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content cita-modal-compact">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="mdReenviarFotoLabel">
+                    <i class="fas fa-file-upload me-2"></i>Reenviar Foto / Documentos
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <!-- Datos identificativos solo lectura -->
+                <div class="row g-2 mb-2">
+                    <div class="col-12 col-md-3">
+                        <label class="form-label fw-bold">Nº Cita</label>
+                        <input type="text" class="form-control" id="rfIdCita" disabled />
+                    </div>
+                    <div class="col-12 col-md-5">
+                        <label class="form-label fw-bold">Doctor</label>
+                        <input type="text" class="form-control" id="rfDoctor" disabled />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label fw-bold">Especialidad</label>
+                        <input type="text" class="form-control" id="rfEspecialidad" disabled />
+                    </div>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label fw-bold">Fecha Cita</label>
+                        <input type="text" class="form-control" id="rfFechaCita" disabled />
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label fw-bold">Hora Cita</label>
+                        <input type="text" class="form-control" id="rfHoraCita" disabled />
+                    </div>
+                </div>
+
+                <hr />
+
+                <!-- Motivo editable -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Motivo de la cita</label>
+                    <textarea class="form-control" id="rfRazonCitaUsr" rows="3"
+                              placeholder="Describa el motivo de la cita..."></textarea>
+                </div>
+
+                <!-- Documento paciente actual -->
+                <div class="mb-2 doc-box">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="fw-bold small">Documento actual del paciente:</span>
+                        <button type="button" id="rfBtnVerDocPaciente" class="btn btn-outline-secondary btn-sm" disabled>
+                            <i class="fas fa-file me-1"></i> Ver documento actual
+                        </button>
+                        <small id="rfLblSinDocPaciente" class="text-muted">No hay documento.</small>
+                        <small id="rfLblHayDocPaciente" class="text-success d-none">
+                            <i class="fas fa-check me-1"></i>Hay un documento adjunto.
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Nuevo documento paciente -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Actualizar / reenviar documento del paciente</label>
+                    <input type="file" class="form-control" id="rfFileDocPaciente"
+                           accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" />
+                    <small class="form-text text-muted">PDF, imagen o documento (informes, radiografías, etc.)</small>
+                </div>
+
+                <hr />
+
+                <!-- Documento doctor (solo lectura) -->
+                <div class="mb-2 doc-box">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="fw-bold small">Documento del doctor:</span>
+                        <button type="button" id="rfBtnVerDocDoctor" class="btn btn-outline-primary btn-sm" disabled>
+                            <i class="fas fa-file-medical me-1"></i> Ver documento doctor
+                        </button>
+                        <small id="rfLblSinDocDoctor" class="text-muted">No hay documento del doctor.</small>
+                        <small id="rfLblHayDocDoctor" class="text-success d-none">
+                            <i class="fas fa-check me-1"></i>Hay un documento del doctor.
+                        </small>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary px-4" id="rfBtnGuardar">
+                    <i class="fas fa-save me-1"></i>Guardar cambios
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            "use strict";
+            window.openHelpVideo = function (fileName) {
+                const w = 900, h = 520;
+                const left = Math.max(0, (screen.width - w) / 2);
+                const top  = Math.max(0, (screen.height - h) / 2);
+                window.open("/helps/" + encodeURIComponent(fileName), "helpVideo",
+                    `width=${w},height=${h},left=${left},top=${top},resizable=yes`);
+            };
+        })();
+
+        let tablaData;
+        let idEditar = 0;
+        let docPacienteBase64 = null, docPacienteContentType = null;
+        let docDoctorBase64   = null, docDoctorContentType   = null;
+        const controlador = "Citas";
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+            tablaData = $('#tbData').DataTable({
+                processing: true,
+                serverSide: false,
+                ajax: { url: `/${controlador}/ListaCitasPendiente`, type: "GET", datatype: "json" },
+                columns: [
+                    {
+                        data: null,
+                        render: function (data, type, row) {
+                            return `<div class="acciones-container">
+                                <button class="btn btn-primary btn-circle text-white btn-reenviar" title="Reenviar foto/documentos">
+                                    <i class="fas fa-file-upload"></i>
+                                </button>
+                            </div>`;
+                        },
+                        orderable: false,
+                        width: "60px"
+                    },
+                    { data: "idCita",       width: "80px" },
+                    { data: "fechaCita" },
+                    { data: "horaCita" },
+                    { data: "especialidad", render: d => d ? d.nombre : "" },
+                    { data: "doctor",       render: d => d ? `${d.nombres} ${d.apellidos}`.trim() : "" }
+                ],
+                scrollX: true,
+                language: { url: "//cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json" }
+            });
+
+            // ── Abrir modal ──────────────────────────────────────────────────
+            $("#tbData tbody").on("click", ".btn-reenviar", function () {
+                const data = tablaData.row($(this).closest("tr")).data();
+                idEditar = data.idCita;
+
+                // Datos identificativos
+                $("#rfIdCita").val(data.idCita);
+                $("#rfDoctor").val(data.doctor ? `${data.doctor.nombres} ${data.doctor.apellidos}`.trim() : "");
+                $("#rfEspecialidad").val(data.especialidad ? data.especialidad.nombre : "");
+                $("#rfFechaCita").val(data.fechaCita ?? "");
+                $("#rfHoraCita").val(data.horaCita ?? "");
+
+                // Motivo
+                $("#rfRazonCitaUsr").val(data.razonCitaUsr || "");
+
+                // Documento paciente
+                docPacienteBase64      = data.documentoCitaUsr ?? null;
+                docPacienteContentType = data.contentType ?? "application/octet-stream";
+                if (docPacienteBase64) {
+                    $("#rfBtnVerDocPaciente").prop("disabled", false);
+                    $("#rfLblHayDocPaciente").removeClass("d-none");
+                    $("#rfLblSinDocPaciente").addClass("d-none");
+                } else {
+                    $("#rfBtnVerDocPaciente").prop("disabled", true);
+                    $("#rfLblHayDocPaciente").addClass("d-none");
+                    $("#rfLblSinDocPaciente").removeClass("d-none");
+                }
+
+                // Documento doctor (solo lectura)
+                docDoctorBase64      = data.docIndicacionesDoctor ?? null;
+                docDoctorContentType = data.contentTypeDoctor ?? "application/octet-stream";
+                if (docDoctorBase64) {
+                    $("#rfBtnVerDocDoctor").prop("disabled", false);
+                    $("#rfLblHayDocDoctor").removeClass("d-none");
+                    $("#rfLblSinDocDoctor").addClass("d-none");
+                } else {
+                    $("#rfBtnVerDocDoctor").prop("disabled", true);
+                    $("#rfLblHayDocDoctor").addClass("d-none");
+                    $("#rfLblSinDocDoctor").removeClass("d-none");
+                }
+
+                // Limpiar fichero seleccionado anterior
+                $("#rfFileDocPaciente").val("");
+
+                new bootstrap.Modal(document.getElementById('mdReenviarFoto')).show();
+            });
+
+            // ── Ver doc paciente ─────────────────────────────────────────────
+            $("#rfBtnVerDocPaciente").on("click", function () {
+                if (!docPacienteBase64) return;
+                abrirDocumento(docPacienteBase64, docPacienteContentType);
+            });
+
+            // ── Ver doc doctor ───────────────────────────────────────────────
+            $("#rfBtnVerDocDoctor").on("click", function () {
+                if (!docDoctorBase64) return;
+                abrirDocumento(docDoctorBase64, docDoctorContentType);
+            });
+
+            // ── Guardar cambios ──────────────────────────────────────────────
+            $("#rfBtnGuardar").on("click", function () {
+                const file = document.getElementById("rfFileDocPaciente").files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => enviarDatos(reader.result.split(',')[1], file.type);
+                } else {
+                    enviarDatos(null, null);
+                }
+            });
+
+            function enviarDatos(b64, type) {
+                Swal.fire({ title: 'Guardando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                fetch(`/${controlador}/ActualizarMotivoPaciente`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        idCita:               idEditar,
+                        razonCitaUsr:         $("#rfRazonCitaUsr").val(),
+                        documentoBase64:      b64,
+                        contentType:          type,
+                        valDoctorCita:        null,
+                        opinionDoctorYClinica: null,
+                        citaConfirmada:       null,
+                        fechaConfirmacion:    null
+                    })
+                })
+                .then(r => r.json())
+                .then(result => {
+                    bootstrap.Modal.getInstance(document.getElementById('mdReenviarFoto'))?.hide();
+                    Swal.fire("¡Guardado!", "Los datos se han actualizado correctamente.", "success")
+                        .then(() => tablaData.ajax.reload());
+                })
+                .catch(() => {
+                    Swal.fire("Error", "Fallo de comunicación con el servidor.", "error");
+                });
+            }
+        });
+
+        function abrirDocumento(base64, contentType) {
+            const bin = atob(base64), arr = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+            window.open(URL.createObjectURL(new Blob([arr], { type: contentType })), "_blank");
+        }
+    </script>
+}
