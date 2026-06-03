@@ -2210,6 +2210,32 @@ LIMIT 1;
         {
             return View("~/Views/Citas/ReenviarFoto.cshtml");
         }
+        [HttpGet]
+        [Authorize(Roles = "Paciente")]
+        public IActionResult CambiarTipoCita()
+        {
+            return View("~/Views/Citas/CambiarTipoCita.cshtml");
+        }
 
+        [HttpPost]
+        [Authorize(Roles = "Paciente")]
+        public async Task<IActionResult> ActualizarTipoCita(int idCita, string tipoDeCita)
+        {
+            ClaimsPrincipal claimuser = HttpContext.User;
+            string idUsuario = claimuser.Claims
+                .Where(c => c.Type == ClaimTypes.NameIdentifier)
+                .Select(c => c.Value)
+                .SingleOrDefault()!;
+
+            if (string.IsNullOrEmpty(idUsuario))
+                return Json(new { ok = false, msg = "Sesión expirada" });
+
+            var resultado = await _repositorioCita.ActualizarTipoCita(idCita, tipoDeCita);
+
+            if (!string.IsNullOrEmpty(resultado))
+                return Json(new { ok = false, msg = resultado });
+
+            return Json(new { ok = true });
+        }
     }
 }   

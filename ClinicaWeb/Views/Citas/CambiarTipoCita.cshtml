@@ -1,0 +1,320 @@
+﻿@{
+    ViewData["Title"] = "Cambiar Tipo de Cita";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .acciones-container {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-circle {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 14px;
+            line-height: 32px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        #tbData {
+            border-collapse: collapse !important;
+        }
+
+        @@media (max-width: 768px) {
+            #tbData thead th:first-child,
+            #tbData tbody td:first-child {
+                position: sticky;
+                left: 0;
+                background-color: #f8f9fa !important;
+                z-index: 5;
+                border-right: 2px solid #dee2e6;
+            }
+        }
+
+        table.dataTable td, table.dataTable th {
+            white-space: normal !important;
+        }
+
+        .cita-modal-compact .modal-body {
+            padding: .75rem;
+        }
+
+        .dataTables_processing {
+            background-color: #ffcccc !important;
+            color: #d9534f !important;
+            font-weight: bold !important;
+            font-size: 1.2rem !important;
+            border: 2px solid #d9534f !important;
+            z-index: 9999 !important;
+            top: 50% !important;
+            height: auto !important;
+            padding: 20px !important;
+        }
+
+        .tipo-badge {
+            font-size: .85rem;
+            padding: .3rem .6rem;
+            border-radius: .375rem;
+        }
+
+        /* Botón video: solo visible en tipo V */
+        .btn-video-cita {
+            transition: opacity .2s;
+        }
+    </style>
+}
+
+<h2 class="mt-4 mb-4 d-flex align-items-center">
+    <span>Cambiar Tipo de Cita</span>
+    <button type="button" class="btn btn-sm ms-auto" style="background-color:#ff8c00;color:#fff;"
+            onclick="openHelpVideo('CambiarTipoCita.mp4')" data-bs-toggle="tooltip" title="Ayuda">
+        <i class="fa fa-circle-question me-1"></i> Ayuda
+    </button>
+</h2>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header"><i class="fas fa-exchange-alt me-1"></i> Citas pendientes</div>
+            <div class="card-body">
+                <div class="alert alert-info small py-2 mb-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Puede cambiar el tipo de cita (Presencial, Telefónica o Virtual) mientras esté pendiente de celebrarse.
+                    Doble clic en <i class="fas fa-video text-primary"></i> para abrir la videollamada.
+                    Toque <i class="fas fa-phone text-success"></i> para llamar directamente.
+                </div>
+                <div class="table-responsive">
+                    <table class="display table table-striped table-bordered table-hover nowrap"
+                           id="tbData" cellspacing="0" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Acciones</th>
+                                <th>Nº Cita</th>
+                                <th>Fecha Cita</th>
+                                <th>Hora Cita</th>
+                                <th>Especialidad</th>
+                                <th>Doctor</th>
+                                <th>Tipo actual</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== MODAL CAMBIAR TIPO CITA ===================== -->
+<div class="modal fade" id="mdCambiarTipo" data-bs-backdrop="static" data-bs-keyboard="false"
+     tabindex="-1" aria-labelledby="mdCambiarTipoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content cita-modal-compact">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="mdCambiarTipoLabel">
+                    <i class="fas fa-exchange-alt me-2"></i>Cambiar Tipo de Cita
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <!-- Datos identificativos solo lectura -->
+                <div class="row g-2 mb-2">
+                    <div class="col-12 col-md-3">
+                        <label class="form-label fw-bold">Nº Cita</label>
+                        <input type="text" class="form-control" id="ctIdCita" disabled />
+                    </div>
+                    <div class="col-12 col-md-5">
+                        <label class="form-label fw-bold">Doctor</label>
+                        <input type="text" class="form-control" id="ctDoctor" disabled />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label fw-bold">Especialidad</label>
+                        <input type="text" class="form-control" id="ctEspecialidad" disabled />
+                    </div>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label fw-bold">Fecha Cita</label>
+                        <input type="text" class="form-control" id="ctFechaCita" disabled />
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label fw-bold">Hora Cita</label>
+                        <input type="text" class="form-control" id="ctHoraCita" disabled />
+                    </div>
+                </div>
+
+                <hr />
+
+                <!-- Tipo de cita editable -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Tipo de cita</label>
+                    <select class="form-select" id="ctTipoDeCita">
+                        <option value="P">🏥 Presencial</option>
+                        <option value="T">📞 Telefónica</option>
+                        <option value="V">💻 Virtual</option>
+                    </select>
+                </div>
+
+                <!-- Info resultante según tipo (solo lectura, informativa) -->
+                <div class="alert alert-secondary small py-2 mb-0" id="ctInfoTipo">
+                    La URL o teléfono se asignará automáticamente al guardar.
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary px-4" id="ctBtnGuardar">
+                    <i class="fas fa-save me-1"></i>Guardar cambios
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            "use strict";
+            window.openHelpVideo = function (fileName) {
+                const w = 900, h = 520;
+                const left = Math.max(0, (screen.width - w) / 2);
+                const top  = Math.max(0, (screen.height - h) / 2);
+                window.open("/helps/" + encodeURIComponent(fileName), "helpVideo",
+                    `width=${w},height=${h},left=${left},top=${top},resizable=yes`);
+            };
+        })();
+
+        let tablaData;
+        let idEditar = 0;
+        const controlador = "Citas";
+
+        const tipoMap = {
+            "P": '<span class="badge bg-success tipo-badge">🏥 Presencial</span>',
+            "T": '<span class="badge bg-info    tipo-badge text-dark">📞 Telefónica</span>',
+            "V": '<span class="badge bg-primary  tipo-badge">💻 Virtual</span>'
+        };
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+            // ── DataTable ────────────────────────────────────────────────
+            tablaData = $('#tbData').DataTable({
+                processing: true,
+                serverSide: false,
+                ajax: { url: `/${controlador}/ListaCitasPendiente`, type: "GET", datatype: "json" },
+                columns: [
+                    {
+                        data: null,
+                        orderable: false,
+                        width: "110px",
+                        render: function (data, type, row) {
+                            const tipo = row.tipoDeCita || "P";
+                            const url  = row.urlCitaOTelefono || "";
+
+                            // Botón editar (siempre visible)
+                            let btns = `<button class="btn btn-primary btn-circle text-white btn-cambiartipo me-1" title="Cambiar tipo de cita">
+                                            <i class="fas fa-exchange-alt"></i>
+                                        </button>`;
+
+                            // Botón video (solo tipo V)
+                            if (tipo === "V" && url) {
+                                btns += `<button class="btn btn-outline-primary btn-circle btn-video-cita"
+                                                 title="Doble clic para abrir videollamada"
+                                                 data-url="${url}"
+                                                 ondblclick="abrirVideo(this)">
+                                             <i class="fas fa-video"></i>
+                                         </button>`;
+                            }
+
+                            // Botón llamar (solo tipo T, en móvil enlaza tel:)
+                            if (tipo === "T" && url) {
+                                btns += `<a class="btn btn-outline-success btn-circle"
+                                            href="tel:${url}"
+                                            title="Llamar al doctor">
+                                             <i class="fas fa-phone"></i>
+                                         </a>`;
+                            }
+
+                            return `<div class="acciones-container">${btns}</div>`;
+                        }
+                    },
+                    { data: "idCita",      width: "80px" },
+                    { data: "fechaCita" },
+                    { data: "horaCita" },
+                    { data: "especialidad", render: d => d ? d.nombre : "" },
+                    { data: "doctor",       render: d => d ? `${d.nombres} ${d.apellidos}`.trim() : "" },
+                    { data: "tipoDeCita",   render: d => tipoMap[d] ?? d }
+                ],
+                scrollX: true,
+                language: { url: "//cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json" }
+            });
+
+            // ── Abrir modal ──────────────────────────────────────────────
+            $("#tbData tbody").on("click", ".btn-cambiartipo", function () {
+                const data = tablaData.row($(this).closest("tr")).data();
+                idEditar = data.idCita;
+
+                $("#ctIdCita").val(data.idCita);
+                $("#ctDoctor").val(data.doctor ? `${data.doctor.nombres} ${data.doctor.apellidos}`.trim() : "");
+                $("#ctEspecialidad").val(data.especialidad ? data.especialidad.nombre : "");
+                $("#ctFechaCita").val(data.fechaCita ?? "");
+                $("#ctHoraCita").val(data.horaCita ?? "");
+                $("#ctTipoDeCita").val(data.tipoDeCita || "P").trigger("change");
+
+                new bootstrap.Modal(document.getElementById('mdCambiarTipo')).show();
+            });
+
+            // ── Info dinámica en el modal según tipo seleccionado ────────
+            $("#ctTipoDeCita").on("change", function () {
+                const info = document.getElementById("ctInfoTipo");
+                if (this.value === "V") {
+                    info.className = "alert alert-primary small py-2 mb-0";
+                    info.innerHTML = '<i class="fas fa-video me-1"></i> Se generará automáticamente el enlace de <strong>videollamada</strong> a partir del booking de Cal.com.';
+                } else if (this.value === "T") {
+                    info.className = "alert alert-success small py-2 mb-0";
+                    info.innerHTML = '<i class="fas fa-phone me-1"></i> Se asignará automáticamente el <strong>teléfono del doctor</strong> configurado en el sistema.';
+                } else {
+                    info.className = "alert alert-secondary small py-2 mb-0";
+                    info.innerHTML = '<i class="fas fa-hospital me-1"></i> Cita <strong>presencial</strong> en la clínica. No se requiere enlace ni teléfono adicional.';
+                }
+            });
+
+            // ── Guardar ──────────────────────────────────────────────────
+            $("#ctBtnGuardar").on("click", function () {
+                enviarDatos($("#ctTipoDeCita").val());
+            });
+
+            function enviarDatos(tipo) {
+                Swal.fire({ title: 'Guardando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                fetch(`/${controlador}/ActualizarTipoCita`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: `idCita=${idEditar}&tipoDeCita=${encodeURIComponent(tipo)}`
+                })
+                .then(r => r.json())
+                .then(result => {
+                    if (!result.ok) {
+                        Swal.fire("Error", result.msg, "error");
+                        return;
+                    }
+                    bootstrap.Modal.getInstance(document.getElementById('mdCambiarTipo'))?.hide();
+                    Swal.fire("¡Guardado!", "El tipo de cita se ha actualizado correctamente.", "success")
+                        .then(() => tablaData.ajax.reload());
+                })
+                .catch(() => Swal.fire("Error", "Fallo de comunicación con el servidor.", "error"));
+            }
+        });
+
+        // ── Abrir videollamada con doble clic ────────────────────────────
+        function abrirVideo(btn) {
+            const url = btn.getAttribute("data-url");
+            if (url) window.open(url, "_blank");
+        }
+    </script>
+}

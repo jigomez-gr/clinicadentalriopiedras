@@ -152,6 +152,6 @@ namespace ClinicaData.Contrato
         // ============================================================
         Task<List<Cita>> ListaCitasConIndicaciones(int idUsuario);
 
-
+        Task<string> ActualizarTipoCita(int idCita, string tipoDeCita);
     }
 }

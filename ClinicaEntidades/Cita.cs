@@ -41,6 +41,12 @@ namespace ClinicaEntidades
         public int ValDoctorCita { get; set; } = 3;                 // valdoctorcita integer DEFAULT 3
         public string? OpinionDoctorYClinica { get; set; }          // opiniondoctoryclinica text NULL
 
-
+        // ===== CAMPOS TIPO, PRECIO Y PAGO =====
+        public string TipoDeCita { get; set; } = "P";           // tipodecita char(1) DEFAULT 'P'
+        public decimal? Precio { get; set; }                     // precio numeric(10,2) NULL
+        public string Pagada { get; set; } = "N";               // pagada varchar(1) DEFAULT 'N'
+        public string? UrlCitaOTelefono { get; set; }           // urlcitaotelefono varchar(80) NULL
+        public string? DiagnosticoIA { get; set; }              // diagnosticoia text NULL
+        public string? ResumenCitaVirtual { get; set; }         // resumencitavirtual text NULL
     }
 }

@@ -2114,6 +2114,27 @@ AND c.fechacita <= NOW() + INTERVAL '48 hours'
             return lista;
         }
 
+        public async Task<string> ActualizarTipoCita(int idCita, string tipoDeCita)
+        {
+            try
+            {
+                await using var conexion = new NpgsqlConnection(con.CadenaSQL);
+                await conexion.OpenAsync();
+                await using var cmd = new NpgsqlCommand(
+                    "SELECT public.sp_actualizartipocita(@IdCita, @TipoDeCita);",
+                    conexion);
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@IdCita", idCita);
+                cmd.Parameters.AddWithValue("@TipoDeCita", tipoDeCita);
+
+                var result = await cmd.ExecuteScalarAsync();
+                return result?.ToString() ?? "";
+            }
+            catch
+            {
+                return "Error al actualizar el tipo de cita";
+            }
+        }
 
     }
 }
