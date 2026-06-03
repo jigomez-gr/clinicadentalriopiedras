@@ -274,7 +274,7 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                     OpinionDoctorYClinica = dr["opiniondoctoryclinica"] == DBNull.Value
                                                 ? null
                                                 : dr["opiniondoctoryclinica"]?.ToString(),
-                    // NUEVOS CAMPOS
+                    // ESTADO Y CONFIRMACIÓN
                     EstadoCita = new EstadoCita
                     {
                         Nombre = dr["nombreestadocita"]?.ToString() ?? ""
@@ -284,7 +284,14 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                                          : dr["citaconfirmada"]?.ToString(),
                     FechaConfirmacion = dr["fechaconfirmacion"] == DBNull.Value
                                             ? (DateTime?)null
-                                            : Convert.ToDateTime(dr["fechaconfirmacion"])
+                                            : Convert.ToDateTime(dr["fechaconfirmacion"]),
+                    // TIPO DE CITA
+                    TipoDeCita = dr["tipodecita"] == DBNull.Value
+                                     ? "P"
+                                     : dr["tipodecita"]?.ToString() ?? "P",
+                    UrlCitaOTelefono = dr["urlcitaotelefono"] == DBNull.Value
+                                           ? null
+                                           : dr["urlcitaotelefono"]?.ToString(),
                 };
                 lista.Add(cita);
             }
@@ -2128,11 +2135,14 @@ AND c.fechacita <= NOW() + INTERVAL '48 hours'
                 cmd.Parameters.AddWithValue("@TipoDeCita", tipoDeCita);
 
                 var result = await cmd.ExecuteScalarAsync();
-                return result?.ToString() ?? "";
+                var msg = result?.ToString() ?? "";
+
+                // Si el SP devuelve algo es un error de negocio
+                return msg;
             }
-            catch
+            catch (Exception ex)
             {
-                return "Error al actualizar el tipo de cita";
+                return $"Error: {ex.Message}";
             }
         }
 
