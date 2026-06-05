@@ -1294,28 +1294,23 @@ LIMIT 1;
             return Json(new { ok = resultado.ok, idAccion = resultado.idAccion });
         }
         [HttpPost]
-
         [Authorize(Roles = "Paciente,Doctor,Administrador")]
         public async Task<IActionResult> ChatConAgenteFicheros(string mensajeusuario, IFormFile fichero)
         {
             try
             {
-                // 1. LEER CONFIGURACIÓN (Optimizado: Usa el IConfiguration inyectado si es posible, si no, mantén esto)
                 var config = new ConfigurationBuilder()
                     .SetBasePath(Directory.GetCurrentDirectory())
                     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                     .Build();
 
-                // IMPORTANTE: Asegúrate de que la URL termine en /waiting (si es Test) o que sea la URL de Producción correcta
-                string urln8n = config["ChatbotConfig:WebhookUrl"] ?? "https://n8njigretera.cloud/webhook/a0959c71-7ec2-4c72-93e9-1a1ecccde4fc";
+                string urln8n = config["ChatbotConfig:WebhookUrl"] ?? "https://n8njigretera.cloud/webhook/chat-clinica";
 
-                // 2. DATOS DEL USUARIO (Claims)
                 string idUsuario = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0";
                 string nombre = User.FindFirstValue(ClaimTypes.Name) ?? "Anonimo";
                 string apellido = User.FindFirstValue(ClaimTypes.Surname) ?? "";
                 string idRol = User.IsInRole("Administrador") ? "1" : (User.IsInRole("Doctor") ? "2" : "3");
 
-                // 3. PROCESAR FICHERO A BASE64
                 string base64File = "";
                 string mimeType = "";
                 string fileName = "";
@@ -1325,14 +1320,12 @@ LIMIT 1;
                     using (var ms = new MemoryStream())
                     {
                         await fichero.CopyToAsync(ms);
-                        byte[] fileBytes = ms.ToArray();
-                        base64File = Convert.ToBase64String(fileBytes);
+                        base64File = Convert.ToBase64String(ms.ToArray());
                         mimeType = fichero.ContentType;
                         fileName = fichero.FileName;
                     }
                 }
 
-                // 4. CREAR PAYLOAD JSON (Debe coincidir EXACTAMENTE con lo que espera el nodo "Preparar Datos")
                 var payload = new
                 {
                     idusuario = idUsuario,
@@ -1344,10 +1337,8 @@ LIMIT 1;
                     nombreArchivo = fileName
                 };
 
-                // 5. ENVIAR A N8N
                 using (var client = new HttpClient())
                 {
-                    // Aumentamos el timeout porque la IA puede tardar más de 30 segundos
                     client.Timeout = TimeSpan.FromSeconds(120);
 
                     var response = await client.PostAsJsonAsync(urln8n, payload);
@@ -1361,30 +1352,23 @@ LIMIT 1;
                             return Json(new { ok = false, msg = "n8n no devolvió contenido" });
 
                         using var jDoc = JsonDocument.Parse(resString);
-                        
+                        var root = jDoc.RootElement;
 
-                        /* AJUSTE CLAVE: 
-                           El nuevo flujo responde: { "ok": true, "data": "Respuesta IA", "localizador": "..." }
-                        */
                         string respuestaIA = "";
                         string localizador = "";
 
                         if (root.TryGetProperty("data", out var dataProp))
-                        {
                             respuestaIA = dataProp.GetString() ?? "";
-                        }
 
                         if (root.TryGetProperty("localizador", out var locProp))
-                        {
                             localizador = locProp.GetString() ?? "";
-                        }
 
                         return Json(new
                         {
                             ok = true,
                             tipo = "texto",
                             data = respuestaIA,
-                            referencia = localizador // Pasamos el localizador a la vista por si quieres mostrarlo
+                            referencia = localizador
                         });
                     }
 
