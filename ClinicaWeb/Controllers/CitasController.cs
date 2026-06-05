@@ -1354,9 +1354,14 @@ LIMIT 1;
 
                     if (response.IsSuccessStatusCode)
                     {
-                        var resString = await response.Content.ReadAsStringAsync();
+                        var bytes = await response.Content.ReadAsByteArrayAsync();
+                        var resString = System.Text.Encoding.UTF8.GetString(bytes);
+
+                        if (string.IsNullOrWhiteSpace(resString))
+                            return Json(new { ok = false, msg = "n8n no devolvió contenido" });
+
                         using var jDoc = JsonDocument.Parse(resString);
-                        var root = jDoc.RootElement;
+                        
 
                         /* AJUSTE CLAVE: 
                            El nuevo flujo responde: { "ok": true, "data": "Respuesta IA", "localizador": "..." }
