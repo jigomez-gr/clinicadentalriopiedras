@@ -475,16 +475,19 @@
             });
         });
 
+      
         function toggleChat() {
             const chat = $("#chat-container");
+            const bubble = $("#chatbot-bubble");
 
             if (chat.is(":visible")) {
                 chat.fadeOut(150);
+                bubble.show();
             } else {
                 chat.css("display", "flex").hide().fadeIn(150);
+                bubble.hide();  // ocultar burbuja cuando el chat está abierto
             }
         }
-
         async function enviarMensaje() {
             const input = document.getElementById('chat-input');
             const fileInput = document.getElementById('chatFile');
