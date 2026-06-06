@@ -183,27 +183,30 @@
                 height: 58px;
                 z-index: 10001;
             }
-
+            /* En móvil: posicionado desde top (debajo navbar) hasta bottom */
             .chat-container {
-                width: calc(100% - 24px) !important;
-                height: calc(100vh - 110px) !important;
-                left: 12px !important;
-                right: 12px !important;
-                bottom: 88px !important;
+                position: fixed !important;
+                top: 58px !important; /* justo debajo de la navbar */
+                bottom: 80px !important; /* espacio para la burbuja */
+                left: 8px !important;
+                right: 8px !important;
+                width: auto !important;
+                height: auto !important;
+                max-height: none !important;
                 border-radius: 14px !important;
-                max-height: calc(100vh - 110px) !important;
                 background: white !important;
                 color: #000 !important;
+                z-index: 9999 !important;
             }
             /* Cabecera siempre visible en móvil */
             .chat-header {
-                padding: 10px 14px;
-                font-size: 14px;
+                padding: 10px 14px !important;
+                font-size: 14px !important;
                 background: linear-gradient(135deg, #14532d 0%, #166534 100%) !important;
                 color: white !important;
                 border-radius: 14px 14px 0 0 !important;
-                flex-shrink: 0;
-                min-height: 48px;
+                flex-shrink: 0 !important;
+                min-height: 48px !important;
             }
             /* Burbujas iguales que PC */
             .msg-user {
@@ -219,11 +222,8 @@
             #chat-messages {
                 background-color: #f8fafc !important;
                 color: #000 !important;
-            }
-
-            #chat-messages {
-                padding: 12px;
-                gap: 10px;
+                padding: 12px !important;
+                gap: 10px !important;
             }
 
             .msg-user,
@@ -267,12 +267,12 @@
             }
 
             .chat-container {
-                left: 8px !important;
-                right: 8px !important;
-                width: calc(100% - 16px) !important;
-                bottom: 78px !important;
-                height: calc(100vh - 95px) !important;
-                max-height: calc(100vh - 95px) !important;
+                top: 56px !important;
+                bottom: 76px !important;
+                left: 4px !important;
+                right: 4px !important;
+                width: auto !important;
+                height: auto !important;
                 border-radius: 12px !important;
             }
         }
@@ -475,19 +475,20 @@
             });
         });
 
-      
         function toggleChat() {
             const chat = $("#chat-container");
             const bubble = $("#chatbot-bubble");
+            const esMobil = window.innerWidth <= 768;
 
             if (chat.is(":visible")) {
                 chat.fadeOut(150);
-                bubble.show();
+                if (esMobil) bubble.show();
             } else {
                 chat.css("display", "flex").hide().fadeIn(150);
-                bubble.hide();  // ocultar burbuja cuando el chat está abierto
+                if (esMobil) bubble.hide();
             }
         }
+
         async function enviarMensaje() {
             const input = document.getElementById('chat-input');
             const fileInput = document.getElementById('chatFile');
