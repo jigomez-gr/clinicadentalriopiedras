@@ -186,6 +186,15 @@
                     <label class="form-label fw-bold">
                         <i class="fas fa-robot me-1 text-success"></i>Análisis IA
                     </label>
+                    <div class="mb-2">
+                        <select class="form-select form-select-sm" id="rfServicioIA" style="max-width:220px;">
+                            <option value="dental">🦷 Dental (boca/encías)</option>
+                            <option value="rx">🩻 Radiografía dental</option>
+                            <option value="derma">🔬 Dermatología</option>
+                            <option value="belleza">✨ Estética</option>
+                            <option value="general">🏥 General</option>
+                        </select>
+                    </div>
                     <div class="d-flex gap-2 flex-wrap mb-2">
                         <button type="button" class="btn btn-success btn-sm" id="rfBtnAbrirCamara">
                             <i class="fas fa-camera me-1"></i>Tomar foto con cámara
@@ -401,9 +410,18 @@
             $("#rfBtnGuardar").on("click", function () {
                 const file = document.getElementById("rfFileDocPaciente").files[0];
                 if (file) {
+                    // Fichero seleccionado manualmente
                     const reader = new FileReader();
                     reader.readAsDataURL(file);
                     reader.onload = () => enviarDatos(reader.result.split(',')[1], file.type);
+                } else if (imagenCapturadaBlob) {
+                    // Imagen capturada con cámara o analizada con IA
+                    const reader = new FileReader();
+                    reader.readAsDataURL(imagenCapturadaBlob);
+                    reader.onload = () => enviarDatos(
+                        reader.result.split(',')[1],
+                        imagenCapturadaBlob.type || "image/jpeg"
+                    );
                 } else {
                     enviarDatos(null, null);
                 }
@@ -521,10 +539,11 @@
                 }
                 Swal.fire({ title: "Analizando imagen con IA...", text: "Esto puede tardar unos segundos.", allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
+                const servicio = document.getElementById("rfServicioIA").value || "dental";
                 const form = new FormData();
                 form.append("idCita",   idEditar);
                 form.append("imagen",   blob, "captura.jpg");
-                form.append("servicio", "dental");
+                form.append("servicio", servicio);
 
                 fetch("/Citas/AnalizarImagenIA", { method: "POST", body: form })
                 .then(r => r.json())
