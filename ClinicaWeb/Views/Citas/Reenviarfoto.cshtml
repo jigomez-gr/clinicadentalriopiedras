@@ -187,25 +187,15 @@
                         <i class="fas fa-robot me-1 text-success"></i>Análisis IA
                     </label>
                     <div class="d-flex gap-2 flex-wrap mb-2">
-                        <button type="button" class="btn btn-success btn-sm" id="rfBtnAbrirCamara">
+                        <!-- En móvil capture="environment" abre la cámara trasera directamente -->
+                        <label class="btn btn-success btn-sm mb-0" for="rfInputCamara">
                             <i class="fas fa-camera me-1"></i>Tomar foto con cámara
-                        </button>
+                        </label>
+                        <input type="file" id="rfInputCamara" accept="image/*" capture="environment"
+                               class="d-none" />
                         <button type="button" class="btn btn-outline-success btn-sm" id="rfBtnAnalizarFichero">
                             <i class="fas fa-microscope me-1"></i>Analizar fichero adjunto con IA
                         </button>
-                    </div>
-                    <!-- Video cámara -->
-                    <div id="rfCamaraContainer" class="d-none mb-2">
-                        <video id="rfVideo" autoplay playsinline
-                               style="width:100%;max-height:260px;border-radius:8px;background:#000;"></video>
-                        <div class="d-flex gap-2 mt-2">
-                            <button type="button" class="btn btn-primary btn-sm" id="rfBtnCapturar">
-                                <i class="fas fa-camera me-1"></i>Capturar
-                            </button>
-                            <button type="button" class="btn btn-secondary btn-sm" id="rfBtnCerrarCamara">
-                                Cancelar
-                            </button>
-                        </div>
                     </div>
                     <!-- Preview foto capturada -->
                     <div id="rfPreviewContainer" class="d-none mb-2">
@@ -270,7 +260,6 @@
         let idEditar = 0;
         let docPacienteBase64 = null, docPacienteContentType = null;
         let docDoctorBase64   = null, docDoctorContentType   = null;
-        let streamCamara      = null;
         let imagenCapturadaBlob = null;
         const controlador = "Citas";
 
@@ -373,9 +362,10 @@
                 new bootstrap.Modal(document.getElementById('mdReenviarFoto')).show();
             });
 
-            // Cerrar cámara al cerrar modal
+            // Limpiar al cerrar modal
             document.getElementById("mdReenviarFoto").addEventListener("hidden.bs.modal", function () {
-                cerrarCamara();
+                imagenCapturadaBlob = null;
+                document.getElementById("rfPreviewContainer").classList.add("d-none");
             });
 
             // ── Ver documentos ───────────────────────────────────────────
@@ -423,41 +413,20 @@
                 .catch(() => Swal.fire("Error", "Fallo de comunicación con el servidor.", "error"));
             }
 
-            // ── Cámara ───────────────────────────────────────────────────
-            document.getElementById("rfBtnAbrirCamara").addEventListener("click", async function () {
-                try {
-                    streamCamara = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-                    document.getElementById("rfVideo").srcObject = streamCamara;
-                    document.getElementById("rfCamaraContainer").classList.remove("d-none");
-                    document.getElementById("rfPreviewContainer").classList.add("d-none");
-                } catch (e) {
-                    Swal.fire("Error", "No se pudo acceder a la cámara: " + e.message, "error");
-                }
-            });
-
-            document.getElementById("rfBtnCerrarCamara").addEventListener("click", function () {
-                cerrarCamara();
-            });
-
-            document.getElementById("rfBtnCapturar").addEventListener("click", function () {
-                const video  = document.getElementById("rfVideo");
-                const canvas = document.createElement("canvas");
-                canvas.width  = video.videoWidth;
-                canvas.height = video.videoHeight;
-                canvas.getContext("2d").drawImage(video, 0, 0);
-                canvas.toBlob(function (blob) {
-                    imagenCapturadaBlob = blob;
-                    document.getElementById("rfImgPreview").src = URL.createObjectURL(blob);
-                    document.getElementById("rfPreviewContainer").classList.remove("d-none");
-                    document.getElementById("rfCamaraContainer").classList.add("d-none");
-                    cerrarCamara();
-                }, "image/jpeg", 0.92);
+            // ── Cámara nativa móvil (capture="environment") ──────────────
+            document.getElementById("rfInputCamara").addEventListener("change", function () {
+                const file = this.files[0];
+                if (!file) return;
+                imagenCapturadaBlob = file;
+                document.getElementById("rfImgPreview").src = URL.createObjectURL(file);
+                document.getElementById("rfPreviewContainer").classList.remove("d-none");
             });
 
             document.getElementById("rfBtnRehacerFoto").addEventListener("click", function () {
                 imagenCapturadaBlob = null;
                 document.getElementById("rfPreviewContainer").classList.add("d-none");
-                document.getElementById("rfBtnAbrirCamara").click();
+                document.getElementById("rfInputCamara").value = "";
+                document.getElementById("rfInputCamara").click();
             });
 
             document.getElementById("rfBtnConfirmarIA").addEventListener("click", function () {
@@ -477,14 +446,6 @@
                 }
                 analizarConIA(file);
             });
-
-            function cerrarCamara() {
-                if (streamCamara) {
-                    streamCamara.getTracks().forEach(t => t.stop());
-                    streamCamara = null;
-                }
-                document.getElementById("rfCamaraContainer").classList.add("d-none");
-            }
 
             function analizarConIA(blob) {
                 if (idEditar <= 0) {
