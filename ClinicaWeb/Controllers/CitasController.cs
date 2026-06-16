@@ -42,11 +42,13 @@ namespace ClinicaWeb.Controllers
 
         private readonly IDoctorRepositorio _repositorioDoctor;
         private readonly ICitaRepositorio _repositorioCita;
+        private readonly IConfiguration _config;
 
-        public CitasController(IDoctorRepositorio repositorioDoctor, ICitaRepositorio repositorioCita)
+        public CitasController(IDoctorRepositorio repositorioDoctor, ICitaRepositorio repositorioCita, IConfiguration config)
         {
             _repositorioDoctor = repositorioDoctor;
             _repositorioCita = repositorioCita;
+            _config = config;
         }
 
 
@@ -2226,5 +2228,92 @@ LIMIT 1;
 
             return Json(new { ok = true });
         }
+
+        [HttpPost]
+        [Authorize(Roles = "Paciente,Doctor,Administrador")]
+        public async Task<IActionResult> AnalizarImagenIA(
+            int idCita,
+            IFormFile imagen,
+            string? contexto = null,
+            string servicio = "dental")   // dental | rx | general
+        {
+            try
+            {
+                // 1. Leer usuario
+                string idUsuario = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0";
+
+                // 2. Validar imagen
+                if (imagen == null || imagen.Length == 0)
+                    return Json(new { ok = false, msg = "Debe adjuntar una imagen." });
+
+                // 3. Leer bytes
+                byte[] imageBytes;
+                using (var ms = new MemoryStream())
+                {
+                    await imagen.CopyToAsync(ms);
+                    imageBytes = ms.ToArray();
+                }
+
+                // 4. Seleccionar endpoint según servicio
+                var iaConfig = _config.GetSection("IAConfig");
+                string urlIA = servicio switch
+                {
+                    "rx" => iaConfig["UrlAnalizarRx"] ?? "",
+                    "general" => iaConfig["UrlAnalizarGeneral"] ?? "",
+                    _ => iaConfig["UrlAnalizarDental"] ?? ""
+                };
+
+                if (string.IsNullOrEmpty(urlIA))
+                    return Json(new { ok = false, msg = "Servicio IA no configurado." });
+
+                // 5. Llamar al FastAPI del DGX con multipart/form-data
+                string diagnosticoIA;
+                using (var client = new HttpClient { Timeout = TimeSpan.FromSeconds(120) })
+                {
+                    using var form = new MultipartFormDataContent();
+
+                    var imageContent = new ByteArrayContent(imageBytes);
+                    imageContent.Headers.ContentType =
+                        new System.Net.Http.Headers.MediaTypeHeaderValue(imagen.ContentType ?? "image/jpeg");
+                    form.Add(imageContent, "imagen", imagen.FileName);
+
+                    string textoPrompt = string.IsNullOrWhiteSpace(contexto)
+                        ? "Analiza esta imagen clínica enviada por el odontólogo y describe los hallazgos observables."
+                        : contexto;
+                    form.Add(new StringContent(textoPrompt), "texto");
+
+                    var respuesta = await client.PostAsync(urlIA, form);
+                    if (!respuesta.IsSuccessStatusCode)
+                        return Json(new { ok = false, msg = $"Error servicio IA: {respuesta.StatusCode}" });
+
+                    var json = await respuesta.Content.ReadAsStringAsync();
+                    using var doc = System.Text.Json.JsonDocument.Parse(json);
+                    var root = doc.RootElement;
+
+                    if (!root.TryGetProperty("ok", out var okProp) || !okProp.GetBoolean())
+                    {
+                        string errMsg = root.TryGetProperty("error", out var e) ? e.GetString() ?? "" : "Error IA";
+                        return Json(new { ok = false, msg = errMsg });
+                    }
+
+                    diagnosticoIA = root.TryGetProperty("respuesta", out var rProp)
+                        ? rProp.GetString() ?? ""
+                        : "";
+                }
+
+                // 6. Guardar diagnóstico en BD si se pasó idCita
+                if (idCita > 0 && !string.IsNullOrWhiteSpace(diagnosticoIA))
+                {
+                    await _repositorioCita.GuardarDiagnosticoIA(idCita, diagnosticoIA);
+                }
+
+                return Json(new { ok = true, diagnostico = diagnosticoIA });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { ok = false, msg = "Error: " + ex.Message });
+            }
+        }
+
     }
 }   

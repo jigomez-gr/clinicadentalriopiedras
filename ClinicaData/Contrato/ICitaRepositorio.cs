@@ -153,5 +153,12 @@ namespace ClinicaData.Contrato
         Task<List<Cita>> ListaCitasConIndicaciones(int idUsuario);
 
         Task<string> ActualizarTipoCita(int idCita, string tipoDeCita);
+
+        // ============================================================
+        // ICitaRepositorio.cs  — añadir al final antes del cierre
+        // ============================================================
+        Task<string> GuardarDiagnosticoIA(int idCita, string diagnosticoIA);
+
+
     }
 }

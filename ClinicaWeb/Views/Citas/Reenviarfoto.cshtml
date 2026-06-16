@@ -92,6 +92,7 @@
                                 <th>Nº Cita</th>
                                 <th>Fecha Cita</th>
                                 <th>Hora Cita</th>
+                                <th>Tipo</th>
                                 <th>Especialidad</th>
                                 <th>Doctor</th>
                             </tr>
@@ -133,13 +134,17 @@
                     </div>
                 </div>
                 <div class="row g-2 mb-3">
-                    <div class="col-12 col-md-6">
+                    <div class="col-12 col-md-4">
                         <label class="form-label fw-bold">Fecha Cita</label>
                         <input type="text" class="form-control" id="rfFechaCita" disabled />
                     </div>
-                    <div class="col-12 col-md-6">
+                    <div class="col-12 col-md-4">
                         <label class="form-label fw-bold">Hora Cita</label>
                         <input type="text" class="form-control" id="rfHoraCita" disabled />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label fw-bold">Tipo de Cita</label>
+                        <input type="text" class="form-control" id="rfTipoCita" disabled />
                     </div>
                 </div>
 
@@ -242,6 +247,15 @@
                     { data: "idCita",       width: "80px" },
                     { data: "fechaCita" },
                     { data: "horaCita" },
+                    {
+                        data: "tipoDeCita",
+                        render: function(v) {
+                            const map = { P: '<span class="badge bg-primary">Presencial</span>',
+                                          T: '<span class="badge bg-warning text-dark">Telefónica</span>',
+                                          V: '<span class="badge bg-info text-dark">Virtual</span>' };
+                            return map[v] || v;
+                        }
+                    },
                     { data: "especialidad", render: d => d ? d.nombre : "" },
                     { data: "doctor",       render: d => d ? `${d.nombres} ${d.apellidos}`.trim() : "" }
                 ],
@@ -260,6 +274,19 @@
                 $("#rfEspecialidad").val(data.especialidad ? data.especialidad.nombre : "");
                 $("#rfFechaCita").val(data.fechaCita ?? "");
                 $("#rfHoraCita").val(data.horaCita ?? "");
+
+                // Tipo de cita
+                const tipoMap = { P: "Presencial", T: "Telefónica", V: "Virtual" };
+                $("#rfTipoCita").val(tipoMap[data.tipoDeCita] || data.tipoDeCita || "Presencial");
+
+                // Diagnóstico IA previo
+                if (data.diagnosticoIA) {
+                    $("#rfTextoIA").text(data.diagnosticoIA);
+                    $("#rfResultadoIA").removeClass("d-none");
+                } else {
+                    $("#rfTextoIA").text("");
+                    $("#rfResultadoIA").addClass("d-none");
+                }
 
                 // Motivo
                 $("#rfRazonCitaUsr").val(data.razonCitaUsr || "");
@@ -353,5 +380,110 @@
             for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
             window.open(URL.createObjectURL(new Blob([arr], { type: contentType })), "_blank");
         }
+
+        // ── Cámara + Análisis IA ─────────────────────────────────────────
+        let streamCamara = null;
+        let imagenCapturadaBlob = null;
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+            // Abrir cámara
+            document.getElementById("rfBtnAbrirCamara").addEventListener("click", async function () {
+                try {
+                    streamCamara = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: "environment" }
+                    });
+                    document.getElementById("rfVideo").srcObject = streamCamara;
+                    document.getElementById("rfCamaraContainer").classList.remove("d-none");
+                    document.getElementById("rfPreviewContainer").classList.add("d-none");
+                } catch (e) {
+                    Swal.fire("Error", "No se pudo acceder a la cámara: " + e.message, "error");
+                }
+            });
+
+            // Cerrar cámara
+            document.getElementById("rfBtnCerrarCamara").addEventListener("click", function () {
+                cerrarCamara();
+            });
+
+            // Capturar foto
+            document.getElementById("rfBtnCapturar").addEventListener("click", function () {
+                const video   = document.getElementById("rfVideo");
+                const canvas  = document.createElement("canvas");
+                canvas.width  = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext("2d").drawImage(video, 0, 0);
+                canvas.toBlob(function (blob) {
+                    imagenCapturadaBlob = blob;
+                    const url = URL.createObjectURL(blob);
+                    document.getElementById("rfImgPreview").src = url;
+                    document.getElementById("rfPreviewContainer").classList.remove("d-none");
+                    document.getElementById("rfCamaraContainer").classList.add("d-none");
+                    cerrarCamara();
+                }, "image/jpeg", 0.92);
+            });
+
+            // Rehacer foto
+            document.getElementById("rfBtnRehacerFoto").addEventListener("click", async function () {
+                imagenCapturadaBlob = null;
+                document.getElementById("rfPreviewContainer").classList.add("d-none");
+                document.getElementById("rfBtnAbrirCamara").click();
+            });
+
+            // Confirmar y analizar con IA (foto de cámara)
+            document.getElementById("rfBtnConfirmarIA").addEventListener("click", function () {
+                if (!imagenCapturadaBlob) return;
+                analizarConIA(imagenCapturadaBlob, "image/jpeg");
+            });
+
+            // Analizar fichero adjunto ya seleccionado con IA
+            document.getElementById("rfBtnAnalizarFichero").addEventListener("click", function () {
+                const file = document.getElementById("rfFileDocPaciente").files[0];
+                if (!file) {
+                    Swal.fire("Aviso", "Primero seleccione un fichero en el campo de documento.", "warning");
+                    return;
+                }
+                if (!file.type.startsWith("image/")) {
+                    Swal.fire("Aviso", "Solo se pueden analizar imágenes con IA.", "warning");
+                    return;
+                }
+                analizarConIA(file, file.type);
+            });
+
+            function cerrarCamara() {
+                if (streamCamara) {
+                    streamCamara.getTracks().forEach(t => t.stop());
+                    streamCamara = null;
+                }
+                document.getElementById("rfCamaraContainer").classList.add("d-none");
+            }
+
+            function analizarConIA(blob, mimeType) {
+                if (idEditar <= 0) {
+                    Swal.fire("Aviso", "No hay cita seleccionada.", "warning");
+                    return;
+                }
+                Swal.fire({ title: "Analizando imagen con IA...", text: "Esto puede tardar unos segundos.", allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+                const form = new FormData();
+                form.append("idCita",  idEditar);
+                form.append("imagen",  blob, "captura.jpg");
+                form.append("servicio", "dental");
+
+                fetch("/Citas/AnalizarImagenIA", { method: "POST", body: form })
+                .then(r => r.json())
+                .then(res => {
+                    Swal.close();
+                    if (res.ok) {
+                        document.getElementById("rfTextoIA").innerText = res.diagnostico;
+                        document.getElementById("rfResultadoIA").classList.remove("d-none");
+                        document.getElementById("rfPreviewContainer").classList.add("d-none");
+                    } else {
+                        Swal.fire("Error IA", res.msg || "Error desconocido", "error");
+                    }
+                })
+                .catch(() => Swal.fire("Error", "Fallo de comunicación con el servidor.", "error"));
+            }
+        });
     </script>
 }

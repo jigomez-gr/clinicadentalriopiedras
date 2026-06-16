@@ -292,6 +292,10 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                     UrlCitaOTelefono = dr["urlcitaotelefono"] == DBNull.Value
                                            ? null
                                            : dr["urlcitaotelefono"]?.ToString(),
+                    DiagnosticoIA = dr["diagnosticoia"] == DBNull.Value
+                    ? null
+                    : dr["diagnosticoia"]?.ToString(),
+
                 };
                 lista.Add(cita);
             }
@@ -2145,6 +2149,34 @@ AND c.fechacita <= NOW() + INTERVAL '48 hours'
                 return $"Error: {ex.Message}";
             }
         }
+        // ============================================================
+        // CitaRepositorio.cs  — añadir implementación
+        // ============================================================
+        public async Task<string> GuardarDiagnosticoIA(int idCita, string diagnosticoIA)
+        {
+            try
+            {
+                await using var conexion = new NpgsqlConnection(con.CadenaSQL);
+                await conexion.OpenAsync();
+
+                await using var cmd = new NpgsqlCommand(
+                    "SELECT public.sp_guardardiagnosticoia(@IdCita, @DiagnosticoIA);",
+                    conexion);
+
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@IdCita", idCita);
+                cmd.Parameters.AddWithValue("@DiagnosticoIA",
+                    string.IsNullOrWhiteSpace(diagnosticoIA) ? (object)DBNull.Value : diagnosticoIA);
+
+                var result = await cmd.ExecuteScalarAsync();
+                return result?.ToString() ?? "";
+            }
+            catch
+            {
+                return "Error al guardar el diagnóstico IA";
+            }
+        }
+
 
     }
 }
