@@ -187,15 +187,27 @@
                         <i class="fas fa-robot me-1 text-success"></i>Análisis IA
                     </label>
                     <div class="d-flex gap-2 flex-wrap mb-2">
-                        <!-- En móvil capture="environment" abre la cámara trasera directamente -->
-                        <label class="btn btn-success btn-sm mb-0" for="rfInputCamara">
+                        <button type="button" class="btn btn-success btn-sm" id="rfBtnAbrirCamara">
                             <i class="fas fa-camera me-1"></i>Tomar foto con cámara
-                        </label>
-                        <input type="file" id="rfInputCamara" accept="image/*" capture="environment"
-                               class="d-none" />
+                        </button>
+                        <!-- Input file para móvil (sin capture para que el usuario elija) -->
+                        <input type="file" id="rfInputCamara" accept="image/*" class="d-none" />
                         <button type="button" class="btn btn-outline-success btn-sm" id="rfBtnAnalizarFichero">
                             <i class="fas fa-microscope me-1"></i>Analizar fichero adjunto con IA
                         </button>
+                    </div>
+                    <!-- Stream cámara escritorio -->
+                    <div id="rfCamaraContainer" class="d-none mb-2">
+                        <video id="rfVideo" autoplay playsinline
+                               style="width:100%;max-height:260px;border-radius:8px;background:#000;"></video>
+                        <div class="d-flex gap-2 mt-2">
+                            <button type="button" class="btn btn-primary btn-sm" id="rfBtnCapturar">
+                                <i class="fas fa-camera me-1"></i>Capturar
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" id="rfBtnCerrarCamara">
+                                Cancelar
+                            </button>
+                        </div>
                     </div>
                     <!-- Preview foto capturada -->
                     <div id="rfPreviewContainer" class="d-none mb-2">
@@ -260,6 +272,7 @@
         let idEditar = 0;
         let docPacienteBase64 = null, docPacienteContentType = null;
         let docDoctorBase64   = null, docDoctorContentType   = null;
+        let streamCamara = null;
         let imagenCapturadaBlob = null;
         const controlador = "Citas";
 
@@ -327,7 +340,9 @@
                     document.getElementById("rfResultadoIA").classList.add("d-none");
                 }
 
-                // Limpiar preview
+                // Limpiar cámara y preview
+                cerrarStream();
+                document.getElementById("rfCamaraContainer").classList.add("d-none");
                 document.getElementById("rfPreviewContainer").classList.add("d-none");
                 imagenCapturadaBlob = null;
                 document.getElementById("rfInputCamara").value = "";
@@ -364,8 +379,10 @@
 
             // Limpiar al cerrar modal
             document.getElementById("mdReenviarFoto").addEventListener("hidden.bs.modal", function () {
+                cerrarStream();
                 imagenCapturadaBlob = null;
                 document.getElementById("rfPreviewContainer").classList.add("d-none");
+                document.getElementById("rfInputCamara").value = "";
             });
 
             // ── Ver documentos ───────────────────────────────────────────
@@ -413,7 +430,20 @@
                 .catch(() => Swal.fire("Error", "Fallo de comunicación con el servidor.", "error"));
             }
 
-            // ── Cámara nativa móvil (capture="environment") ──────────────
+            // ── Cámara: móvil usa input file, escritorio usa stream ────────
+            const esMobil = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+
+            document.getElementById("rfBtnAbrirCamara").addEventListener("click", function () {
+                if (esMobil) {
+                    // Móvil: abre selector nativo (cámara o galería)
+                    document.getElementById("rfInputCamara").click();
+                } else {
+                    // Escritorio: abre stream de vídeo
+                    abrirStreamCamara();
+                }
+            });
+
+            // Móvil: cuando el usuario selecciona/captura una foto
             document.getElementById("rfInputCamara").addEventListener("change", function () {
                 const file = this.files[0];
                 if (!file) return;
@@ -422,12 +452,57 @@
                 document.getElementById("rfPreviewContainer").classList.remove("d-none");
             });
 
+            // Escritorio: botones de stream
+            document.getElementById("rfBtnCerrarCamara").addEventListener("click", function () {
+                cerrarStream();
+            });
+
+            document.getElementById("rfBtnCapturar").addEventListener("click", function () {
+                const video  = document.getElementById("rfVideo");
+                const canvas = document.createElement("canvas");
+                canvas.width  = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext("2d").drawImage(video, 0, 0);
+                canvas.toBlob(function (blob) {
+                    imagenCapturadaBlob = blob;
+                    document.getElementById("rfImgPreview").src = URL.createObjectURL(blob);
+                    document.getElementById("rfPreviewContainer").classList.remove("d-none");
+                    document.getElementById("rfCamaraContainer").classList.add("d-none");
+                    cerrarStream();
+                }, "image/jpeg", 0.92);
+            });
+
             document.getElementById("rfBtnRehacerFoto").addEventListener("click", function () {
                 imagenCapturadaBlob = null;
                 document.getElementById("rfPreviewContainer").classList.add("d-none");
-                document.getElementById("rfInputCamara").value = "";
-                document.getElementById("rfInputCamara").click();
+                if (esMobil) {
+                    document.getElementById("rfInputCamara").value = "";
+                    document.getElementById("rfInputCamara").click();
+                } else {
+                    abrirStreamCamara();
+                }
             });
+
+            function abrirStreamCamara() {
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+                .then(function(stream) {
+                    streamCamara = stream;
+                    document.getElementById("rfVideo").srcObject = stream;
+                    document.getElementById("rfCamaraContainer").classList.remove("d-none");
+                    document.getElementById("rfPreviewContainer").classList.add("d-none");
+                })
+                .catch(function(e) {
+                    Swal.fire("Error", "No se pudo acceder a la cámara: " + e.message, "error");
+                });
+            }
+
+            function cerrarStream() {
+                if (streamCamara) {
+                    streamCamara.getTracks().forEach(t => t.stop());
+                    streamCamara = null;
+                }
+                document.getElementById("rfCamaraContainer").classList.add("d-none");
+            }
 
             document.getElementById("rfBtnConfirmarIA").addEventListener("click", function () {
                 if (!imagenCapturadaBlob) return;
