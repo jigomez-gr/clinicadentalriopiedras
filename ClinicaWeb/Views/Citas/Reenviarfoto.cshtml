@@ -327,10 +327,10 @@
                     document.getElementById("rfResultadoIA").classList.add("d-none");
                 }
 
-                // Limpiar cámara y preview
-                document.getElementById("rfCamaraContainer").classList.add("d-none");
+                // Limpiar preview
                 document.getElementById("rfPreviewContainer").classList.add("d-none");
                 imagenCapturadaBlob = null;
+                document.getElementById("rfInputCamara").value = "";
 
                 $("#rfRazonCitaUsr").val(data.razonCitaUsr || "");
 
