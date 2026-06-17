@@ -468,12 +468,8 @@
 
             // ── Guardar cambios ──────────────────────────────────────────
             $("#rfBtnGuardar").on("click", function () {
-                const file = document.getElementById("rfFileDocPaciente").files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.readAsDataURL(file);
-                    reader.onload = () => enviarDatos(reader.result.split(',')[1], file.type);
-                } else if (imagenFinalBlob) {
+                // Si hay recorte de cámara siempre tiene prioridad sobre el fichero
+                if (imagenFinalBlob) {
                     const reader = new FileReader();
                     reader.readAsDataURL(imagenFinalBlob);
                     reader.onload = () => enviarDatos(
@@ -481,7 +477,14 @@
                         imagenFinalBlob.type || "image/jpeg"
                     );
                 } else {
-                    enviarDatos(null, null);
+                    const file = document.getElementById("rfFileDocPaciente").files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.readAsDataURL(file);
+                        reader.onload = () => enviarDatos(reader.result.split(',')[1], file.type);
+                    } else {
+                        enviarDatos(null, null);
+                    }
                 }
             });
 

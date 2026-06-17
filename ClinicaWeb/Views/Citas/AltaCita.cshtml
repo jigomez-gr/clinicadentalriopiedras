@@ -10,6 +10,7 @@
 *@
 @section Estilos {
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" />
     <style>
         .ui-datepicker-highlight-disabled a {
             border: 1px solid #c5c5c5 !important;
@@ -299,6 +300,88 @@
 
             </div>
 
+            <hr />
+
+            <!-- ── Análisis IA (Cámara + Fichero) ── -->
+            <div class="mb-2">
+                <label class="col-form-label fw-bold">
+                    <i class="fas fa-robot me-1 text-success"></i>Análisis IA (opcional)
+                </label>
+                <div class="mb-2">
+                    <select class="form-select form-select-sm" id="altaServicioIA" style="max-width:220px;">
+                        <option value="dental">🦷 Dental (boca/encías)</option>
+                        <option value="rx">🩻 Radiografía dental</option>
+                        <option value="derma">🔬 Dermatología</option>
+                        <option value="belleza">✨ Estética</option>
+                        <option value="general">🏥 General</option>
+                    </select>
+                </div>
+                <ul class="nav nav-tabs nav-sm mb-2" id="altaTabsIA">
+                    <li class="nav-item">
+                        <button class="nav-link active small" data-bs-toggle="tab" data-bs-target="#altaTabCamara">
+                            <i class="fas fa-camera me-1"></i>Cámara
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link small" data-bs-toggle="tab" data-bs-target="#altaTabFichero">
+                            <i class="fas fa-file-image me-1"></i>Fichero subido
+                        </button>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <!-- Tab Cámara -->
+                    <div class="tab-pane fade show active" id="altaTabCamara">
+                        <div class="d-flex gap-2 mb-2">
+                            <button type="button" class="btn btn-success btn-sm" id="altaBtnAbrirCamara">
+                                <i class="fas fa-camera me-1"></i>Tomar foto
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm d-none" id="altaBtnCerrarCamara">
+                                Cancelar
+                            </button>
+                        </div>
+                        <div id="altaCamaraStream" class="d-none mb-2 position-relative">
+                            <video id="altaVideo" autoplay playsinline
+                                   style="width:100%;max-height:220px;border-radius:8px;background:#000;"></video>
+                            <button type="button" id="altaBtnVoltear"
+                                    class="btn btn-dark btn-sm position-absolute"
+                                    style="top:8px;right:8px;opacity:0.8;">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                            <div class="mt-1">
+                                <button type="button" class="btn btn-primary btn-sm" id="altaBtnCapturar">
+                                    <i class="fas fa-camera me-1"></i>Capturar
+                                </button>
+                            </div>
+                        </div>
+                        <div id="altaCropperWrapper" class="d-none mb-2">
+                            <div style="max-height:220px;background:#000;border-radius:8px;overflow:hidden;">
+                                <img id="altaImgCropper" src="" alt="Recortar" style="max-width:100%;display:block;" />
+                            </div>
+                            <div class="d-flex gap-2 mt-1 flex-wrap">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="altaBtnZoomIn"><i class="fas fa-search-plus"></i></button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="altaBtnZoomOut"><i class="fas fa-search-minus"></i></button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="altaBtnResetCrop"><i class="fas fa-undo"></i></button>
+                                <button type="button" class="btn btn-success btn-sm ms-auto" id="altaBtnAnalizarCamara">
+                                    <i class="fas fa-microscope me-1"></i>Analizar con IA
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Tab Fichero -->
+                    <div class="tab-pane fade" id="altaTabFichero">
+                        <p class="small text-muted mb-2">Seleccione primero el fichero de imagen en el campo de documento de arriba.</p>
+                        <button type="button" class="btn btn-success btn-sm" id="altaBtnAnalizarFichero">
+                            <i class="fas fa-microscope me-1"></i>Analizar fichero con IA
+                        </button>
+                    </div>
+                </div>
+                <!-- Resultado IA -->
+                <div id="altaResultadoIA" class="d-none mt-2">
+                    <div class="alert alert-success small py-2 mb-0" id="altaTextoIA"
+                         style="white-space:pre-line;max-height:150px;overflow-y:auto;"></div>
+                </div>
+            </div>
+
             <div class="modal-footer">
                 <button type="button"
                         class="btn btn-secondary"
@@ -367,6 +450,11 @@
         let Doctores = [];
         let DoctorHorario = [];
         const modal = "mdData";
+        let altaStreamCamara   = null;
+        let altaFacingMode     = "environment";
+        let altaCropper        = null;
+        let altaImagenBlob     = null;   // recorte cámara para guardar como doc
+        let altaDiagnosticoIA  = "";    // resultado IA para guardar con la cita
 
         let IdEspecialidadSeleccionada = 0;
         let IdDoctorSeleccionado = 0;
@@ -853,6 +941,15 @@
             const fileInput = $("#fileDocumentoCitaUsr")[0];
 
             const construirYEnviar = function (fileBase64, contentType) {
+                // Si hay recorte de cámara tiene prioridad como documento
+                if (altaImagenBlob && !fileBase64) {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(altaImagenBlob);
+                    reader.onload = function(e) {
+                        construirYEnviar(e.target.result.split(',')[1], altaImagenBlob.type || "image/jpeg");
+                    };
+                    return;
+                }
 
                 const tipoCita = document.querySelector('input[name="tipoDeCita"]:checked')?.value || "P";
 
@@ -868,7 +965,8 @@
                     RazonCitaUsr: razon,
                     DocumentoCitaUsr: fileBase64,
                     ContentType: contentType,
-                    TipoDeCita: tipoCita
+                    TipoDeCita: tipoCita,
+                    DiagnosticoIA: altaDiagnosticoIA || null
                 };
 
                 if (ES_ADMIN && ID_USUARIO_PACIENTE > 0) {
@@ -910,5 +1008,127 @@
             }
         }
 
+        // ── Lógica IA AltaCita ─────────────────────────────────────────
+        document.addEventListener("DOMContentLoaded", function () {
+
+            // Abrir cámara
+            document.getElementById("altaBtnAbrirCamara").addEventListener("click", function () {
+                altaFacingMode = "environment";
+                altaAbrirStream();
+            });
+            document.getElementById("altaBtnVoltear").addEventListener("click", function () {
+                altaFacingMode = altaFacingMode === "environment" ? "user" : "environment";
+                altaAbrirStream();
+            });
+            document.getElementById("altaBtnCerrarCamara").addEventListener("click", function () {
+                altaCerrarStream();
+                document.getElementById("altaBtnCerrarCamara").classList.add("d-none");
+            });
+            document.getElementById("altaBtnCapturar").addEventListener("click", function () {
+                const video  = document.getElementById("altaVideo");
+                const canvas = document.createElement("canvas");
+                canvas.width  = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext("2d").drawImage(video, 0, 0);
+                altaCerrarStream();
+                document.getElementById("altaCamaraStream").classList.add("d-none");
+                const img = document.getElementById("altaImgCropper");
+                img.src   = canvas.toDataURL("image/jpeg", 0.92);
+                document.getElementById("altaCropperWrapper").classList.remove("d-none");
+                if (altaCropper) { altaCropper.destroy(); altaCropper = null; }
+                altaCropper = new Cropper(img, {
+                    aspectRatio: NaN, viewMode: 1, autoCropArea: 0.85,
+                    responsive: true, movable: true, zoomable: true,
+                    cropBoxMovable: true, cropBoxResizable: true, dragMode: "move"
+                });
+            });
+            document.getElementById("altaBtnZoomIn").addEventListener("click",    () => altaCropper?.zoom(0.1));
+            document.getElementById("altaBtnZoomOut").addEventListener("click",   () => altaCropper?.zoom(-0.1));
+            document.getElementById("altaBtnResetCrop").addEventListener("click", () => altaCropper?.reset());
+
+            // Analizar recorte cámara
+            document.getElementById("altaBtnAnalizarCamara").addEventListener("click", function () {
+                if (!altaCropper) { Swal.fire("Aviso", "Primero capture una foto.", "warning"); return; }
+                const canvas = altaCropper.getCroppedCanvas({ maxWidth: 1600, maxHeight: 1600 });
+                const mx = Math.round(canvas.width * 0.10), my = Math.round(canvas.height * 0.10);
+                const full = document.createElement("canvas");
+                full.width  = canvas.width  + mx * 2;
+                full.height = canvas.height + my * 2;
+                full.getContext("2d").drawImage(canvas, mx, my);
+                full.toBlob(function(blob) {
+                    altaImagenBlob = blob;
+                    altaAnalizarBlob(blob);
+                }, "image/jpeg", 0.92);
+            });
+
+            // Analizar fichero subido
+            document.getElementById("altaBtnAnalizarFichero").addEventListener("click", function () {
+                const file = document.getElementById("fileDocumentoCitaUsr").files[0];
+                if (!file) { Swal.fire("Aviso", "Primero seleccione un fichero de imagen.", "warning"); return; }
+                if (!file.type.startsWith("image/")) { Swal.fire("Aviso", "Solo se pueden analizar imágenes con IA.", "warning"); return; }
+                altaAnalizarBlob(file);
+            });
+
+            function altaAnalizarBlob(blob) {
+                Swal.fire({ title: "Analizando con IA...", allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                const servicio = document.getElementById("altaServicioIA").value || "dental";
+                const razon    = document.getElementById("txtRazonCitaUsr")?.value || "";
+                const contexto = razon
+                    ? `El paciente describe: "${razon}". Analiza la imagen teniendo en cuenta este contexto.`
+                    : "Analiza esta imagen clínica y describe los hallazgos observables.";
+
+                const form = new FormData();
+                form.append("idCita",   0);
+                form.append("imagen",   blob, "imagen.jpg");
+                form.append("servicio", servicio);
+                form.append("contexto", contexto);
+
+                fetch("/Citas/AnalizarImagenIA", { method: "POST", body: form })
+                .then(r => r.json())
+                .then(res => {
+                    Swal.close();
+                    if (res.ok) {
+                        altaDiagnosticoIA = res.diagnostico;
+                        document.getElementById("altaTextoIA").innerText = res.diagnostico;
+                        document.getElementById("altaResultadoIA").classList.remove("d-none");
+                    } else {
+                        Swal.fire("Error IA", res.msg || "Error desconocido", "error");
+                    }
+                })
+                .catch(() => Swal.fire("Error", "Fallo de comunicación con el servidor.", "error"));
+            }
+
+            function altaAbrirStream() {
+                altaCerrarStream();
+                document.getElementById("altaCropperWrapper").classList.add("d-none");
+                navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: altaFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } }
+                }).then(function(stream) {
+                    altaStreamCamara = stream;
+                    document.getElementById("altaVideo").srcObject = stream;
+                    document.getElementById("altaCamaraStream").classList.remove("d-none");
+                    document.getElementById("altaBtnCerrarCamara").classList.remove("d-none");
+                }).catch(function(e) {
+                    Swal.fire("Error", "No se pudo acceder a la cámara: " + e.message, "error");
+                });
+            }
+
+            function altaCerrarStream() {
+                if (altaStreamCamara) { altaStreamCamara.getTracks().forEach(t => t.stop()); altaStreamCamara = null; }
+                document.getElementById("altaCamaraStream").classList.add("d-none");
+            }
+
+            // Cerrar cámara al cerrar modal
+            document.getElementById("mdData").addEventListener("hidden.bs.modal", function () {
+                altaCerrarStream();
+                if (altaCropper) { altaCropper.destroy(); altaCropper = null; }
+                altaImagenBlob   = null;
+                altaDiagnosticoIA = "";
+                document.getElementById("altaCropperWrapper").classList.add("d-none");
+                document.getElementById("altaResultadoIA").classList.add("d-none");
+                document.getElementById("altaBtnCerrarCamara").classList.add("d-none");
+            });
+        });
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 }
