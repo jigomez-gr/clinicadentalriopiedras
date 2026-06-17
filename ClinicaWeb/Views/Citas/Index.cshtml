@@ -1,10 +1,11 @@
-﻿ @{
+﻿@{
     ViewData["Title"] = "Mis Citas";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 @section Styles {
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" />
     <style>
         .acciones-container {
             display: flex;
@@ -158,6 +159,7 @@
                                 <th>Nº Cita</th>
                                 <th>Fecha Cita</th>
                                 <th>Hora Cita</th>
+                                <th>Tipo</th>
                                 <th>Especialidad</th>
                                 <th>Doctor</th>
                             </tr>
