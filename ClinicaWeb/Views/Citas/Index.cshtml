@@ -260,6 +260,106 @@
 
                 <hr />
 
+                <!-- Tipo de Cita -->
+                <div class="row g-2 mb-3">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label fw-bold">Tipo de Cita</label>
+                        <select class="form-select" id="selTipoCita">
+                            <option value="P">Presencial</option>
+                            <option value="V">Virtual</option>
+                            <option value="T">Telefónica</option>
+                        </select>
+                    </div>
+                </div>
+
+                <hr />
+
+                <!-- Análisis IA -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-robot me-1 text-success"></i>Análisis IA
+                    </label>
+                    <div class="mb-2">
+                        <select class="form-select form-select-sm" id="idxServicioIA" style="max-width:220px;">
+                            <option value="dental">🦷 Dental (boca/encías)</option>
+                            <option value="rx">🩻 Radiografía dental</option>
+                            <option value="derma">🔬 Dermatología</option>
+                            <option value="belleza">✨ Estética</option>
+                            <option value="general">🏥 General</option>
+                        </select>
+                    </div>
+                    <ul class="nav nav-tabs nav-sm mb-2">
+                        <li class="nav-item">
+                            <button class="nav-link active small" data-bs-toggle="tab" data-bs-target="#idxTabCamara">
+                                <i class="fas fa-camera me-1"></i>Cámara
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link small" data-bs-toggle="tab" data-bs-target="#idxTabFichero">
+                                <i class="fas fa-file-image me-1"></i>Fichero subido
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link small" data-bs-toggle="tab" data-bs-target="#idxTabBD">
+                                <i class="fas fa-database me-1"></i>Doc. en BD
+                            </button>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="idxTabCamara">
+                            <div class="d-flex gap-2 mb-2">
+                                <button type="button" class="btn btn-success btn-sm" id="idxBtnAbrirCamara">
+                                    <i class="fas fa-camera me-1"></i>Tomar foto
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm d-none" id="idxBtnCerrarCamara">Cancelar</button>
+                            </div>
+                            <div id="idxCamaraStream" class="d-none mb-2 position-relative">
+                                <video id="idxVideo" autoplay playsinline
+                                       style="width:100%;max-height:240px;border-radius:8px;background:#000;"></video>
+                                <button type="button" id="idxBtnVoltear" class="btn btn-dark btn-sm position-absolute" style="top:8px;right:8px;opacity:0.8;">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                                <div class="mt-1">
+                                    <button type="button" class="btn btn-primary btn-sm" id="idxBtnCapturar">
+                                        <i class="fas fa-camera me-1"></i>Capturar
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="idxCropperWrapper" class="d-none mb-2">
+                                <div style="max-height:240px;background:#000;border-radius:8px;overflow:hidden;">
+                                    <img id="idxImgCropper" src="" alt="Recortar" style="max-width:100%;display:block;" />
+                                </div>
+                                <div class="d-flex gap-2 mt-1 flex-wrap">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="idxBtnZoomIn"><i class="fas fa-search-plus"></i></button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="idxBtnZoomOut"><i class="fas fa-search-minus"></i></button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="idxBtnResetCrop"><i class="fas fa-undo"></i></button>
+                                    <button type="button" class="btn btn-success btn-sm ms-auto" id="idxBtnAnalizarCamara">
+                                        <i class="fas fa-microscope me-1"></i>Analizar con IA
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="idxTabFichero">
+                            <p class="small text-muted mb-2">Seleccione primero el fichero de imagen en el campo de documento de arriba.</p>
+                            <button type="button" class="btn btn-success btn-sm" id="idxBtnAnalizarFichero">
+                                <i class="fas fa-microscope me-1"></i>Analizar fichero con IA
+                            </button>
+                        </div>
+                        <div class="tab-pane fade" id="idxTabBD">
+                            <p class="small text-muted mb-2" id="idxLblBDInfo">Se analizará el documento guardado en BD.</p>
+                            <button type="button" class="btn btn-success btn-sm" id="idxBtnAnalizarBD" disabled>
+                                <i class="fas fa-database me-1"></i>Analizar doc. en BD con IA
+                            </button>
+                        </div>
+                    </div>
+                    <div id="idxResultadoIA" class="d-none mt-2">
+                        <div class="alert alert-success small py-2 mb-0" id="idxTextoIA"
+                             style="white-space:pre-line;max-height:180px;overflow-y:auto;"></div>
+                    </div>
+                </div>
+
+                <hr />
+
                 <!-- Valoración -->
                 <div class="mb-3">
                     <label class="form-label fw-bold">Valoración del doctor (0-5 estrellas)</label>
@@ -393,6 +493,8 @@
         let tablaData, modalReproObj, idEditar = 0;
         const controlador = "Citas";
         let docPacienteBase64 = null, docPacienteContentType = null;
+        let idxStreamCamara = null, idxFacingMode = "environment";
+        let idxCropper = null, idxImagenBlob = null;
 
         document.addEventListener("DOMContentLoaded", function () {
             modalReproObj = new bootstrap.Modal(document.getElementById('mdReproPaciente'));
@@ -426,7 +528,7 @@
                         orderable: false,
                         width: "115px"
                     },
-                     { data: "idCita", width: "80px" },
+                    { data: "idCita", width: "80px" },
                     { data: "fechaCita" },
                     { data: "horaCita" },
                     {
@@ -489,9 +591,26 @@
             $("#selCitaConfirmada").val((data.citaConfirmada || "N").toUpperCase());
             $("#txtFechaConfirmacion").val(formatFecha(data.fechaConfirmacion));
 
+            // Tipo cita
+            $("#selTipoCita").val(data.tipoDeCita || "P");
+
             // Motivo / doc
             $("#txtRazonCitaUsr").val(data.razonCitaUsr);
             $("#txtIndicacionesDoctor").val(data.indicaciones);
+
+            // BD IA
+            if (data.documentoCitaUsr) {
+                const esImagen = (data.contentType || "").startsWith("image/");
+                $("#idxBtnAnalizarBD").prop("disabled", !esImagen);
+                $("#idxLblBDInfo").text(esImagen ? "Se analizará la imagen guardada en BD." : "El documento en BD no es una imagen.");
+            } else {
+                $("#idxBtnAnalizarBD").prop("disabled", true);
+                $("#idxLblBDInfo").text("No hay documento en BD para esta cita.");
+            }
+            idxImagenBlob = null;
+            if (idxCropper) { idxCropper.destroy(); idxCropper = null; }
+            $("#idxCropperWrapper, #idxCamaraStream, #idxResultadoIA").addClass("d-none");
+            $("#idxBtnCerrarCamara").addClass("d-none");
 
             if (data.documentoCitaUsr) {
                 docPacienteBase64      = data.documentoCitaUsr;
@@ -522,13 +641,19 @@
 
         // ── Guardar paciente ──────────────────────────────────────────────────
         $("#btnGuardarPaciente").on("click", async function () {
-            const file = document.getElementById("fileDocPaciente").files[0];
-            if (file) {
+            if (idxImagenBlob) {
                 const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => enviarDatos(reader.result.split(',')[1], file.type);
+                reader.readAsDataURL(idxImagenBlob);
+                reader.onload = () => enviarDatos(reader.result.split(',')[1], idxImagenBlob.type || "image/jpeg");
             } else {
-                enviarDatos(null, null);
+                const file = document.getElementById("fileDocPaciente").files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => enviarDatos(reader.result.split(',')[1], file.type);
+                } else {
+                    enviarDatos(null, null);
+                }
             }
         });
 
@@ -550,7 +675,8 @@
                     valDoctorCita,
                     opinionDoctorYClinica,
                     citaConfirmada,
-                    fechaConfirmacion
+                    fechaConfirmacion,
+                    tipoDeCita: $("#selTipoCita").val() || "P"
                 })
             }).then(() => { $("#mdData").modal("hide"); tablaData.ajax.reload(); });
         }
@@ -564,9 +690,14 @@
             $("#fileDocPaciente").val("");
             $("#txtIdCita, #txtEstadoCita, #txtFechaConfirmacion").val("");
             $("#selCitaConfirmada").val("N");
+            $("#selTipoCita").val("P");
             $("input[name='valDoctorCita']").prop("checked", false);
             $("#star3").prop("checked", true);
             $("#txtOpinionDoctorYClinica").val("");
+            idxImagenBlob = null;
+            if (idxCropper) { idxCropper.destroy(); idxCropper = null; }
+            $("#idxCropperWrapper, #idxCamaraStream, #idxResultadoIA").addClass("d-none");
+            $("#idxBtnCerrarCamara").addClass("d-none");
         }
 
         // ── Cancelar cita ─────────────────────────────────────────────────────
@@ -698,5 +829,113 @@
                 }
             }, 3000);
         }
+
+        // ── Lógica IA ─────────────────────────────────────────────────────────
+        document.addEventListener("DOMContentLoaded", function () {
+            document.getElementById("idxBtnAbrirCamara").addEventListener("click", function () {
+                idxFacingMode = "environment"; idxAbrirStream();
+            });
+            document.getElementById("idxBtnVoltear").addEventListener("click", function () {
+                idxFacingMode = idxFacingMode === "environment" ? "user" : "environment"; idxAbrirStream();
+            });
+            document.getElementById("idxBtnCerrarCamara").addEventListener("click", function () {
+                idxCerrarStream();
+                document.getElementById("idxBtnCerrarCamara").classList.add("d-none");
+            });
+            document.getElementById("idxBtnCapturar").addEventListener("click", function () {
+                const video = document.getElementById("idxVideo");
+                const canvas = document.createElement("canvas");
+                canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+                canvas.getContext("2d").drawImage(video, 0, 0);
+                idxCerrarStream();
+                document.getElementById("idxCamaraStream").classList.add("d-none");
+                const img = document.getElementById("idxImgCropper");
+                img.src = canvas.toDataURL("image/jpeg", 0.92);
+                document.getElementById("idxCropperWrapper").classList.remove("d-none");
+                if (idxCropper) { idxCropper.destroy(); idxCropper = null; }
+                idxCropper = new Cropper(img, {
+                    aspectRatio: NaN, viewMode: 1, autoCropArea: 0.85,
+                    responsive: true, movable: true, zoomable: true,
+                    cropBoxMovable: true, cropBoxResizable: true, dragMode: "move"
+                });
+            });
+            document.getElementById("idxBtnZoomIn").addEventListener("click",    () => idxCropper?.zoom(0.1));
+            document.getElementById("idxBtnZoomOut").addEventListener("click",   () => idxCropper?.zoom(-0.1));
+            document.getElementById("idxBtnResetCrop").addEventListener("click", () => idxCropper?.reset());
+            document.getElementById("idxBtnAnalizarCamara").addEventListener("click", function () {
+                if (!idxCropper) { Swal.fire("Aviso", "Primero capture una foto.", "warning"); return; }
+                const canvas = idxCropper.getCroppedCanvas({ maxWidth: 1600, maxHeight: 1600 });
+                const mx = Math.round(canvas.width * 0.10), my = Math.round(canvas.height * 0.10);
+                const full = document.createElement("canvas");
+                full.width = canvas.width + mx * 2; full.height = canvas.height + my * 2;
+                full.getContext("2d").drawImage(canvas, mx, my);
+                full.toBlob(function(blob) { idxImagenBlob = blob; idxAnalizarBlob(blob); }, "image/jpeg", 0.92);
+            });
+            document.getElementById("idxBtnAnalizarFichero").addEventListener("click", function () {
+                const file = document.getElementById("fileDocPaciente").files[0];
+                if (!file) { Swal.fire("Aviso", "Primero seleccione un fichero de imagen.", "warning"); return; }
+                if (!file.type.startsWith("image/")) { Swal.fire("Aviso", "Solo se pueden analizar imágenes con IA.", "warning"); return; }
+                idxAnalizarBlob(file);
+            });
+            document.getElementById("idxBtnAnalizarBD").addEventListener("click", function () {
+                if (!docPacienteBase64) return;
+                const bin = atob(docPacienteBase64), arr = new Uint8Array(bin.length);
+                for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+                idxAnalizarBlob(new Blob([arr], { type: docPacienteContentType || "image/jpeg" }));
+            });
+            function idxAnalizarBlob(blob) {
+                if (idEditar <= 0) { Swal.fire("Aviso", "No hay cita seleccionada.", "warning"); return; }
+                Swal.fire({ title: "Analizando con IA...", allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                const servicio = document.getElementById("idxServicioIA").value || "dental";
+                const razon    = document.getElementById("txtRazonCitaUsr")?.value || "";
+                const contexto = razon
+                    ? `El paciente describe: "${razon}". Analiza la imagen teniendo en cuenta este contexto.`
+                    : "Analiza esta imagen clínica y describe los hallazgos observables.";
+                const form = new FormData();
+                form.append("idCita", idEditar);
+                form.append("imagen", blob, "imagen.jpg");
+                form.append("servicio", servicio);
+                form.append("contexto", contexto);
+                fetch("/Citas/AnalizarImagenIA", { method: "POST", body: form })
+                .then(r => r.json())
+                .then(res => {
+                    Swal.close();
+                    if (res.ok) {
+                        document.getElementById("idxTextoIA").innerText = res.diagnostico;
+                        document.getElementById("idxResultadoIA").classList.remove("d-none");
+                    } else {
+                        Swal.fire("Error IA", res.msg || "Error desconocido", "error");
+                    }
+                })
+                .catch(() => Swal.fire("Error", "Fallo de comunicación con el servidor.", "error"));
+            }
+            function idxAbrirStream() {
+                idxCerrarStream();
+                document.getElementById("idxCropperWrapper").classList.add("d-none");
+                navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: idxFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } }
+                }).then(function(stream) {
+                    idxStreamCamara = stream;
+                    document.getElementById("idxVideo").srcObject = stream;
+                    document.getElementById("idxCamaraStream").classList.remove("d-none");
+                    document.getElementById("idxBtnCerrarCamara").classList.remove("d-none");
+                }).catch(function(e) {
+                    Swal.fire("Error", "No se pudo acceder a la cámara: " + e.message, "error");
+                });
+            }
+            function idxCerrarStream() {
+                if (idxStreamCamara) { idxStreamCamara.getTracks().forEach(t => t.stop()); idxStreamCamara = null; }
+                document.getElementById("idxCamaraStream").classList.add("d-none");
+            }
+            document.getElementById("mdData").addEventListener("hidden.bs.modal", function () {
+                idxCerrarStream();
+                if (idxCropper) { idxCropper.destroy(); idxCropper = null; }
+                idxImagenBlob = null;
+                document.getElementById("idxCropperWrapper").classList.add("d-none");
+                document.getElementById("idxResultadoIA").classList.add("d-none");
+                document.getElementById("idxBtnCerrarCamara").classList.add("d-none");
+            });
+        });
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 }
