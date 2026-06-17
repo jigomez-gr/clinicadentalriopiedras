@@ -72,7 +72,7 @@
 
         /* comienzo cambio ggg */
         /* MEJORA DE LEGIBILIDAD: Cuando la tarjeta se pone azul (bg-primary)
-                           forzamos a que todo el texto e iconos sean blancos */
+                                   forzamos a que todo el texto e iconos sean blancos */
         .card-doctor.bg-primary,
         .card-doctor.bg-primary h6,
         .card-doctor.bg-primary .resumen-ai-mini,
@@ -231,6 +231,38 @@
                                id="txtHoraCita"
                                autocomplete="off"
                                disabled />
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col-sm-12">
+                        <label class="col-form-label fw-bold">
+                            Tipo de Cita
+                            <small class="text-muted d-block">¿Cómo será la consulta?</small>
+                        </label>
+                        <div class="d-flex gap-3 mt-1">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tipoDeCita"
+                                       id="tipoCitaP" value="P" checked />
+                                <label class="form-check-label" for="tipoCitaP">
+                                    <i class="fas fa-hospital me-1 text-primary"></i>Presencial
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tipoDeCita"
+                                       id="tipoCitaV" value="V" />
+                                <label class="form-check-label" for="tipoCitaV">
+                                    <i class="fas fa-video me-1 text-info"></i>Virtual
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tipoDeCita"
+                                       id="tipoCitaT" value="T" />
+                                <label class="form-check-label" for="tipoCitaT">
+                                    <i class="fas fa-phone me-1 text-success"></i>Telefónica
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -822,6 +854,8 @@
 
             const construirYEnviar = function (fileBase64, contentType) {
 
+                const tipoCita = document.querySelector('input[name="tipoDeCita"]:checked')?.value || "P";
+
                 let objeto = {
                     DoctorHorarioDetalle: {
                         IdDoctorHorarioDetalle: IdHoraSeleccionado
@@ -833,7 +867,8 @@
                     OrigenCita: ES_ADMIN ? "ADMIN" : "WEB",
                     RazonCitaUsr: razon,
                     DocumentoCitaUsr: fileBase64,
-                    ContentType: contentType
+                    ContentType: contentType,
+                    TipoDeCita: tipoCita
                 };
 
                 if (ES_ADMIN && ID_USUARIO_PACIENTE > 0) {

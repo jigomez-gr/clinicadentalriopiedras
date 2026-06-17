@@ -173,32 +173,33 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
             }
         }
 
+        // ============================================================
+        // CitaRepositorio.cs — método Guardar actualizado
+        // Llama a sp_guardarcita_con_tipo con el parámetro TipoDeCita
+        // ============================================================
         public async Task<string> Guardar(Cita objeto)
         {
             try
             {
                 await using var conexion = new NpgsqlConnection(con.CadenaSQL);
                 await conexion.OpenAsync();
-
                 await using var cmd = new NpgsqlCommand(
-                    "SELECT public.sp_guardarcita(" +
+                    "SELECT public.sp_guardarcita_con_tipo(" +
                     "@IdUsuario, @IdDoctorHorarioDetalle, @IdEstadoCita, @FechaCita, " +
-                    "@OrigenCita, @RazonCitaUsr, @DocumentoCitaUsr, @ContentType);",
+                    "@OrigenCita, @RazonCitaUsr, @DocumentoCitaUsr, @ContentType, @TipoDeCita);",
                     conexion);
-
                 cmd.CommandType = CommandType.Text;
 
-                cmd.Parameters.AddWithValue("@IdUsuario", objeto.Usuario.IdUsuario);
-                cmd.Parameters.AddWithValue("@IdDoctorHorarioDetalle", objeto.DoctorHorarioDetalle.IdDoctorHorarioDetalle);
-                cmd.Parameters.AddWithValue("@IdEstadoCita", objeto.EstadoCita.IdEstadoCita);
-
-                // p_fechacita es character varying y la función hace to_date(..., 'DD/MM/YYYY')
+                cmd.Parameters.AddWithValue("@IdUsuario",
+                    objeto.Usuario.IdUsuario);
+                cmd.Parameters.AddWithValue("@IdDoctorHorarioDetalle",
+                    objeto.DoctorHorarioDetalle.IdDoctorHorarioDetalle);
+                cmd.Parameters.AddWithValue("@IdEstadoCita",
+                    objeto.EstadoCita.IdEstadoCita);
                 cmd.Parameters.AddWithValue("@FechaCita",
                     string.IsNullOrWhiteSpace(objeto.FechaCita) ? (object)DBNull.Value : objeto.FechaCita);
-
                 cmd.Parameters.AddWithValue("@OrigenCita",
                     string.IsNullOrWhiteSpace(objeto.OrigenCita) ? "WEB" : objeto.OrigenCita);
-
                 cmd.Parameters.AddWithValue("@RazonCitaUsr",
                     string.IsNullOrWhiteSpace(objeto.RazonCitaUsr) ? (object)DBNull.Value : objeto.RazonCitaUsr);
 
@@ -210,6 +211,10 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 cmd.Parameters.AddWithValue("@ContentType",
                     string.IsNullOrWhiteSpace(objeto.ContentType) ? (object)DBNull.Value : objeto.ContentType);
 
+                // Nuevo parámetro — por defecto 'P' si no viene informado
+                cmd.Parameters.AddWithValue("@TipoDeCita",
+                    string.IsNullOrWhiteSpace(objeto.TipoDeCita) ? "P" : objeto.TipoDeCita.Trim().ToUpper());
+
                 var result = await cmd.ExecuteScalarAsync();
                 return result?.ToString() ?? "";
             }
@@ -218,6 +223,7 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                 return "Error al guardar la cita";
             }
         }
+
         public async Task<List<Cita>> ListaCitasPendiente(int IdUsuario)
         {
             var lista = new List<Cita>();

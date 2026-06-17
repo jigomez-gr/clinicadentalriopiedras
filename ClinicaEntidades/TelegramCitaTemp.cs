@@ -57,5 +57,12 @@ namespace ClinicaEntidades
                                                    // --- PROPIEDADES PARA MAPEO DIRECTO DESDE LA VISTA (SIN DTO) ---
         public string? Notas { get; set; }        // Recibe lo que el JS envía como 'Notas'
         public string? ImagenBase64 { get; set; } // Recibe lo que el JS envía como 'ImagenBase64'
+        // ===== CAMPOS TIPO, PRECIO Y PAGO =====
+        public string TipoDeCita { get; set; } = "P";           // tipodecita char(1) DEFAULT 'P'
+        public decimal? Precio { get; set; }                     // precio numeric(10,2) NULL
+        public string Pagada { get; set; } = "N";               // pagada varchar(1) DEFAULT 'N'
+        public string? UrlCitaOTelefono { get; set; }           // urlcitaotelefono varchar(80) NULL
+        public string? DiagnosticoIA { get; set; }              // diagnosticoia text NULL
+        public string? ResumenCitaVirtual { get; set; }         // resumencitavirtual text NULL
     }
 }
