@@ -426,9 +426,20 @@
                         orderable: false,
                         width: "115px"
                     },
-                     { data: "idCita", width: "80px" },   // ← AÑADIR
+                     { data: "idCita", width: "80px" },
                     { data: "fechaCita" },
                     { data: "horaCita" },
+                    {
+                        data: "tipoDeCita",
+                        render: function(v) {
+                            const map = {
+                                P: '<span class="badge bg-primary">Presencial</span>',
+                                T: '<span class="badge bg-warning text-dark">Telefónica</span>',
+                                V: '<span class="badge bg-info text-dark">Virtual</span>'
+                            };
+                            return map[v] || v || '';
+                        }
+                    },
                     { data: "especialidad", render: d => d ? d.nombre : "" },
                     { data: "doctor",       render: d => d ? `${d.nombres} ${d.apellidos}`.trim() : "" }
                 ],
