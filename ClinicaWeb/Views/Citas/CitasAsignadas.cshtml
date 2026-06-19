@@ -360,10 +360,13 @@
                             <div style="max-height:240px;background:#000;border-radius:8px;overflow:hidden;">
                                 <img id="docImgCropper" src="" alt="Recortar" style="max-width:100%;display:block;" />
                             </div>
-                            <div class="d-flex gap-2 mt-1 flex-wrap">
-                                <button type="button" class="btn btn-outline-secondary btn-sm" id="docBtnZoomIn"><i class="fas fa-search-plus"></i></button>
-                                <button type="button" class="btn btn-outline-secondary btn-sm" id="docBtnZoomOut"><i class="fas fa-search-minus"></i></button>
-                                <button type="button" class="btn btn-outline-secondary btn-sm" id="docBtnResetCrop"><i class="fas fa-undo"></i></button>
+                            <!-- Slider zoom vertical -->
+                            <div class="d-flex gap-2 mt-2 align-items-center flex-wrap">
+                                <input type="range" id="docSliderZoom" min="0" max="3" step="0.05" value="0"
+                                       class="form-range" style="max-width:180px;"
+                                       title="Zoom" />
+                                <small class="text-muted">Zoom</small>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="docBtnResetCrop"><i class="fas fa-undo"></i> Reset</button>
                                 <button type="button" class="btn btn-success btn-sm ms-auto" id="docBtnAnalizarCamara">
                                     <i class="fas fa-microscope me-1"></i>Analizar con IA
                                 </button>
@@ -442,6 +445,7 @@
         var docCropper = null, docImagenBlob = null;
         var urlCalcom = null;
         var docPacienteBase64 = null, docPacienteContentType = null;
+        var docIdCitaSeleccionada = 0;
         (function () {
             "use strict";
             window.openHelpVideo = function (fileName) {
@@ -547,6 +551,7 @@
                 $("#tbData tbody").on("click", ".btn-indicaciones", function () {
                     const data = tablaData.row($(this).closest('tr')).data();
                     idCitaSeleccionada = data.idCita;
+                    docIdCitaSeleccionada = data.idCita;
 
                     $("#txtNumeroCita").val(data.idCita || "");
                     $("#txtPaciente").val(((data.usuario?.nombre) || "") + " " + ((data.usuario?.apellido) || ""));
@@ -559,9 +564,9 @@
                     // Tipo cita + botón Cal.com
                     const tipoMap = { P: "Presencial", T: "Telefónica", V: "Virtual" };
                     $("#txtTipoCita").val(tipoMap[data.tipoDeCita] || data.tipoDeCita || "Presencial");
-                    const calUid = data.calBookingUid || null;
+                    const calUid = data.calBookingUid || data.cal_booking_uid || null;
                     urlCalcom = calUid ? `https://app.cal.eu/video/${calUid}` : (data.urlCitaoTelefono || null);
-                    if (data.tipoDeCita === "V" && urlCalcom) {
+                    if (urlCalcom) {
                         $("#btnUnirseCalcom").removeClass("d-none").attr("href", urlCalcom);
                     } else {
                         $("#btnUnirseCalcom").addClass("d-none");
@@ -751,9 +756,19 @@
                     cropBoxMovable: true, cropBoxResizable: true, dragMode: "move"
                 });
             });
-            document.getElementById("docBtnZoomIn").addEventListener("click",    () => docCropper?.zoom(0.1));
-            document.getElementById("docBtnZoomOut").addEventListener("click",   () => docCropper?.zoom(-0.1));
-            document.getElementById("docBtnResetCrop").addEventListener("click", () => docCropper?.reset());
+            document.getElementById("docSliderZoom").addEventListener("input", function() {
+                if (!docCropper) return;
+                const ratio = parseFloat(this.value);
+                const imgData = docCropper.getImageData();
+                // zoom relativo al tamaño natural
+                docCropper.zoomTo(ratio, { x: imgData.left + imgData.width/2, y: imgData.top + imgData.height/2 });
+            });
+            document.getElementById("docBtnResetCrop").addEventListener("click", function() {
+                if (docCropper) {
+                    docCropper.reset();
+                    document.getElementById("docSliderZoom").value = 0;
+                }
+            });
 
             document.getElementById("docBtnAnalizarCamara").addEventListener("click", function () {
                 if (!docCropper) { Swal.fire("Aviso", "Primero capture una foto.", "warning"); return; }
@@ -810,7 +825,7 @@
             });
 
             function docAnalizarBlob(blob) {
-                if (!idCitaSeleccionada) { Swal.fire("Aviso", "No hay cita seleccionada.", "warning"); return; }
+                if (!docIdCitaSeleccionada) { Swal.fire("Aviso", "No hay cita seleccionada.", "warning"); return; }
                 Swal.fire({ title: "Analizando con IA...", allowOutsideClick: false, didOpen: () => Swal.showLoading() });
                 const servicio = document.getElementById("docServicioIA").value || "dental";
                 const razon    = document.getElementById("txtRazonCitaUsr")?.value || "";
@@ -818,7 +833,7 @@
                     ? `El paciente describe: "${razon}". Analiza la imagen teniendo en cuenta este contexto.`
                     : "Analiza esta imagen clínica y describe los hallazgos observables.";
                 const form = new FormData();
-                form.append("idCita", idCitaSeleccionada);
+                form.append("idCita", docIdCitaSeleccionada);
                 form.append("imagen", blob, "imagen.jpg");
                 form.append("servicio", servicio);
                 form.append("contexto", contexto);
@@ -860,6 +875,8 @@
                 if (docCropper) { docCropper.destroy(); docCropper = null; }
                 docImagenBlob = null; urlCalcom = null;
                 docDoctorBase64 = null; docDoctorContentType = null;
+                document.getElementById("docSliderZoom").value = 0;
+                docIdCitaSeleccionada = 0;
                 document.getElementById("docCropperWrapper").classList.add("d-none");
                 document.getElementById("docResultadoIA").classList.add("d-none");
                 document.getElementById("docBtnCerrarCamara").classList.add("d-none");

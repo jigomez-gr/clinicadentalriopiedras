@@ -240,7 +240,9 @@ namespace ClinicaData.Implementacion
                     DocumentoCitaUsr = dr["DocumentoCitaUsr"] == DBNull.Value ? null : (byte[])dr["DocumentoCitaUsr"],
                     DocIndicacionesDoctor = dr["DocIndicacionesDoctor"] == DBNull.Value ? null : (byte[])dr["DocIndicacionesDoctor"],
                     ContentTypeDoctor = dr["ContentType_Doctor"] == DBNull.Value ? null : dr["ContentType_Doctor"].ToString(),
-                    TipoDeCita = dr["TipoDeCita"] == DBNull.Value ? "P" : dr["TipoDeCita"].ToString()!
+                    TipoDeCita = dr["TipoDeCita"] == DBNull.Value ? "P" : dr["TipoDeCita"].ToString()!,
+                    CalBookingUid = dr["CalBookingUid"] == DBNull.Value ? null : dr["CalBookingUid"].ToString(),
+                    UrlCitaoTelefono = dr["UrlCitaoTelefono"] == DBNull.Value ? null : dr["UrlCitaoTelefono"].ToString()
                 };
                 lista.Add(cita);
             }
