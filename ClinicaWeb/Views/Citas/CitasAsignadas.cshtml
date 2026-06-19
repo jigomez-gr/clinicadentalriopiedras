@@ -188,9 +188,9 @@
                         <input type="text" class="form-control" id="txtTipoCita" disabled />
                     </div>
                     <div class="col-12 col-md-3 d-flex align-items-end">
-                        <button type="button" class="btn btn-info btn-sm w-100 d-none" id="btnUnirseCalcom">
+                        <a href="#" target="_blank" class="btn btn-info btn-sm w-100 d-none" id="btnUnirseCalcom">
                             <i class="fas fa-video me-1"></i>Unirse a reunión virtual
-                        </button>
+                        </a>
                     </div>
                 </div>
 
@@ -324,7 +324,12 @@
                     </li>
                     <li class="nav-item">
                         <button class="nav-link small" data-bs-toggle="tab" data-bs-target="#docTabBD">
-                            <i class="fas fa-database me-1"></i>Doc. en BD
+                            <i class="fas fa-database me-1"></i>Doc. paciente BD
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link small" data-bs-toggle="tab" data-bs-target="#docTabDoctorBD">
+                            <i class="fas fa-user-md me-1"></i>Doc. doctor BD
                         </button>
                     </li>
                 </ul>
@@ -396,11 +401,18 @@
                             <i class="fas fa-microscope me-1"></i>Analizar fichero con IA
                         </button>
                     </div>
-                    <!-- Tab BD -->
+                    <!-- Tab BD Paciente -->
                     <div class="tab-pane fade" id="docTabBD">
                         <p class="small text-muted mb-2" id="docLblBDInfo">Se analizará el documento del paciente en BD.</p>
                         <button type="button" class="btn btn-success btn-sm" id="docBtnAnalizarBD" disabled>
                             <i class="fas fa-database me-1"></i>Analizar doc. paciente con IA
+                        </button>
+                    </div>
+                    <!-- Tab BD Doctor -->
+                    <div class="tab-pane fade" id="docTabDoctorBD">
+                        <p class="small text-muted mb-2" id="docLblDoctorBDInfo">Se analizará el documento del doctor en BD.</p>
+                        <button type="button" class="btn btn-success btn-sm" id="docBtnAnalizarDoctorBD" disabled>
+                            <i class="fas fa-user-md me-1"></i>Analizar doc. doctor con IA
                         </button>
                     </div>
                 </div>
@@ -425,6 +437,11 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
+        // Variables globales cámara/cropper/IA
+        var docStreamCamara = null, docFacingMode = "environment";
+        var docCropper = null, docImagenBlob = null;
+        var urlCalcom = null;
+        var docPacienteBase64 = null, docPacienteContentType = null;
         (function () {
             "use strict";
             window.openHelpVideo = function (fileName) {
@@ -456,13 +473,10 @@
             const controlador = "Doctor";
             const modal        = "mdData";
 
-            let docPacienteBase64      = null;
-            let docPacienteContentType = null;
-            let docDoctorBase64        = null;
-            let docDoctorContentType   = null;
-            let docStreamCamara = null, docFacingMode = "environment";
-            let docCropper = null, docImagenBlob = null;
-            let urlCalcom = null;
+            // Las variables de doc son globales (ver arriba del script)
+            var docDoctorBase64        = null;
+            var docDoctorContentType   = null;
+
 
             $(document).ready(function () {
                 initTooltips();
@@ -545,7 +559,8 @@
                     // Tipo cita + botón Cal.com
                     const tipoMap = { P: "Presencial", T: "Telefónica", V: "Virtual" };
                     $("#txtTipoCita").val(tipoMap[data.tipoDeCita] || data.tipoDeCita || "Presencial");
-                    urlCalcom = data.urlCitaoTelefono || null;
+                    const calUid = data.calBookingUid || null;
+                    urlCalcom = calUid ? `https://app.cal.eu/video/${calUid}` : (data.urlCitaoTelefono || null);
                     if (data.tipoDeCita === "V" && urlCalcom) {
                         $("#btnUnirseCalcom").removeClass("d-none").attr("href", urlCalcom);
                     } else {
@@ -560,6 +575,15 @@
                     } else {
                         $("#docBtnAnalizarBD").prop("disabled", true);
                         $("#docLblBDInfo").text("No hay documento del paciente en BD.");
+                    }
+                    // Doc doctor BD
+                    if (data.docIndicacionesDoctor) {
+                        const esImagenDoc = (data.contentTypeDoctor || "").startsWith("image/");
+                        $("#docBtnAnalizarDoctorBD").prop("disabled", !esImagenDoc);
+                        $("#docLblDoctorBDInfo").text(esImagenDoc ? "Se analizará el documento del doctor en BD." : "El doc. del doctor no es una imagen.");
+                    } else {
+                        $("#docBtnAnalizarDoctorBD").prop("disabled", true);
+                        $("#docLblDoctorBDInfo").text("No hay documento del doctor en BD.");
                     }
                     docImagenBlob = null;
                     if (docCropper) { docCropper.destroy(); docCropper = null; }
@@ -621,11 +645,6 @@
                         : "Escriba las indicaciones para el paciente y adjunte un documento si lo desea.");
 
                     $("#" + modal).modal("show");
-                });
-
-                // ── Botón Cal.com ────────────────────────────────────────────
-                $("#btnUnirseCalcom").on("click", function () {
-                    if (urlCalcom) window.open(urlCalcom, "_blank");
                 });
 
                 // ── Ver documentos ────────────────────────────────────────────
@@ -783,6 +802,13 @@
                 docAnalizarBlob(new Blob([arr], { type: docPacienteContentType || "image/jpeg" }));
             });
 
+            document.getElementById("docBtnAnalizarDoctorBD").addEventListener("click", function () {
+                if (!docDoctorBase64) return;
+                const bin = atob(docDoctorBase64), arr = new Uint8Array(bin.length);
+                for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+                docAnalizarBlob(new Blob([arr], { type: docDoctorContentType || "image/jpeg" }));
+            });
+
             function docAnalizarBlob(blob) {
                 if (!idCitaSeleccionada) { Swal.fire("Aviso", "No hay cita seleccionada.", "warning"); return; }
                 Swal.fire({ title: "Analizando con IA...", allowOutsideClick: false, didOpen: () => Swal.showLoading() });
@@ -833,6 +859,7 @@
                 docCerrarStream();
                 if (docCropper) { docCropper.destroy(); docCropper = null; }
                 docImagenBlob = null; urlCalcom = null;
+                docDoctorBase64 = null; docDoctorContentType = null;
                 document.getElementById("docCropperWrapper").classList.add("d-none");
                 document.getElementById("docResultadoIA").classList.add("d-none");
                 document.getElementById("docBtnCerrarCamara").classList.add("d-none");
