@@ -48,5 +48,7 @@ namespace ClinicaEntidades
         public string? UrlCitaOTelefono { get; set; }           // urlcitaotelefono varchar(80) NULL
         public string? DiagnosticoIA { get; set; }              // diagnosticoia text NULL
         public string? ResumenCitaVirtual { get; set; }         // resumencitavirtual text NULL
+        public string? CalBookingUid { get; set; }      // cal_booking_uid text NULL
+
     }
 }

@@ -242,7 +242,7 @@ namespace ClinicaData.Implementacion
                     ContentTypeDoctor = dr["ContentType_Doctor"] == DBNull.Value ? null : dr["ContentType_Doctor"].ToString(),
                     TipoDeCita = dr["TipoDeCita"] == DBNull.Value ? "P" : dr["TipoDeCita"].ToString()!,
                     CalBookingUid = dr["CalBookingUid"] == DBNull.Value ? null : dr["CalBookingUid"].ToString(),
-                    UrlCitaoTelefono = dr["UrlCitaoTelefono"] == DBNull.Value ? null : dr["UrlCitaoTelefono"].ToString()
+                    UrlCitaOTelefono = dr["UrlCitaoTelefono"] == DBNull.Value ? null : dr["UrlCitaoTelefono"].ToString()
                 };
                 lista.Add(cita);
             }
