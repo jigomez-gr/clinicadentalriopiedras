@@ -907,6 +907,7 @@ namespace ClinicaWeb.Controllers
                 object? citaCompacta = null;
                 if (cita != null)
                 {
+
                     citaCompacta = new
                     {
                         idCita = cita.IdCita,
@@ -916,8 +917,22 @@ namespace ClinicaWeb.Controllers
                         estado = estado,
                         origenCita = cita.OrigenCita ?? "",
                         razonCitaUsr = cita.RazonCitaUsr ?? "",
-                        indicaciones = cita.Indicaciones ?? ""
+                        indicaciones = cita.Indicaciones ?? "",
+                        // Nuevos campos
+                        tipoDeCita = cita.TipoDeCita ?? "P",
+                        calBookingUid = cita.CalBookingUid ?? "",
+                        urlCitaOTelefono = cita.UrlCitaOTelefono ?? "",
+                        diagnosticoIA = cita.DiagnosticoIA ?? "",
+                        documentoCitaUsr = cita.DocumentoCitaUsr != null
+                            ? Convert.ToBase64String(cita.DocumentoCitaUsr)
+                            : null,
+                        contentType = cita.ContentType ?? "",
+                        docIndicacionesDoctor = cita.DocIndicacionesDoctor != null
+                            ? Convert.ToBase64String(cita.DocIndicacionesDoctor)
+                            : null,
+                        contentTypeDoctor = cita.ContentTypeDoctor ?? ""
                     };
+
                 }
 
                 var slot = new
