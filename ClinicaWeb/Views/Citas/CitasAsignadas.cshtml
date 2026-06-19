@@ -5,6 +5,7 @@
 @section Estilos {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" />
 
     <style>
         .acciones-container {
@@ -127,6 +128,7 @@
                             <th>Nº Cita</th>
                             <th>Fecha Cita</th>
                             <th>Hora Cita</th>
+                            <th>Tipo</th>
                             <th>Paciente</th>
                             <th>Estado</th>
                         </tr>
@@ -175,11 +177,20 @@
                     </div>
                 </div>
 
-                <!-- ── Origen ── -->
+                <!-- ── Origen + Tipo ── -->
                 <div class="row g-2 mb-2">
                     <div class="col-12 col-md-6">
                         <label class="form-label">Origen de la cita</label>
                         <input type="text" class="form-control" id="txtOrigenCita" autocomplete="off" disabled />
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label fw-bold">Tipo de Cita</label>
+                        <input type="text" class="form-control" id="txtTipoCita" disabled />
+                    </div>
+                    <div class="col-12 col-md-3 d-flex align-items-end">
+                        <button type="button" class="btn btn-info btn-sm w-100 d-none" id="btnUnirseCalcom">
+                            <i class="fas fa-video me-1"></i>Unirse a reunión virtual
+                        </button>
                     </div>
                 </div>
 
@@ -279,6 +290,127 @@
 
             </div>
 
+            <hr />
+
+            <!-- ── Análisis IA doctor ── -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">
+                    <i class="fas fa-robot me-1 text-success"></i>Análisis IA
+                </label>
+                <div class="mb-2">
+                    <select class="form-select form-select-sm" id="docServicioIA" style="max-width:220px;">
+                        <option value="dental">🦷 Dental (boca/encías)</option>
+                        <option value="rx">🩻 Radiografía dental</option>
+                        <option value="derma">🔬 Dermatología</option>
+                        <option value="belleza">✨ Estética</option>
+                        <option value="general">🏥 General</option>
+                    </select>
+                </div>
+                <ul class="nav nav-tabs nav-sm mb-2">
+                    <li class="nav-item">
+                        <button class="nav-link active small" data-bs-toggle="tab" data-bs-target="#docTabCamara">
+                            <i class="fas fa-camera me-1"></i>Cámara web
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link small" data-bs-toggle="tab" data-bs-target="#docTabPegar">
+                            <i class="fas fa-paste me-1"></i>Pegar captura
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link small" data-bs-toggle="tab" data-bs-target="#docTabFichero">
+                            <i class="fas fa-file-image me-1"></i>Fichero
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link small" data-bs-toggle="tab" data-bs-target="#docTabBD">
+                            <i class="fas fa-database me-1"></i>Doc. en BD
+                        </button>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <!-- Tab Cámara web -->
+                    <div class="tab-pane fade show active" id="docTabCamara">
+                        <div class="d-flex gap-2 mb-2">
+                            <button type="button" class="btn btn-success btn-sm" id="docBtnAbrirCamara">
+                                <i class="fas fa-camera me-1"></i>Tomar foto
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm d-none" id="docBtnCerrarCamara">Cancelar</button>
+                        </div>
+                        <div id="docCamaraStream" class="d-none mb-2 position-relative">
+                            <video id="docVideo" autoplay playsinline
+                                   style="width:100%;max-height:240px;border-radius:8px;background:#000;"></video>
+                            <button type="button" id="docBtnVoltear"
+                                    class="btn btn-dark btn-sm position-absolute"
+                                    style="top:8px;right:8px;opacity:0.8;">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                            <div class="mt-1">
+                                <button type="button" class="btn btn-primary btn-sm" id="docBtnCapturar">
+                                    <i class="fas fa-camera me-1"></i>Capturar
+                                </button>
+                            </div>
+                        </div>
+                        <div id="docCropperWrapper" class="d-none mb-2">
+                            <div style="max-height:240px;background:#000;border-radius:8px;overflow:hidden;">
+                                <img id="docImgCropper" src="" alt="Recortar" style="max-width:100%;display:block;" />
+                            </div>
+                            <div class="d-flex gap-2 mt-1 flex-wrap">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="docBtnZoomIn"><i class="fas fa-search-plus"></i></button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="docBtnZoomOut"><i class="fas fa-search-minus"></i></button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="docBtnResetCrop"><i class="fas fa-undo"></i></button>
+                                <button type="button" class="btn btn-success btn-sm ms-auto" id="docBtnAnalizarCamara">
+                                    <i class="fas fa-microscope me-1"></i>Analizar con IA
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Tab Pegar captura (Ctrl+V o PrintScreen) -->
+                    <div class="tab-pane fade" id="docTabPegar">
+                        <div class="alert alert-info small py-2">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Haga una captura de pantalla de la reunión virtual (PrintScreen o Snipping Tool),
+                            luego haga clic en el área de abajo y pegue con <kbd>Ctrl+V</kbd>.
+                        </div>
+                        <div id="docPasteArea"
+                             tabindex="0"
+                             style="min-height:120px;border:2px dashed #6c757d;border-radius:8px;
+                                        display:flex;align-items:center;justify-content:center;
+                                        cursor:pointer;background:#f8f9fa;"
+                             class="mb-2">
+                            <span class="text-muted small">Haga clic aquí y pegue la captura (Ctrl+V)</span>
+                        </div>
+                        <div id="docPastePreview" class="d-none mb-2">
+                            <img id="docPasteImg" src="" style="max-width:100%;max-height:200px;border-radius:8px;border:1px solid #dee2e6;" />
+                        </div>
+                        <button type="button" class="btn btn-success btn-sm d-none" id="docBtnAnalizarPaste">
+                            <i class="fas fa-microscope me-1"></i>Analizar captura con IA
+                        </button>
+                    </div>
+                    <!-- Tab Fichero -->
+                    <div class="tab-pane fade" id="docTabFichero">
+                        <div class="mb-2">
+                            <input type="file" class="form-control form-control-sm" id="docFileIA" accept="image/*" />
+                        </div>
+                        <button type="button" class="btn btn-success btn-sm" id="docBtnAnalizarFichero">
+                            <i class="fas fa-microscope me-1"></i>Analizar fichero con IA
+                        </button>
+                    </div>
+                    <!-- Tab BD -->
+                    <div class="tab-pane fade" id="docTabBD">
+                        <p class="small text-muted mb-2" id="docLblBDInfo">Se analizará el documento del paciente en BD.</p>
+                        <button type="button" class="btn btn-success btn-sm" id="docBtnAnalizarBD" disabled>
+                            <i class="fas fa-database me-1"></i>Analizar doc. paciente con IA
+                        </button>
+                    </div>
+                </div>
+                <!-- Resultado -->
+                <div id="docResultadoIA" class="d-none mt-2">
+                    <div class="alert alert-success small py-2 mb-0" id="docTextoIA"
+                         style="white-space:pre-line;max-height:200px;overflow-y:auto;"></div>
+                </div>
+            </div>
+
             <div class="modal-footer d-flex flex-wrap gap-2">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                 <button type="button" class="btn btn-primary" id="btnTerminarCita">
@@ -328,6 +460,9 @@
             let docPacienteContentType = null;
             let docDoctorBase64        = null;
             let docDoctorContentType   = null;
+            let docStreamCamara = null, docFacingMode = "environment";
+            let docCropper = null, docImagenBlob = null;
+            let urlCalcom = null;
 
             $(document).ready(function () {
                 initTooltips();
@@ -362,6 +497,18 @@
                         { data: "fechaCita",  width: "150px" },
                         { data: "horaCita",   width: "150px" },
                         {
+                            data: "tipoDeCita",
+                            width: "100px",
+                            render: function(v) {
+                                const map = {
+                                    P: '<span class="badge bg-primary">Presencial</span>',
+                                    T: '<span class="badge bg-warning text-dark">Telefónica</span>',
+                                    V: '<span class="badge bg-info text-dark">Virtual</span>'
+                                };
+                                return map[v] || v || '';
+                            }
+                        },
+                        {
                             data: "usuario",
                             render: d => (d?.nombre || "") + " " + (d?.apellido || "")
                         },
@@ -394,6 +541,30 @@
                     $("#txtOrigenCita").val(data.origenCita       || "");
                     $("#txtRazonCitaUsr").val(data.razonCitaUsr   || "");
                     $("#txtIndicaciones").val(data.indicaciones   || "");
+
+                    // Tipo cita + botón Cal.com
+                    const tipoMap = { P: "Presencial", T: "Telefónica", V: "Virtual" };
+                    $("#txtTipoCita").val(tipoMap[data.tipoDeCita] || data.tipoDeCita || "Presencial");
+                    urlCalcom = data.urlCitaoTelefono || null;
+                    if (data.tipoDeCita === "V" && urlCalcom) {
+                        $("#btnUnirseCalcom").removeClass("d-none").attr("href", urlCalcom);
+                    } else {
+                        $("#btnUnirseCalcom").addClass("d-none");
+                    }
+
+                    // BD IA
+                    if (data.documentoCitaUsr) {
+                        const esImagen = (data.contentType || "").startsWith("image/");
+                        $("#docBtnAnalizarBD").prop("disabled", !esImagen);
+                        $("#docLblBDInfo").text(esImagen ? "Se analizará la imagen del paciente en BD." : "El doc. del paciente no es una imagen.");
+                    } else {
+                        $("#docBtnAnalizarBD").prop("disabled", true);
+                        $("#docLblBDInfo").text("No hay documento del paciente en BD.");
+                    }
+                    docImagenBlob = null;
+                    if (docCropper) { docCropper.destroy(); docCropper = null; }
+                    $("#docCropperWrapper, #docCamaraStream, #docResultadoIA, #docPastePreview").addClass("d-none");
+                    $("#docBtnAnalizarPaste, #docBtnCerrarCamara").addClass("d-none");
 
                     mostrarValoracion(data.valDoctorCita ?? 3);
                     $("#txtOpinionDoctorYClinica").val(data.opinionDoctorYClinica || "");
@@ -450,6 +621,11 @@
                         : "Escriba las indicaciones para el paciente y adjunte un documento si lo desea.");
 
                     $("#" + modal).modal("show");
+                });
+
+                // ── Botón Cal.com ────────────────────────────────────────────
+                $("#btnUnirseCalcom").on("click", function () {
+                    if (urlCalcom) window.open(urlCalcom, "_blank");
                 });
 
                 // ── Ver documentos ────────────────────────────────────────────
@@ -526,5 +702,144 @@
                 });
             });
         })();
+
+        // ── Lógica IA CitasAsignadas ──────────────────────────────────────────
+        document.addEventListener("DOMContentLoaded", function () {
+            document.getElementById("docBtnAbrirCamara").addEventListener("click", function () {
+                docFacingMode = "environment"; docAbrirStream();
+            });
+            document.getElementById("docBtnVoltear").addEventListener("click", function () {
+                docFacingMode = docFacingMode === "environment" ? "user" : "environment"; docAbrirStream();
+            });
+            document.getElementById("docBtnCerrarCamara").addEventListener("click", function () {
+                docCerrarStream();
+                document.getElementById("docBtnCerrarCamara").classList.add("d-none");
+            });
+            document.getElementById("docBtnCapturar").addEventListener("click", function () {
+                const video = document.getElementById("docVideo");
+                const canvas = document.createElement("canvas");
+                canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+                canvas.getContext("2d").drawImage(video, 0, 0);
+                docCerrarStream();
+                document.getElementById("docCamaraStream").classList.add("d-none");
+                const img = document.getElementById("docImgCropper");
+                img.src = canvas.toDataURL("image/jpeg", 0.92);
+                document.getElementById("docCropperWrapper").classList.remove("d-none");
+                if (docCropper) { docCropper.destroy(); docCropper = null; }
+                docCropper = new Cropper(img, {
+                    aspectRatio: NaN, viewMode: 1, autoCropArea: 0.85,
+                    responsive: true, movable: true, zoomable: true,
+                    cropBoxMovable: true, cropBoxResizable: true, dragMode: "move"
+                });
+            });
+            document.getElementById("docBtnZoomIn").addEventListener("click",    () => docCropper?.zoom(0.1));
+            document.getElementById("docBtnZoomOut").addEventListener("click",   () => docCropper?.zoom(-0.1));
+            document.getElementById("docBtnResetCrop").addEventListener("click", () => docCropper?.reset());
+
+            document.getElementById("docBtnAnalizarCamara").addEventListener("click", function () {
+                if (!docCropper) { Swal.fire("Aviso", "Primero capture una foto.", "warning"); return; }
+                const canvas = docCropper.getCroppedCanvas({ maxWidth: 1600, maxHeight: 1600 });
+                const mx = Math.round(canvas.width * 0.10), my = Math.round(canvas.height * 0.10);
+                const full = document.createElement("canvas");
+                full.width = canvas.width + mx * 2; full.height = canvas.height + my * 2;
+                full.getContext("2d").drawImage(canvas, mx, my);
+                full.toBlob(function(blob) { docImagenBlob = blob; docAnalizarBlob(blob); }, "image/jpeg", 0.92);
+            });
+
+            // Pegar captura (Ctrl+V)
+            const pasteArea = document.getElementById("docPasteArea");
+            pasteArea.addEventListener("click", function() { pasteArea.focus(); });
+            pasteArea.addEventListener("paste", function(e) {
+                const items = e.clipboardData?.items;
+                if (!items) return;
+                for (const item of items) {
+                    if (item.type.startsWith("image/")) {
+                        const blob = item.getAsFile();
+                        docImagenBlob = blob;
+                        const url = URL.createObjectURL(blob);
+                        document.getElementById("docPasteImg").src = url;
+                        document.getElementById("docPastePreview").classList.remove("d-none");
+                        document.getElementById("docBtnAnalizarPaste").classList.remove("d-none");
+                        pasteArea.querySelector("span").textContent = "✔ Captura pegada. Pulse Analizar.";
+                        break;
+                    }
+                }
+            });
+            document.getElementById("docBtnAnalizarPaste").addEventListener("click", function () {
+                if (docImagenBlob) docAnalizarBlob(docImagenBlob);
+            });
+
+            document.getElementById("docBtnAnalizarFichero").addEventListener("click", function () {
+                const file = document.getElementById("docFileIA").files[0];
+                if (!file) { Swal.fire("Aviso", "Primero seleccione un fichero.", "warning"); return; }
+                if (!file.type.startsWith("image/")) { Swal.fire("Aviso", "Solo imágenes.", "warning"); return; }
+                docAnalizarBlob(file);
+            });
+
+            document.getElementById("docBtnAnalizarBD").addEventListener("click", function () {
+                if (!docPacienteBase64) return;
+                const bin = atob(docPacienteBase64), arr = new Uint8Array(bin.length);
+                for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+                docAnalizarBlob(new Blob([arr], { type: docPacienteContentType || "image/jpeg" }));
+            });
+
+            function docAnalizarBlob(blob) {
+                if (!idCitaSeleccionada) { Swal.fire("Aviso", "No hay cita seleccionada.", "warning"); return; }
+                Swal.fire({ title: "Analizando con IA...", allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                const servicio = document.getElementById("docServicioIA").value || "dental";
+                const razon    = document.getElementById("txtRazonCitaUsr")?.value || "";
+                const contexto = razon
+                    ? `El paciente describe: "${razon}". Analiza la imagen teniendo en cuenta este contexto.`
+                    : "Analiza esta imagen clínica y describe los hallazgos observables.";
+                const form = new FormData();
+                form.append("idCita", idCitaSeleccionada);
+                form.append("imagen", blob, "imagen.jpg");
+                form.append("servicio", servicio);
+                form.append("contexto", contexto);
+                fetch("/Citas/AnalizarImagenIA", { method: "POST", body: form })
+                .then(r => r.json())
+                .then(res => {
+                    Swal.close();
+                    if (res.ok) {
+                        document.getElementById("docTextoIA").innerText = res.diagnostico;
+                        document.getElementById("docResultadoIA").classList.remove("d-none");
+                    } else {
+                        Swal.fire("Error IA", res.msg || "Error desconocido", "error");
+                    }
+                })
+                .catch(() => Swal.fire("Error", "Fallo de comunicación con el servidor.", "error"));
+            }
+
+            function docAbrirStream() {
+                docCerrarStream();
+                document.getElementById("docCropperWrapper").classList.add("d-none");
+                navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: docFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } }
+                }).then(function(stream) {
+                    docStreamCamara = stream;
+                    document.getElementById("docVideo").srcObject = stream;
+                    document.getElementById("docCamaraStream").classList.remove("d-none");
+                    document.getElementById("docBtnCerrarCamara").classList.remove("d-none");
+                }).catch(function(e) {
+                    Swal.fire("Error", "No se pudo acceder a la cámara: " + e.message, "error");
+                });
+            }
+            function docCerrarStream() {
+                if (docStreamCamara) { docStreamCamara.getTracks().forEach(t => t.stop()); docStreamCamara = null; }
+                document.getElementById("docCamaraStream").classList.add("d-none");
+            }
+
+            document.getElementById("mdData").addEventListener("hidden.bs.modal", function () {
+                docCerrarStream();
+                if (docCropper) { docCropper.destroy(); docCropper = null; }
+                docImagenBlob = null; urlCalcom = null;
+                document.getElementById("docCropperWrapper").classList.add("d-none");
+                document.getElementById("docResultadoIA").classList.add("d-none");
+                document.getElementById("docBtnCerrarCamara").classList.add("d-none");
+                document.getElementById("docPastePreview").classList.add("d-none");
+                document.getElementById("docBtnAnalizarPaste").classList.add("d-none");
+            });
+        });
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 }

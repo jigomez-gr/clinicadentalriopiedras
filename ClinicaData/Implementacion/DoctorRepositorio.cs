@@ -201,21 +201,21 @@ namespace ClinicaData.Implementacion
 
             return lista;
         }
+        // ============================================================
+        // CitaRepositorio.cs — método ListaCitasAsignadas actualizado
+        // Llama a sp_listacitasasignadas_contipo y mapea TipoDeCita
+        // ============================================================
         public async Task<List<Cita>> ListaCitasAsignadas(int Id, int IdEstadoCita)
         {
             var lista = new List<Cita>();
-
             await using var conexion = new NpgsqlConnection(con.CadenaSQL);
             await conexion.OpenAsync();
-
             await using var cmd = new NpgsqlCommand(
-                "SELECT * FROM public.sp_listacitasasignadas(@IdDoctor, @IdEstadoCita);",
+                "SELECT * FROM public.sp_listacitasasignadas_contipo(@IdDoctor, @IdEstadoCita);",
                 conexion);
-
             cmd.CommandType = CommandType.Text;
-            cmd.Parameters.AddWithValue("@IdDoctor", Id);               // en PG la function filtra por doctor
+            cmd.Parameters.AddWithValue("@IdDoctor", Id);
             cmd.Parameters.AddWithValue("@IdEstadoCita", IdEstadoCita);
-
             await using var dr = await cmd.ExecuteReaderAsync();
             while (await dr.ReadAsync())
             {
@@ -234,24 +234,21 @@ namespace ClinicaData.Implementacion
                         Nombre = dr["EstadoCita"].ToString()!
                     },
                     Indicaciones = dr["Indicaciones"]?.ToString() ?? string.Empty,
-
                     OrigenCita = dr["OrigenCita"] == DBNull.Value ? string.Empty : dr["OrigenCita"].ToString()!,
                     RazonCitaUsr = dr["RazonCitaUsr"] == DBNull.Value ? string.Empty : dr["RazonCitaUsr"].ToString()!,
                     ContentType = dr["ContentType"] == DBNull.Value ? null : dr["ContentType"].ToString(),
                     DocumentoCitaUsr = dr["DocumentoCitaUsr"] == DBNull.Value ? null : (byte[])dr["DocumentoCitaUsr"],
-
                     DocIndicacionesDoctor = dr["DocIndicacionesDoctor"] == DBNull.Value ? null : (byte[])dr["DocIndicacionesDoctor"],
-                    ContentTypeDoctor = dr["ContentType_Doctor"] == DBNull.Value ? null : dr["ContentType_Doctor"].ToString()
+                    ContentTypeDoctor = dr["ContentType_Doctor"] == DBNull.Value ? null : dr["ContentType_Doctor"].ToString(),
+                    TipoDeCita = dr["TipoDeCita"] == DBNull.Value ? "P" : dr["TipoDeCita"].ToString()!
                 };
-
                 lista.Add(cita);
             }
-
             return lista;
         }
 
 
-public async Task<(List<Cita> Lista, int TotalRegistros)> ListaCitasAsignadasServerSide(
+        public async Task<(List<Cita> Lista, int TotalRegistros)> ListaCitasAsignadasServerSide(
     int idDoctor,
     int idEstadoCita,
     int start,
