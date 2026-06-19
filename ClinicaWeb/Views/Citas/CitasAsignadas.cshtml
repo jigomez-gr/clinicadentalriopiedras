@@ -730,6 +730,15 @@
                         $("#btnUnirseCalcom").addClass("d-none");
                     }
 
+                    // Mostrar diagnóstico IA previo si existe
+                    if (data.diagnosticoIA) {
+                        document.getElementById("docTextoIA").innerText = data.diagnosticoIA;
+                        document.getElementById("docResultadoIA").classList.remove("d-none");
+                    } else {
+                        document.getElementById("docTextoIA").innerText = "";
+                        document.getElementById("docResultadoIA").classList.add("d-none");
+                    }
+
                     // BD IA
                     if (data.documentoCitaUsr) {
                         const esImagen = (data.contentType || "").startsWith("image/");
@@ -1079,6 +1088,8 @@
                 docImagenBlob = null; urlCalcom = null;
                 docDoctorBase64 = null; docDoctorContentType = null;
                 docIdCitaSeleccionada = 0;
+                document.getElementById("docTextoIA").innerText = "";
+                document.getElementById("docResultadoIA").classList.add("d-none");
                 fsCerrarPantallaCompleta();
                 document.getElementById("docCamaraMiniPreview").classList.add("d-none");
                 document.getElementById("docCropperWrapper").classList.add("d-none");

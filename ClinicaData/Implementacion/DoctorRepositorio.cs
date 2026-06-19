@@ -330,7 +330,9 @@ namespace ClinicaData.Implementacion
                     // ============================================================
                     TipoDeCita = dr["TipoDeCita"] == DBNull.Value ? "P" : dr["TipoDeCita"]?.ToString() ?? "P",
                     CalBookingUid = dr["CalBookingUid"] == DBNull.Value ? null : dr["CalBookingUid"]?.ToString(),
-                    UrlCitaOTelefono = dr["UrlCitaoTelefono"] == DBNull.Value ? null : dr["UrlCitaoTelefono"]?.ToString()
+                    UrlCitaOTelefono = dr["UrlCitaoTelefono"] == DBNull.Value ? null : dr["UrlCitaoTelefono"]?.ToString(),
+
+                    DiagnosticoIA = dr["DiagnosticoIA"] == DBNull.Value ? null : dr["DiagnosticoIA"]?.ToString()
 
                 };
 
