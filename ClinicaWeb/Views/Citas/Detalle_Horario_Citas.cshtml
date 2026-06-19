@@ -270,15 +270,15 @@
             </button>
         </div>
     </div>
-    <div style="flex:1;min-height:0;background:#000;" id="dhcFsArea">
+    <div style="flex:1;min-height:0;background:#000;overflow:hidden;" id="dhcFsArea">
         <div id="dhcFsStreamDiv" style="width:100%;height:100%;display:flex;flex-direction:column;">
-            <video id="dhcFsVideo" autoplay playsinline style="width:100%;flex:1;object-fit:cover;background:#000;"></video>
+            <video id="dhcFsVideo" autoplay playsinline style="width:100%;flex:1;object-fit:cover;background:#000;max-height:calc(100vh - 120px);"></video>
             <div style="background:#1a1a2e;padding:10px;display:flex;gap:10px;flex-wrap:wrap;">
                 <button type="button" class="btn btn-primary" id="dhcFsBtnCapturar"><i class="fas fa-camera me-1"></i>Capturar</button>
                 <button type="button" class="btn btn-outline-light" id="dhcFsBtnVoltear"><i class="fas fa-sync-alt me-1"></i>Voltear</button>
             </div>
         </div>
-        <div id="dhcFsCropperDiv" style="display:none;width:100%;height:100%;">
+        <div id="dhcFsCropperDiv" style="display:none;width:100%;height:calc(100vh - 160px);overflow:hidden;">
             <img id="dhcFsImgCropper" src="" alt="Recortar" style="max-width:100%;display:block;" />
         </div>
     </div>
@@ -371,12 +371,19 @@
 
                         <div class="col-12 col-md-2">
                             <label class="form-label fw-bold">Tipo de Cita</label>
-                            <input id="citaTipoCita" class="form-control" readonly />
+                            <select id="citaTipoCita" class="form-select">
+                                <option value="P">Presencial</option>
+                                <option value="V">Virtual</option>
+                                <option value="T">Telefónica</option>
+                            </select>
                         </div>
-                        <div class="col-12 col-md-2 d-flex align-items-end pb-1">
-                            <a href="#" target="_blank" class="btn btn-info btn-sm w-100 d-none" id="citaBtnCalcom">
-                                <i class="fas fa-video me-1"></i>Unirse a reunión
+                        <div class="col-12 col-md-2 d-flex align-items-end gap-1 pb-1 flex-wrap">
+                            <a href="#" target="_blank" class="btn btn-info btn-sm flex-fill d-none" id="citaBtnCalcom">
+                                <i class="fas fa-video me-1"></i>Unirse
                             </a>
+                            <button type="button" class="btn btn-warning btn-sm flex-fill" id="citaBtnGuardarTipo">
+                                <i class="fas fa-save me-1"></i>Guardar tipo
+                            </button>
                         </div>
 
                         <div class="col-12 col-md-2">
@@ -1821,7 +1828,7 @@
             if (!cita) return;
             const tipoMap = { P:"Presencial", T:"Telefónica", V:"Virtual" };
             const tipoCitaEl = document.getElementById("citaTipoCita");
-            if (tipoCitaEl) tipoCitaEl.value = tipoMap[cita.tipoDeCita] || cita.tipoDeCita || "Presencial";
+            if (tipoCitaEl) tipoCitaEl.value = cita.tipoDeCita || "P";
             const calUid = cita.calBookingUid || null;
             const urlCal = calUid ? `https://app.cal.eu/video/${calUid}` : (cita.urlCitaOTelefono || null);
             const btnCal = document.getElementById("citaBtnCalcom");
@@ -1967,6 +1974,24 @@
                 } else {Swal.fire("Error IA",res.msg||"Error","error");if(cb)cb();}
             }).catch(()=>{Swal.fire("Error","Fallo de comunicación.","error");if(cb)cb();});
         }
+        // Guardar tipo de cita
+        document.addEventListener("DOMContentLoaded", function() {
+            const btnGuardarTipo = document.getElementById("citaBtnGuardarTipo");
+            if (btnGuardarTipo) {
+                btnGuardarTipo.addEventListener("click", function() {
+                    if (!dhcIdCita) { Swal.fire("Aviso","No hay cita seleccionada.","warning"); return; }
+                    const tipo = document.getElementById("citaTipoCita").value;
+                    fetch(`/Citas/ActualizarTipoCita?idCita=${dhcIdCita}&tipoDeCita=${tipo}`, { method:"POST" })
+                    .then(r=>r.json())
+                    .then(res=>{
+                        if(res.ok) Swal.fire("Guardado","Tipo de cita actualizado.","success");
+                        else Swal.fire("Error", res.msg||"Error al guardar","error");
+                    })
+                    .catch(()=>Swal.fire("Error","Fallo de comunicación.","error"));
+                });
+            }
+        });
+
         function dhcFsAbrir(){
             document.getElementById("dhcFullscreen").style.display="flex";
             document.body.style.overflow="hidden";

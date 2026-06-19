@@ -577,7 +577,16 @@ public async Task ActualizarCitaConfirmacionAdmin(int idCita, string? citaConfir
                     ContentType = dr["ContentType"] == DBNull.Value ? null : dr["ContentType"]?.ToString(),
 
                     DocIndicacionesDoctor = dr["DocIndicacionesDoctor"] == DBNull.Value ? null : (byte[])dr["DocIndicacionesDoctor"],
-                    ContentTypeDoctor = dr["ContentType_Doctor"] == DBNull.Value ? null : dr["ContentType_Doctor"]?.ToString()
+                    ContentTypeDoctor = dr["ContentType_Doctor"] == DBNull.Value ? null : dr["ContentType_Doctor"]?.ToString(),
+                    // ============================================================
+                    // CitaRepositorio.cs — ListaCitasAdmin
+                    // Añadir al mapping después de FechaConfirmacion = ...
+                    // ============================================================
+                    TipoDeCita = dr["TipoDeCita"] == DBNull.Value ? "P" : dr["TipoDeCita"]?.ToString() ?? "P",
+                    CalBookingUid = dr["CalBookingUid"] == DBNull.Value ? null : dr["CalBookingUid"]?.ToString(),
+                    DiagnosticoIA = dr["DiagnosticoIA"] == DBNull.Value ? null : dr["DiagnosticoIA"]?.ToString(),
+                    UrlCitaOTelefono = dr["UrlCitaOTelefono"] == DBNull.Value ? null : dr["UrlCitaOTelefono"]?.ToString()
+
                 };
 
                 lista.Add(oCita);
