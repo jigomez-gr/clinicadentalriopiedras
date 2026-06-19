@@ -83,6 +83,67 @@
                 align-self: center;
                 margin-left: 5px;
             }
+        /* Pantalla completa cámara IA */
+        #docFullscreen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 99999;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+            #docFullscreen.activo {
+                display: flex;
+            }
+
+            #docFullscreen .fs-toolbar {
+                background: #1a1a2e;
+                padding: 8px 12px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex-wrap: wrap;
+                flex-shrink: 0;
+            }
+
+            #docFullscreen .fs-cropper-area {
+                flex: 1;
+                min-height: 0;
+                position: relative;
+                background: #000;
+            }
+
+                #docFullscreen .fs-cropper-area img {
+                    max-width: 100%;
+                    display: block;
+                }
+
+            #docFullscreen .fs-controls {
+                background: #1a1a2e;
+                padding: 8px 12px;
+                flex-shrink: 0;
+            }
+
+            #docFullscreen .fs-resultado {
+                background: #0f3460;
+                color: #fff;
+                padding: 12px;
+                flex-shrink: 0;
+                display: none;
+                white-space: pre-line;
+                font-size: 0.9rem;
+                max-height: 40vh;
+                overflow-y: auto;
+            }
+
+                #docFullscreen .fs-resultado.visible {
+                    display: block;
+                }
     </style>
 }
 
@@ -138,6 +199,74 @@
             </div>
         </div>
     </div>
+</div>
+
+<!-- ===================== PANTALLA COMPLETA CÁMARA IA ===================== -->
+<div id="docFullscreen">
+    <!-- Toolbar superior -->
+    <div class="fs-toolbar">
+        <button type="button" class="btn btn-outline-light btn-sm" id="fsBtnVolver">
+            <i class="fas fa-arrow-left me-1"></i>Volver al modal
+        </button>
+        <span class="text-white small ms-2" id="fsTitulo">Cámara — ajusta el recorte y analiza</span>
+        <div class="ms-auto d-flex gap-2">
+            <button type="button" class="btn btn-outline-warning btn-sm d-none" id="fsBtnVerResultados">
+                <i class="fas fa-eye me-1"></i>Ver resultados
+            </button>
+        </div>
+    </div>
+
+    <!-- Área cámara / cropper -->
+    <div class="fs-cropper-area" id="fsCropperArea">
+        <!-- Stream vídeo fullscreen -->
+        <div id="fsStreamDiv" style="width:100%;height:100%;display:flex;flex-direction:column;">
+            <video id="fsVideo" autoplay playsinline
+                   style="width:100%;flex:1;object-fit:cover;background:#000;"></video>
+            <div style="background:#1a1a2e;padding:8px;display:flex;gap:8px;flex-wrap:wrap;">
+                <button type="button" class="btn btn-primary btn-sm" id="fsBtnCapturar">
+                    <i class="fas fa-camera me-1"></i>Capturar
+                </button>
+                <button type="button" class="btn btn-outline-light btn-sm" id="fsBtnVoltearFS">
+                    <i class="fas fa-sync-alt me-1"></i>Voltear
+                </button>
+            </div>
+        </div>
+        <!-- Cropper fullscreen -->
+        <div id="fsCropperDiv" style="display:none;width:100%;height:100%;">
+            <img id="fsImgCropper" src="" alt="Recortar"
+                 style="max-width:100%;display:block;" />
+        </div>
+    </div>
+
+    <!-- Controles cropper -->
+    <div class="fs-controls" id="fsControles" style="display:none;">
+        <div class="d-flex gap-2 align-items-center mb-2 flex-wrap">
+            <span class="text-white small">Zoom:</span>
+            <i class="fas fa-search-minus text-white"></i>
+            <input type="range" id="fsSliderZoom" min="0.1" max="5" step="0.05" value="0.1"
+                   class="form-range flex-grow-1" style="max-width:250px;" />
+            <i class="fas fa-search-plus text-white"></i>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <div class="btn-group btn-group-sm">
+                <button type="button" class="btn btn-outline-light" id="fsBtnModeMover">
+                    <i class="fas fa-hand-paper me-1"></i>Mover
+                </button>
+                <button type="button" class="btn btn-outline-light active" id="fsBtnModeRecortar">
+                    <i class="fas fa-crop-alt me-1"></i>Recortar
+                </button>
+            </div>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="fsBtnReset">
+                <i class="fas fa-undo"></i> Reset
+            </button>
+            <button type="button" class="btn btn-success btn-sm ms-auto" id="fsBtnAnalizarFS">
+                <i class="fas fa-microscope me-1"></i>Analizar recorte con IA
+            </button>
+        </div>
+    </div>
+
+    <!-- Resultado IA -->
+    <div class="fs-resultado" id="fsResultado"></div>
 </div>
 
 <!-- ===================== MODAL DETALLE CITA ===================== -->
@@ -918,10 +1047,9 @@
                 if (docCropper) { docCropper.destroy(); docCropper = null; }
                 docImagenBlob = null; urlCalcom = null;
                 docDoctorBase64 = null; docDoctorContentType = null;
-                document.getElementById("docSliderZoom").value = 0.1;
                 docIdCitaSeleccionada = 0;
-                document.getElementById("docBtnModeMover").classList.remove("active");
-                document.getElementById("docBtnModeRecortar").classList.add("active");
+                fsCerrarPantallaCompleta();
+                document.getElementById("docCamaraMiniPreview").classList.add("d-none");
                 document.getElementById("docCropperWrapper").classList.add("d-none");
                 document.getElementById("docResultadoIA").classList.add("d-none");
                 document.getElementById("docBtnCerrarCamara").classList.add("d-none");
