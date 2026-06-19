@@ -6,7 +6,6 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" />
-
     <style>
         .acciones-container {
             display: flex;
@@ -29,9 +28,8 @@
             border-collapse: collapse !important;
         }
 
-        @@media (max-width: 768px) {
-            #tbData thead th:first-child,
-            #tbData tbody td:first-child {
+        @@media (max-width:768px) {
+            #tbData thead th:first-child, #tbData tbody td:first-child {
                 position: sticky;
                 left: 0;
                 background-color: #f8f9fa !important;
@@ -62,7 +60,6 @@
                 border: 1px solid rgba(0,0,0,.15);
             }
 
-        /* Valoración solo lectura */
         .star-rating-readonly {
             display: flex;
             gap: 2px;
@@ -111,17 +108,12 @@
                 flex-shrink: 0;
             }
 
-            #docFullscreen .fs-cropper-area {
+            #docFullscreen .fs-area {
                 flex: 1;
                 min-height: 0;
                 position: relative;
                 background: #000;
             }
-
-                #docFullscreen .fs-cropper-area img {
-                    max-width: 100%;
-                    display: block;
-                }
 
             #docFullscreen .fs-controls {
                 background: #1a1a2e;
@@ -136,8 +128,8 @@
                 flex-shrink: 0;
                 display: none;
                 white-space: pre-line;
-                font-size: 0.9rem;
-                max-height: 40vh;
+                font-size: .9rem;
+                max-height: 35vh;
                 overflow-y: auto;
             }
 
@@ -148,26 +140,18 @@
 }
 
 <div class="container-fluid px-2 px-md-4">
-
     <h2 class="mt-4 mb-4 d-flex align-items-center">
         <span>Citas asignadas</span>
-        <button type="button" class="btn btn-sm ms-auto"
-                style="background-color:#ff8c00;color:#fff;border-color:#ff8c00;"
-                onclick="openHelpVideo('Doctor_Horario.mp4')"
-                data-bs-toggle="tooltip" data-bs-placement="top"
-                data-bs-custom-class="tooltip-citas" title="Ayuda">
+        <button type="button" class="btn btn-sm ms-auto" style="background-color:#ff8c00;color:#fff;border-color:#ff8c00;"
+                onclick="openHelpVideo('Doctor_Horario.mp4')" data-bs-toggle="tooltip" title="Ayuda">
             <i class="fa fa-circle-question me-1"></i> Ayuda
         </button>
     </h2>
-
     <div class="card shadow-sm mb-3">
         <div class="card-body">
             <div class="row g-2 align-items-center">
                 <div class="col-12 col-md-4">
-                    <label class="form-label"
-                           data-bs-toggle="tooltip" data-bs-placement="top"
-                           data-bs-custom-class="tooltip-light"
-                           title="Filtrar por estado">Filtrar por estado</label>
+                    <label class="form-label">Filtrar por estado</label>
                     <select class="form-select" id="cboEstadoCita">
                         <option value="1" selected>Pendiente</option>
                         <option value="2">Atendido</option>
@@ -176,13 +160,10 @@
             </div>
         </div>
     </div>
-
     <div class="card shadow-sm">
         <div class="card-body">
             <div class="table-responsive">
-                <table id="tbData"
-                       class="table table-striped table-bordered table-hover w-100 align-middle"
-                       style="width:100%">
+                <table id="tbData" class="table table-striped table-bordered table-hover w-100 align-middle" style="width:100%">
                     <thead>
                         <tr>
                             <th>Acciones</th>
@@ -201,50 +182,43 @@
     </div>
 </div>
 
-<!-- ===================== PANTALLA COMPLETA CÁMARA IA ===================== -->
+<!-- ===== PANTALLA COMPLETA CÁMARA ===== -->
 <div id="docFullscreen">
-    <!-- Toolbar superior -->
     <div class="fs-toolbar">
         <button type="button" class="btn btn-outline-light btn-sm" id="fsBtnVolver">
             <i class="fas fa-arrow-left me-1"></i>Volver al modal
         </button>
-        <span class="text-white small ms-2" id="fsTitulo">Cámara — ajusta el recorte y analiza</span>
-        <div class="ms-auto d-flex gap-2">
-            <button type="button" class="btn btn-outline-warning btn-sm d-none" id="fsBtnVerResultados">
-                <i class="fas fa-eye me-1"></i>Ver resultados
+        <span class="text-white small ms-2">Cámara — captura, recorta y analiza</span>
+        <div class="ms-auto">
+            <button type="button" class="btn btn-warning btn-sm d-none" id="fsBtnVerResultados">
+                <i class="fas fa-eye me-1"></i>Ver resultados y volver
             </button>
         </div>
     </div>
-
-    <!-- Área cámara / cropper -->
-    <div class="fs-cropper-area" id="fsCropperArea">
-        <!-- Stream vídeo fullscreen -->
+    <div class="fs-area" id="fsArea">
+        <!-- Stream -->
         <div id="fsStreamDiv" style="width:100%;height:100%;display:flex;flex-direction:column;">
-            <video id="fsVideo" autoplay playsinline
-                   style="width:100%;flex:1;object-fit:cover;background:#000;"></video>
-            <div style="background:#1a1a2e;padding:8px;display:flex;gap:8px;flex-wrap:wrap;">
-                <button type="button" class="btn btn-primary btn-sm" id="fsBtnCapturar">
-                    <i class="fas fa-camera me-1"></i>Capturar
+            <video id="fsVideo" autoplay playsinline style="width:100%;flex:1;object-fit:cover;background:#000;"></video>
+            <div style="background:#1a1a2e;padding:10px;display:flex;gap:10px;flex-wrap:wrap;">
+                <button type="button" class="btn btn-primary" id="fsBtnCapturar">
+                    <i class="fas fa-camera me-1"></i>Capturar foto
                 </button>
-                <button type="button" class="btn btn-outline-light btn-sm" id="fsBtnVoltearFS">
-                    <i class="fas fa-sync-alt me-1"></i>Voltear
+                <button type="button" class="btn btn-outline-light" id="fsBtnVoltearFS">
+                    <i class="fas fa-sync-alt me-1"></i>Voltear cámara
                 </button>
             </div>
         </div>
-        <!-- Cropper fullscreen -->
+        <!-- Cropper -->
         <div id="fsCropperDiv" style="display:none;width:100%;height:100%;">
-            <img id="fsImgCropper" src="" alt="Recortar"
-                 style="max-width:100%;display:block;" />
+            <img id="fsImgCropper" src="" alt="Recortar" style="max-width:100%;display:block;" />
         </div>
     </div>
-
-    <!-- Controles cropper -->
     <div class="fs-controls" id="fsControles" style="display:none;">
         <div class="d-flex gap-2 align-items-center mb-2 flex-wrap">
             <span class="text-white small">Zoom:</span>
             <i class="fas fa-search-minus text-white"></i>
             <input type="range" id="fsSliderZoom" min="0.1" max="5" step="0.05" value="0.1"
-                   class="form-range flex-grow-1" style="max-width:250px;" />
+                   class="form-range flex-grow-1" style="max-width:260px;" />
             <i class="fas fa-search-plus text-white"></i>
         </div>
         <div class="d-flex gap-2 flex-wrap">
@@ -259,331 +233,224 @@
             <button type="button" class="btn btn-outline-secondary btn-sm" id="fsBtnReset">
                 <i class="fas fa-undo"></i> Reset
             </button>
-            <button type="button" class="btn btn-success btn-sm ms-auto" id="fsBtnAnalizarFS">
+            <button type="button" class="btn btn-success ms-auto" id="fsBtnAnalizarFS">
                 <i class="fas fa-microscope me-1"></i>Analizar recorte con IA
             </button>
         </div>
     </div>
-
-    <!-- Resultado IA -->
     <div class="fs-resultado" id="fsResultado"></div>
 </div>
 
-<!-- ===================== MODAL DETALLE CITA ===================== -->
+<!-- ===== MODAL ===== -->
 <div class="modal fade" id="mdData" data-bs-backdrop="static" data-bs-keyboard="false"
-     tabindex="-1" aria-labelledby="mdDataLabel" aria-hidden="true">
+     tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="mdDataLabel">Resumen de la cita</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                <h5 class="modal-title">Resumen de la cita</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-
             <div class="modal-body">
-
-                <!-- ── Nº Cita + Paciente ── -->
                 <div class="row g-2 mb-2">
                     <div class="col-12 col-md-3">
                         <label class="form-label">Nº Cita</label>
-                        <input type="text" class="form-control fw-bold text-center"
-                               id="txtNumeroCita" autocomplete="off" disabled />
+                        <input type="text" class="form-control fw-bold text-center" id="txtNumeroCita" disabled />
                     </div>
                     <div class="col-12 col-md-9">
                         <label class="form-label">Paciente</label>
-                        <input type="text" class="form-control" id="txtPaciente" autocomplete="off" disabled>
+                        <input type="text" class="form-control" id="txtPaciente" disabled>
                     </div>
                 </div>
-
-                <!-- ── Fecha + Hora ── -->
                 <div class="row g-2 mb-2">
                     <div class="col-12 col-md-6">
                         <label class="form-label">Fecha cita</label>
-                        <input type="text" class="form-control" id="txtFechaCitaResumen" autocomplete="off" disabled />
+                        <input type="text" class="form-control" id="txtFechaCitaResumen" disabled />
                     </div>
                     <div class="col-12 col-md-6">
                         <label class="form-label">Hora cita</label>
-                        <input type="text" class="form-control" id="txtHoraCitaResumen" autocomplete="off" disabled />
+                        <input type="text" class="form-control" id="txtHoraCitaResumen" disabled />
                     </div>
                 </div>
-
-                <!-- ── Origen + Tipo ── -->
                 <div class="row g-2 mb-2">
-                    <div class="col-12 col-md-6">
-                        <label class="form-label">Origen de la cita</label>
-                        <input type="text" class="form-control" id="txtOrigenCita" autocomplete="off" disabled />
+                    <div class="col-12 col-md-5">
+                        <label class="form-label">Origen</label>
+                        <input type="text" class="form-control" id="txtOrigenCita" disabled />
                     </div>
                     <div class="col-12 col-md-3">
                         <label class="form-label fw-bold">Tipo de Cita</label>
                         <input type="text" class="form-control" id="txtTipoCita" disabled />
                     </div>
-                    <div class="col-12 col-md-3 d-flex align-items-end">
+                    <div class="col-12 col-md-4 d-flex align-items-end">
                         <a href="#" target="_blank" class="btn btn-info btn-sm w-100 d-none" id="btnUnirseCalcom">
                             <i class="fas fa-video me-1"></i>Unirse a reunión virtual
                         </a>
                     </div>
                 </div>
-
                 <hr />
-
-                <!-- ── Motivo paciente ── -->
-                <div class="row g-2 mb-2">
-                    <div class="col-12">
-                        <label class="form-label">Motivo indicado por el paciente</label>
-                        <textarea class="form-control" id="txtRazonCitaUsr" rows="3" readonly></textarea>
-                    </div>
-                </div>
-
-                <!-- ── Documento paciente ── -->
-                <div class="row g-2 mb-3">
-                    <div class="col-12">
-                        <label class="form-label d-block">Documento aportado por el paciente</label>
-                        <button type="button" id="btnVerDocPaciente"
-                                class="btn btn-outline-secondary btn-sm" disabled>
-                            Ver documento del paciente
-                        </button>
-                        <div class="mt-1">
-                            <small id="lblDocPacienteSin" class="text-muted d-none">El paciente no adjuntó ningún documento.</small>
-                            <small id="lblDocPacienteCon" class="text-success d-none">✔ Documento del paciente disponible.</small>
-                        </div>
-                        <!-- Vista previa imagen si el documento es una imagen -->
-                        <div class="mt-2" id="divImgPaciente" style="display:none;">
-                            <img id="imgDocPaciente" src=""
-                                 class="img-fluid rounded border"
-                                 style="max-height:250px; object-fit:contain;" />
-                        </div>
-                    </div>
-                </div>
-
-                <hr />
-
-                <!-- ── Valoración solo lectura ── -->
-                <div class="row g-2 mb-2">
-                    <div class="col-12">
-                        <label class="form-label fw-bold">Valoración del paciente (0-5 estrellas)</label>
-                        <div class="star-rating-readonly" id="starRatingDisplay">
-                            <span class="star" data-value="1">★</span>
-                            <span class="star" data-value="2">★</span>
-                            <span class="star" data-value="3">★</span>
-                            <span class="star" data-value="4">★</span>
-                            <span class="star" data-value="5">★</span>
-                            <span class="star-zero" id="lblSinValoracion" style="display:none;">(Sin valoración)</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ── Opinión paciente ── -->
-                <div class="row g-2 mb-3">
-                    <div class="col-12">
-                        <label class="form-label">Opinión del paciente sobre el doctor y la clínica</label>
-                        <textarea class="form-control" id="txtOpinionDoctorYClinica" rows="3" readonly
-                                  placeholder="El paciente no ha dejado ninguna opinión."></textarea>
-                    </div>
-                </div>
-
-                <hr />
-
-                <div class="alert alert-primary" role="alert">
-                    Escriba las indicaciones para el paciente y, si lo desea, adjunte un informe o documento del doctor.
-                </div>
-
-                <!-- ── Indicaciones doctor ── -->
-                <div class="row g-2 mb-3">
-                    <div class="col-12">
-                        <label class="form-label">Indicaciones del doctor</label>
-                        <textarea class="form-control" id="txtIndicaciones" rows="3"></textarea>
-                    </div>
-                </div>
-
-                <!-- ── Documento doctor ── -->
-                <div class="row g-2 mb-2">
-                    <div class="col-12">
-                        <label class="form-label d-block">Documento del doctor</label>
-                        <button type="button" id="btnVerDocDoctor"
-                                class="btn btn-outline-secondary btn-sm" disabled>
-                            Ver documento del doctor
-                        </button>
-                        <div class="mt-1">
-                            <small id="lblDocDoctorSin" class="text-muted d-none">No hay documento registrado del doctor para esta cita.</small>
-                            <small id="lblDocDoctorCon" class="text-success d-none">✔ Documento del doctor disponible.</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row g-2 mb-2">
-                    <div class="col-12">
-                        <label class="form-label">Adjuntar / actualizar documento del doctor</label>
-                        <input type="file" class="form-control" id="fileDocDoctor"
-                               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
-                    </div>
-                </div>
-
-            </div>
-
-            <hr />
-
-            <!-- ── Análisis IA doctor ── -->
-            <div class="mb-3">
-                <label class="form-label fw-bold">
-                    <i class="fas fa-robot me-1 text-success"></i>Análisis IA
-                </label>
                 <div class="mb-2">
-                    <select class="form-select form-select-sm" id="docServicioIA" style="max-width:220px;">
-                        <option value="dental">🦷 Dental (boca/encías)</option>
-                        <option value="rx">🩻 Radiografía dental</option>
-                        <option value="derma">🔬 Dermatología</option>
-                        <option value="belleza">✨ Estética</option>
-                        <option value="general">🏥 General</option>
-                    </select>
+                    <label class="form-label">Motivo del paciente</label>
+                    <textarea class="form-control" id="txtRazonCitaUsr" rows="3" readonly></textarea>
                 </div>
-                <ul class="nav nav-tabs nav-sm mb-2">
-                    <li class="nav-item">
-                        <button class="nav-link active small" data-bs-toggle="tab" data-bs-target="#docTabCamara">
-                            <i class="fas fa-camera me-1"></i>Cámara web
-                        </button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link small" data-bs-toggle="tab" data-bs-target="#docTabPegar">
-                            <i class="fas fa-paste me-1"></i>Pegar captura
-                        </button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link small" data-bs-toggle="tab" data-bs-target="#docTabFichero">
-                            <i class="fas fa-file-image me-1"></i>Fichero
-                        </button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link small" data-bs-toggle="tab" data-bs-target="#docTabBD">
-                            <i class="fas fa-database me-1"></i>Doc. paciente BD
-                        </button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link small" data-bs-toggle="tab" data-bs-target="#docTabDoctorBD">
-                            <i class="fas fa-user-md me-1"></i>Doc. doctor BD
-                        </button>
-                    </li>
-                </ul>
-                <div class="tab-content">
-                    <!-- Tab Cámara web -->
-                    <div class="tab-pane fade show active" id="docTabCamara">
-                        <div class="d-flex gap-2 mb-2">
-                            <button type="button" class="btn btn-success btn-sm" id="docBtnAbrirCamara">
-                                <i class="fas fa-camera me-1"></i>Tomar foto
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary btn-sm d-none" id="docBtnCerrarCamara">Cancelar</button>
-                        </div>
-                        <div id="docCamaraStream" class="d-none mb-2 position-relative">
-                            <video id="docVideo" autoplay playsinline
-                                   style="width:100%;max-height:240px;border-radius:8px;background:#000;"></video>
-                            <button type="button" id="docBtnVoltear"
-                                    class="btn btn-dark btn-sm position-absolute"
-                                    style="top:8px;right:8px;opacity:0.8;">
-                                <i class="fas fa-sync-alt"></i>
-                            </button>
-                            <div class="mt-1">
-                                <button type="button" class="btn btn-primary btn-sm" id="docBtnCapturar">
-                                    <i class="fas fa-camera me-1"></i>Capturar
-                                </button>
-                            </div>
-                        </div>
-                        <div id="docCropperWrapper" class="d-none mb-2">
-                            <div id="docCropperBox" style="height:220px;background:#000;border-radius:8px;overflow:hidden;position:relative;">
-                                <img id="docImgCropper" src="" alt="Recortar" style="max-width:100%;display:block;" />
-                            </div>
-                            <div class="alert alert-info py-1 px-2 mt-1 mb-1 small">
-                                <i class="fas fa-crop-alt me-1"></i>
-                                <strong>1.</strong> Usa el zoom para ampliar la zona.
-                                <strong>2.</strong> Pulsa <kbd>Mover</kbd> para desplazar la imagen.
-                                <strong>3.</strong> Pulsa <kbd>Recortar</kbd> para ajustar el área.
-                                Solo se enviará la zona seleccionada.
-                            </div>
-                            <!-- Fila 1: Zoom -->
-                            <div class="d-flex gap-2 mt-1 align-items-center">
-                                <span class="text-muted small" style="min-width:40px;">Zoom:</span>
-                                <i class="fas fa-search-minus text-muted"></i>
-                                <input type="range" id="docSliderZoom" min="0.1" max="5" step="0.05" value="0.1"
-                                       class="form-range flex-grow-1" title="Zoom" />
-                                <i class="fas fa-search-plus text-muted"></i>
-                            </div>
-                            <!-- Fila 2: Modos + Reset + Analizar -->
-                            <div class="d-flex gap-2 mt-1 flex-wrap align-items-center">
-                                <div class="btn-group btn-group-sm" role="group">
-                                    <button type="button" class="btn btn-outline-primary" id="docBtnModeMover" title="Mover imagen">
-                                        <i class="fas fa-hand-paper me-1"></i>Mover
-                                    </button>
-                                    <button type="button" class="btn btn-outline-primary active" id="docBtnModeRecortar" title="Ajustar recorte">
-                                        <i class="fas fa-crop-alt me-1"></i>Recortar
-                                    </button>
-                                </div>
-                                <button type="button" class="btn btn-outline-secondary btn-sm" id="docBtnResetCrop">
-                                    <i class="fas fa-undo"></i> Reset
-                                </button>
-                                <button type="button" class="btn btn-success btn-sm ms-auto" id="docBtnAnalizarCamara">
-                                    <i class="fas fa-microscope me-1"></i>Analizar recorte con IA
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Tab Pegar captura (Ctrl+V o PrintScreen) -->
-                    <div class="tab-pane fade" id="docTabPegar">
-                        <div class="alert alert-info small py-2">
-                            <i class="fas fa-info-circle me-1"></i>
-                            Haga una captura de pantalla de la reunión virtual (PrintScreen o Snipping Tool),
-                            luego haga clic en el área de abajo y pegue con <kbd>Ctrl+V</kbd>.
-                        </div>
-                        <div id="docPasteArea"
-                             tabindex="0"
-                             style="min-height:120px;border:2px dashed #6c757d;border-radius:8px;
-                                        display:flex;align-items:center;justify-content:center;
-                                        cursor:pointer;background:#f8f9fa;"
-                             class="mb-2">
-                            <span class="text-muted small">Haga clic aquí y pegue la captura (Ctrl+V)</span>
-                        </div>
-                        <div id="docPastePreview" class="d-none mb-2">
-                            <img id="docPasteImg" src="" style="max-width:100%;max-height:200px;border-radius:8px;border:1px solid #dee2e6;" />
-                        </div>
-                        <button type="button" class="btn btn-success btn-sm d-none" id="docBtnAnalizarPaste">
-                            <i class="fas fa-microscope me-1"></i>Analizar captura con IA
-                        </button>
-                    </div>
-                    <!-- Tab Fichero -->
-                    <div class="tab-pane fade" id="docTabFichero">
-                        <div class="mb-2">
-                            <input type="file" class="form-control form-control-sm" id="docFileIA" accept="image/*" />
-                        </div>
-                        <button type="button" class="btn btn-success btn-sm" id="docBtnAnalizarFichero">
-                            <i class="fas fa-microscope me-1"></i>Analizar fichero con IA
-                        </button>
-                    </div>
-                    <!-- Tab BD Paciente -->
-                    <div class="tab-pane fade" id="docTabBD">
-                        <p class="small text-muted mb-2" id="docLblBDInfo">Se analizará el documento del paciente en BD.</p>
-                        <div class="d-flex gap-2 flex-wrap">
-                            <button type="button" class="btn btn-success btn-sm" id="docBtnAnalizarBD" disabled>
-                                <i class="fas fa-database me-1"></i>Analizar doc. paciente con IA
-                            </button>
-                            <button type="button" class="btn btn-outline-success btn-sm" id="docBtnAnalizarBDSeleccion" disabled>
-                                <i class="fas fa-crop-alt me-1"></i>Analizar selección con IA
-                            </button>
-                            <button type="button" class="btn btn-outline-warning btn-sm" id="docBtnAnalizarBDYolo" disabled>
-                                <i class="fas fa-robot me-1"></i>Analizar selección con IA + YOLO
-                            </button>
-                        </div>
-                    </div>
-                    <!-- Tab BD Doctor -->
-                    <div class="tab-pane fade" id="docTabDoctorBD">
-                        <p class="small text-muted mb-2" id="docLblDoctorBDInfo">Se analizará el documento del doctor en BD.</p>
-                        <button type="button" class="btn btn-success btn-sm" id="docBtnAnalizarDoctorBD" disabled>
-                            <i class="fas fa-user-md me-1"></i>Analizar doc. doctor con IA
-                        </button>
+                <div class="mb-3">
+                    <label class="form-label d-block">Documento del paciente</label>
+                    <button type="button" id="btnVerDocPaciente" class="btn btn-outline-secondary btn-sm" disabled>
+                        Ver documento del paciente
+                    </button>
+                    <small id="lblDocPacienteSin" class="text-muted ms-2 d-none">Sin documento.</small>
+                    <small id="lblDocPacienteCon" class="text-success ms-2 d-none">✔ Disponible.</small>
+                    <div class="mt-2" id="divImgPaciente" style="display:none;">
+                        <img id="imgDocPaciente" src="" class="img-fluid rounded border" style="max-height:200px;object-fit:contain;" />
                     </div>
                 </div>
-                <!-- Resultado -->
-                <div id="docResultadoIA" class="d-none mt-2">
-                    <div class="alert alert-success small py-2 mb-0" id="docTextoIA"
-                         style="white-space:pre-line;max-height:200px;overflow-y:auto;"></div>
+                <hr />
+                <div class="mb-2">
+                    <label class="form-label fw-bold">Valoración del paciente</label>
+                    <div class="star-rating-readonly" id="starRatingDisplay">
+                        <span class="star" data-value="1">★</span><span class="star" data-value="2">★</span>
+                        <span class="star" data-value="3">★</span><span class="star" data-value="4">★</span>
+                        <span class="star" data-value="5">★</span>
+                        <span class="star-zero" id="lblSinValoracion" style="display:none;">(Sin valoración)</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Opinión del paciente</label>
+                    <textarea class="form-control" id="txtOpinionDoctorYClinica" rows="2" readonly></textarea>
+                </div>
+                <hr />
+                <div class="alert alert-primary" role="alert">
+                    Escriba las indicaciones para el paciente y adjunte documento si lo desea.
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Indicaciones del doctor</label>
+                    <textarea class="form-control" id="txtIndicaciones" rows="4"></textarea>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label d-block">Documento del doctor</label>
+                    <button type="button" id="btnVerDocDoctor" class="btn btn-outline-secondary btn-sm" disabled>
+                        Ver documento del doctor
+                    </button>
+                    <small id="lblDocDoctorSin" class="text-muted ms-2 d-none">Sin documento.</small>
+                    <small id="lblDocDoctorCon" class="text-success ms-2 d-none">✔ Disponible.</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Adjuntar / actualizar documento del doctor</label>
+                    <input type="file" class="form-control" id="fileDocDoctor" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                </div>
+                <hr />
+                <!-- ── Análisis IA ── -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-robot me-1 text-success"></i>Análisis IA
+                    </label>
+                    <div class="mb-2">
+                        <select class="form-select form-select-sm" id="docServicioIA" style="max-width:220px;">
+                            <option value="dental">🦷 Dental (boca/encías)</option>
+                            <option value="rx">🩻 Radiografía dental</option>
+                            <option value="derma">🔬 Dermatología</option>
+                            <option value="belleza">✨ Estética</option>
+                            <option value="general">🏥 General</option>
+                        </select>
+                    </div>
+                    <ul class="nav nav-tabs nav-sm mb-2">
+                        <li class="nav-item">
+                            <button class="nav-link active small" data-bs-toggle="tab" data-bs-target="#docTabCamara">
+                                <i class="fas fa-camera me-1"></i>Cámara
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link small" data-bs-toggle="tab" data-bs-target="#docTabPegar">
+                                <i class="fas fa-paste me-1"></i>Pegar captura
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link small" data-bs-toggle="tab" data-bs-target="#docTabFichero">
+                                <i class="fas fa-file-image me-1"></i>Fichero
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link small" data-bs-toggle="tab" data-bs-target="#docTabBD">
+                                <i class="fas fa-database me-1"></i>Doc. paciente BD
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link small" data-bs-toggle="tab" data-bs-target="#docTabDoctorBD">
+                                <i class="fas fa-user-md me-1"></i>Doc. doctor BD
+                            </button>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <!-- Tab Cámara — abre pantalla completa -->
+                        <div class="tab-pane fade show active" id="docTabCamara">
+                            <button type="button" class="btn btn-success" id="docBtnAbrirCamara">
+                                <i class="fas fa-camera me-1"></i>Abrir cámara a pantalla completa
+                            </button>
+                            <p class="text-muted small mt-2 mb-1">
+                                Se abrirá pantalla completa para capturar, recortar con zoom y analizar.
+                                Al terminar pulsa "Ver resultados y volver".
+                            </p>
+                            <div id="docCamaraMiniPreview" class="d-none mt-1">
+                                <img id="docCamaraMiniImg" src="" style="max-height:70px;border-radius:6px;border:2px solid #198754;" />
+                                <span class="badge bg-success ms-2">✓ Imagen capturada</span>
+                            </div>
+                        </div>
+                        <!-- Tab Pegar -->
+                        <div class="tab-pane fade" id="docTabPegar">
+                            <div class="alert alert-info small py-2">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Haz PrintScreen de la reunión virtual, clic en el área y pega con <kbd>Ctrl+V</kbd>.
+                            </div>
+                            <div id="docPasteArea" tabindex="0"
+                                 style="min-height:100px;border:2px dashed #6c757d;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#f8f9fa;"
+                                 class="mb-2">
+                                <span class="text-muted small">Clic aquí y pega (Ctrl+V)</span>
+                            </div>
+                            <div id="docPastePreview" class="d-none mb-2">
+                                <img id="docPasteImg" src="" style="max-width:100%;max-height:180px;border-radius:8px;border:1px solid #dee2e6;" />
+                            </div>
+                            <button type="button" class="btn btn-success btn-sm d-none" id="docBtnAnalizarPaste">
+                                <i class="fas fa-microscope me-1"></i>Analizar captura con IA
+                            </button>
+                        </div>
+                        <!-- Tab Fichero -->
+                        <div class="tab-pane fade" id="docTabFichero">
+                            <input type="file" class="form-control form-control-sm mb-2" id="docFileIA" accept="image/*" />
+                            <button type="button" class="btn btn-success btn-sm" id="docBtnAnalizarFichero">
+                                <i class="fas fa-microscope me-1"></i>Analizar fichero con IA
+                            </button>
+                        </div>
+                        <!-- Tab BD Paciente -->
+                        <div class="tab-pane fade" id="docTabBD">
+                            <p class="small text-muted mb-2" id="docLblBDInfo">Se analizará el documento del paciente en BD.</p>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button type="button" class="btn btn-success btn-sm" id="docBtnAnalizarBD" disabled>
+                                    <i class="fas fa-database me-1"></i>Analizar doc. paciente con IA
+                                </button>
+                                <button type="button" class="btn btn-outline-success btn-sm" id="docBtnAnalizarBDSeleccion" disabled>
+                                    <i class="fas fa-crop-alt me-1"></i>Analizar selección con IA
+                                </button>
+                                <button type="button" class="btn btn-outline-warning btn-sm" id="docBtnAnalizarBDYolo" disabled>
+                                    <i class="fas fa-robot me-1"></i>Analizar selección con IA + YOLO
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Tab BD Doctor -->
+                        <div class="tab-pane fade" id="docTabDoctorBD">
+                            <p class="small text-muted mb-2" id="docLblDoctorBDInfo">Se analizará el documento del doctor en BD.</p>
+                            <button type="button" class="btn btn-success btn-sm" id="docBtnAnalizarDoctorBD" disabled>
+                                <i class="fas fa-user-md me-1"></i>Analizar doc. doctor con IA
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Resultado IA -->
+                    <div id="docResultadoIA" class="d-none mt-2">
+                        <label class="form-label fw-bold text-success">
+                            <i class="fas fa-check-circle me-1"></i>Resultado del análisis IA:
+                        </label>
+                        <div class="alert alert-success small py-2 mb-0" id="docTextoIA"
+                             style="white-space:pre-line;max-height:220px;overflow-y:auto;"></div>
+                    </div>
                 </div>
             </div>
-
             <div class="modal-footer d-flex flex-wrap gap-2">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                 <button type="button" class="btn btn-primary" id="btnTerminarCita">
@@ -596,141 +463,92 @@
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
     <script>
-        // Variables globales cámara/cropper/IA
-        var docStreamCamara = null, docFacingMode = "environment";
-        var docCropper = null, docImagenBlob = null;
-        var urlCalcom = null;
+        // ── Variables globales ────────────────────────────────────────────────
         var docPacienteBase64 = null, docPacienteContentType = null;
+        var docDoctorBase64   = null, docDoctorContentType   = null;
+        var docImagenBlob     = null;
+        var urlCalcom         = null;
         var docIdCitaSeleccionada = 0;
+        var fsCropper = null, fsStream = null, fsFacingMode = "environment";
+
         (function () {
             "use strict";
             window.openHelpVideo = function (fileName) {
                 const w = 900, h = 520;
-                const left = Math.max(0, (screen.width  - w) / 2);
-                const top  = Math.max(0, (screen.height - h) / 2);
                 window.open("/helps/" + encodeURIComponent(fileName), "helpVideo",
-                    `width=${w},height=${h},left=${left},top=${top},resizable=yes`);
+                    `width=${w},height=${h},left=${Math.max(0,(screen.width-w)/2)},top=${Math.max(0,(screen.height-h)/2)},resizable=yes`);
             };
         })();
 
         function initTooltips(scope) {
-            const root = scope || document;
-            root.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+            (scope || document).querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
                 if (!bootstrap.Tooltip.getInstance(el)) new bootstrap.Tooltip(el);
             });
         }
-
         function mostrarValoracion(valor) {
-            document.querySelectorAll('#starRatingDisplay .star').forEach(star => {
-                star.classList.toggle('active', parseInt(star.getAttribute('data-value')) <= valor);
-            });
+            document.querySelectorAll('#starRatingDisplay .star').forEach(s =>
+                s.classList.toggle('active', parseInt(s.getAttribute('data-value')) <= valor));
             document.getElementById('lblSinValoracion').style.display = valor === 0 ? 'inline' : 'none';
         }
 
+        // ── IIFE principal ────────────────────────────────────────────────────
         (function () {
-            let tablaData;
-            let idCitaSeleccionada = 0;
-            const controlador = "Doctor";
-            const modal        = "mdData";
-
-            // Las variables de doc son globales (ver arriba del script)
-            var docDoctorBase64        = null;
-            var docDoctorContentType   = null;
-
+            let tablaData, idCitaSeleccionada = 0;
+            const controlador = "Doctor", modal = "mdData";
 
             $(document).ready(function () {
                 initTooltips();
-
                 tablaData = $('#tbData').DataTable({
-                    processing: true,
-                    serverSide: true,
-                    scrollX:    true,
+                    processing: true, serverSide: true, scrollX: true,
                     ajax: {
-                        url:      '/' + controlador + '/ListaCitasAsignadasServerSide',
-                        type:     'POST',
-                        dataType: 'json',
-                        data: function (d) {
-                            d.idEstadoCita = parseInt($('#cboEstadoCita').val() || '1');
-                            return d;
-                        }
+                        url: '/' + controlador + '/ListaCitasAsignadasServerSide',
+                        type: 'POST', dataType: 'json',
+                        data: function (d) { d.idEstadoCita = parseInt($('#cboEstadoCita').val() || '1'); return d; }
                     },
                     columns: [
-                        {
-                            data: "idCita", width: "80px", orderable: false,
-                            render: function () {
-                                return `<div class="acciones-container">
-                                    <button type="button"
-                                            class="btn btn-warning btn-circle text-white btn-indicaciones"
-                                            title="Indicaciones">
-                                        <i class="fas fa-notes-medical"></i>
-                                    </button>
-                                </div>`;
-                            }
-                        },
-                        { data: "idCita",     width: "80px",  title: "Nº Cita" },
-                        { data: "fechaCita",  width: "150px" },
-                        { data: "horaCita",   width: "150px" },
-                        {
-                            data: "tipoDeCita",
-                            width: "100px",
-                            render: function(v) {
-                                const map = {
-                                    P: '<span class="badge bg-primary">Presencial</span>',
-                                    T: '<span class="badge bg-warning text-dark">Telefónica</span>',
-                                    V: '<span class="badge bg-info text-dark">Virtual</span>'
-                                };
-                                return map[v] || v || '';
-                            }
-                        },
-                        {
-                            data: "usuario",
-                            render: d => (d?.nombre || "") + " " + (d?.apellido || "")
-                        },
-                        {
-                            data: "estadoCita",
-                            render: d => {
-                                if (!d?.nombre) return "";
-                                return d.nombre === "Pendiente"
-                                    ? `<span class="badge bg-primary">${d.nombre}</span>`
-                                    : `<span class="badge bg-success">${d.nombre}</span>`;
-                            }
-                        }
+                        { data: "idCita", width: "80px", orderable: false,
+                          render: () => `<div class="acciones-container"><button type="button" class="btn btn-warning btn-circle text-white btn-indicaciones" title="Indicaciones"><i class="fas fa-notes-medical"></i></button></div>` },
+                        { data: "idCita", width: "80px", title: "Nº Cita" },
+                        { data: "fechaCita", width: "150px" },
+                        { data: "horaCita",  width: "100px" },
+                        { data: "tipoDeCita", width: "100px",
+                          render: v => ({ P: '<span class="badge bg-primary">Presencial</span>', T: '<span class="badge bg-warning text-dark">Telefónica</span>', V: '<span class="badge bg-info text-dark">Virtual</span>' }[v] || v || '') },
+                        { data: "usuario", render: d => (d?.nombre||"")+" "+(d?.apellido||"") },
+                        { data: "estadoCita", render: d => !d?.nombre ? "" : d.nombre==="Pendiente" ? `<span class="badge bg-primary">${d.nombre}</span>` : `<span class="badge bg-success">${d.nombre}</span>` }
                     ],
-                    order: [[2, "desc"], [3, "asc"]],
+                    order: [[2,"desc"],[3,"asc"]],
                     language: { url: "https://cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json" },
                     drawCallback: function () { initTooltips(document.getElementById("tbData")); }
                 });
 
                 $("#cboEstadoCita").on("change", () => tablaData.ajax.reload());
 
-                // ── Abrir modal ───────────────────────────────────────────────
+                // Abrir modal
                 $("#tbData tbody").on("click", ".btn-indicaciones", function () {
                     const data = tablaData.row($(this).closest('tr')).data();
                     idCitaSeleccionada = data.idCita;
                     docIdCitaSeleccionada = data.idCita;
 
-                    $("#txtNumeroCita").val(data.idCita || "");
-                    $("#txtPaciente").val(((data.usuario?.nombre) || "") + " " + ((data.usuario?.apellido) || ""));
-                    $("#txtFechaCitaResumen").val(data.fechaCita  || "");
-                    $("#txtHoraCitaResumen").val(data.horaCita    || "");
-                    $("#txtOrigenCita").val(data.origenCita       || "");
-                    $("#txtRazonCitaUsr").val(data.razonCitaUsr   || "");
-                    $("#txtIndicaciones").val(data.indicaciones   || "");
+                    $("#txtNumeroCita").val(data.idCita||"");
+                    $("#txtPaciente").val((data.usuario?.nombre||"")+" "+(data.usuario?.apellido||""));
+                    $("#txtFechaCitaResumen").val(data.fechaCita||"");
+                    $("#txtHoraCitaResumen").val(data.horaCita||"");
+                    $("#txtOrigenCita").val(data.origenCita||"");
+                    $("#txtRazonCitaUsr").val(data.razonCitaUsr||"");
+                    $("#txtIndicaciones").val(data.indicaciones||"");
+                    mostrarValoracion(data.valDoctorCita ?? 3);
+                    $("#txtOpinionDoctorYClinica").val(data.opinionDoctorYClinica||"");
 
-                    // Tipo cita + botón Cal.com
-                    const tipoMap = { P: "Presencial", T: "Telefónica", V: "Virtual" };
-                    $("#txtTipoCita").val(tipoMap[data.tipoDeCita] || data.tipoDeCita || "Presencial");
-                    const calUid = data.calBookingUid || data.cal_booking_uid || null;
-                    urlCalcom = calUid ? `https://app.cal.eu/video/${calUid}` : (data.urlCitaoTelefono || null);
-                    if (urlCalcom) {
-                        $("#btnUnirseCalcom").removeClass("d-none").attr("href", urlCalcom);
-                    } else {
-                        $("#btnUnirseCalcom").addClass("d-none");
-                    }
+                    // Tipo + Cal.com
+                    const tipoMap = { P:"Presencial", T:"Telefónica", V:"Virtual" };
+                    $("#txtTipoCita").val(tipoMap[data.tipoDeCita]||data.tipoDeCita||"Presencial");
+                    const calUid = data.calBookingUid || null;
+                    urlCalcom = calUid ? `https://app.cal.eu/video/${calUid}` : (data.urlCitaOTelefono||null);
+                    urlCalcom ? $("#btnUnirseCalcom").removeClass("d-none").attr("href", urlCalcom)
+                              : $("#btnUnirseCalcom").addClass("d-none");
 
-                    // Mostrar diagnóstico IA previo si existe
+                    // Diagnóstico IA previo
                     if (data.diagnosticoIA) {
                         document.getElementById("docTextoIA").innerText = data.diagnosticoIA;
                         document.getElementById("docResultadoIA").classList.remove("d-none");
@@ -739,77 +557,47 @@
                         document.getElementById("docResultadoIA").classList.add("d-none");
                     }
 
-                    // BD IA
-                    if (data.documentoCitaUsr) {
-                        const esImagen = (data.contentType || "").startsWith("image/");
-                        $("#docBtnAnalizarBD, #docBtnAnalizarBDSeleccion, #docBtnAnalizarBDYolo").prop("disabled", !esImagen);
-                        $("#docLblBDInfo").text(esImagen ? "Se analizará la imagen del paciente en BD." : "El doc. del paciente no es una imagen.");
+                    // Documento paciente
+                    docPacienteBase64      = data.documentoCitaUsr || null;
+                    docPacienteContentType = data.contentType || "application/octet-stream";
+                    if (docPacienteBase64) {
+                        $("#btnVerDocPaciente").prop("disabled",false).addClass("btn-outline-success").removeClass("btn-outline-secondary");
+                        $("#lblDocPacienteSin").addClass("d-none"); $("#lblDocPacienteCon").removeClass("d-none");
+                        if ((data.contentType||"").toLowerCase().includes("image")) {
+                            $("#imgDocPaciente").attr("src", `data:${data.contentType};base64,${data.documentoCitaUsr}`);
+                            $("#divImgPaciente").show();
+                        } else { $("#divImgPaciente").hide(); $("#imgDocPaciente").attr("src",""); }
+                        const esImg = (data.contentType||"").startsWith("image/");
+                        $("#docBtnAnalizarBD, #docBtnAnalizarBDSeleccion, #docBtnAnalizarBDYolo").prop("disabled", !esImg);
+                        $("#docLblBDInfo").text(esImg ? "Se analizará la imagen del paciente en BD." : "El doc. del paciente no es una imagen.");
                     } else {
+                        $("#btnVerDocPaciente").prop("disabled",true).removeClass("btn-outline-success").addClass("btn-outline-secondary");
+                        $("#lblDocPacienteSin").removeClass("d-none"); $("#lblDocPacienteCon").addClass("d-none");
+                        $("#divImgPaciente").hide(); $("#imgDocPaciente").attr("src","");
                         $("#docBtnAnalizarBD, #docBtnAnalizarBDSeleccion, #docBtnAnalizarBDYolo").prop("disabled", true);
                         $("#docLblBDInfo").text("No hay documento del paciente en BD.");
                     }
-                    // Doc doctor BD
-                    if (data.docIndicacionesDoctor) {
-                        const esImagenDoc = (data.contentTypeDoctor || "").startsWith("image/");
-                        $("#docBtnAnalizarDoctorBD").prop("disabled", !esImagenDoc);
-                        $("#docLblDoctorBDInfo").text(esImagenDoc ? "Se analizará el documento del doctor en BD." : "El doc. del doctor no es una imagen.");
+
+                    // Documento doctor
+                    docDoctorBase64      = data.docIndicacionesDoctor || null;
+                    docDoctorContentType = data.contentTypeDoctor || "application/octet-stream";
+                    if (docDoctorBase64) {
+                        $("#btnVerDocDoctor").prop("disabled",false).addClass("btn-outline-success").removeClass("btn-outline-secondary");
+                        $("#lblDocDoctorSin").addClass("d-none"); $("#lblDocDoctorCon").removeClass("d-none");
+                        const esImgDoc = (data.contentTypeDoctor||"").startsWith("image/");
+                        $("#docBtnAnalizarDoctorBD").prop("disabled", !esImgDoc);
+                        $("#docLblDoctorBDInfo").text(esImgDoc ? "Se analizará el documento del doctor en BD." : "El doc. del doctor no es una imagen.");
                     } else {
+                        $("#btnVerDocDoctor").prop("disabled",true).removeClass("btn-outline-success").addClass("btn-outline-secondary");
+                        $("#lblDocDoctorSin").removeClass("d-none"); $("#lblDocDoctorCon").addClass("d-none");
                         $("#docBtnAnalizarDoctorBD").prop("disabled", true);
                         $("#docLblDoctorBDInfo").text("No hay documento del doctor en BD.");
                     }
+
                     docImagenBlob = null;
-                    if (docCropper) { docCropper.destroy(); docCropper = null; }
-                    $("#docCropperWrapper, #docCamaraStream, #docResultadoIA, #docPastePreview").addClass("d-none");
-                    $("#docBtnAnalizarPaste, #docBtnCerrarCamara").addClass("d-none");
-
-                    mostrarValoracion(data.valDoctorCita ?? 3);
-                    $("#txtOpinionDoctorYClinica").val(data.opinionDoctorYClinica || "");
-
-                    // ── Documento paciente ────────────────────────────────────
-                    docPacienteBase64      = data.documentoCitaUsr;
-                    docPacienteContentType = data.contentType || "application/octet-stream";
-
-                    if (docPacienteBase64) {
-                        $("#btnVerDocPaciente").prop("disabled", false)
-                            .addClass("btn-outline-success").removeClass("btn-outline-secondary");
-                        $("#lblDocPacienteSin").addClass("d-none");
-                        $("#lblDocPacienteCon").removeClass("d-none");
-
-                        // Mostrar imagen inline si el contenido es una imagen
-                        const ct = (data.contentType || "").toLowerCase();
-                        if (ct.includes("image")) {
-                            $("#imgDocPaciente").attr("src",
-                                `data:${data.contentType};base64,${data.documentoCitaUsr}`);
-                            $("#divImgPaciente").show();
-                        } else {
-                            $("#divImgPaciente").hide();
-                            $("#imgDocPaciente").attr("src", "");
-                        }
-                    } else {
-                        $("#btnVerDocPaciente").prop("disabled", true)
-                            .removeClass("btn-outline-success").addClass("btn-outline-secondary");
-                        $("#lblDocPacienteSin").removeClass("d-none");
-                        $("#lblDocPacienteCon").addClass("d-none");
-                        $("#divImgPaciente").hide();
-                        $("#imgDocPaciente").attr("src", "");
-                    }
-
-                    // ── Documento doctor ──────────────────────────────────────
-                    docDoctorBase64      = data.docIndicacionesDoctor;
-                    docDoctorContentType = data.contentTypeDoctor || "application/octet-stream";
-                    if (docDoctorBase64) {
-                        $("#btnVerDocDoctor").prop("disabled", false)
-                            .addClass("btn-outline-success").removeClass("btn-outline-secondary");
-                        $("#lblDocDoctorSin").addClass("d-none");
-                        $("#lblDocDoctorCon").removeClass("d-none");
-                    } else {
-                        $("#btnVerDocDoctor").prop("disabled", true)
-                            .removeClass("btn-outline-success").addClass("btn-outline-secondary");
-                        $("#lblDocDoctorSin").removeClass("d-none");
-                        $("#lblDocDoctorCon").addClass("d-none");
-                    }
-
                     $("#fileDocDoctor").val("");
+                    $("#docCamaraMiniPreview").addClass("d-none");
+                    $("#docPastePreview, #docBtnAnalizarPaste").addClass("d-none");
 
                     const esAtendido = data.estadoCita?.nombre === "Atendido";
                     $(".alert-primary").text(esAtendido
@@ -819,179 +607,220 @@
                     $("#" + modal).modal("show");
                 });
 
-                // ── Ver documentos ────────────────────────────────────────────
+                // Ver documentos
                 $("#btnVerDocPaciente").on("click", function () {
                     if (!docPacienteBase64) return;
-                    const bytes = atob(docPacienteBase64);
-                    const arr   = new Uint8Array(bytes.length);
-                    for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
-                    window.open(URL.createObjectURL(
-                        new Blob([arr], { type: docPacienteContentType || "application/octet-stream" })
-                    ), "_blank");
+                    const b = atob(docPacienteBase64), a = new Uint8Array(b.length);
+                    for (let i=0;i<b.length;i++) a[i]=b.charCodeAt(i);
+                    window.open(URL.createObjectURL(new Blob([a],{type:docPacienteContentType})),"_blank");
                 });
-
                 $("#btnVerDocDoctor").on("click", function () {
                     if (!docDoctorBase64) return;
-                    const bytes = atob(docDoctorBase64);
-                    const arr   = new Uint8Array(bytes.length);
-                    for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
-                    window.open(URL.createObjectURL(
-                        new Blob([arr], { type: docDoctorContentType || "application/octet-stream" })
-                    ), "_blank");
+                    const b = atob(docDoctorBase64), a = new Uint8Array(b.length);
+                    for (let i=0;i<b.length;i++) a[i]=b.charCodeAt(i);
+                    window.open(URL.createObjectURL(new Blob([a],{type:docDoctorContentType})),"_blank");
                 });
 
-                // ── Guardar / marcar atendida ─────────────────────────────────
+                // Guardar
                 $("#btnTerminarCita").on("click", function () {
-                    if ($("#txtIndicaciones").val().trim() === "")
-                        return Swal.fire("Importante", "Debe ingresar las indicaciones.", "warning");
-
-                    const objeto = {
-                        IdCita:       idCitaSeleccionada,
-                        EstadoCita:   { IdEstadoCita: 2 },
-                        Indicaciones: $("#txtIndicaciones").val().trim()
-                    };
-
-                    fetch("/" + controlador + "/CambiarEstado", {
-                        method:  "POST",
-                        headers: { "Content-Type": "application/json;charset=utf-8" },
-                        body:    JSON.stringify(objeto)
-                    })
-                    .then(r => r.json())
-                    .then(rj => {
-                        if (rj.data === "") {
-                            // Prioridad doc: fichero > imagen cámara IA
+                    if ($("#txtIndicaciones").val().trim()==="")
+                        return Swal.fire("Importante","Debe ingresar las indicaciones.","warning");
+                    fetch("/"+controlador+"/CambiarEstado", {
+                        method:"POST", headers:{"Content-Type":"application/json;charset=utf-8"},
+                        body: JSON.stringify({ IdCita:idCitaSeleccionada, EstadoCita:{IdEstadoCita:2}, Indicaciones:$("#txtIndicaciones").val().trim() })
+                    }).then(r=>r.json()).then(rj => {
+                        if (rj.data==="") {
                             const file = document.getElementById("fileDocDoctor").files[0];
-                            const tieneDocDoctor = docDoctorBase64 && docDoctorBase64.length > 0;
-
-                            function guardarDocYFinalizar(b64, tipo) {
-                                const objDoc = {
-                                    IdCita:                idCitaSeleccionada,
-                                    DocIndicacionesDoctor: b64,
-                                    ContentTypeDoctor:     tipo
-                                };
-                                fetch("/" + controlador + "/GuardarDocumentoDoctor", {
-                                    method:  "POST",
-                                    headers: { "Content-Type": "application/json;charset=utf-8" },
-                                    body:    JSON.stringify(objDoc)
-                                })
-                                .then(res => res.json())
-                                .then(() => {
-                                    Swal.fire("Listo!", "Cita marcada como atendida y documento guardado.", "success");
-                                    $("#" + modal).modal("hide");
-                                    tablaData.ajax.reload();
+                            const tieneDoc = docDoctorBase64 && docDoctorBase64.length > 0;
+                            function guardarDoc(b64, tipo) {
+                                fetch("/"+controlador+"/GuardarDocumentoDoctor", {
+                                    method:"POST", headers:{"Content-Type":"application/json;charset=utf-8"},
+                                    body: JSON.stringify({IdCita:idCitaSeleccionada, DocIndicacionesDoctor:b64, ContentTypeDoctor:tipo})
+                                }).then(r=>r.json()).then(()=>{
+                                    Swal.fire("Listo!","Cita marcada como atendida y documento guardado.","success");
+                                    $("#"+modal).modal("hide"); tablaData.ajax.reload();
                                 });
                             }
-
                             if (file) {
-                                // Fichero seleccionado manualmente
-                                const reader = new FileReader();
-                                reader.onload = e => guardarDocYFinalizar(e.target.result.split(",")[1], file.type);
-                                reader.readAsDataURL(file);
-                            } else if (docImagenBlob && !tieneDocDoctor) {
-                                // Imagen recortada con cámara IA — solo si no hay doc doctor previo
-                                const reader = new FileReader();
-                                reader.onload = e => guardarDocYFinalizar(e.target.result.split(",")[1], docImagenBlob.type || "image/jpeg");
-                                reader.readAsDataURL(docImagenBlob);
+                                const rd = new FileReader();
+                                rd.onload = e => guardarDoc(e.target.result.split(",")[1], file.type);
+                                rd.readAsDataURL(file);
+                            } else if (docImagenBlob && !tieneDoc) {
+                                const rd = new FileReader();
+                                rd.onload = e => guardarDoc(e.target.result.split(",")[1], docImagenBlob.type||"image/jpeg");
+                                rd.readAsDataURL(docImagenBlob);
                             } else {
-                                Swal.fire("Listo!", "La cita fue marcada como ATENDIDO.", "success");
-                                $("#" + modal).modal("hide");
-                                tablaData.ajax.reload();
+                                Swal.fire("Listo!","La cita fue marcada como ATENDIDO.","success");
+                                $("#"+modal).modal("hide"); tablaData.ajax.reload();
                             }
-                        } else {
-                            Swal.fire("Error!", rj.data, "warning");
-                        }
+                        } else { Swal.fire("Error!",rj.data,"warning"); }
                     });
+                });
+
+                // Cerrar modal
+                document.getElementById("mdData").addEventListener("hidden.bs.modal", function () {
+                    fsCerrarPantallaCompleta();
+                    docPacienteBase64 = null; docDoctorBase64 = null;
+                    docImagenBlob = null; urlCalcom = null; docIdCitaSeleccionada = 0;
+                    document.getElementById("docTextoIA").innerText = "";
+                    document.getElementById("docResultadoIA").classList.add("d-none");
+                    document.getElementById("docCamaraMiniPreview").classList.add("d-none");
+                    document.getElementById("docPastePreview").classList.add("d-none");
+                    document.getElementById("docBtnAnalizarPaste").classList.add("d-none");
                 });
             });
         })();
 
-        // ── Lógica IA CitasAsignadas ──────────────────────────────────────────
+        // ── Pantalla completa ────────────────────────────────────────────────
+        function fsAbrirPantallaCompleta() {
+            document.getElementById("docFullscreen").classList.add("activo");
+            document.body.style.overflow = "hidden";
+            document.getElementById("fsStreamDiv").style.display = "flex";
+            document.getElementById("fsCropperDiv").style.display = "none";
+            document.getElementById("fsControles").style.display = "none";
+            document.getElementById("fsResultado").classList.remove("visible");
+            document.getElementById("fsBtnVerResultados").classList.add("d-none");
+            fsAbrirStream();
+        }
+        function fsCerrarPantallaCompleta() {
+            fsCerrarStream();
+            if (fsCropper) { fsCropper.destroy(); fsCropper = null; }
+            document.getElementById("docFullscreen").classList.remove("activo");
+            document.body.style.overflow = "";
+        }
+        function fsAbrirStream() {
+            fsCerrarStream();
+            navigator.mediaDevices.getUserMedia({
+                video: { facingMode: fsFacingMode, width:{ideal:1280}, height:{ideal:720} }
+            }).then(s => {
+                fsStream = s;
+                document.getElementById("fsVideo").srcObject = s;
+            }).catch(e => Swal.fire("Error","No se pudo acceder a la cámara: "+e.message,"error"));
+        }
+        function fsCerrarStream() {
+            if (fsStream) { fsStream.getTracks().forEach(t=>t.stop()); fsStream=null; }
+        }
+
         document.addEventListener("DOMContentLoaded", function () {
-            document.getElementById("docBtnAbrirCamara").addEventListener("click", function () {
-                docFacingMode = "environment"; docAbrirStream();
+
+            // Botón abrir pantalla completa
+            document.getElementById("docBtnAbrirCamara").addEventListener("click", fsAbrirPantallaCompleta);
+
+            // Botones pantalla completa
+            document.getElementById("fsBtnVolver").addEventListener("click", fsCerrarPantallaCompleta);
+
+            document.getElementById("fsBtnVoltearFS").addEventListener("click", function () {
+                fsFacingMode = fsFacingMode==="environment" ? "user" : "environment";
+                fsAbrirStream();
             });
-            document.getElementById("docBtnVoltear").addEventListener("click", function () {
-                docFacingMode = docFacingMode === "environment" ? "user" : "environment"; docAbrirStream();
-            });
-            document.getElementById("docBtnCerrarCamara").addEventListener("click", function () {
-                docCerrarStream();
-                document.getElementById("docBtnCerrarCamara").classList.add("d-none");
-            });
-            document.getElementById("docBtnCapturar").addEventListener("click", function () {
-                const video = document.getElementById("docVideo");
+
+            document.getElementById("fsBtnCapturar").addEventListener("click", function () {
+                const video = document.getElementById("fsVideo");
                 const canvas = document.createElement("canvas");
                 canvas.width = video.videoWidth; canvas.height = video.videoHeight;
                 canvas.getContext("2d").drawImage(video, 0, 0);
-                docCerrarStream();
-                document.getElementById("docCamaraStream").classList.add("d-none");
-                const img = document.getElementById("docImgCropper");
+                fsCerrarStream();
+                document.getElementById("fsStreamDiv").style.display = "none";
+                const img = document.getElementById("fsImgCropper");
                 img.src = canvas.toDataURL("image/jpeg", 0.92);
-                document.getElementById("docCropperWrapper").classList.remove("d-none");
-                if (docCropper) { docCropper.destroy(); docCropper = null; }
-                docCropper = new Cropper(img, {
-                    aspectRatio:      NaN,
-                    viewMode:         1,
-                    autoCropArea:     0.5,
-                    responsive:       true,
-                    movable:          true,
-                    zoomable:         true,
-                    cropBoxMovable:   true,
-                    cropBoxResizable: true,
-                    dragMode:         "crop",
-                    minContainerHeight: 220,
-                    background:       true,
-                    guides:           true,
-                    center:           true
+                document.getElementById("fsCropperDiv").style.display = "block";
+                document.getElementById("fsControles").style.display = "block";
+                if (fsCropper) { fsCropper.destroy(); fsCropper=null; }
+                fsCropper = new Cropper(img, {
+                    aspectRatio:NaN, viewMode:1, autoCropArea:0.5,
+                    responsive:true, movable:true, zoomable:true,
+                    cropBoxMovable:true, cropBoxResizable:true, dragMode:"crop"
                 });
-                document.getElementById("docSliderZoom").value = 0.1;
-                document.getElementById("docBtnModeMover").classList.remove("active");
-                document.getElementById("docBtnModeRecortar").classList.add("active");
-            });
-            document.getElementById("docSliderZoom").addEventListener("input", function() {
-                if (!docCropper) return;
-                docCropper.zoomTo(parseFloat(this.value));
-            });
-            document.getElementById("docBtnResetCrop").addEventListener("click", function() {
-                if (docCropper) {
-                    docCropper.reset();
-                    document.getElementById("docSliderZoom").value = 0.1;
-                }
-            });
-            document.getElementById("docBtnModeMover").addEventListener("click", function() {
-                if (!docCropper) return;
-                docCropper.setDragMode("move");
-                this.classList.add("active");
-                document.getElementById("docBtnModeRecortar").classList.remove("active");
-            });
-            document.getElementById("docBtnModeRecortar").addEventListener("click", function() {
-                if (!docCropper) return;
-                docCropper.setDragMode("crop");
-                this.classList.add("active");
-                document.getElementById("docBtnModeMover").classList.remove("active");
+                document.getElementById("fsSliderZoom").value = 0.1;
             });
 
-            document.getElementById("docBtnAnalizarCamara").addEventListener("click", function () {
-                if (!docCropper) { Swal.fire("Aviso", "Primero capture una foto.", "warning"); return; }
-                const canvas = docCropper.getCroppedCanvas({ maxWidth: 1600, maxHeight: 1600 });
-                const mx = Math.round(canvas.width * 0.10), my = Math.round(canvas.height * 0.10);
+            document.getElementById("fsSliderZoom").addEventListener("input", function() {
+                if (fsCropper) fsCropper.zoomTo(parseFloat(this.value));
+            });
+            document.getElementById("fsBtnReset").addEventListener("click", function() {
+                if (fsCropper) { fsCropper.reset(); document.getElementById("fsSliderZoom").value=0.1; }
+            });
+            document.getElementById("fsBtnModeMover").addEventListener("click", function() {
+                if (!fsCropper) return;
+                fsCropper.setDragMode("move");
+                this.classList.add("active");
+                document.getElementById("fsBtnModeRecortar").classList.remove("active");
+            });
+            document.getElementById("fsBtnModeRecortar").addEventListener("click", function() {
+                if (!fsCropper) return;
+                fsCropper.setDragMode("crop");
+                this.classList.add("active");
+                document.getElementById("fsBtnModeMover").classList.remove("active");
+            });
+
+            document.getElementById("fsBtnAnalizarFS").addEventListener("click", function() {
+                if (!fsCropper) { Swal.fire("Aviso","Primero capture una foto.","warning"); return; }
+                const canvas = fsCropper.getCroppedCanvas({ maxWidth:1600, maxHeight:1600 });
+                const mx = Math.round(canvas.width*0.10), my = Math.round(canvas.height*0.10);
                 const full = document.createElement("canvas");
-                full.width = canvas.width + mx * 2; full.height = canvas.height + my * 2;
+                full.width = canvas.width+mx*2; full.height = canvas.height+my*2;
                 full.getContext("2d").drawImage(canvas, mx, my);
-                full.toBlob(function(blob) { docImagenBlob = blob; docAnalizarBlob(blob); }, "image/jpeg", 0.92);
+                const btn = this;
+                btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Analizando...';
+                full.toBlob(function(blob) {
+                    docImagenBlob = blob;
+                    document.getElementById("docCamaraMiniImg").src = URL.createObjectURL(blob);
+                    document.getElementById("docCamaraMiniPreview").classList.remove("d-none");
+                    fsAnalizarBlob(blob, btn);
+                }, "image/jpeg", 0.92);
             });
 
-            // Pegar captura (Ctrl+V)
+            document.getElementById("fsBtnVerResultados").addEventListener("click", function() {
+                fsCerrarPantallaCompleta();
+                setTimeout(() => {
+                    const txtInd = document.getElementById("txtIndicaciones");
+                    const diag = document.getElementById("docTextoIA").innerText;
+                    if (diag && txtInd.value.trim()==="") txtInd.value = diag;
+                    else if (diag) txtInd.value += "\n\n[IA] " + diag;
+                    if (diag) { txtInd.focus(); txtInd.scrollIntoView({behavior:"smooth"}); }
+                    document.getElementById("docResultadoIA").scrollIntoView({behavior:"smooth"});
+                }, 350);
+            });
+
+            function fsAnalizarBlob(blob, btn) {
+                const servicio = document.getElementById("docServicioIA").value || "dental";
+                const razon    = document.getElementById("txtRazonCitaUsr")?.value || "";
+                const contexto = razon ? `El paciente describe: "${razon}". Analiza la imagen teniendo en cuenta este contexto.`
+                                       : "Analiza esta imagen clínica y describe los hallazgos observables.";
+                const form = new FormData();
+                form.append("idCita", docIdCitaSeleccionada);
+                form.append("imagen", blob, "imagen.jpg");
+                form.append("servicio", servicio);
+                form.append("contexto", contexto);
+                fetch("/Citas/AnalizarImagenIA", { method:"POST", body:form })
+                .then(r=>r.json())
+                .then(res => {
+                    if (btn) { btn.disabled=false; btn.innerHTML='<i class="fas fa-microscope me-1"></i>Analizar recorte con IA'; }
+                    if (res.ok) {
+                        document.getElementById("fsResultado").innerText = res.diagnostico;
+                        document.getElementById("fsResultado").classList.add("visible");
+                        document.getElementById("fsBtnVerResultados").classList.remove("d-none");
+                        document.getElementById("docTextoIA").innerText = res.diagnostico;
+                        document.getElementById("docResultadoIA").classList.remove("d-none");
+                        if (document.getElementById("txtIndicaciones").value.trim()==="")
+                            document.getElementById("txtIndicaciones").value = res.diagnostico;
+                    } else { Swal.fire("Error IA", res.msg||"Error desconocido", "error"); }
+                })
+                .catch(() => {
+                    if (btn) { btn.disabled=false; btn.innerHTML='<i class="fas fa-microscope me-1"></i>Analizar recorte con IA'; }
+                    Swal.fire("Error","Fallo de comunicación.","error");
+                });
+            }
+
+            // ── Pegar captura ─────────────────────────────────────────────────
             const pasteArea = document.getElementById("docPasteArea");
-            pasteArea.addEventListener("click", function() { pasteArea.focus(); });
+            pasteArea.addEventListener("click", () => pasteArea.focus());
             pasteArea.addEventListener("paste", function(e) {
-                const items = e.clipboardData?.items;
-                if (!items) return;
-                for (const item of items) {
+                for (const item of (e.clipboardData?.items||[])) {
                     if (item.type.startsWith("image/")) {
                         const blob = item.getAsFile();
                         docImagenBlob = blob;
-                        const url = URL.createObjectURL(blob);
-                        document.getElementById("docPasteImg").src = url;
+                        document.getElementById("docPasteImg").src = URL.createObjectURL(blob);
                         document.getElementById("docPastePreview").classList.remove("d-none");
                         document.getElementById("docBtnAnalizarPaste").classList.remove("d-none");
                         pasteArea.querySelector("span").textContent = "✔ Captura pegada. Pulse Analizar.";
@@ -999,105 +828,62 @@
                     }
                 }
             });
-            document.getElementById("docBtnAnalizarPaste").addEventListener("click", function () {
+            document.getElementById("docBtnAnalizarPaste").addEventListener("click", function() {
                 if (docImagenBlob) docAnalizarBlob(docImagenBlob);
             });
 
-            document.getElementById("docBtnAnalizarFichero").addEventListener("click", function () {
+            // ── Fichero ───────────────────────────────────────────────────────
+            document.getElementById("docBtnAnalizarFichero").addEventListener("click", function() {
                 const file = document.getElementById("docFileIA").files[0];
-                if (!file) { Swal.fire("Aviso", "Primero seleccione un fichero.", "warning"); return; }
-                if (!file.type.startsWith("image/")) { Swal.fire("Aviso", "Solo imágenes.", "warning"); return; }
+                if (!file) { Swal.fire("Aviso","Seleccione un fichero de imagen.","warning"); return; }
+                if (!file.type.startsWith("image/")) { Swal.fire("Aviso","Solo imágenes.","warning"); return; }
                 docAnalizarBlob(file);
             });
 
-            function docBlobDesdeBD() {
+            // ── BD ────────────────────────────────────────────────────────────
+            function blobDesdePacienteBD() {
                 if (!docPacienteBase64) return null;
-                const bin = atob(docPacienteBase64), arr = new Uint8Array(bin.length);
-                for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-                return new Blob([arr], { type: docPacienteContentType || "image/jpeg" });
+                const b=atob(docPacienteBase64), a=new Uint8Array(b.length);
+                for(let i=0;i<b.length;i++) a[i]=b.charCodeAt(i);
+                return new Blob([a],{type:docPacienteContentType||"image/jpeg"});
             }
-
-            document.getElementById("docBtnAnalizarBD").addEventListener("click", function () {
-                const blob = docBlobDesdeBD(); if (blob) docAnalizarBlob(blob);
-            });
-            document.getElementById("docBtnAnalizarBDSeleccion").addEventListener("click", function () {
-                // Por ahora igual que el anterior — en futuro abrirá Cropper sobre doc BD
-                const blob = docBlobDesdeBD(); if (blob) docAnalizarBlob(blob);
-            });
-            document.getElementById("docBtnAnalizarBDYolo").addEventListener("click", function () {
-                // Por ahora igual — en futuro llamará a /api/dental/segmentar primero
-                const blob = docBlobDesdeBD(); if (blob) docAnalizarBlob(blob);
-            });
-
-            document.getElementById("docBtnAnalizarDoctorBD").addEventListener("click", function () {
+            document.getElementById("docBtnAnalizarBD").addEventListener("click", () => { const bl=blobDesdePacienteBD(); if(bl) docAnalizarBlob(bl); });
+            document.getElementById("docBtnAnalizarBDSeleccion").addEventListener("click", () => { const bl=blobDesdePacienteBD(); if(bl) docAnalizarBlob(bl); });
+            document.getElementById("docBtnAnalizarBDYolo").addEventListener("click", () => { const bl=blobDesdePacienteBD(); if(bl) docAnalizarBlob(bl); });
+            document.getElementById("docBtnAnalizarDoctorBD").addEventListener("click", function() {
                 if (!docDoctorBase64) return;
-                const bin = atob(docDoctorBase64), arr = new Uint8Array(bin.length);
-                for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-                docAnalizarBlob(new Blob([arr], { type: docDoctorContentType || "image/jpeg" }));
+                const b=atob(docDoctorBase64), a=new Uint8Array(b.length);
+                for(let i=0;i<b.length;i++) a[i]=b.charCodeAt(i);
+                docAnalizarBlob(new Blob([a],{type:docDoctorContentType||"image/jpeg"}));
             });
 
+            // ── Función común análisis ────────────────────────────────────────
             function docAnalizarBlob(blob) {
-                if (!docIdCitaSeleccionada) { Swal.fire("Aviso", "No hay cita seleccionada.", "warning"); return; }
-                Swal.fire({ title: "Analizando con IA...", allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                if (!docIdCitaSeleccionada) { Swal.fire("Aviso","No hay cita seleccionada.","warning"); return; }
+                Swal.fire({ title:"Analizando con IA...", allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
                 const servicio = document.getElementById("docServicioIA").value || "dental";
                 const razon    = document.getElementById("txtRazonCitaUsr")?.value || "";
-                const contexto = razon
-                    ? `El paciente describe: "${razon}". Analiza la imagen teniendo en cuenta este contexto.`
-                    : "Analiza esta imagen clínica y describe los hallazgos observables.";
+                const contexto = razon ? `El paciente describe: "${razon}". Analiza la imagen teniendo en cuenta este contexto.`
+                                       : "Analiza esta imagen clínica y describe los hallazgos observables.";
                 const form = new FormData();
                 form.append("idCita", docIdCitaSeleccionada);
                 form.append("imagen", blob, "imagen.jpg");
                 form.append("servicio", servicio);
                 form.append("contexto", contexto);
-                fetch("/Citas/AnalizarImagenIA", { method: "POST", body: form })
-                .then(r => r.json())
+                fetch("/Citas/AnalizarImagenIA", { method:"POST", body:form })
+                .then(r=>r.json())
                 .then(res => {
                     Swal.close();
                     if (res.ok) {
                         document.getElementById("docTextoIA").innerText = res.diagnostico;
                         document.getElementById("docResultadoIA").classList.remove("d-none");
-                    } else {
-                        Swal.fire("Error IA", res.msg || "Error desconocido", "error");
-                    }
+                        document.getElementById("docResultadoIA").scrollIntoView({behavior:"smooth"});
+                        if (document.getElementById("txtIndicaciones").value.trim()==="")
+                            document.getElementById("txtIndicaciones").value = res.diagnostico;
+                    } else { Swal.fire("Error IA", res.msg||"Error desconocido","error"); }
                 })
-                .catch(() => Swal.fire("Error", "Fallo de comunicación con el servidor.", "error"));
+                .catch(() => Swal.fire("Error","Fallo de comunicación con el servidor.","error"));
             }
-
-            function docAbrirStream() {
-                docCerrarStream();
-                document.getElementById("docCropperWrapper").classList.add("d-none");
-                navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: docFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } }
-                }).then(function(stream) {
-                    docStreamCamara = stream;
-                    document.getElementById("docVideo").srcObject = stream;
-                    document.getElementById("docCamaraStream").classList.remove("d-none");
-                    document.getElementById("docBtnCerrarCamara").classList.remove("d-none");
-                }).catch(function(e) {
-                    Swal.fire("Error", "No se pudo acceder a la cámara: " + e.message, "error");
-                });
-            }
-            function docCerrarStream() {
-                if (docStreamCamara) { docStreamCamara.getTracks().forEach(t => t.stop()); docStreamCamara = null; }
-                document.getElementById("docCamaraStream").classList.add("d-none");
-            }
-
-            document.getElementById("mdData").addEventListener("hidden.bs.modal", function () {
-                docCerrarStream();
-                if (docCropper) { docCropper.destroy(); docCropper = null; }
-                docImagenBlob = null; urlCalcom = null;
-                docDoctorBase64 = null; docDoctorContentType = null;
-                docIdCitaSeleccionada = 0;
-                document.getElementById("docTextoIA").innerText = "";
-                document.getElementById("docResultadoIA").classList.add("d-none");
-                fsCerrarPantallaCompleta();
-                document.getElementById("docCamaraMiniPreview").classList.add("d-none");
-                document.getElementById("docCropperWrapper").classList.add("d-none");
-                document.getElementById("docResultadoIA").classList.add("d-none");
-                document.getElementById("docBtnCerrarCamara").classList.add("d-none");
-                document.getElementById("docPastePreview").classList.add("d-none");
-                document.getElementById("docBtnAnalizarPaste").classList.add("d-none");
-            });
         });
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
