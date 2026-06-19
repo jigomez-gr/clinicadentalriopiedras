@@ -258,7 +258,7 @@
 
 
 <!-- ===== PANTALLA COMPLETA CÁMARA IA ===== -->
-<div id="dhcFullscreen" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:#000;z-index:99999;flex-direction:column;overflow-y:auto;">
+<div id="dhcFullscreen" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:#000;z-index:99999;flex-direction:column;overflow:hidden;">
     <div style="background:#1a1a2e;padding:8px 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0;">
         <button type="button" class="btn btn-outline-light btn-sm" id="dhcFsBtnVolver">
             <i class="fas fa-arrow-left me-1"></i>Volver al modal
@@ -270,7 +270,7 @@
             </button>
         </div>
     </div>
-    <div style="position:relative;background:#000;height:calc(100vh - 110px);overflow:hidden;" id="dhcFsArea">
+    <div style="position:relative;background:#000;flex:1;min-height:0;overflow:hidden;" id="dhcFsArea">
         <div id="dhcFsStreamDiv" style="width:100%;height:100%;display:flex;flex-direction:column;position:absolute;top:0;left:0;">
             <video id="dhcFsVideo" autoplay playsinline style="width:100%;flex:1;object-fit:cover;background:#000;"></video>
             <div style="background:#1a1a2e;padding:10px;display:flex;gap:10px;flex-wrap:wrap;">
@@ -313,8 +313,8 @@
                 <div class="cita-box">
                     <div class="row g-2">
 
-                        <!-- DESPUÉS (sustitúyelo por esto): -->
-                        <div class="col-12 col-md-2">
+                        <!-- FILA 1: Nº Cita | Hora | Paciente -->
+                        <div class="col-6 col-md-2">
                             <label class="form-label"
                                    data-bs-toggle="tooltip" data-bs-placement="top"
                                    data-bs-custom-class="tooltip-agenda"
@@ -324,7 +324,7 @@
                                    data-bs-custom-class="tooltip-agenda"
                                    title="Número identificador de la cita" />
                         </div>
-                        <div class="col-12 col-md-2">
+                        <div class="col-6 col-md-2">
                             <label class="form-label"
                                    data-bs-toggle="tooltip" data-bs-placement="top"
                                    data-bs-custom-class="tooltip-agenda"
@@ -334,9 +334,7 @@
                                    data-bs-custom-class="tooltip-agenda"
                                    title="Hora de la cita" />
                         </div>
-
-
-                        <div class="col-12 col-md-5">
+                        <div class="col-12 col-md-8">
                             <label class="form-label"
                                    data-bs-toggle="tooltip" data-bs-placement="top"
                                    data-bs-custom-class="tooltip-agenda"
@@ -347,6 +345,7 @@
                                    title="Datos Identificativos del paciente" />
                         </div>
 
+                        <!-- FILA 2: Estado | Origen | Tipo de Cita + botones -->
                         <div class="col-12 col-md-4">
                             <label class="form-label"
                                    data-bs-toggle="tooltip" data-bs-placement="top"
@@ -369,24 +368,25 @@
                                    title="La cita puede haber sido registrada por Email, en la WEB (esta aplicación), por teléfono VAPI, por WASSAP, SMS y/o por Telegram" />
                         </div>
 
-                        <div class="col-12 col-md-2">
+                        <div class="col-12 col-md-4">
                             <label class="form-label fw-bold">Tipo de Cita</label>
-                            <select id="citaTipoCita" class="form-select">
-                                <option value="P">Presencial</option>
-                                <option value="V">Virtual</option>
-                                <option value="T">Telefónica</option>
-                            </select>
-                        </div>
-                        <div class="col-12 col-md-2 d-flex align-items-end gap-1 pb-1 flex-wrap">
-                            <a href="#" target="_blank" class="btn btn-info btn-sm flex-fill d-none" id="citaBtnCalcom">
-                                <i class="fas fa-video me-1"></i>Unirse
-                            </a>
-                            <button type="button" class="btn btn-warning btn-sm flex-fill" id="citaBtnGuardarTipo">
-                                <i class="fas fa-save me-1"></i>Guardar tipo
-                            </button>
+                            <div class="d-flex gap-1">
+                                <select id="citaTipoCita" class="form-select flex-grow-1">
+                                    <option value="P">Presencial</option>
+                                    <option value="V">Virtual</option>
+                                    <option value="T">Telefónica</option>
+                                </select>
+                                <a href="#" target="_blank" class="btn btn-info btn-sm d-none" id="citaBtnCalcom" style="white-space:nowrap;">
+                                    <i class="fas fa-video me-1"></i>Unirse
+                                </a>
+                                <button type="button" class="btn btn-warning btn-sm" id="citaBtnGuardarTipo" style="white-space:nowrap;">
+                                    <i class="fas fa-save me-1"></i>Guardar
+                                </button>
+                            </div>
                         </div>
 
-                        <div class="col-12 col-md-2">
+                        <!-- FILA 3: Confirmada | Fecha petición | Fecha confirmación | Método -->
+                        <div class="col-6 col-md-2">
                             <label class="form-label"
                                    data-bs-toggle="tooltip" data-bs-placement="top"
                                    data-bs-custom-class="tooltip-agenda"
@@ -397,7 +397,7 @@
                                    title="La cita se intenta reconfirmar con el paciente 24 horas antes; este campo vale 'N' ó 'S'" />
                         </div>
 
-                        <div class="col-12 col-md-3">
+                        <div class="col-6 col-md-3">
                             <label class="form-label"
                                    data-bs-toggle="tooltip" data-bs-placement="top"
                                    data-bs-custom-class="tooltip-agenda"
@@ -408,7 +408,7 @@
                                    title="Es la fecha y hora a la que se le pidió que reconfirmara" />
                         </div>
 
-                        <div class="col-12 col-md-3">
+                        <div class="col-6 col-md-3">
                             <label class="form-label"
                                    data-bs-toggle="tooltip" data-bs-placement="top"
                                    data-bs-custom-class="tooltip-agenda"
@@ -419,7 +419,7 @@
                                    title="Es la fecha y hora a la que el usuario reconfirmó la cita en el caso en el que lo hiciera" />
                         </div>
 
-                        <div class="col-12 col-md-4">
+                        <div class="col-6 col-md-4">
                             <label class="form-label"
                                    data-bs-toggle="tooltip" data-bs-placement="top"
                                    data-bs-custom-class="tooltip-agenda"
@@ -1884,12 +1884,13 @@
                     if(dhcFsCropper){dhcFsCropper.destroy();dhcFsCropper=null;}
                     // Forzar altura del contenedor al tamaño disponible
                     const fsArea = document.getElementById("dhcFsArea");
-                    img.style.maxHeight = fsArea.offsetHeight + "px";
+                    const areaH = fsArea.offsetHeight || (window.innerHeight - 160);
+                    img.style.maxHeight = areaH + "px";
                     dhcFsCropper=new Cropper(img,{
                         aspectRatio:NaN, viewMode:1, autoCropArea:0.5,
                         responsive:true, movable:true, zoomable:true,
                         cropBoxMovable:true, cropBoxResizable:true, dragMode:"crop",
-                        minContainerHeight: fsArea.offsetHeight
+                        minContainerHeight: areaH
                     });
                     document.getElementById("dhcFsSliderZoom").value=0.1;
                 });
