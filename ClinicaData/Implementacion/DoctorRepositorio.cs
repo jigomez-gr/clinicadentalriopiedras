@@ -323,7 +323,7 @@ namespace ClinicaData.Implementacion
                 
                     // NUEVOS CAMPOS DE VALORACIÓN
                     ValDoctorCita = dr["ValDoctorCita"] == DBNull.Value ? 3 : Convert.ToInt32(dr["ValDoctorCita"]),
-                    OpinionDoctorYClinica = dr["OpinionDoctorYClinica"] == DBNull.Value ? null : dr["OpinionDoctorYClinica"]?.ToString()
+                    OpinionDoctorYClinica = dr["OpinionDoctorYClinica"] == DBNull.Value ? null : dr["OpinionDoctorYClinica"]?.ToString(),
                     // ============================================================
                     // Añadir al mapping del DataReader en ListaCitasAsignadasServerSide
                     // Justo después de OpinionDoctorYClinica:
