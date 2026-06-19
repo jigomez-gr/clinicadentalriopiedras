@@ -557,9 +557,17 @@
                     <!-- Tab BD Paciente -->
                     <div class="tab-pane fade" id="docTabBD">
                         <p class="small text-muted mb-2" id="docLblBDInfo">Se analizará el documento del paciente en BD.</p>
-                        <button type="button" class="btn btn-success btn-sm" id="docBtnAnalizarBD" disabled>
-                            <i class="fas fa-database me-1"></i>Analizar doc. paciente con IA
-                        </button>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button type="button" class="btn btn-success btn-sm" id="docBtnAnalizarBD" disabled>
+                                <i class="fas fa-database me-1"></i>Analizar doc. paciente con IA
+                            </button>
+                            <button type="button" class="btn btn-outline-success btn-sm" id="docBtnAnalizarBDSeleccion" disabled>
+                                <i class="fas fa-crop-alt me-1"></i>Analizar selección con IA
+                            </button>
+                            <button type="button" class="btn btn-outline-warning btn-sm" id="docBtnAnalizarBDYolo" disabled>
+                                <i class="fas fa-robot me-1"></i>Analizar selección con IA + YOLO
+                            </button>
+                        </div>
                     </div>
                     <!-- Tab BD Doctor -->
                     <div class="tab-pane fade" id="docTabDoctorBD">
@@ -725,10 +733,10 @@
                     // BD IA
                     if (data.documentoCitaUsr) {
                         const esImagen = (data.contentType || "").startsWith("image/");
-                        $("#docBtnAnalizarBD").prop("disabled", !esImagen);
+                        $("#docBtnAnalizarBD, #docBtnAnalizarBDSeleccion, #docBtnAnalizarBDYolo").prop("disabled", !esImagen);
                         $("#docLblBDInfo").text(esImagen ? "Se analizará la imagen del paciente en BD." : "El doc. del paciente no es una imagen.");
                     } else {
-                        $("#docBtnAnalizarBD").prop("disabled", true);
+                        $("#docBtnAnalizarBD, #docBtnAnalizarBDSeleccion, #docBtnAnalizarBDYolo").prop("disabled", true);
                         $("#docLblBDInfo").text("No hay documento del paciente en BD.");
                     }
                     // Doc doctor BD
@@ -842,28 +850,39 @@
                     .then(r => r.json())
                     .then(rj => {
                         if (rj.data === "") {
+                            // Prioridad doc: fichero > imagen cámara IA
                             const file = document.getElementById("fileDocDoctor").files[0];
-                            if (file) {
-                                const reader = new FileReader();
-                                reader.onload = function (e) {
-                                    const objDoc = {
-                                        IdCita:               idCitaSeleccionada,
-                                        DocIndicacionesDoctor: e.target.result.split(",")[1],
-                                        ContentTypeDoctor:    file.type
-                                    };
-                                    fetch("/" + controlador + "/GuardarDocumentoDoctor", {
-                                        method:  "POST",
-                                        headers: { "Content-Type": "application/json;charset=utf-8" },
-                                        body:    JSON.stringify(objDoc)
-                                    })
-                                    .then(res => res.json())
-                                    .then(() => {
-                                        Swal.fire("Listo!", "Cita marcada como atendida y documento guardado.", "success");
-                                        $("#" + modal).modal("hide");
-                                        tablaData.ajax.reload();
-                                    });
+                            const tieneDocDoctor = docDoctorBase64 && docDoctorBase64.length > 0;
+
+                            function guardarDocYFinalizar(b64, tipo) {
+                                const objDoc = {
+                                    IdCita:                idCitaSeleccionada,
+                                    DocIndicacionesDoctor: b64,
+                                    ContentTypeDoctor:     tipo
                                 };
+                                fetch("/" + controlador + "/GuardarDocumentoDoctor", {
+                                    method:  "POST",
+                                    headers: { "Content-Type": "application/json;charset=utf-8" },
+                                    body:    JSON.stringify(objDoc)
+                                })
+                                .then(res => res.json())
+                                .then(() => {
+                                    Swal.fire("Listo!", "Cita marcada como atendida y documento guardado.", "success");
+                                    $("#" + modal).modal("hide");
+                                    tablaData.ajax.reload();
+                                });
+                            }
+
+                            if (file) {
+                                // Fichero seleccionado manualmente
+                                const reader = new FileReader();
+                                reader.onload = e => guardarDocYFinalizar(e.target.result.split(",")[1], file.type);
                                 reader.readAsDataURL(file);
+                            } else if (docImagenBlob && !tieneDocDoctor) {
+                                // Imagen recortada con cámara IA — solo si no hay doc doctor previo
+                                const reader = new FileReader();
+                                reader.onload = e => guardarDocYFinalizar(e.target.result.split(",")[1], docImagenBlob.type || "image/jpeg");
+                                reader.readAsDataURL(docImagenBlob);
                             } else {
                                 Swal.fire("Listo!", "La cita fue marcada como ATENDIDO.", "success");
                                 $("#" + modal).modal("hide");
@@ -982,11 +1001,23 @@
                 docAnalizarBlob(file);
             });
 
-            document.getElementById("docBtnAnalizarBD").addEventListener("click", function () {
-                if (!docPacienteBase64) return;
+            function docBlobDesdeBD() {
+                if (!docPacienteBase64) return null;
                 const bin = atob(docPacienteBase64), arr = new Uint8Array(bin.length);
                 for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-                docAnalizarBlob(new Blob([arr], { type: docPacienteContentType || "image/jpeg" }));
+                return new Blob([arr], { type: docPacienteContentType || "image/jpeg" });
+            }
+
+            document.getElementById("docBtnAnalizarBD").addEventListener("click", function () {
+                const blob = docBlobDesdeBD(); if (blob) docAnalizarBlob(blob);
+            });
+            document.getElementById("docBtnAnalizarBDSeleccion").addEventListener("click", function () {
+                // Por ahora igual que el anterior — en futuro abrirá Cropper sobre doc BD
+                const blob = docBlobDesdeBD(); if (blob) docAnalizarBlob(blob);
+            });
+            document.getElementById("docBtnAnalizarBDYolo").addEventListener("click", function () {
+                // Por ahora igual — en futuro llamará a /api/dental/segmentar primero
+                const blob = docBlobDesdeBD(); if (blob) docAnalizarBlob(blob);
             });
 
             document.getElementById("docBtnAnalizarDoctorBD").addEventListener("click", function () {
