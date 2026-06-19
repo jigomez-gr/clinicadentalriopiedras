@@ -1,8 +1,7 @@
 ﻿@using System.Net
 
 @{
-
-    ViewData["Title"] = "Calendario Horarios y Citas ";
+    ViewData["Title"] = "Calendario Horarios y Citas";
 
     bool esAdmin = (ViewBag.EsAdmin ?? 0) == 1;
     bool esDoctor = (ViewBag.EsDoctor ?? 0) == 1;
@@ -346,7 +345,7 @@
                                    title="Datos Identificativos del paciente" />
                         </div>
 
-                        <!-- FILA 2: Estado | Origen | Tipo de Cita + botones -->
+                        <!-- FILA 2: Estado | Origen | Tipo + botones -->
                         <div class="col-12 col-md-4">
                             <label class="form-label"
                                    data-bs-toggle="tooltip" data-bs-placement="top"
@@ -386,7 +385,7 @@
                             </div>
                         </div>
 
-                        <!-- FILA 3: Confirmada | Fecha petición | Fecha confirmación | Método -->
+                        <!-- FILA 3: Confirmada | Fechas | Método -->
                         <div class="col-6 col-md-2">
                             <label class="form-label"
                                    data-bs-toggle="tooltip" data-bs-placement="top"
@@ -1883,17 +1882,26 @@
                     document.getElementById("dhcFsCropperDiv").style.display="block";
                     document.getElementById("dhcFsControles").style.display="block";
                     if(dhcFsCropper){dhcFsCropper.destroy();dhcFsCropper=null;}
-                    // Forzar altura del contenedor al tamaño disponible
-                    const fsArea = document.getElementById("dhcFsArea");
-                    const areaH = fsArea.offsetHeight || (window.innerHeight - 160);
-                    img.style.maxHeight = areaH + "px";
-                    dhcFsCropper=new Cropper(img,{
-                        aspectRatio:NaN, viewMode:1, autoCropArea:0.5,
-                        responsive:true, movable:true, zoomable:true,
-                        cropBoxMovable:true, cropBoxResizable:true, dragMode:"crop",
-                        minContainerHeight: areaH
+                    // Esperar al siguiente frame para que el DOM calcule alturas reales
+                    requestAnimationFrame(function(){
+                        requestAnimationFrame(function(){
+                            const fsArea = document.getElementById("dhcFsArea");
+                            const areaH = fsArea.offsetHeight || (window.innerHeight - 160);
+                            const areaW = fsArea.offsetWidth || window.innerWidth;
+                            img.style.height = areaH + "px";
+                            img.style.maxHeight = areaH + "px";
+                            img.style.width = "100%";
+                            if(dhcFsCropper){dhcFsCropper.destroy();dhcFsCropper=null;}
+                            dhcFsCropper=new Cropper(img,{
+                                aspectRatio:NaN, viewMode:1, autoCropArea:0.5,
+                                responsive:true, movable:true, zoomable:true,
+                                cropBoxMovable:true, cropBoxResizable:true, dragMode:"crop",
+                                minContainerHeight: areaH,
+                                minContainerWidth: areaW
+                            });
+                            document.getElementById("dhcFsSliderZoom").value=0.1;
+                        });
                     });
-                    document.getElementById("dhcFsSliderZoom").value=0.1;
                 });
                 document.getElementById("dhcFsSliderZoom").addEventListener("input",function(){if(dhcFsCropper)dhcFsCropper.zoomTo(parseFloat(this.value));});
                 document.getElementById("dhcFsBtnReset").addEventListener("click",function(){if(dhcFsCropper){dhcFsCropper.reset();document.getElementById("dhcFsSliderZoom").value=0.1;}});
