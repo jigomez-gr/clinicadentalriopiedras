@@ -134,11 +134,81 @@
         }
 
     .slot-actions .btn {
-        font-size: 0.75rem; /* Fuente más pequeña */
-        padding: 0.25rem 0.4rem; /* Padding muy ajustado */
-        white-space: nowrap; /* Evita que el texto interno se rompa */
+        font-size: 0.75rem;
+        padding: 0.25rem 0.4rem;
+        white-space: nowrap;
     }
-</style>
+
+    /* ===== RESPONSIVE MÓVIL ===== */
+    @media (max-width: 767px) {
+        /* Modal: ocupar casi toda la pantalla */
+        #mdCita .modal-dialog
+
+    {
+        margin: 4px !important;
+        max-width: calc(100vw - 8px) !important;
+    }
+
+    #mdCita .modal-body {
+        padding: .5rem !important;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    #mdCita .cita-box {
+        padding: .4rem .5rem !important;
+    }
+
+        #mdCita .cita-box label {
+            font-size: .78rem !important;
+            margin-bottom: .1rem !important;
+        }
+
+        #mdCita .cita-box .form-control,
+        #mdCita .cita-box textarea {
+            font-size: .82rem !important;
+            padding: .2rem .4rem !important;
+        }
+    /* Tipo de cita + botones en móvil: apilar select arriba, botones abajo */
+    #citaTipoCita {
+        min-width: 0;
+    }
+    /* Tabs IA: texto más pequeño */
+    .nav-link.small {
+        font-size: .73rem !important;
+        padding: .3rem .4rem !important;
+    }
+
+    /* Pantalla completa cámara en móvil */
+    #dhcFullscreen {
+        overflow: hidden !important;
+    }
+
+    #dhcFsArea {
+        flex: 1 !important;
+        min-height: 0 !important;
+    }
+
+    #dhcFsControles {
+        padding: 5px 8px !important;
+        flex-shrink: 0 !important;
+    }
+
+        #dhcFsControles .btn {
+            font-size: .75rem !important;
+            padding: .2rem .35rem !important;
+        }
+
+        #dhcFsControles .form-range {
+            max-width: 160px !important;
+        }
+
+    #dhcFsResultado {
+        max-height: 25vh !important;
+        font-size: .8rem !important;
+    }
+
+    }</style>
 <div class="d-flex align-items-center justify-content-between mb-3 agenda-header"
      style="background: #198754; color:#fff;">
     <div>
