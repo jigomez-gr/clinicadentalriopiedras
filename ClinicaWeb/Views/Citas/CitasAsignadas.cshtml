@@ -357,18 +357,39 @@
                             </div>
                         </div>
                         <div id="docCropperWrapper" class="d-none mb-2">
-                            <div style="max-height:240px;background:#000;border-radius:8px;overflow:hidden;">
+                            <div id="docCropperBox" style="height:280px;background:#000;border-radius:8px;overflow:hidden;position:relative;">
                                 <img id="docImgCropper" src="" alt="Recortar" style="max-width:100%;display:block;" />
                             </div>
-                            <!-- Slider zoom vertical -->
-                            <div class="d-flex gap-2 mt-2 align-items-center flex-wrap">
-                                <input type="range" id="docSliderZoom" min="0" max="3" step="0.05" value="0"
-                                       class="form-range" style="max-width:180px;"
-                                       title="Zoom" />
-                                <small class="text-muted">Zoom</small>
-                                <button type="button" class="btn btn-outline-secondary btn-sm" id="docBtnResetCrop"><i class="fas fa-undo"></i> Reset</button>
+                            <div class="alert alert-info py-1 px-2 mt-1 mb-1 small">
+                                <i class="fas fa-crop-alt me-1"></i>
+                                <strong>1.</strong> Usa el zoom para ampliar la zona.
+                                <strong>2.</strong> Pulsa <kbd>Mover</kbd> para desplazar la imagen.
+                                <strong>3.</strong> Pulsa <kbd>Recortar</kbd> para ajustar el área.
+                                Solo se enviará la zona seleccionada.
+                            </div>
+                            <!-- Fila 1: Zoom -->
+                            <div class="d-flex gap-2 mt-1 align-items-center">
+                                <span class="text-muted small" style="min-width:40px;">Zoom:</span>
+                                <i class="fas fa-search-minus text-muted"></i>
+                                <input type="range" id="docSliderZoom" min="0.1" max="5" step="0.05" value="0.1"
+                                       class="form-range flex-grow-1" title="Zoom" />
+                                <i class="fas fa-search-plus text-muted"></i>
+                            </div>
+                            <!-- Fila 2: Modos + Reset + Analizar -->
+                            <div class="d-flex gap-2 mt-1 flex-wrap align-items-center">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button type="button" class="btn btn-outline-primary" id="docBtnModeMover" title="Mover imagen">
+                                        <i class="fas fa-hand-paper me-1"></i>Mover
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary active" id="docBtnModeRecortar" title="Ajustar recorte">
+                                        <i class="fas fa-crop-alt me-1"></i>Recortar
+                                    </button>
+                                </div>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="docBtnResetCrop">
+                                    <i class="fas fa-undo"></i> Reset
+                                </button>
                                 <button type="button" class="btn btn-success btn-sm ms-auto" id="docBtnAnalizarCamara">
-                                    <i class="fas fa-microscope me-1"></i>Analizar con IA
+                                    <i class="fas fa-microscope me-1"></i>Analizar recorte con IA
                                 </button>
                             </div>
                         </div>
@@ -751,23 +772,45 @@
                 document.getElementById("docCropperWrapper").classList.remove("d-none");
                 if (docCropper) { docCropper.destroy(); docCropper = null; }
                 docCropper = new Cropper(img, {
-                    aspectRatio: NaN, viewMode: 1, autoCropArea: 0.85,
-                    responsive: true, movable: true, zoomable: true,
-                    cropBoxMovable: true, cropBoxResizable: true, dragMode: "move"
+                    aspectRatio:      NaN,
+                    viewMode:         1,
+                    autoCropArea:     0.5,
+                    responsive:       true,
+                    movable:          true,
+                    zoomable:         true,
+                    cropBoxMovable:   true,
+                    cropBoxResizable: true,
+                    dragMode:         "crop",
+                    minContainerHeight: 280,
+                    background:       true,
+                    guides:           true,
+                    center:           true
                 });
+                document.getElementById("docSliderZoom").value = 0.1;
+                document.getElementById("docBtnModeMover").classList.remove("active");
+                document.getElementById("docBtnModeRecortar").classList.add("active");
             });
             document.getElementById("docSliderZoom").addEventListener("input", function() {
                 if (!docCropper) return;
-                const ratio = parseFloat(this.value);
-                const imgData = docCropper.getImageData();
-                // zoom relativo al tamaño natural
-                docCropper.zoomTo(ratio, { x: imgData.left + imgData.width/2, y: imgData.top + imgData.height/2 });
+                docCropper.zoomTo(parseFloat(this.value));
             });
             document.getElementById("docBtnResetCrop").addEventListener("click", function() {
                 if (docCropper) {
                     docCropper.reset();
-                    document.getElementById("docSliderZoom").value = 0;
+                    document.getElementById("docSliderZoom").value = 0.1;
                 }
+            });
+            document.getElementById("docBtnModeMover").addEventListener("click", function() {
+                if (!docCropper) return;
+                docCropper.setDragMode("move");
+                this.classList.add("active");
+                document.getElementById("docBtnModeRecortar").classList.remove("active");
+            });
+            document.getElementById("docBtnModeRecortar").addEventListener("click", function() {
+                if (!docCropper) return;
+                docCropper.setDragMode("crop");
+                this.classList.add("active");
+                document.getElementById("docBtnModeMover").classList.remove("active");
             });
 
             document.getElementById("docBtnAnalizarCamara").addEventListener("click", function () {
@@ -875,8 +918,10 @@
                 if (docCropper) { docCropper.destroy(); docCropper = null; }
                 docImagenBlob = null; urlCalcom = null;
                 docDoctorBase64 = null; docDoctorContentType = null;
-                document.getElementById("docSliderZoom").value = 0;
+                document.getElementById("docSliderZoom").value = 0.1;
                 docIdCitaSeleccionada = 0;
+                document.getElementById("docBtnModeMover").classList.remove("active");
+                document.getElementById("docBtnModeRecortar").classList.add("active");
                 document.getElementById("docCropperWrapper").classList.add("d-none");
                 document.getElementById("docResultadoIA").classList.add("d-none");
                 document.getElementById("docBtnCerrarCamara").classList.add("d-none");
