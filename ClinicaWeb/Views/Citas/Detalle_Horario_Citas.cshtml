@@ -2309,29 +2309,69 @@
                 document.getElementById("iaPastePreview").classList.add("d-none");
                 document.getElementById("iaBtnAnalizarPaste").classList.add("d-none");
 
+                // ── SOLUCIÓN DEFINITIVA: cerrar mdCita → limpiar → abrir mdIA ──
                 try {
-                    const mdIADom = document.getElementById("mdIA");
-                    // Limpiar estado previo completamente
-                    const existInst = bootstrap.Modal.getInstance(mdIADom);
-                    if(existInst) { existInst.dispose(); }
-                    // Limpiar clases y estilos residuales del DOM
+                    const mdIADom  = document.getElementById("mdIA");
+                    const mdCitaDom = document.getElementById("mdCita");
+
+                    // 1) Destruir cualquier instancia previa de mdIA
+                    const prevIA = bootstrap.Modal.getInstance(mdIADom);
+                    if (prevIA) { prevIA.dispose(); }
+
+                    // 2) Limpiar clases/atributos residuales del mdIA
                     mdIADom.classList.remove("show");
                     mdIADom.style.display = "";
                     mdIADom.removeAttribute("aria-modal");
                     mdIADom.removeAttribute("role");
-                    // Limpiar backdrops y body
+
+                    // 3) Cerrar mdCita si está abierto (Bootstrap lo anima ~300ms)
+                    const instCita = bootstrap.Modal.getInstance(mdCitaDom);
+                    if (instCita) {
+                        // Escuchar el momento en que mdCita termine de ocultarse
+                        mdCitaDom.addEventListener("hidden.bs.modal", function _onCitaHidden() {
+                            mdCitaDom.removeEventListener("hidden.bs.modal", _onCitaHidden);
+                            _abrirMdIALimpio(mdIADom, mdCitaDom);
+                        }, { once: true });
+                        instCita.hide();
+                    } else {
+                        // mdCita no estaba abierto: limpiar backdrops y abrir directo
+                        document.querySelectorAll(".modal-backdrop").forEach(b => b.remove());
+                        document.body.classList.remove("modal-open");
+                        document.body.style.overflow = "";
+                        document.body.style.paddingRight = "";
+                        _abrirMdIALimpio(mdIADom, mdCitaDom);
+                    }
+                } catch(err) {
+                    console.error("Error abriendo mdIA:", err);
+                }
+            }
+
+            function _abrirMdIALimpio(mdIADom, mdCitaDom) {
+                // Limpiar cualquier backdrop residual antes de mostrar mdIA
+                document.querySelectorAll(".modal-backdrop").forEach(b => b.remove());
+                document.body.classList.remove("modal-open");
+                document.body.style.overflow = "";
+                document.body.style.paddingRight = "";
+
+                const mdIA = new bootstrap.Modal(mdIADom, { backdrop: true, keyboard: true });
+
+                // Al cerrar mdIA → reabrir mdCita
+                mdIADom.addEventListener("hidden.bs.modal", function _onIAHidden() {
+                    mdIADom.removeEventListener("hidden.bs.modal", _onIAHidden);
+                    // Limpiar backdrops que deje mdIA
                     document.querySelectorAll(".modal-backdrop").forEach(b => b.remove());
                     document.body.classList.remove("modal-open");
                     document.body.style.overflow = "";
                     document.body.style.paddingRight = "";
-                    // Abrir fresco
-                    setTimeout(function(){
-                        new bootstrap.Modal(mdIADom, {backdrop: true, keyboard: true}).show();
-                        console.log("mdIA.show() llamado OK (fresh)");
-                    }, 50);
-                } catch(err) {
-                    console.error("Error abriendo mdIA:", err);
-                }
+                    // Reabrir mdCita
+                    if (mdCitaDom) {
+                        const inst = bootstrap.Modal.getInstance(mdCitaDom) || new bootstrap.Modal(mdCitaDom);
+                        inst.show();
+                    }
+                }, { once: true });
+
+                mdIA.show();
+                console.log("mdIA.show() llamado OK (fresh, mdCita cerrado primero)");
             }
 
             function iaAnalizarBlob(blob, cb) {
