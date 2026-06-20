@@ -2329,16 +2329,7 @@ LIMIT 1;
                 return Json(new { ok = false, msg = "Error: " + ex.Message });
             }
         }
-        // ── NUEVA VISTA POPUP ANÁLISIS IA ──
-        [HttpGet]
-        [Authorize(Roles = "Doctor,Administrador")]
-        public IActionResult AnalisisIA(int idCita, string paciente = "")
-        {
-            ViewBag.IdCita = idCita;
-            ViewBag.Paciente = paciente;
-            return View();
-        }
-
+       
         // ── GUARDAR INDICACIONES DESDE LA VENTANA IA ──
         [HttpPost]
         [Authorize(Roles = "Doctor,Administrador")]
@@ -2358,6 +2349,286 @@ LIMIT 1;
 
             return Json(new { ok = true });
         }
+        // ── ANÁLISIS IA — popup independiente sin Razor ni _Layout ──
+        [HttpGet]
+        [Authorize(Roles = "Doctor,Administrador")]
+        public IActionResult AnalisisIA(int idCita, string paciente = "")
+        {
+            string pac = System.Net.WebUtility.HtmlEncode(paciente);
+            string html = $@"<!DOCTYPE html>
+<html lang=""es"">
+<head>
+<meta charset=""UTF-8""/>
+<meta name=""viewport"" content=""width=device-width, initial-scale=1.0""/>
+<title>🤖 Análisis IA — {pac}</title>
+<link rel=""stylesheet"" href=""https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css""/>
+<link rel=""stylesheet"" href=""https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css""/>
+<link rel=""stylesheet"" href=""https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css""/>
+<style>
+body{{background:#f0fdf4;font-family:system-ui,sans-serif;}}
+.ia-header{{background:#198754;color:#fff;padding:.75rem 1.25rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}}
+.ia-body{{padding:1rem;max-width:900px;margin:0 auto;}}
+.indicaciones-box{{background:#fff;border:1px solid #c3e6cb;border-radius:.5rem;padding:1rem;margin-bottom:1rem;}}
+.resultado-ia{{white-space:pre-line;max-height:260px;overflow-y:auto;}}
+#fsOverlay{{display:none;position:fixed;inset:0;background:#000;z-index:9999;flex-direction:column;}}
+#fsVideo{{width:100%;flex:1;min-height:0;object-fit:contain;}}
+#fsCropperImg{{display:none;max-width:100%;flex:1;min-height:0;object-fit:contain;}}
+#fsControles{{background:rgba(0,0,0,.85);padding:.6rem 1rem;display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;}}
+</style>
+</head>
+<body>
+<div class=""ia-header"">
+  <div><i class=""fas fa-robot me-2""></i><strong>Análisis IA</strong><span class=""ms-2 opacity-75 small"">{pac}</span></div>
+  <button class=""btn btn-sm btn-outline-light"" onclick=""window.close()""><i class=""fas fa-times me-1""></i>Cerrar</button>
+</div>
+<div class=""ia-body"">
+  <input type=""hidden"" id=""iaIdCita"" value=""{idCita}""/>
+  <div class=""indicaciones-box"">
+    <label class=""fw-bold mb-1""><i class=""fas fa-notes-medical me-1 text-warning""></i>Indicaciones del doctor</label>
+    <textarea id=""iaIndicaciones"" class=""form-control mb-2"" rows=""3"" placeholder=""Diagnóstico e indicaciones para el paciente...""></textarea>
+    <button class=""btn btn-warning btn-sm"" onclick=""guardarIndicaciones()""><i class=""fas fa-save me-1""></i>Guardar indicaciones</button>
+    <span id=""msgGuardado"" class=""text-success ms-3 small d-none"">✔ Guardado correctamente</span>
+    <span id=""msgError"" class=""text-danger ms-3 small d-none""></span>
+  </div>
+  <hr/>
+  <div class=""mb-3"">
+    <label class=""fw-bold small""><i class=""fas fa-stethoscope me-1""></i>Tipo de análisis</label>
+    <select class=""form-select form-select-sm"" id=""iaServicio"" style=""max-width:240px;"">
+      <option value=""dental"">🦷 Dental (boca/encías)</option>
+      <option value=""rx"">🩻 Radiografía dental</option>
+      <option value=""derma"">🔬 Dermatología</option>
+      <option value=""belleza"">✨ Estética</option>
+      <option value=""general"">🏥 General</option>
+    </select>
+  </div>
+  <ul class=""nav nav-tabs mb-3"">
+    <li class=""nav-item""><button class=""nav-link active"" data-bs-toggle=""tab"" data-bs-target=""#tabCamara""><i class=""fas fa-camera me-1""></i>Cámara</button></li>
+    <li class=""nav-item""><button class=""nav-link"" data-bs-toggle=""tab"" data-bs-target=""#tabPegar""><i class=""fas fa-paste me-1""></i>Pegar</button></li>
+    <li class=""nav-item""><button class=""nav-link"" data-bs-toggle=""tab"" data-bs-target=""#tabFichero""><i class=""fas fa-file-image me-1""></i>Fichero</button></li>
+    <li class=""nav-item""><button class=""nav-link"" data-bs-toggle=""tab"" data-bs-target=""#tabBDPac""><i class=""fas fa-database me-1""></i>Doc. paciente</button></li>
+    <li class=""nav-item""><button class=""nav-link"" data-bs-toggle=""tab"" data-bs-target=""#tabBDDoc""><i class=""fas fa-user-md me-1""></i>Doc. doctor</button></li>
+  </ul>
+  <div class=""tab-content"">
+    <div class=""tab-pane fade show active"" id=""tabCamara"">
+      <button class=""btn btn-success btn-sm"" onclick=""fsAbrir()""><i class=""fas fa-camera me-1""></i>Abrir cámara</button>
+      <div id=""miniPreview"" class=""d-none mt-2"">
+        <img id=""miniImg"" src="""" style=""max-height:80px;border-radius:6px;border:2px solid #198754;""/>
+        <span class=""badge bg-success ms-2"">✓ Capturada</span>
+        <button class=""btn btn-success btn-sm ms-3"" id=""btnAnalizarMini""><i class=""fas fa-microscope me-1""></i>Analizar</button>
+      </div>
+    </div>
+    <div class=""tab-pane fade"" id=""tabPegar"">
+      <div class=""alert alert-info small py-1"">Haz <kbd>PrintScreen</kbd>, clic en el área y pega con <kbd>Ctrl+V</kbd>.</div>
+      <div id=""pasteArea"" tabindex=""0"" style=""min-height:90px;border:2px dashed #6c757d;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#f8f9fa;"" class=""mb-2"">
+        <span class=""text-muted small"">Clic aquí y pega (Ctrl+V)</span>
+      </div>
+      <div id=""pastePreview"" class=""d-none mb-2""><img id=""pasteImg"" src="""" style=""max-width:100%;max-height:180px;border-radius:8px;""/></div>
+      <button class=""btn btn-success btn-sm d-none"" id=""btnAnalizarPaste""><i class=""fas fa-microscope me-1""></i>Analizar captura</button>
+    </div>
+    <div class=""tab-pane fade"" id=""tabFichero"">
+      <input type=""file"" class=""form-control form-control-sm mb-2"" id=""iaFile"" accept=""image/*""/>
+      <button class=""btn btn-success btn-sm"" id=""btnAnalizarFichero""><i class=""fas fa-microscope me-1""></i>Analizar fichero</button>
+    </div>
+    <div class=""tab-pane fade"" id=""tabBDPac"">
+      <p class=""small text-muted mb-2"" id=""lblBDPac"">Cargando...</p>
+      <button class=""btn btn-success btn-sm"" id=""btnBDPac"" disabled><i class=""fas fa-database me-1""></i>Analizar doc. paciente</button>
+    </div>
+    <div class=""tab-pane fade"" id=""tabBDDoc"">
+      <p class=""small text-muted mb-2"" id=""lblBDDoc"">Cargando...</p>
+      <button class=""btn btn-success btn-sm"" id=""btnBDDoc"" disabled><i class=""fas fa-user-md me-1""></i>Analizar doc. doctor</button>
+      <button class=""btn btn-warning btn-sm ms-2"" id=""btnDescDoc"" disabled><i class=""fas fa-download me-1""></i>Descargar doc. doctor</button>
+    </div>
+  </div>
+  <div id=""resultadoIA"" class=""d-none mt-4"">
+    <div class=""card border-success"">
+      <div class=""card-header bg-success text-white py-2""><i class=""fas fa-check-circle me-1""></i><strong>Resultado análisis IA</strong></div>
+      <div class=""card-body"">
+        <div class=""alert alert-success small py-2 resultado-ia mb-2"" id=""textoIA""></div>
+        <button class=""btn btn-sm btn-outline-success"" id=""btnCopiarInd""><i class=""fas fa-arrow-up me-1""></i>Copiar a Indicaciones</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id=""fsOverlay"">
+  <video id=""fsVideo"" autoplay playsinline></video>
+  <img id=""fsCropperImg"" src="""" alt=""""/>
+  <div id=""fsControles"">
+    <button class=""btn btn-light btn-sm"" id=""fsFlipBtn""><i class=""fas fa-sync-alt me-1""></i>Cambiar cámara</button>
+    <button class=""btn btn-success btn-sm"" id=""fsCapturarBtn""><i class=""fas fa-camera me-1""></i>Capturar</button>
+    <button class=""btn btn-info btn-sm d-none"" id=""fsMoverBtn"">Mover</button>
+    <button class=""btn btn-info btn-sm d-none"" id=""fsRecortarBtn"">Recortar</button>
+    <button class=""btn btn-warning btn-sm d-none"" id=""fsAnalizarBtn""><i class=""fas fa-microscope me-1""></i>Analizar</button>
+    <button class=""btn btn-secondary btn-sm d-none"" id=""fsRepetirBtn""><i class=""fas fa-redo me-1""></i>Repetir</button>
+    <button class=""btn btn-danger btn-sm ms-3"" id=""fsCerrarBtn""><i class=""fas fa-times me-1""></i>Cerrar cámara</button>
+  </div>
+</div>
+<script src=""https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js""></script>
+<script src=""https://cdn.jsdelivr.net/npm/sweetalert2@11""></script>
+<script src=""https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js""></script>
+<script>
+const IA_ID_CITA = {idCita};
+let _pacBase64=null,_pacCT=null,_docBase64=null,_docCT=null,_pasteBlob=null,_camaraBlob=null;
+let fsStream=null,fsFacing='environment',fsCropper=null;
 
+function fsAbrir(){{
+  document.getElementById('fsOverlay').style.display='flex';
+  document.getElementById('fsVideo').style.display='block';
+  document.getElementById('fsCropperImg').style.display='none';
+  ['fsMoverBtn','fsRecortarBtn','fsAnalizarBtn','fsRepetirBtn'].forEach(id=>document.getElementById(id).classList.add('d-none'));
+  document.getElementById('fsCapturarBtn').classList.remove('d-none');
+  fsAbrirStream();
+}}
+function fsCerrar(){{
+  fsCerrarStream();
+  if(fsCropper){{fsCropper.destroy();fsCropper=null;}}
+  document.getElementById('fsOverlay').style.display='none';
+}}
+function fsAbrirStream(){{
+  fsCerrarStream();
+  navigator.mediaDevices.getUserMedia({{video:{{facingMode:fsFacing,width:{{ideal:1280}},height:{{ideal:720}}}}}})
+    .then(s=>{{fsStream=s;document.getElementById('fsVideo').srcObject=s;}})
+    .catch(e=>Swal.fire('Error','No se pudo acceder a la cámara: '+e.message,'error'));
+}}
+function fsCerrarStream(){{if(fsStream){{fsStream.getTracks().forEach(t=>t.stop());fsStream=null;}}}}
+function fsCapturar(){{
+  const video=document.getElementById('fsVideo');
+  const canvas=document.createElement('canvas');
+  canvas.width=video.videoWidth||1280;canvas.height=video.videoHeight||720;
+  canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);
+  fsCerrarStream();
+  document.getElementById('fsVideo').style.display='none';
+  const cropImg=document.getElementById('fsCropperImg');
+  cropImg.src=canvas.toDataURL('image/jpeg',0.92);cropImg.style.display='block';
+  document.getElementById('fsCapturarBtn').classList.add('d-none');
+  ['fsMoverBtn','fsRecortarBtn','fsAnalizarBtn','fsRepetirBtn'].forEach(id=>document.getElementById(id).classList.remove('d-none'));
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{{
+    if(fsCropper){{fsCropper.destroy();fsCropper=null;}}
+    fsCropper=new Cropper(cropImg,{{viewMode:1,dragMode:'move',autoCropArea:1,movable:true,zoomable:true,rotatable:false,scalable:false}});
+  }}));
+}}
+function fsAnalizarCaptura(){{
+  if(!fsCropper)return;
+  fsCropper.getCroppedCanvas({{maxWidth:1920,maxHeight:1080,fillColor:'#fff'}}).toBlob(blob=>{{
+    _camaraBlob=blob;fsCerrar();
+    document.getElementById('miniImg').src=URL.createObjectURL(blob);
+    document.getElementById('miniPreview').classList.remove('d-none');
+    analizarBlob(blob);
+  }},'image/jpeg',0.88);
+}}
+function fsRepetir(){{
+  if(fsCropper){{fsCropper.destroy();fsCropper=null;}}
+  document.getElementById('fsCropperImg').style.display='none';
+  document.getElementById('fsVideo').style.display='block';
+  ['fsMoverBtn','fsRecortarBtn','fsAnalizarBtn','fsRepetirBtn'].forEach(id=>document.getElementById(id).classList.add('d-none'));
+  document.getElementById('fsCapturarBtn').classList.remove('d-none');
+  fsAbrirStream();
+}}
+function analizarBlob(blob){{
+  if(!IA_ID_CITA){{Swal.fire('Aviso','No hay cita seleccionada.','warning');return;}}
+  Swal.fire({{title:'Analizando con IA...',allowOutsideClick:false,didOpen:()=>Swal.showLoading()}});
+  const servicio=document.getElementById('iaServicio').value||'dental';
+  const razon=(document.getElementById('iaIndicaciones').value||'').trim();
+  const contexto=razon?`El paciente describe: ""${{razon}}"". Analiza la imagen.`:'Analiza esta imagen clínica y describe los hallazgos.';
+  const form=new FormData();
+  form.append('idCita',IA_ID_CITA);form.append('imagen',blob,'imagen.jpg');
+  form.append('servicio',servicio);form.append('contexto',contexto);
+  fetch('/Citas/AnalizarImagenIA',{{method:'POST',body:form}})
+    .then(r=>r.json()).then(res=>{{
+      Swal.close();
+      if(res.ok){{
+        document.getElementById('textoIA').innerText=res.diagnostico;
+        document.getElementById('resultadoIA').classList.remove('d-none');
+        document.getElementById('resultadoIA').scrollIntoView({{behavior:'smooth'}});
+      }}else{{Swal.fire('Error IA',res.msg||'Error desconocido','error');}}
+    }}).catch(()=>Swal.fire('Error','Fallo de comunicación.','error'));
+}}
+function base64ABlob(b64,ct){{
+  const b=atob(b64),a=new Uint8Array(b.length);
+  for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);
+  return new Blob([a],{{type:ct||'image/jpeg'}});
+}}
+function guardarIndicaciones(){{
+  const texto=document.getElementById('iaIndicaciones').value.trim();
+  document.getElementById('msgGuardado').classList.add('d-none');
+  document.getElementById('msgError').classList.add('d-none');
+  fetch(`/Citas/GuardarIndicaciones?idCita=${{IA_ID_CITA}}`,{{
+    method:'POST',headers:{{'Content-Type':'application/json'}},
+    body:JSON.stringify({{indicaciones:texto}})
+  }}).then(r=>r.json()).then(res=>{{
+    if(res.ok){{const ok=document.getElementById('msgGuardado');ok.classList.remove('d-none');setTimeout(()=>ok.classList.add('d-none'),2500);}}
+    else{{const err=document.getElementById('msgError');err.textContent=res.msg||'Error al guardar';err.classList.remove('d-none');}}
+  }}).catch(()=>{{const err=document.getElementById('msgError');err.textContent='Fallo de comunicación.';err.classList.remove('d-none');}});
+}}
+async function descargarDocDoctor(){{
+  const r=await fetch(`/Citas/DescargarDocumentoDoctor?idCita=${{IA_ID_CITA}}`);
+  if(!r.ok){{Swal.fire('Info','No hay documento del doctor.','info');return;}}
+  const blob=await r.blob();
+  const cd=r.headers.get('content-disposition')||'';
+  const m=/filename\*=UTF-8''([^;]+)|filename=""?([^""]+)""?/i.exec(cd);
+  const filename=m?decodeURIComponent(m[1]||m[2]||''):`doc_doctor_${{IA_ID_CITA}}`;
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=filename;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}}
+document.addEventListener('DOMContentLoaded',async()=>{{
+  document.getElementById('fsCapturarBtn').onclick=fsCapturar;
+  document.getElementById('fsAnalizarBtn').onclick=fsAnalizarCaptura;
+  document.getElementById('fsRepetirBtn').onclick=fsRepetir;
+  document.getElementById('fsCerrarBtn').onclick=fsCerrar;
+  document.getElementById('fsFlipBtn').onclick=()=>{{fsFacing=fsFacing==='environment'?'user':'environment';fsAbrirStream();}};
+  document.getElementById('fsMoverBtn').onclick=()=>fsCropper&&fsCropper.setDragMode('move');
+  document.getElementById('fsRecortarBtn').onclick=()=>fsCropper&&fsCropper.setDragMode('crop');
+  document.getElementById('btnAnalizarMini').onclick=()=>{{if(_camaraBlob)analizarBlob(_camaraBlob);}};
+  document.getElementById('btnCopiarInd').onclick=()=>{{const d=document.getElementById('textoIA').innerText;if(d)document.getElementById('iaIndicaciones').value=d;}};
+  const pa=document.getElementById('pasteArea');
+  pa.addEventListener('click',()=>pa.focus());
+  pa.addEventListener('paste',e=>{{
+    for(const item of(e.clipboardData?.items||[])){{
+      if(item.type.startsWith('image/')){{
+        _pasteBlob=item.getAsFile();
+        document.getElementById('pasteImg').src=URL.createObjectURL(_pasteBlob);
+        document.getElementById('pastePreview').classList.remove('d-none');
+        document.getElementById('btnAnalizarPaste').classList.remove('d-none');
+        pa.querySelector('span').textContent='✔ Pegada. Pulse Analizar.';break;
+      }}
+    }}
+  }});
+  document.getElementById('btnAnalizarPaste').onclick=()=>{{if(_pasteBlob)analizarBlob(_pasteBlob);}};
+  document.getElementById('btnAnalizarFichero').onclick=()=>{{
+    const file=document.getElementById('iaFile').files[0];
+    if(!file){{Swal.fire('Aviso','Seleccione un fichero.','warning');return;}}
+    if(!file.type.startsWith('image/')){{Swal.fire('Aviso','Solo imágenes.','warning');return;}}
+    analizarBlob(file);
+  }};
+  document.getElementById('btnBDPac').onclick=()=>{{if(_pacBase64)analizarBlob(base64ABlob(_pacBase64,_pacCT));}};
+  document.getElementById('btnBDDoc').onclick=()=>{{if(_docBase64)analizarBlob(base64ABlob(_docBase64,_docCT));}};
+  document.getElementById('btnDescDoc').onclick=descargarDocDoctor;
+  if(!IA_ID_CITA)return;
+  try{{
+    const r=await fetch(`/Citas/ObtenerDetalleCita?idCita=${{IA_ID_CITA}}`);
+    const res=await r.json();
+    if(!res.ok)return;
+    const dto=res.data;
+    document.getElementById('iaIndicaciones').value=(dto.indicaciones||'').trim();
+    if(dto.diagnosticoIA){{document.getElementById('textoIA').innerText=dto.diagnosticoIA;document.getElementById('resultadoIA').classList.remove('d-none');}}
+    _pacBase64=dto.documentoCitaUsr||null;_pacCT=dto.contentType||'application/octet-stream';
+    const esImgPac=!!(_pacBase64&&(_pacCT||'').startsWith('image/'));
+    document.getElementById('btnBDPac').disabled=!esImgPac;
+    document.getElementById('lblBDPac').textContent=esImgPac?'Imagen del paciente disponible.':(_pacBase64?'El doc. no es imagen.':'No hay doc. del paciente en BD.');
+    _docBase64=dto.docIndicacionesDoctor||null;_docCT=dto.contentTypeDoctor||'application/octet-stream';
+    const esImgDoc=!!(_docBase64&&(_docCT||'').startsWith('image/'));
+    document.getElementById('btnBDDoc').disabled=!esImgDoc;
+    document.getElementById('btnDescDoc').disabled=!_docBase64;
+    document.getElementById('lblBDDoc').textContent=esImgDoc?'Doc. del doctor disponible.':(_docBase64?'El doc. no es imagen.':'No hay doc. del doctor en BD.');
+  }}catch(e){{console.warn('No se pudo cargar detalle:',e);}}
+}});
+</script>
+</body>
+</html>";
+            return Content(html, "text/html", System.Text.Encoding.UTF8);
+        }
+
+      
     }
 }   

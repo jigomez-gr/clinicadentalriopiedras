@@ -878,25 +878,21 @@
             acciones.className = "slot-actions mt-2 d-flex flex-wrap gap-1";
 
             if (tieneCitaEfectiva) {
-                // --- BLOQUE CITA ACTIVA — solo iconos, una fila ---
-
-                // 👁 Ver
+                // --- BLOQUE CITA ACTIVA ---
                 const btn = document.createElement("button");
                 btn.className = "btn btn-sm btn-light px-2";
-                btn.title = "Ver detalle de la cita";
+                btn.title = "Ver detalle";
                 btn.innerHTML = '<i class="fa fa-eye"></i>';
                 btn.onclick = (ev) => { ev.stopPropagation(); abrirModalCita(s); };
                 acciones.appendChild(btn);
 
-                // 📅 Reprogramar
                 const btnRepro = document.createElement("button");
                 btnRepro.className = "btn btn-sm btn-dark px-2";
-                btnRepro.title = "Reprogramar cita";
+                btnRepro.title = "Reprogramar";
                 btnRepro.innerHTML = '<i class="fa fa-calendar-day"></i>';
                 btnRepro.onclick = (ev) => { ev.stopPropagation(); abrirModalReprogramar(s); };
                 acciones.appendChild(btnRepro);
 
-                // ✕ Cancelar
                 const btnCancel = document.createElement("button");
                 btnCancel.className = "btn btn-sm btn-warning text-dark px-2";
                 btnCancel.title = "Cancelar cita";
@@ -916,10 +912,9 @@
                 };
                 acciones.appendChild(btnCancel);
 
-                // 🔄 Sincronizar Cal.com
                 const btnChk = document.createElement("button");
                 btnChk.className = "btn btn-sm btn-chk-calcom text-white px-2";
-                btnChk.title = "Chequear integridad en Cal.com";
+                btnChk.title = "Sincronizar Cal.com";
                 btnChk.innerHTML = '<i class="fa fa-sync"></i>';
                 btnChk.onclick = (e) => {
                     e.stopPropagation();
@@ -932,24 +927,20 @@
                 };
                 acciones.appendChild(btnChk);
 
-                // 🤖 Análisis IA (ventana popup independiente)
+                // Botón IA — abre ventana popup independiente
                 const btnIA = document.createElement("button");
                 btnIA.className = "btn btn-sm btn-success px-2";
-                btnIA.title = "Análisis IA de esta cita";
+                btnIA.title = "Análisis IA";
                 btnIA.innerHTML = '<i class="fas fa-robot"></i>';
                 btnIA.onclick = (e) => {
                     e.stopPropagation();
                     const idCitaIA = s.idCita || (s.cita ? s.cita.idCita : 0) || s.IdCita || 0;
-                    const pacienteIA = encodeURIComponent(s.paciente || "");
                     if (!idCitaIA) { Swal.fire("Aviso","ID de cita no encontrado.","warning"); return; }
-                    const w = 960, h = 720;
-                    const left = Math.max(0, (screen.width - w) / 2);
-                    const top  = Math.max(0, (screen.height - h) / 2);
-                    window.open(
-                        `/Citas/AnalisisIA?idCita=${idCitaIA}&paciente=${pacienteIA}`,
-                        `ia_cita_${idCitaIA}`,
-                        `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,status=no`
-                    );
+                    const pac = encodeURIComponent(s.paciente || "");
+                    const w=960,h=720,left=Math.max(0,(screen.width-w)/2),top=Math.max(0,(screen.height-h)/2);
+                    window.open(`/Citas/AnalisisIA?idCita=${idCitaIA}&paciente=${pac}`,
+                        `ia_${idCitaIA}`,
+                        `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no`);
                 };
                 acciones.appendChild(btnIA);
 
