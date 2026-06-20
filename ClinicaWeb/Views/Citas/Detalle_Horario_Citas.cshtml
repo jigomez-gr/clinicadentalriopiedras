@@ -2310,24 +2310,25 @@
                 document.getElementById("iaBtnAnalizarPaste").classList.add("d-none");
 
                 try {
-                    const mdIAInst = bootstrap.Modal.getOrCreateInstance(document.getElementById("mdIA"));
-                    // Si ya estaba abierto (clase show), forzar dispose y recrear
                     const mdIADom = document.getElementById("mdIA");
-                    if(mdIADom.classList.contains("show")) {
-                        mdIAInst.hide();
-                        setTimeout(function(){
-                            // Limpiar backdrop huérfano
-                            document.querySelectorAll(".modal-backdrop").forEach(b => b.remove());
-                            document.body.classList.remove("modal-open");
-                            document.body.style.overflow = "";
-                            document.body.style.paddingRight = "";
-                            bootstrap.Modal.getOrCreateInstance(mdIADom).show();
-                            console.log("mdIA.show() llamado (reset) OK");
-                        }, 350);
-                    } else {
-                        mdIAInst.show();
-                        console.log("mdIA.show() llamado OK");
-                    }
+                    // Limpiar estado previo completamente
+                    const existInst = bootstrap.Modal.getInstance(mdIADom);
+                    if(existInst) { existInst.dispose(); }
+                    // Limpiar clases y estilos residuales del DOM
+                    mdIADom.classList.remove("show");
+                    mdIADom.style.display = "";
+                    mdIADom.removeAttribute("aria-modal");
+                    mdIADom.removeAttribute("role");
+                    // Limpiar backdrops y body
+                    document.querySelectorAll(".modal-backdrop").forEach(b => b.remove());
+                    document.body.classList.remove("modal-open");
+                    document.body.style.overflow = "";
+                    document.body.style.paddingRight = "";
+                    // Abrir fresco
+                    setTimeout(function(){
+                        new bootstrap.Modal(mdIADom, {backdrop: true, keyboard: true}).show();
+                        console.log("mdIA.show() llamado OK (fresh)");
+                    }, 50);
                 } catch(err) {
                     console.error("Error abriendo mdIA:", err);
                 }
@@ -2530,3 +2531,4 @@
         }
     </style>
     }
+
