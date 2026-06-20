@@ -143,17 +143,17 @@
         gap: 3px !important;
     }
 
-    /* Modal IA: z-index superior para evitar conflicto de backdrops */
+    /* Todos los modales: z-index correcto */
+    #mdCita {
+        z-index: 1055 !important;
+    }
+
     #mdIA {
         z-index: 1060 !important;
     }
-
-        #mdIA ~ .modal-backdrop {
-            z-index: 1055 !important;
-        }
-    /* Cuando mdIA está abierto, el backdrop anterior queda debajo */
-    .modal-backdrop:last-of-type {
-        z-index: 1055 !important;
+    /* Backdrops siempre por debajo de los modales */
+    .modal-backdrop {
+        z-index: 1040 !important;
     }
 
     /* ===== RESPONSIVE MÓVIL ===== */
@@ -1595,9 +1595,6 @@
             }
 
             // 5) Abrir modal
-            // Limpiar backdrops huérfanos antes de abrir
-            document.querySelectorAll(".modal-backdrop").forEach(function(b) { b.remove(); });
-            document.body.classList.remove("modal-open");
             bootstrap.Modal.getOrCreateInstance(modalEl).show();
 
             // 6) Cargar detalles de reconfirmación
@@ -2259,21 +2256,12 @@
             var iaImagenBlob = null;
 
             function abrirModalIA(slot) {
-                // Cerrar cualquier modal abierto para evitar backdrops apilados
-                document.querySelectorAll(".modal.show").forEach(function(m) {
-                    const inst = bootstrap.Modal.getInstance(m);
-                    if(inst) inst.hide();
-                });
-                // Limpiar backdrops huérfanos
-                setTimeout(function() {
-                    document.querySelectorAll(".modal-backdrop").forEach(function(b) { b.remove(); });
-                    document.body.classList.remove("modal-open");
-                    document.body.style.overflow = "";
-                    document.body.style.paddingRight = "";
-                }, 200);
-
+                console.log("abrirModalIA llamado, slot=", slot);
+                const mdIAEl = document.getElementById("mdIA");
+                console.log("mdIA elemento=", mdIAEl);
                 const cita = (slot && slot.cita) ? slot.cita : slot;
                 iaIdCita = cita.idCita || slot.idCita || 0;
+                console.log("iaIdCita=", iaIdCita);
 
                 // Nombre paciente en título
                 const pacNom = (cita.paciente || slot.paciente || "").trim();
@@ -2321,7 +2309,12 @@
                 document.getElementById("iaPastePreview").classList.add("d-none");
                 document.getElementById("iaBtnAnalizarPaste").classList.add("d-none");
 
-                bootstrap.Modal.getOrCreateInstance(document.getElementById("mdIA")).show();
+                try {
+                    bootstrap.Modal.getOrCreateInstance(document.getElementById("mdIA")).show();
+                    console.log("mdIA.show() llamado OK");
+                } catch(err) {
+                    console.error("Error abriendo mdIA:", err);
+                }
             }
 
             function iaAnalizarBlob(blob, cb) {
