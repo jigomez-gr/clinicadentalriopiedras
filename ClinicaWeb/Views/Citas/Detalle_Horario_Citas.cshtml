@@ -878,22 +878,29 @@
             acciones.className = "slot-actions mt-2 d-flex flex-wrap gap-1";
 
             if (tieneCitaEfectiva) {
-                // --- BLOQUE CITA ACTIVA ---
+                // --- BLOQUE CITA ACTIVA — solo iconos, una fila ---
+
+                // 👁 Ver
                 const btn = document.createElement("button");
                 btn.className = "btn btn-sm btn-light px-2";
-                btn.textContent = "Ver";
+                btn.title = "Ver detalle de la cita";
+                btn.innerHTML = '<i class="fa fa-eye"></i>';
                 btn.onclick = (ev) => { ev.stopPropagation(); abrirModalCita(s); };
                 acciones.appendChild(btn);
 
+                // 📅 Reprogramar
                 const btnRepro = document.createElement("button");
                 btnRepro.className = "btn btn-sm btn-dark px-2";
-                btnRepro.textContent = "Repro";
+                btnRepro.title = "Reprogramar cita";
+                btnRepro.innerHTML = '<i class="fa fa-calendar-day"></i>';
                 btnRepro.onclick = (ev) => { ev.stopPropagation(); abrirModalReprogramar(s); };
                 acciones.appendChild(btnRepro);
 
+                // ✕ Cancelar
                 const btnCancel = document.createElement("button");
-                btnCancel.className = "btn btn-sm btn-warning text-dark fw-bold px-2";
-                btnCancel.innerHTML = '<i class="bi bi-x-circle"></i> Canc';
+                btnCancel.className = "btn btn-sm btn-warning text-dark px-2";
+                btnCancel.title = "Cancelar cita";
+                btnCancel.innerHTML = '<i class="fa fa-times"></i>';
                 btnCancel.onclick = function(ev) {
                     ev.stopPropagation();
                     let idCita = s.idCita || (s.cita ? s.cita.idCita : 0) || s.IdCita || (s.cita ? s.cita.IdCita : 0);
@@ -909,10 +916,11 @@
                 };
                 acciones.appendChild(btnCancel);
 
+                // 🔄 Sincronizar Cal.com
                 const btnChk = document.createElement("button");
                 btnChk.className = "btn btn-sm btn-chk-calcom text-white px-2";
                 btnChk.title = "Chequear integridad en Cal.com";
-                btnChk.innerHTML = '<i class="fa fa-sync"></i> Sinc';
+                btnChk.innerHTML = '<i class="fa fa-sync"></i>';
                 btnChk.onclick = (e) => {
                     e.stopPropagation();
                     let idCitaChk = s.idCita || (s.cita ? s.cita.idCita : 0) || s.IdCita || (s.cita ? s.cita.IdCita : 0);
@@ -924,11 +932,11 @@
                 };
                 acciones.appendChild(btnChk);
 
-                // ── Botón IA (abre ventana popup independiente) ──
+                // 🤖 Análisis IA (ventana popup independiente)
                 const btnIA = document.createElement("button");
                 btnIA.className = "btn btn-sm btn-success px-2";
                 btnIA.title = "Análisis IA de esta cita";
-                btnIA.innerHTML = '<i class="fas fa-robot me-1"></i>IA';
+                btnIA.innerHTML = '<i class="fas fa-robot"></i>';
                 btnIA.onclick = (e) => {
                     e.stopPropagation();
                     const idCitaIA = s.idCita || (s.cita ? s.cita.idCita : 0) || s.IdCita || 0;

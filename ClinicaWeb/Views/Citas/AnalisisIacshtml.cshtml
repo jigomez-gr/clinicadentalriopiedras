@@ -1,7 +1,7 @@
 ﻿@{
     Layout = null;
-    int idCita = (int)(ViewBag.IdCita ?? 0);
-    string paciente = (string)(ViewBag.Paciente ?? "");
+    int idCita = ViewBag.IdCita != null ? (int)ViewBag.IdCita : 0;
+    string paciente = ViewBag.Paciente?.ToString() ?? "";
 }
 <!DOCTYPE html>
 <html lang="es">
