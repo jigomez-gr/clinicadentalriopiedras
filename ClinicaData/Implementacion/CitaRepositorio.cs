@@ -2191,6 +2191,30 @@ AND c.fechacita <= NOW() + INTERVAL '48 hours'
                 return "Error al guardar el diagnóstico IA";
             }
         }
+        public async Task<string> GuardarIndicaciones(int idCita, string indicaciones)
+        {
+            try
+            {
+                await using var conexion = new NpgsqlConnection(con.CadenaSQL);
+                await conexion.OpenAsync();
+
+                await using var cmd = new NpgsqlCommand(
+                    "SELECT public.sp_guardarindicaciones(@IdCita, @Indicaciones);",
+                    conexion);
+
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@IdCita", idCita);
+                cmd.Parameters.AddWithValue("@Indicaciones",
+                    string.IsNullOrWhiteSpace(indicaciones) ? (object)DBNull.Value : indicaciones);
+
+                var result = await cmd.ExecuteScalarAsync();
+                return result?.ToString() ?? "";
+            }
+            catch (Exception ex)
+            {
+                return $"Error al guardar indicaciones: {ex.Message}";
+            }
+        }
 
 
     }

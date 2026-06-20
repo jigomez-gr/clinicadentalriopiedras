@@ -134,93 +134,9 @@
         }
 
     .slot-actions .btn {
-        font-size: 0.7rem;
-        padding: 0.18rem 0.3rem;
-        white-space: nowrap;
-    }
-
-    .slot-actions {
-        gap: 3px !important;
-    }
-
-    /* Todos los modales: z-index correcto */
-    #mdCita {
-        z-index: 1055 !important;
-    }
-
-    #mdIA {
-        z-index: 1060 !important;
-    }
-    /* Backdrops siempre por debajo de los modales */
-    .modal-backdrop {
-        z-index: 1040 !important;
-    }
-
-    /* ===== RESPONSIVE MÓVIL ===== */
-    @@media (max-width: 767px) {
-        /* Modal: ocupar casi toda la pantalla */
-        #mdCita .modal-dialog {
-            margin: 4px !important;
-            max-width: calc(100vw - 8px) !important;
-        }
-
-        #mdCita .modal-body {
-            padding: .5rem !important;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        #mdCita .cita-box {
-            padding: .4rem .5rem !important;
-        }
-
-            #mdCita .cita-box label {
-                font-size: .78rem !important;
-                margin-bottom: .1rem !important;
-            }
-
-            #mdCita .cita-box .form-control,
-            #mdCita .cita-box textarea {
-                font-size: .82rem !important;
-                padding: .2rem .4rem !important;
-            }
-        /* Tipo de cita + botones en móvil: apilar select arriba, botones abajo */
-        #citaTipoCita {
-            min-width: 0;
-        }
-        /* Tabs IA: texto más pequeño */
-        .nav-link.small {
-            font-size: .73rem !important;
-            padding: .3rem .4rem !important;
-        }
-        /* Pantalla completa cámara en móvil */
-        #dhcFullscreen {
-            overflow: hidden !important;
-        }
-
-        #dhcFsArea {
-            flex: 1 !important;
-            min-height: 0 !important;
-        }
-
-        #dhcFsControles {
-            padding: 5px 8px !important;
-            flex-shrink: 0 !important;
-        }
-
-            #dhcFsControles .btn {
-                font-size: .75rem !important;
-                padding: .2rem .35rem !important;
-            }
-
-            #dhcFsControles .form-range {
-                max-width: 160px !important;
-            }
-
-        #dhcFsResultado {
-            max-height: 25vh !important;
-            font-size: .8rem !important;
-        }
+        font-size: 0.75rem; /* Fuente más pequeña */
+        padding: 0.25rem 0.4rem; /* Padding muy ajustado */
+        white-space: nowrap; /* Evita que el texto interno se rompa */
     }
 </style>
 <div class="d-flex align-items-center justify-content-between mb-3 agenda-header"
@@ -341,50 +257,6 @@
 
 
 
-<!-- ===== PANTALLA COMPLETA CÁMARA IA ===== -->
-<div id="dhcFullscreen" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:#000;z-index:99999;flex-direction:column;overflow:hidden;">
-    <div style="background:#1a1a2e;padding:8px 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0;">
-        <button type="button" class="btn btn-outline-light btn-sm" id="dhcFsBtnVolver">
-            <i class="fas fa-arrow-left me-1"></i>Volver al modal
-        </button>
-        <span class="text-white small ms-2">Cámara — captura, recorta y analiza</span>
-        <div class="ms-auto">
-            <button type="button" class="btn btn-warning btn-sm d-none" id="dhcFsBtnVerResultados">
-                <i class="fas fa-eye me-1"></i>Ver resultados y volver
-            </button>
-        </div>
-    </div>
-    <div style="position:relative;background:#000;flex:1;min-height:0;overflow:hidden;" id="dhcFsArea">
-        <div id="dhcFsStreamDiv" style="width:100%;height:100%;display:flex;flex-direction:column;position:absolute;top:0;left:0;">
-            <video id="dhcFsVideo" autoplay playsinline style="width:100%;flex:1;object-fit:cover;background:#000;"></video>
-            <div style="background:#1a1a2e;padding:10px;display:flex;gap:10px;flex-wrap:wrap;">
-                <button type="button" class="btn btn-primary" id="dhcFsBtnCapturar"><i class="fas fa-camera me-1"></i>Capturar</button>
-                <button type="button" class="btn btn-outline-light" id="dhcFsBtnVoltear"><i class="fas fa-sync-alt me-1"></i>Voltear</button>
-            </div>
-        </div>
-        <div id="dhcFsCropperDiv" style="display:none;width:100%;height:100%;position:absolute;top:0;left:0;overflow:hidden;">
-            <img id="dhcFsImgCropper" src="" alt="Recortar" style="max-width:100%;display:block;" />
-        </div>
-    </div>
-    <div id="dhcFsControles" style="display:none;background:#1a1a2e;padding:8px 12px;flex-shrink:0;">
-        <div class="d-flex gap-2 align-items-center mb-2 flex-wrap">
-            <span class="text-white small">Zoom:</span>
-            <i class="fas fa-search-minus text-white"></i>
-            <input type="range" id="dhcFsSliderZoom" min="0.1" max="5" step="0.05" value="0.1" class="form-range flex-grow-1" style="max-width:260px;" />
-            <i class="fas fa-search-plus text-white"></i>
-        </div>
-        <div class="d-flex gap-2 flex-wrap">
-            <div class="btn-group btn-group-sm">
-                <button type="button" class="btn btn-outline-light" id="dhcFsBtnMover"><i class="fas fa-hand-paper me-1"></i>Mover</button>
-                <button type="button" class="btn btn-outline-light active" id="dhcFsBtnRecortar"><i class="fas fa-crop-alt me-1"></i>Recortar</button>
-            </div>
-            <button type="button" class="btn btn-outline-secondary btn-sm" id="dhcFsBtnReset"><i class="fas fa-undo"></i> Reset</button>
-            <button type="button" class="btn btn-success ms-auto" id="dhcFsBtnAnalizarFS"><i class="fas fa-microscope me-1"></i>Analizar recorte con IA</button>
-        </div>
-    </div>
-    <div id="dhcFsResultado" style="display:none;background:#0f3460;color:#fff;padding:12px;flex-shrink:0;white-space:pre-line;font-size:.9rem;max-height:35vh;overflow-y:auto;"></div>
-</div>
-
 <div class="modal fade" id="mdCita" tabindex="-1" aria-labelledby="mdCitaLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
@@ -397,8 +269,8 @@
                 <div class="cita-box">
                     <div class="row g-2">
 
-                        <!-- FILA 1: Nº Cita | Hora | Paciente -->
-                        <div class="col-6 col-md-2">
+                        <!-- DESPUÉS (sustitúyelo por esto): -->
+                        <div class="col-12 col-md-2">
                             <label class="form-label"
                                    data-bs-toggle="tooltip" data-bs-placement="top"
                                    data-bs-custom-class="tooltip-agenda"
@@ -408,7 +280,7 @@
                                    data-bs-custom-class="tooltip-agenda"
                                    title="Número identificador de la cita" />
                         </div>
-                        <div class="col-6 col-md-2">
+                        <div class="col-12 col-md-2">
                             <label class="form-label"
                                    data-bs-toggle="tooltip" data-bs-placement="top"
                                    data-bs-custom-class="tooltip-agenda"
@@ -418,7 +290,9 @@
                                    data-bs-custom-class="tooltip-agenda"
                                    title="Hora de la cita" />
                         </div>
-                        <div class="col-12 col-md-8">
+
+
+                        <div class="col-12 col-md-5">
                             <label class="form-label"
                                    data-bs-toggle="tooltip" data-bs-placement="top"
                                    data-bs-custom-class="tooltip-agenda"
@@ -429,7 +303,6 @@
                                    title="Datos Identificativos del paciente" />
                         </div>
 
-                        <!-- FILA 2: Estado | Origen | Tipo + botones -->
                         <div class="col-12 col-md-4">
                             <label class="form-label"
                                    data-bs-toggle="tooltip" data-bs-placement="top"
@@ -452,25 +325,7 @@
                                    title="La cita puede haber sido registrada por Email, en la WEB (esta aplicación), por teléfono VAPI, por WASSAP, SMS y/o por Telegram" />
                         </div>
 
-                        <div class="col-12 col-md-4">
-                            <label class="form-label fw-bold">Tipo de Cita</label>
-                            <div class="d-flex gap-1">
-                                <select id="citaTipoCita" class="form-select flex-grow-1">
-                                    <option value="P">Presencial</option>
-                                    <option value="V">Virtual</option>
-                                    <option value="T">Telefónica</option>
-                                </select>
-                                <a href="#" target="_blank" class="btn btn-info btn-sm d-none" id="citaBtnCalcom" style="white-space:nowrap;">
-                                    <i class="fas fa-video me-1"></i>Unirse
-                                </a>
-                                <button type="button" class="btn btn-warning btn-sm" id="citaBtnGuardarTipo" style="white-space:nowrap;">
-                                    <i class="fas fa-save me-1"></i>Guardar
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- FILA 3: Confirmada | Fechas | Método -->
-                        <div class="col-6 col-md-2">
+                        <div class="col-12 col-md-2">
                             <label class="form-label"
                                    data-bs-toggle="tooltip" data-bs-placement="top"
                                    data-bs-custom-class="tooltip-agenda"
@@ -481,7 +336,7 @@
                                    title="La cita se intenta reconfirmar con el paciente 24 horas antes; este campo vale 'N' ó 'S'" />
                         </div>
 
-                        <div class="col-6 col-md-3">
+                        <div class="col-12 col-md-3">
                             <label class="form-label"
                                    data-bs-toggle="tooltip" data-bs-placement="top"
                                    data-bs-custom-class="tooltip-agenda"
@@ -492,7 +347,7 @@
                                    title="Es la fecha y hora a la que se le pidió que reconfirmara" />
                         </div>
 
-                        <div class="col-6 col-md-3">
+                        <div class="col-12 col-md-3">
                             <label class="form-label"
                                    data-bs-toggle="tooltip" data-bs-placement="top"
                                    data-bs-custom-class="tooltip-agenda"
@@ -503,7 +358,7 @@
                                    title="Es la fecha y hora a la que el usuario reconfirmó la cita en el caso en el que lo hiciera" />
                         </div>
 
-                        <div class="col-6 col-md-4">
+                        <div class="col-12 col-md-4">
                             <label class="form-label"
                                    data-bs-toggle="tooltip" data-bs-placement="top"
                                    data-bs-custom-class="tooltip-agenda"
@@ -529,10 +384,7 @@
                             <label class="form-label"
                                    data-bs-toggle="tooltip" data-bs-placement="top"
                                    data-bs-custom-class="tooltip-agenda"
-                                   title="Texto que pone el doctor indicando diagnóstico y las recomendaciones">
-                                Indicaciones
-                                <small class="text-muted ms-2">(editar desde botón IA del slot)</small>
-                            </label>
+                                   title="Texto que pone el doctor indicando diagnóstico y las recomendaciones">Indicaciones</label>
                             <textarea id="citaIndicaciones" class="form-control" rows="2" readonly
                                       data-bs-toggle="tooltip" data-bs-placement="top"
                                       data-bs-custom-class="tooltip-agenda"
@@ -635,1940 +487,1246 @@
 
                 <div id="infoDirectaSincro" class="small mt-2" style="display:none">
                 </div>
-                <!-- ── Análisis IA movido al submodal IA ── -->
-                <div class="mb-3" id="dhcSeccionIA" style="display:none">
-                    <label class="form-label fw-bold">
-                        <i class="fas fa-robot me-1 text-success"></i>Análisis IA
-                    </label>
-                    <div class="mb-2">
-                        <select class="form-select form-select-sm" id="dhcServicioIA" style="max-width:220px;">
-                            <option value="dental">🦷 Dental (boca/encías)</option>
-                            <option value="rx">🩻 Radiografía dental</option>
-                            <option value="derma">🔬 Dermatología</option>
-                            <option value="belleza">✨ Estética</option>
-                            <option value="general">🏥 General</option>
-                        </select>
-                    </div>
-                    <ul class="nav nav-tabs nav-sm mb-2">
-                        <li class="nav-item"><button class="nav-link active small" data-bs-toggle="tab" data-bs-target="#dhcTabCamara"><i class="fas fa-camera me-1"></i>Cámara</button></li>
-                        <li class="nav-item"><button class="nav-link small" data-bs-toggle="tab" data-bs-target="#dhcTabPegar"><i class="fas fa-paste me-1"></i>Pegar captura</button></li>
-                        <li class="nav-item"><button class="nav-link small" data-bs-toggle="tab" data-bs-target="#dhcTabFichero"><i class="fas fa-file-image me-1"></i>Fichero</button></li>
-                        <li class="nav-item"><button class="nav-link small" data-bs-toggle="tab" data-bs-target="#dhcTabBDPac"><i class="fas fa-database me-1"></i>Doc. paciente BD</button></li>
-                        <li class="nav-item"><button class="nav-link small" data-bs-toggle="tab" data-bs-target="#dhcTabBDDoc"><i class="fas fa-user-md me-1"></i>Doc. doctor BD</button></li>
-                    </ul>
-                    <div class="tab-content">
-                        <div class="tab-pane fade show active" id="dhcTabCamara">
-                            <button type="button" class="btn btn-success btn-sm" id="dhcBtnAbrirCamara">
-                                <i class="fas fa-camera me-1"></i>Abrir cámara a pantalla completa
-                            </button>
-                            <p class="text-muted small mt-1 mb-1">Pantalla completa para capturar, recortar y analizar.</p>
-                            <div id="dhcMiniPreview" class="d-none mt-1">
-                                <img id="dhcMiniImg" src="" style="max-height:60px;border-radius:6px;border:2px solid #198754;" />
-                                <span class="badge bg-success ms-2">✓ Capturada</span>
-                            </div>
-                        </div>
-                        <div class="tab-pane fade" id="dhcTabPegar">
-                            <div class="alert alert-info small py-1">Haz PrintScreen de la reunión, clic aquí y pega con <kbd>Ctrl+V</kbd>.</div>
-                            <div id="dhcPasteArea" tabindex="0" style="min-height:80px;border:2px dashed #6c757d;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#f8f9fa;" class="mb-2">
-                                <span class="text-muted small">Clic y pega (Ctrl+V)</span>
-                            </div>
-                            <div id="dhcPastePreview" class="d-none mb-2">
-                                <img id="dhcPasteImg" src="" style="max-width:100%;max-height:160px;border-radius:8px;" />
-                            </div>
-                            <button type="button" class="btn btn-success btn-sm d-none" id="dhcBtnAnalizarPaste">
-                                <i class="fas fa-microscope me-1"></i>Analizar captura
-                            </button>
-                        </div>
-                        <div class="tab-pane fade" id="dhcTabFichero">
-                            <input type="file" class="form-control form-control-sm mb-2" id="dhcFileIA" accept="image/*" />
-                            <button type="button" class="btn btn-success btn-sm" id="dhcBtnAnalizarFichero">
-                                <i class="fas fa-microscope me-1"></i>Analizar fichero
-                            </button>
-                        </div>
-                        <div class="tab-pane fade" id="dhcTabBDPac">
-                            <p class="small text-muted mb-2" id="dhcLblBDPac">Doc. paciente en BD.</p>
-                            <div class="d-flex gap-2 flex-wrap">
-                                <button type="button" class="btn btn-success btn-sm" id="dhcBtnAnalizarBDPac" disabled>
-                                    <i class="fas fa-database me-1"></i>Analizar doc. paciente con IA
-                                </button>
-                                <button type="button" class="btn btn-outline-success btn-sm" id="dhcBtnAnalizarBDPacSel" disabled>
-                                    <i class="fas fa-crop-alt me-1"></i>Analizar selección con IA
-                                </button>
-                                <button type="button" class="btn btn-outline-primary btn-sm" id="dhcBtnAnalizarBDPacYolo" disabled>
-                                    <i class="fas fa-robot me-1"></i>Analizar selección con IA + YOLO
-                                </button>
-                            </div>
-                        </div>
-                        <div class="tab-pane fade" id="dhcTabBDDoc">
-                            <p class="small text-muted mb-2" id="dhcLblBDDoc">Doc. doctor en BD.</p>
-                            <button type="button" class="btn btn-success btn-sm" id="dhcBtnAnalizarBDDoc" disabled>
-                                <i class="fas fa-user-md me-1"></i>Analizar doc. doctor con IA
-                            </button>
-                        </div>
-                    </div>
-                    <div id="dhcResultadoIA" class="d-none mt-2">
-                        <label class="form-label fw-bold text-success"><i class="fas fa-check-circle me-1"></i>Resultado análisis IA:</label>
-                        <div class="alert alert-success small py-2 mb-0" id="dhcTextoIA"
-                             style="white-space:pre-line;max-height:200px;overflow-y:auto;"></div>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
+</div>
 
 @* /* cambio comienzo */ *@
-
-    <!-- ===== SUBMODAL IA ===== -->
-    <div class="modal fade" id="mdIA" tabindex="-1" aria-labelledby="mdIALabel" aria-hidden="true" data-bs-backdrop="static">
-        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header" style="background:#198754;color:#fff;">
-                    <h5 class="modal-title" id="mdIALabel">
-                        <i class="fas fa-robot me-2"></i>Análisis IA — <span id="iaModalPaciente"></span>
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+<div class="modal fade" id="mdReprogramar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title"><i class="fa fa-calendar-day"></i> Reprogramar Cita</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="reproIdCitaVieja" />
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nueva Fecha</label>
+                    <input id="reproFecha" class="form-control" placeholder="dd/mm/aaaa" />
                 </div>
-                <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nueva Hora (HH:MM)</label>
+                    <input id="reproHora" class="form-control" placeholder="00:00" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Motivo de Reprogramación</label>
+                    <textarea id="reproMotivo" class="form-control" rows="3" placeholder="Indique la razón del cambio..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button id="btnConfirmarRepro" class="btn btn-warning">Confirmar Reprogramación</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="mdCancelarCita" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-times-circle me-2"></i>Cancelar Cita</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="cancelarIdCita" value="">
 
-                    <!-- Indicaciones editables -->
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">
-                            <i class="fas fa-notes-medical me-1 text-warning"></i>Indicaciones del doctor
-                        </label>
-                        <textarea id="iaIndicaciones" class="form-control" rows="3"
-                                  placeholder="Diagnóstico e indicaciones para el paciente..."></textarea>
-                        <button type="button" class="btn btn-warning btn-sm mt-1" id="iaBtnGuardarIndicaciones">
-                            <i class="fas fa-save me-1"></i>Guardar indicaciones
-                        </button>
-                    </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Motivo de la cancelación:</label>
+                    <textarea class="form-control" id="cancelarMotivo" rows="3" placeholder="Indique el motivo..."></textarea>
+                </div>
 
-                    <hr />
+                <p class="text-muted small">
+                    <i class="fas fa-info-circle me-1"></i> Esta acción liberará el hueco en la agenda.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" id="btnConfirmarCancelPac" class="btn btn-danger px-4">
+                    Confirmar Cancelación
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
-                    <!-- Análisis IA -->
-                    <div class="mb-2">
-                        <label class="form-label fw-bold">
-                            <i class="fas fa-robot me-1 text-success"></i>Análisis IA
-                        </label>
-                        <select class="form-select form-select-sm mb-2" id="iaServicioIA" style="max-width:220px;">
-                            <option value="dental">🦷 Dental (boca/encías)</option>
-                            <option value="rx">🩻 Radiografía dental</option>
-                            <option value="derma">🔬 Dermatología</option>
-                            <option value="belleza">✨ Estética</option>
-                            <option value="general">🏥 General</option>
-                        </select>
-                        <ul class="nav nav-tabs nav-sm mb-2">
-                            <li class="nav-item"><button class="nav-link active small" data-bs-toggle="tab" data-bs-target="#iaTabCamara"><i class="fas fa-camera me-1"></i>Cámara</button></li>
-                            <li class="nav-item"><button class="nav-link small" data-bs-toggle="tab" data-bs-target="#iaTabPegar"><i class="fas fa-paste me-1"></i>Pegar</button></li>
-                            <li class="nav-item"><button class="nav-link small" data-bs-toggle="tab" data-bs-target="#iaTabFichero"><i class="fas fa-file-image me-1"></i>Fichero</button></li>
-                            <li class="nav-item"><button class="nav-link small" data-bs-toggle="tab" data-bs-target="#iaTabBDPac"><i class="fas fa-database me-1"></i>Doc. paciente</button></li>
-                            <li class="nav-item"><button class="nav-link small" data-bs-toggle="tab" data-bs-target="#iaTabBDDoc"><i class="fas fa-user-md me-1"></i>Doc. doctor</button></li>
-                        </ul>
-                        <div class="tab-content">
-                            <div class="tab-pane fade show active" id="iaTabCamara">
-                                <button type="button" class="btn btn-success btn-sm" id="iaBtnAbrirCamara">
-                                    <i class="fas fa-camera me-1"></i>Abrir cámara a pantalla completa
-                                </button>
-                                <p class="text-muted small mt-1 mb-1">Captura, recorta y analiza.</p>
-                                <div id="iaMiniPreview" class="d-none mt-1">
-                                    <img id="iaMiniImg" src="" style="max-height:60px;border-radius:6px;border:2px solid #198754;" />
-                                    <span class="badge bg-success ms-2">✓ Capturada</span>
-                                </div>
-                            </div>
-                            <div class="tab-pane fade" id="iaTabPegar">
-                                <div class="alert alert-info small py-1">Haz PrintScreen, clic aquí y pega con <kbd>Ctrl+V</kbd>.</div>
-                                <div id="iaPasteArea" tabindex="0" style="min-height:80px;border:2px dashed #6c757d;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#f8f9fa;" class="mb-2">
-                                    <span class="text-muted small">Clic y pega (Ctrl+V)</span>
-                                </div>
-                                <div id="iaPastePreview" class="d-none mb-2">
-                                    <img id="iaPasteImg" src="" style="max-width:100%;max-height:160px;border-radius:8px;" />
-                                </div>
-                                <button type="button" class="btn btn-success btn-sm d-none" id="iaBtnAnalizarPaste">
-                                    <i class="fas fa-microscope me-1"></i>Analizar
-                                </button>
-                            </div>
-                            <div class="tab-pane fade" id="iaTabFichero">
-                                <input type="file" class="form-control form-control-sm mb-2" id="iaFileIA" accept="image/*" />
-                                <button type="button" class="btn btn-success btn-sm" id="iaBtnAnalizarFichero">
-                                    <i class="fas fa-microscope me-1"></i>Analizar fichero
-                                </button>
-                            </div>
-                            <div class="tab-pane fade" id="iaTabBDPac">
-                                <p class="small text-muted mb-2" id="iaLblBDPac">Doc. paciente en BD.</p>
-                                <div class="d-flex gap-2 flex-wrap">
-                                    <button type="button" class="btn btn-success btn-sm" id="iaBtnAnalizarBDPac" disabled>
-                                        <i class="fas fa-database me-1"></i>Analizar con IA
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="tab-pane fade" id="iaTabBDDoc">
-                                <p class="small text-muted mb-2" id="iaLblBDDoc">Doc. doctor en BD.</p>
-                                <button type="button" class="btn btn-success btn-sm" id="iaBtnAnalizarBDDoc" disabled>
-                                    <i class="fas fa-user-md me-1"></i>Analizar con IA
-                                </button>
-                                <div class="mt-2">
-                                    <button type="button" class="btn btn-warning btn-sm" id="iaBtnDescDocDoctor" disabled>
-                                        <i class="fas fa-download me-1"></i>Descargar doc. doctor
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
 
-                        <div id="iaResultadoIA" class="d-none mt-3">
-                            <label class="form-label fw-bold text-success">
-                                <i class="fas fa-check-circle me-1"></i>Resultado análisis IA:
+
+
+<div class="modal fade" id="mdChkCalcom" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header btn-chk-calcom text-white">
+                <h5 class="modal-title"><i class="fa fa-sync"></i> Estado de Sincronización Cal.com</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="chk_idCita" />
+
+                <div class="alert alert-info py-2 mb-3">
+                    <i class="fa fa-question-circle"></i> Seleccione el tipo de chequeo si desea re-validar la cita ahora.
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="form-check card p-2">
+                            <input class="form-check-input ms-1" type="radio" name="radRefresh" id="refN" value="N" checked>
+                            <label class="form-check-label ms-4" for="refN">
+                                <strong>Chequeo Simple</strong><br><small class="text-muted">Solo verifica integridad.</small>
                             </label>
-                            <div class="alert alert-success small py-2 mb-0" id="iaTextoIA"
-                                 style="white-space:pre-line;max-height:200px;overflow-y:auto;"></div>
-                            <button type="button" class="btn btn-sm btn-outline-success mt-1" id="iaBtnUsarDiagnostico">
-                                <i class="fas fa-arrow-up me-1"></i>Copiar a Indicaciones
-                            </button>
                         </div>
                     </div>
-
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- ===== FIN SUBMODAL IA ===== -->
-
-    <div class="modal fade" id="mdReprogramar" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-warning text-dark">
-                    <h5 class="modal-title"><i class="fa fa-calendar-day"></i> Reprogramar Cita</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" id="reproIdCitaVieja" />
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Nueva Fecha</label>
-                        <input id="reproFecha" class="form-control" placeholder="dd/mm/aaaa" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Nueva Hora (HH:MM)</label>
-                        <input id="reproHora" class="form-control" placeholder="00:00" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Motivo de Reprogramación</label>
-                        <textarea id="reproMotivo" class="form-control" rows="3" placeholder="Indique la razón del cambio..."></textarea>
+                    <div class="col-md-6">
+                        <div class="form-check card p-2">
+                            <input class="form-check-input ms-1" type="radio" name="radRefresh" id="refS" value="S">
+                            <label class="form-check-label ms-4" for="refS">
+                                <strong>Refresh Forzado</strong><br><small class="text-muted">Actualiza datos en Cal.com.</small>
+                            </label>
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button id="btnConfirmarRepro" class="btn btn-warning">Confirmar Reprogramación</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="modal fade" id="mdCancelarCita" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title"><i class="fas fa-times-circle me-2"></i>Cancelar Cita</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" id="cancelarIdCita" value="">
 
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Motivo de la cancelación:</label>
-                        <textarea class="form-control" id="cancelarMotivo" rows="3" placeholder="Indique el motivo..."></textarea>
-                    </div>
-
-                    <p class="text-muted small">
-                        <i class="fas fa-info-circle me-1"></i> Esta acción liberará el hueco en la agenda.
-                    </p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="button" id="btnConfirmarCancelPac" class="btn btn-danger px-4">
-                        Confirmar Cancelación
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-
-
-    <div class="modal fade" id="mdChkCalcom" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-header btn-chk-calcom text-white">
-                    <h5 class="modal-title"><i class="fa fa-sync"></i> Estado de Sincronización Cal.com</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" id="chk_idCita" />
-
-                    <div class="alert alert-info py-2 mb-3">
-                        <i class="fa fa-question-circle"></i> Seleccione el tipo de chequeo si desea re-validar la cita ahora.
-                    </div>
-
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <div class="form-check card p-2">
-                                <input class="form-check-input ms-1" type="radio" name="radRefresh" id="refN" value="N" checked>
-                                <label class="form-check-label ms-4" for="refN">
-                                    <strong>Chequeo Simple</strong><br><small class="text-muted">Solo verifica integridad.</small>
-                                </label>
+                <div id="secResultadoSincro" style="display:none;">
+                    <h6 class="border-bottom pb-2 text-primary"><i class="fa fa-database"></i> Datos en Repositorio y Cal.com</h6>
+                    <div class="bg-light p-3 rounded border">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="text-muted small d-block">Resultado Sincro</label>
+                                <span id="lblResStatus" class="badge p-2 w-100">-</span>
                             </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-check card p-2">
-                                <input class="form-check-input ms-1" type="radio" name="radRefresh" id="refS" value="S">
-                                <label class="form-check-label ms-4" for="refS">
-                                    <strong>Refresh Forzado</strong><br><small class="text-muted">Actualiza datos en Cal.com.</small>
-                                </label>
+                            <div class="col-md-4">
+                                <label class="text-muted small d-block">Última Conexión</label>
+                                <strong id="lblResFecha">-</strong>
                             </div>
-                        </div>
-                    </div>
+                            <div class="col-md-4">
+                                <label class="text-muted small d-block">Booking UID</label>
+                                <code id="lblResUID" class="text-dark small">-</code>
+                            </div>
 
-                    <div id="secResultadoSincro" style="display:none;">
-                        <h6 class="border-bottom pb-2 text-primary"><i class="fa fa-database"></i> Datos en Repositorio y Cal.com</h6>
-                        <div class="bg-light p-3 rounded border">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label class="text-muted small d-block">Resultado Sincro</label>
-                                    <span id="lblResStatus" class="badge p-2 w-100">-</span>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="text-muted small d-block">Última Conexión</label>
-                                    <strong id="lblResFecha">-</strong>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="text-muted small d-block">Booking UID</label>
-                                    <code id="lblResUID" class="text-dark small">-</code>
-                                </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small d-block">Estado API (Cal.com)</label>
+                                <span id="lblResApiStatus" class="fw-bold">-</span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small d-block">Cita Local ID</label>
+                                <span id="lblResIdCita" class="fw-bold">-</span>
+                            </div>
 
-                                <div class="col-md-6">
-                                    <label class="text-muted small d-block">Estado API (Cal.com)</label>
-                                    <span id="lblResApiStatus" class="fw-bold">-</span>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="text-muted small d-block">Cita Local ID</label>
-                                    <span id="lblResIdCita" class="fw-bold">-</span>
-                                </div>
-
-                                <div class="col-12">
-                                    <label class="text-muted small d-block text-danger">Log de Errores / Observaciones</label>
-                                    <div id="lblResError" class="p-2 bg-white border rounded small text-danger" style="min-height:50px;">
-                                        -
-                                    </div>
+                            <div class="col-12">
+                                <label class="text-muted small d-block text-danger">Log de Errores / Observaciones</label>
+                                <div id="lblResError" class="p-2 bg-white border rounded small text-danger" style="min-height:50px;">
+                                    -
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="button" class="btn btn-primary" onclick="visualizarResultadoSincro()"><i class="fa fa-eye"></i> Cargar/Ver Datos</button>
-                    <button type="button" class="btn btn-chk-calcom text-white" onclick="ejecutarChequeoSincro()"><i class="fa fa-play"></i> Lanzar Chequeo</button>
-                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" onclick="visualizarResultadoSincro()"><i class="fa fa-eye"></i> Cargar/Ver Datos</button>
+                <button type="button" class="btn btn-chk-calcom text-white" onclick="ejecutarChequeoSincro()"><i class="fa fa-play"></i> Lanzar Chequeo</button>
             </div>
         </div>
     </div>
+</div>
 
 
 
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 
-    <script>
-        /* cambio cancelacion: VARIABLES */
-        let modalReproObj;
-        let modalCancelarObj;
-        /* final cambio */
-             /* MODI44 */
-         console.log("Detalle_Horario_Citas JS cargado");
-         window.addEventListener("error", function (e) {
-             console.error("JS ERROR:", e.message, "at", e.filename + ":" + e.lineno + ":" + e.colno);
-         });
-         window.addEventListener("unhandledrejection", function (e) {
-             console.error("PROMISE ERROR:", e.reason);
-         });
-         /*FIN MODI44 */
-
-              (function () {
-            "use strict";
-
-            // ========= HELP VIDEO (simple) =========
-            window.openHelpVideo = function (fileName) {
-              const w = 900, h = 520;
-              const left = Math.max(0, (screen.width - w) / 2);
-              const top = Math.max(0, (screen.height - h) / 2);
-
-
-              const url = "/helps/" + encodeURIComponent(fileName);
-
-              window.open(
-                url,
-                "helpVideo",
-                `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no`
-              );
-            };
-          })();
-          const ES_ADMIN = @(esAdmin ? "true" : "false");
-          const ES_DOCTOR = @(esDoctor ? "true" : "false");
-          const ID_DOCTOR_FIJO = @idDoctorFijo;
-          // const DOCTOR_NOMBRE = "@doctorNombreCompleto".trim();
-           const DOCTOR_NOMBRE = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(doctorNombreCompleto));
-
-
-          let FECHA_EN_PANTALLA = "";
-          let idCitaActual = 0;
-          function hoyDmy() {
-              const d = new Date();
-              const dd = String(d.getDate()).padStart(2, "0");
-              const mm = String(d.getMonth() + 1).padStart(2, "0");
-              const yy = d.getFullYear();
-              return `${dd}/${mm}/${yy}`;
-          }
-
-          function normHora(v) {
-              if (!v) return "";
-              const s = String(v).trim();
-              return s.length >= 5 ? s.substring(0, 5) : s;
-          }
-
-          function fmtDateTime(v) {
-              if (!v) return "";
-              const s = String(v).trim();
-
-              // ya viene bonito tipo 29/12/2025 10:00
-              if (s.includes("/") && !s.includes("T")) return s;
-              // ISO
-              if (s.includes("T")) {
-                  const d = new Date(s);
-                  if (!isNaN(d.getTime())) {
-                      const dd = String(d.getDate()).padStart(2, "0");
-                      const mm = String(d.getMonth() + 1).padStart(2, "0");
-                      const yy = d.getFullYear();
-                      const hh = String(d.getHours()).padStart(2, "0");
-                      const mi = String(d.getMinutes()).padStart(2, "0");
-                      return `${dd}/${mm}/${yy} ${hh}:${mi}`;
-                  }
-              }
-              return s;
-          }
-
-          async function cargarDoctores() {
-              const r = await fetch("/Doctor/Lista", { headers: { "Accept": "application/json" } });
-              const j = await r.json().catch(() => null);
-              const arr = (j && j.data) ? j.data : [];
-              const cbo = document.getElementById("cboDoctor");
-              cbo.innerHTML = "";
-
-              const opt0 = document.createElement("option");
-              opt0.value = "";
-              opt0.textContent = "-- Seleccione --";
-              cbo.appendChild(opt0);
-              for (const d of arr) {
-                  const id = d.idDoctor ??
-                  d.IdDoctor ?? 0;
-                  const nom = d.nombres ?? d.Nombres ?? "";
-                  const ape = d.apellidos ?? d.Apellidos ?? "";
-                  const esp = d.especialidad?.nombre ?? d.Especialidad?.Nombre ?? "";
-                  const o = document.createElement("option");
-                  o.value = id;
-                  o.textContent = `${nom} ${ape}${esp ?
-                  " - " + esp : ""}`.trim();
-                  cbo.appendChild(o);
-              }
-          }
+<script>
+    /* cambio cancelacion: VARIABLES */
+    let modalReproObj;
+    let modalCancelarObj;
+    /* final cambio */
          /* MODI44 */
-             /* CAMBIO CALCOM empieza */
-         async function refrescarBotonCalAgenda(idDoctor) {
-             const btn = document.getElementById("btnCalAgenda");
-             if (!btn) return;
+     console.log("Detalle_Horario_Citas JS cargado");
+     window.addEventListener("error", function (e) {
+         console.error("JS ERROR:", e.message, "at", e.filename + ":" + e.lineno + ":" + e.colno);
+     });
+     window.addEventListener("unhandledrejection", function (e) {
+         console.error("PROMISE ERROR:", e.reason);
+     });
+     /*FIN MODI44 */
 
-             // si no hay doctor seleccionado, oculta
-             if (!idDoctor || idDoctor <= 0) {
-                 btn.style.display = "none";
-                 btn.href = "#";
-                 return;
-             }
+          (function () {
+        "use strict";
 
-             try {
-                 const r = await fetch(`/Doctor/GetCalPublicUrl?idDoctor=${encodeURIComponent(idDoctor)}`, {
-                     headers: { "Accept": "application/json" }
-                 });
-                 const j = await r.json().catch(() => null);
-                 const url = (j && j.ok && j.cal_public_url) ?
-                 ("" + j.cal_public_url).trim() : "";
+        // ========= HELP VIDEO (simple) =========
+        window.openHelpVideo = function (fileName) {
+          const w = 900, h = 520;
+          const left = Math.max(0, (screen.width - w) / 2);
+          const top = Math.max(0, (screen.height - h) / 2);
 
-                 btn.href = url || "#";
-                 btn.style.display = url ? "" : "none";
-                 // re-init tooltip si usas initTooltips()
-                 if (typeof initTooltips === "function") initTooltips(btn.parentElement || document);
-             } catch (e) {
-                 console.error("Cal.com URL error:", e);
-                 btn.style.display = "none";
-                 btn.href = "#";
-             }
-         }
-         /* CAMBIO CALCOM fin */
 
-             /* MODI44 */
-         function getIdDoctorPantalla_SAFE() {
-             if (typeof ES_ADMIN !== "undefined" && ES_ADMIN) {
-                 const cbo = document.getElementById("cboDoctor");
-                 if (!cbo) return null;
-                 const v = (cbo.value || "").trim();
-                 if (!v) return null;
-                 const id = parseInt(v, 10);
-                 return Number.isFinite(id) && id > 0 ? id : null;
-             }
+          const url = "/helps/" + encodeURIComponent(fileName);
 
-             const fijo = (typeof ID_DOCTOR_FIJO !== "undefined") ? parseInt(ID_DOCTOR_FIJO, 10) : 0;
-             return Number.isFinite(fijo) && fijo > 0 ? fijo : null;
-         }
-         /*FIN MODI44 */
-
-             /* MODI44 */
-         function getIdDoctorPantalla() {
-             if (ES_ADMIN) {
-                 const cbo = document.getElementById("cboDoctor");
-                 if (!cbo) return null;                 // <- evita null.value
-                 const v = (cbo.value || "").trim();
-                 if (!v) return null;                   // <- "-- Seleccione --"
-                 const id = parseInt(v, 10);
-                 return Number.isFinite(id) && id > 0 ? id : null;
-             }
-
-             // doctor fijo
-             const fijo = (typeof ID_DOCTOR_FIJO !== "undefined") ?
-             parseInt(ID_DOCTOR_FIJO, 10) : 0;
-             return Number.isFinite(fijo) && fijo > 0 ? fijo : null;
-         }
-         /*FIN MODI44 */
-
-         /*FIN MODI44 */
-          function initTooltips(scope) {
-              // Bootstrap 5 tooltips need JS initialization
-              const root = scope ||
-              document;
-              const triggers = root.querySelectorAll('[data-bs-toggle="tooltip"]');
-              triggers.forEach(el => {
-                  // Evita duplicados si se re-renderiza
-                  if (el._bsTooltip) return;
-                  el._bsTooltip = new bootstrap.Tooltip(el);
-              });
-          }
-                   function renderSlots(containerId, slots, fechaTxt) {
-            const cont = document.getElementById(containerId);
-            cont.innerHTML = "";
-
-            if (!slots || slots.length === 0) {
-                cont.innerHTML = `<div class="text-muted">Sin horarios para esta fecha.</div>`;
-                return;
-            }
-
-            const fecha = (fechaTxt || document.getElementById("txtFecha").value || "").trim();
-
-            for (const s of slots) {
-                /* ========================================================== */
-                /* 1. DETECCIÓN POR EL CAMPO 'ESTADO' (Tu versión antigua)     */
-                /* ========================================================== */
-                const textoEstado = (s.estado || "").toString().toUpperCase();
-                const esAnulada = textoEstado.includes("ANULA") || s.idEstadoCita === 3;
-
-                let tieneCitaEfectiva = !!s.tieneCita;
-                if (esAnulada) {
-                    tieneCitaEfectiva = false;
-                }
-                /* ========================================================== */
-
-                const col = document.createElement("div");
-                col.className = "col-12 col-md-6 mb-3";
-
-                const hora = normHora(s.hora || s.turnoHora);
-
-                const div = document.createElement("div");
-                div.className = "slot-card " + (tieneCitaEfectiva ? "ocupado" : "libre");
-
-                /* comienzo cambio slot_inex_calcom */
-                // Verificamos si el slot existe en Cal.com (0 o null es inexistente)
-                const idCalcom = parseInt(s.idDoctorHorarioDetalleCalcom) || 0;
-                let avisoCalcom = "";
-                if (idCalcom === 0) {
-                    avisoCalcom = ` <span style="color:red; font-weight:bold; font-size:0.85em; margin-left:5px;">(Slot Inex Cal.Com)</span>`;
-                }
-                /* final cambio slot_inex_calcom */
-
-                const titulo = document.createElement("div");
-                titulo.innerHTML = `
-                    <div class="slot-time"><strong>${hora || "(sin hora)"}</strong>${avisoCalcom}</div>
-                    <div class="slot-date">${fecha}</div>
-                `;
-
-                const subt = document.createElement("div");
-                subt.className = "muted";
-                subt.textContent = tieneCitaEfectiva
-                    ? `Cita: ${s.paciente || ""}${s.estado ? " (" + s.estado + ")" : ""}`
-                    : "Libre";
-
-                const acciones = document.createElement("div");
-                acciones.className = "slot-actions mt-2 d-flex flex-wrap gap-1";
-
-                if (tieneCitaEfectiva) {
-                    // --- BLOQUE CITA ACTIVA ---
-                    const btn = document.createElement("button");
-                    btn.className = "btn btn-sm btn-light px-1";
-                    btn.innerHTML = '<i class="fas fa-eye"></i>';
-                    btn.title = "Ver detalle cita";
-                    btn.onclick = (ev) => { ev.stopPropagation(); abrirModalCita(s); };
-                    acciones.appendChild(btn);
-
-                    const btnRepro = document.createElement("button");
-                    btnRepro.className = "btn btn-sm btn-dark px-1";
-                    btnRepro.innerHTML = '<i class="fas fa-calendar-alt"></i>';
-                    btnRepro.title = "Reprogramar";
-                    btnRepro.onclick = (ev) => { ev.stopPropagation(); abrirModalReprogramar(s); };
-                    acciones.appendChild(btnRepro);
-
-                    const btnCancel = document.createElement("button");
-                    btnCancel.className = "btn btn-sm btn-warning text-dark fw-bold px-1";
-                    btnCancel.innerHTML = '<i class="fas fa-times"></i>';
-                    btnCancel.title = "Cancelar cita";
-                    btnCancel.onclick = function(ev) {
-                        ev.stopPropagation();
-                        let idCita = s.idCita || (s.cita ? s.cita.idCita : 0) || s.IdCita || (s.cita ? s.cita.IdCita : 0);
-                        if (idCita > 0) {
-                            if (typeof abrirModalCancelarCita === "function") {
-                                abrirModalCancelarCita(idCita);
-                            } else {
-                                console.error("La función abrirModalCancelarCita no está definida.");
-                            }
-                        } else {
-                            Swal.fire("Aviso", "ID de cita no encontrado.", "warning");
-                        }
-                    };
-                    acciones.appendChild(btnCancel);
-
-                    const btnChk = document.createElement("button");
-                    btnChk.className = "btn btn-sm btn-chk-calcom text-white px-2";
-                    btnChk.title = "Chequear integridad en Cal.com";
-                    btnChk.innerHTML = '<i class="fa fa-sync"></i>';
-                    btnChk.onclick = (e) => {
-                        e.stopPropagation();
-                        let idCitaChk = s.idCita || (s.cita ? s.cita.idCita : 0) || s.IdCita || (s.cita ? s.cita.IdCita : 0);
-                        if (idCitaChk > 0) {
-                            abrirModalChequeo(idCitaChk);
-                        } else {
-                            Swal.fire("Aviso", "ID de cita no encontrado.", "warning");
-                        }
-                    };
-                    acciones.appendChild(btnChk);
-
-                    const btnIA = document.createElement("button");
-                    btnIA.className = "btn btn-sm btn-success px-2";
-                    btnIA.title = "Análisis IA + Indicaciones";
-                    btnIA.innerHTML = '<i class="fas fa-robot"></i> IA';
-                    btnIA.style.cssText = "font-size:0.7rem;padding:0.2rem 0.35rem;";
-                    btnIA.onclick = (e) => {
-                        e.stopPropagation();
-                        abrirModalIA(s);
-                    };
-                    acciones.appendChild(btnIA);
-
-                } else {
-                    // --- BLOQUE LIBRE ---
-                    const btnDel = document.createElement("button");
-                    btnDel.className = "btn btn-sm btn-outline-danger";
-                    btnDel.textContent = "Borrar slot";
-                    btnDel.onclick = async (ev) => {
-                        ev.stopPropagation();
-                        await borrarSlot(parseInt(s.idDoctorHorarioDetalle || "0", 10));
-                    };
-                    acciones.appendChild(btnDel);
-                }
-
-                div.appendChild(titulo);
-                div.appendChild(subt);
-                div.appendChild(acciones);
-                col.appendChild(div);
-                cont.appendChild(col);
-            }
-
-            if (typeof initTooltips === "function") initTooltips(cont);
-        }
-          @* /* cambio comienzo */ *@
-         let fpRepro;
-         function abrirModalReprogramar(slot) {
-             // 0) Limpieza de tooltips
-             try {
-                 document.querySelectorAll(".tooltip").forEach(t => t.remove());
-             } catch (e) { }
-
-             // 1) Identificar cita
-             const idCita = (slot && (slot.idCita ?? slot.IdCita)) ??
-                            (slot && slot.cita && (slot.cita.idCita ?? slot.cita.IdCita)) ?? 0;
-
-             if (!idCita) {
-                 Swal.fire("Error", "No se identificó la cita.", "error");
-                 return;
-             }
-
-             document.getElementById("reproIdCitaVieja").value = idCita;
-             document.getElementById("reproHora").value = "";
-             document.getElementById("reproMotivo").value = "";
-
-             // 2) Inicializar flatpickr interno si no existe
-             if (!fpRepro) {
-                 fpRepro = flatpickr("#reproFecha", {
-                     locale: "es",
-                     dateFormat: "d/m/Y",
-                     minDate: "today"
-                 });
-             }
-
-             const myModal = new bootstrap.Modal(document.getElementById('mdReprogramar'));
-             myModal.show();
-         }
-
-         /* cambio comienzo */
-        document.getElementById("btnConfirmarRepro").onclick = async () => {
-            const idCitaVieja = document.getElementById("reproIdCitaVieja").value;
-            const fecha = document.getElementById("reproFecha").value;
-            const hora = document.getElementById("reproHora").value;
-            const motivo = document.getElementById("reproMotivo").value;
-
-            if (!fecha || !hora) {
-                Swal.fire("Aviso", "Debe indicar nueva fecha y hora.", "info");
-                return;
-            }
-                Swal.fire({
-                title: 'Sincronizando...',
-                text: 'Por favor, espere mientras se procesa el cambio en Cal.com',
-                allowOutsideClick: false,
-                didOpen: () => { Swal.showLoading(); }
-            });
-
-            try {
-                const res = await fetch("/Citas/ReprogramarCita", {
-                    method: "POST",
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        idCitaVieja: parseInt(idCitaVieja),
-                        nuevaFecha: fecha,
-                        nuevaHora: hora,
-                        motivo: motivo
-                    })
-                });
-                const result = await res.json();
-
-                if (!result.ok) {
-                    Swal.fire("Error", result.data, "error");
-                    return;
-                }
-
-                const idAccion = result.idAccion || result.IdAccion;
-
-                // Bucle de consulta (Polling) cada 3 segundos
-                let intentos = 0;
-                const intervalo = setInterval(async () => {
-                    intentos++;
-                    try {
-                        const check = await fetch(`/Citas/ConsultarEstadoAccion?id=${idAccion}`);
-                        const resAccion = await check.json();
-
-                        const estado = (resAccion.status || resAccion.Status || "").trim().toUpperCase();
-                        const log = (resAccion.log || resAccion.Log || "");
-
-                        if (estado === 'S') {
-                            clearInterval(intervalo);
-
-                            // ✅ CERRAMOS MODAL Y REFRESCAMOS AGENDA (Clic Virtual)
-                            bootstrap.Modal.getInstance(document.getElementById('mdReprogramar')).hide();
-
-                            Swal.fire({
-                                title: "¡Éxito!",
-                                text: "Cita reprogramada. Refrescando agenda...",
-                                icon: "success",
-                                timer: 2000,
-                                showConfirmButton: false
-                            });
-
-                            // Invocamos la función que refresca los slots
-                            await verAgenda();
-                        }
-                        else if (estado === 'Z' || (estado === 'R' && log.includes("KO|"))) {
-                            clearInterval(intervalo);
-                            Swal.fire("Atención", "Error en Cal.com: " + log, "warning");
-                        }
-                    } catch (err) {
-                        console.error("Error consultando estado:", err);
-                    }
-
-                    if (intentos > 30) {
-                        clearInterval(intervalo);
-                        Swal.fire("Sincronización lenta", "El proceso sigue en curso, refresque manualmente en unos segundos.", "info");
-                    }
-                }, 3000);
-
-            } catch (e) {
-                Swal.fire("Error", "No se pudo conectar con el servidor.", "error");
-            }
+          window.open(
+            url,
+            "helpVideo",
+            `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no`
+          );
         };
-        /* cambio fin */
-         @* /* cambio fin */ *@
+      })();
+      const ES_ADMIN = @(esAdmin ? "true" : "false");
+      const ES_DOCTOR = @(esDoctor ? "true" : "false");
+      const ID_DOCTOR_FIJO = @idDoctorFijo;
+      // const DOCTOR_NOMBRE = "@doctorNombreCompleto".trim();
+       const DOCTOR_NOMBRE = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(doctorNombreCompleto));
 
-        function abrirModalChequeo(idCita) {
-            $("#chk_idCita").val(idCita);
-            $("#secResultadoSincro").hide();
-            new bootstrap.Modal(document.getElementById('mdChkCalcom')).show();
-        }
 
-        function ejecutarChequeoSincro() {
-            const idCita = parseInt($("#chk_idCita").val());
-            const refresh = $("input[name='radRefresh']:checked").val();
+      let FECHA_EN_PANTALLA = "";
+      let idCitaActual = 0;
+      function hoyDmy() {
+          const d = new Date();
+          const dd = String(d.getDate()).padStart(2, "0");
+          const mm = String(d.getMonth() + 1).padStart(2, "0");
+          const yy = d.getFullYear();
+          return `${dd}/${mm}/${yy}`;
+      }
 
-            $.LoadingOverlay("show");
-            $.ajax({
-                url: "/Citas/LanzarChequeoCalcom",
-                type: "POST",
-                contentType: "application/json",
-                data: JSON.stringify({ IdCita: idCita, Refresh: refresh }),
-                success: function (res) {
-                    if (res.ok) {
-                        hacerPollingSincro(res.idAccion);
-                    } else {
-                        $.LoadingOverlay("hide");
-                        Swal.fire("Error", res.data, "error");
-                    }
-                }
-            });
-        }
+      function normHora(v) {
+          if (!v) return "";
+          const s = String(v).trim();
+          return s.length >= 5 ? s.substring(0, 5) : s;
+      }
 
-        function hacerPollingSincro(idAccion) {
-            let intentos = 0;
-            const intervalo = setInterval(async () => {
-                intentos++;
-                const check = await fetch(`/Citas/ConsultarEstadoAccionSincro?idAccion=${idAccion}`);
-                const estado = await check.text();
+      function fmtDateTime(v) {
+          if (!v) return "";
+          const s = String(v).trim();
 
-                if (estado === 'S' || intentos > 15) {
-                    clearInterval(intervalo);
-                    $.LoadingOverlay("hide");
-                    visualizarResultadoSincro();
-                }
-            }, 3000);
-        }
-
-        function visualizarResultadoSincro() {
-            const idCita = $("#chk_idCita").val();
-            $.get("/Citas/VerResultadoSincro", { idCita: idCita }, function (res) {
-                if (res.ok) {
-                    $("#lblResStatus").text(res.data.resultsincro || "OK");
-                    $("#lblResFecha").text(res.data.fecha_sincro ? new Date(res.data.fecha_sincro).toLocaleString() : "---");
-                    $("#lblResError").text(res.data.cal_last_error || "Ninguno");
-                    $("#secResultadoSincro").slideDown();
-                } else {
-                    Swal.fire("Info", "Sin registros de sincronización previos.", "info");
-                }
-            });
-        }
-
-        function visualizarResultadoSincroDirecto() {
-           // Muestra el modal de chequeo con los datos ya cargados
-            const idCita = $("#chk_idCita").val();
-             $("#chk_idCita").val(idCita);
-             visualizarResultadoSincro();
-
-        }
-        // fin cambio chkcalcom */
-          async function descargarDocumento(tipo) {
-              if (!idCitaActual) {
-                  Swal.fire("Aviso", "No se ha podido identificar la cita.", "info");
-                  return;
+          // ya viene bonito tipo 29/12/2025 10:00
+          if (s.includes("/") && !s.includes("T")) return s;
+          // ISO
+          if (s.includes("T")) {
+              const d = new Date(s);
+              if (!isNaN(d.getTime())) {
+                  const dd = String(d.getDate()).padStart(2, "0");
+                  const mm = String(d.getMonth() + 1).padStart(2, "0");
+                  const yy = d.getFullYear();
+                  const hh = String(d.getHours()).padStart(2, "0");
+                  const mi = String(d.getMinutes()).padStart(2, "0");
+                  return `${dd}/${mm}/${yy} ${hh}:${mi}`;
               }
-
-              const url = (tipo === "paciente")
-                  ?
-                  `/Citas/DescargarDocumentoPaciente?idCita=${idCitaActual}`
-                  : `/Citas/DescargarDocumentoDoctor?idCita=${idCitaActual}`;
-              const r = await fetch(url, { method: "GET" });
-
-              if (!r.ok) {
-                  if (r.status === 404) Swal.fire("Información", "No hay documento para descargar.", "info");
-                  else Swal.fire("Error", "No se pudo descargar el documento.", "error");
-                  return;
-              }
-
-              const blob = await r.blob();
-
-              let filename = "";
-              const cd = r.headers.get("content-disposition") || "";
-              const m = /filename\*=UTF-8''([^;]+)|filename="?([^"]+)"?/i.exec(cd);
-              if (m) filename = decodeURIComponent(m[1] || m[2] || "");
-
-              if (!filename) {
-                  filename = (tipo === "paciente")
-                      ? `documento_paciente_cita_${idCitaActual}`
-                      : `documento_doctor_cita_${idCitaActual}`;
-              }
-
-
-              const urlObj = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = urlObj;
-              a.download = filename;
-              document.body.appendChild(a);
-              a.click();
-              a.remove();
-              setTimeout(() => URL.revokeObjectURL(urlObj), 1000);
           }
-                     function abrirModalCita(slot) {
-            // 0) Limpieza y habilitar descargas
-            try {
-                document.querySelectorAll(".tooltip").forEach(t => t.remove());
-            } catch (e) { }
+          return s;
+      }
 
-            if (typeof initTooltips === "function") initTooltips();
+      async function cargarDoctores() {
+          const r = await fetch("/Doctor/Lista", { headers: { "Accept": "application/json" } });
+          const j = await r.json().catch(() => null);
+          const arr = (j && j.data) ? j.data : [];
+          const cbo = document.getElementById("cboDoctor");
+          cbo.innerHTML = "";
 
-            // 1) Identificación de cita
-            const rawId = (slot && (slot.idCita ?? slot.IdCita)) ?? (slot && slot.cita && (slot.cita.idCita ?? slot.cita.IdCita)) ?? 0;
-            idCitaActual = parseInt(rawId || 0, 10);
-
-            // Botones descarga
-            const btnPac = document.getElementById("btnDescDocPaciente");
-            const btnDoc = document.getElementById("btnDescDocDoctor");
-            if (btnPac) btnPac.disabled = !idCitaActual;
-            if (btnDoc) btnDoc.disabled = !idCitaActual;
-
-            const modalEl = document.getElementById("mdCita");
-            const setVal = (sel, val) => {
-                const el = modalEl.querySelector(sel);
-                if (el) el.value = (val ?? "").toString();
-            };
-
-            // 2) Datos básicos de la cita
-            const cita = (slot && slot.cita) ? slot.cita : {};
-            setVal("#citaIdCita", cita.idCita || slot.idCita || 0);
-            setVal("#citaHora", normHora(cita.hora || slot.hora || ""));
-            setVal("#citaPaciente", (cita.paciente || slot.paciente || "").trim());
-            setVal("#citaEstado", (cita.estado || "").trim());
-            setVal("#citaOrigen", (cita.origenCita || "").trim());
-            setVal("#citaRazon", (cita.razonCitaUsr || "").trim());
-            setVal("#citaIndicaciones", (cita.indicaciones || "").trim());
-
-            // 3) CARGA DE METADATA CAL.COM (JSON)
-            const idSlot = slot.idDoctorHorarioDetalle;
-            window.ultimoSlotIdParaCalcom = idSlot;
-
-            // Reset campos Metadata
-            document.getElementById("calApe").value = "Cargando...";
-            document.getElementById("calEmail").value = "";
-            document.getElementById("calMovil").value = "";
-            document.getElementById("calUid").value = "";
-            document.getElementById("calRazon").value = "";
-
-            fetch(`/Doctor/ObtenerDetalleCalcom?idSlot=${idSlot}`)
-                .then(r => r.json())
-                .then(r => {
-                    if (r.ok && r.data) {
-                        document.getElementById("calApe").value = r.data.pacienteApellido || "";
-                        document.getElementById("calEmail").value = r.data.pacienteEmail || "";
-                        document.getElementById("calMovil").value = r.data.pacienteMovil || "";
-                        document.getElementById("calUid").value = r.data.bookingUid || "";
-                        document.getElementById("calRazon").value = r.data.razoncitausr || "";
-                        window.currentCalJsonStr = r.data.calJsonFull;
-                    } else {
-                        document.getElementById("calApe").value = "Sin datos";
-                        document.getElementById("calRazon").value = "No hay información extendida.";
-                    }
-                }).catch(e => console.error("Error calcom", e));
-
-            // 4) ACTUALIZAR ESTADO DE SINCRONIZACIÓN (Badge OK/ERROR)
-            // Llamamos a tu función existente para que rellene la parte de abajo
-            if (idCitaActual > 0 && typeof cargarDetalleSincroCita === "function") {
-                cargarDetalleSincroCita(idCitaActual);
-            }
-
-            // 5) Abrir modal
-            bootstrap.Modal.getOrCreateInstance(modalEl).show();
-
-            // 6) Cargar detalles de reconfirmación
-            if (idCitaActual > 0) {
-                fetch("/Citas/ObtenerDetalleCita?idCita=" + encodeURIComponent(idCitaActual))
-                    .then(r => r.json())
-                        .then(json => {
-                        const d = json.data ?? json.Data;
-                        if (!d) return;
-                        setVal("#citaConfirmada", d.citaConfirmada ?? "");
-                        setVal("#citaFechaPeticion", fmtDateTime(d.fechaPeticion ?? ""));
-                        setVal("#citaFechaConfirmacion", fmtDateTime(d.fechaConfirmacion ?? ""));
-                        setVal("#citaMetodoPeticion", d.metodoPeticion ?? "");
-                    });
-            }
-        }
-              function descargarJSON() {
-            if (!window.currentCalJsonStr) { alert("No hay datos"); return; }
-            const blob = new Blob([window.currentCalJsonStr], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "cita_calcom.json";
-            a.click();
-        }
-
-          async function borrarSlot(idDoctorHorarioDetalle) {
-            if (!idDoctorHorarioDetalle) return;
-            const confirm = await Swal.fire({
-                title: "Borrar slot",
-                text: "¿Seguro? Solo se permite si NO hay cita asignada.",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonText: "Sí, borrar",
-                cancelButtonText: "Cancelar"
-            });
-
-            if (!confirm.isConfirmed) return;
-
-            const r = await fetch(`/Citas/EliminarSlot?idDoctorHorarioDetalle=${idDoctorHorarioDetalle}`, { method: "DELETE" });
-            const j = await r.json().catch(() => null);
-
-            if (!r.ok || (j && j.ok === false)) {
-                Swal.fire("Error", (j && (j.msg || j.data)) ? (j.msg || j.data) : "No se pudo borrar el slot.", "error");
-                return;
-            }
-
-            Swal.fire("OK", "Slot borrado.", "success");
-
-            // ✅ CORRECCIÓN 1: Damos medio segundo de oxígeno al VPS para que cierre la transacción
-            // de base de datos antes de pedirle que nos devuelva la agenda actualizada.
-            setTimeout(async () => {
-                await verAgenda();
-            }, 800);
-        }
-
-          // ✅ Validación mínima HH:MM (no rangos, no 00/30, SOLO formato)
-          function esHoraValidaMinima(hhmm) {
-              const s = (hhmm || "").trim();
-              return /^([01]\d|2[0-3]):([0-5]\d)$/.test(s);
+          const opt0 = document.createElement("option");
+          opt0.value = "";
+          opt0.textContent = "-- Seleccione --";
+          cbo.appendChild(opt0);
+          for (const d of arr) {
+              const id = d.idDoctor ??
+              d.IdDoctor ?? 0;
+              const nom = d.nombres ?? d.Nombres ?? "";
+              const ape = d.apellidos ?? d.Apellidos ?? "";
+              const esp = d.especialidad?.nombre ?? d.Especialidad?.Nombre ?? "";
+              const o = document.createElement("option");
+              o.value = id;
+              o.textContent = `${nom} ${ape}${esp ?
+              " - " + esp : ""}`.trim();
+              cbo.appendChild(o);
           }
-        async function addSlot() {
-              const fechaInput = (document.getElementById("txtFecha").value || "").trim();
-              const horaInput = (document.getElementById("txtNuevoSlotHora").value || "").trim();
-              const idDoctor = getIdDoctorPantalla_SAFE();
+      }
+     /* MODI44 */
+         /* CAMBIO CALCOM empieza */
+     async function refrescarBotonCalAgenda(idDoctor) {
+         const btn = document.getElementById("btnCalAgenda");
+         if (!btn) return;
 
-              if (!fechaInput) { Swal.fire("Aviso", "Selecciona una fecha.", "info"); return; }
-              if (!idDoctor) { Swal.fire("Aviso", "IdDoctor inválido.", "error"); return; }
+         // si no hay doctor seleccionado, oculta
+         if (!idDoctor || idDoctor <= 0) {
+             btn.style.display = "none";
+             btn.href = "#";
+             return;
+         }
 
-              if (!esHoraValidaMinima(horaInput)) {
-                  Swal.fire("Aviso", "Hora inválida. Usa formato HH:MM (ej: 10:00).", "info");
-                  return;
-              }
+         try {
+             const r = await fetch(`/Doctor/GetCalPublicUrl?idDoctor=${encodeURIComponent(idDoctor)}`, {
+                 headers: { "Accept": "application/json" }
+             });
+             const j = await r.json().catch(() => null);
+             const url = (j && j.ok && j.cal_public_url) ?
+             ("" + j.cal_public_url).trim() : "";
 
-              // endpoint: el tuyo (el que ya te funcionó antes)
-              const url = `/Citas/AgregarSlot?fecha=${encodeURIComponent(fechaInput)}&idDoctor=${idDoctor}&hora=${encodeURIComponent(horaInput)}`;
-              const r = await fetch(url, { method: "POST", headers: { "Accept": "application/json" } });
-              const j = await r.json().catch(() => null);
+             btn.href = url || "#";
+             btn.style.display = url ? "" : "none";
+             // re-init tooltip si usas initTooltips()
+             if (typeof initTooltips === "function") initTooltips(btn.parentElement || document);
+         } catch (e) {
+             console.error("Cal.com URL error:", e);
+             btn.style.display = "none";
+             btn.href = "#";
+         }
+     }
+     /* CAMBIO CALCOM fin */
 
-              if (!r.ok || !j || j.ok === false) {
-                  Swal.fire("Error", (j && j.msg) ? j.msg : "No se pudo crear el slot.", "error");
-                  return;
-              }
+         /* MODI44 */
+     function getIdDoctorPantalla_SAFE() {
+         if (typeof ES_ADMIN !== "undefined" && ES_ADMIN) {
+             const cbo = document.getElementById("cboDoctor");
+             if (!cbo) return null;
+             const v = (cbo.value || "").trim();
+             if (!v) return null;
+             const id = parseInt(v, 10);
+             return Number.isFinite(id) && id > 0 ? id : null;
+         }
 
-              // Vaciamos el cajetín de texto de la hora
-              document.getElementById("txtNuevoSlotHora").value = "";
+         const fijo = (typeof ID_DOCTOR_FIJO !== "undefined") ? parseInt(ID_DOCTOR_FIJO, 10) : 0;
+         return Number.isFinite(fijo) && fijo > 0 ? fijo : null;
+     }
+     /*FIN MODI44 */
 
-              Swal.fire({
-                  title: "OK",
-                  text: "Slot creado: " + horaInput,
-                  icon: "success",
-                  timer: 1500,          // Hacemos que el mensaje desaparezca solo para que sea más fluido
-                  showConfirmButton: false
-              });
+         /* MODI44 */
+     function getIdDoctorPantalla() {
+         if (ES_ADMIN) {
+             const cbo = document.getElementById("cboDoctor");
+             if (!cbo) return null;                 // <- evita null.value
+             const v = (cbo.value || "").trim();
+             if (!v) return null;                   // <- "-- Seleccione --"
+             const id = parseInt(v, 10);
+             return Number.isFinite(id) && id > 0 ? id : null;
+         }
 
-              // ✅ CORRECCIÓN: Damos 400ms de oxígeno al VPS para que cierre la transacción
-              // antes de recargar la pantalla con verAgenda() (que ya tiene los anti-cachés)
-              setTimeout(async () => {
-                  await verAgenda();
-              }, 800);
-          }
-           function getIdDoctorPantalla() {
-               const v = document.getElementById("ddlDoctor").value;
-               return v ? parseInt(v) : null;
-           }
+         // doctor fijo
+         const fijo = (typeof ID_DOCTOR_FIJO !== "undefined") ?
+         parseInt(ID_DOCTOR_FIJO, 10) : 0;
+         return Number.isFinite(fijo) && fijo > 0 ? fijo : null;
+     }
+     /*FIN MODI44 */
 
-        async function verAgenda() {
-            // 1) Fecha
-            const txtFechaEl = document.getElementById("txtFecha");
-            const fechaInput = (txtFechaEl ? (txtFechaEl.value || "") : "").trim();
-            if (!fechaInput) { Swal.fire("Aviso", "Selecciona una fecha.", "info"); return; }
+     /*FIN MODI44 */
+      function initTooltips(scope) {
+          // Bootstrap 5 tooltips need JS initialization
+          const root = scope ||
+          document;
+          const triggers = root.querySelectorAll('[data-bs-toggle="tooltip"]');
+          triggers.forEach(el => {
+              // Evita duplicados si se re-renderiza
+              if (el._bsTooltip) return;
+              el._bsTooltip = new bootstrap.Tooltip(el);
+          });
+      }
+               function renderSlots(containerId, slots, fechaTxt) {
+        const cont = document.getElementById(containerId);
+        cont.innerHTML = "";
 
-            // 2) Doctor
-            const idDoctor = getIdDoctorPantalla_SAFE();
-
-            if (ES_ADMIN && !idDoctor) { Swal.fire("Aviso", "Selecciona un doctor.", "info"); return; }
-            if (ES_DOCTOR && !idDoctor) { Swal.fire("Aviso", "No se ha podido resolver el doctor logueado.", "warning"); return; }
-            if (!idDoctor) {
-                const btn = document.getElementById("btnCalAgenda");
-                if (btn) { btn.style.display = "none"; btn.href = "#"; }
-                return;
-            }
-
-            // ✅ CORRECCIÓN 2: Generamos una cadena 100% aleatoria para engañar al Proxy de Nginx.
-            const NukeCache = new Date().getTime() + "-" + Math.random().toString(36).substring(2);
-            const url = `/Citas/AgendaDia?fecha=${encodeURIComponent(fechaInput)}&idDoctor=${idDoctor}&anticache=${NukeCache}`;
-
-            // ✅ CORRECCIÓN 3: Le inyectamos los "Headers Anti-Caché" más agresivos que existen.
-            const r = await fetch(url, {
-                headers: {
-                    "Accept": "application/json",
-                    "Cache-Control": "no-cache, no-store, must-revalidate",
-                    "Pragma": "no-cache",
-                    "Expires": "0"
-                },
-                cache: "no-store"
-            });
-
-            const payload = await r.json().catch(() => null);
-            if (!r.ok || !payload || payload.ok === false) {
-                Swal.fire("Aviso", (payload && payload.msg) ? payload.msg : "No se pudo cargar la agenda.", "warning");
-                return;
-            }
-
-            FECHA_EN_PANTALLA = (payload.fecha || fechaInput || "").trim();
-            renderSlots("slotsAM", payload.am || [], FECHA_EN_PANTALLA);
-            renderSlots("slotsPM", payload.pm || [], FECHA_EN_PANTALLA);
-        }
-        document.addEventListener("DOMContentLoaded", async () => {
-            // 1. Inicialización de Flatpickr (Calendario principal)
-            const fp = flatpickr("#txtFecha", {
-                locale: "es",
-                dateFormat: "d/m/Y",
-                allowInput: true,
-                defaultDate: hoyDmy()
-            });
-
-            fp.setDate(hoyDmy(), true, "d/m/Y");
-
-            /* cambio cancelacion: INICIALIZAR MODAL Y EVENTO */
-            const elModalCancel = document.getElementById('mdCancelarCita');
-            if (elModalCancel) {
-                modalCancelarObj = new bootstrap.Modal(elModalCancel);
-            }
-
-            const btnConfCancel = document.getElementById("btnConfirmarCancelacionCita");
-            if (btnConfCancel) {
-                btnConfCancel.onclick = async () => {
-                    await ejecutarCancelacionCita();
-                };
-            }
-            /* final cambio */
-
-            // 2. Inicializar tooltips de Bootstrap 5
-            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
-                new bootstrap.Tooltip(el);
-            });
-
-            // 3. Eventos de botones de la interfaz
-            document.getElementById("btnHoy").addEventListener("dblclick", async () => {
-                fp.setDate(new Date(), true);
-                await verAgenda();
-            });
-
-            document.getElementById("btnVer").addEventListener("click", async () => {
-                await verAgenda();
-            });
-
-            document.getElementById("btnAddSlot").addEventListener("dblclick", async () => {
-                await addSlot();
-            });
-
-            const btnPac = document.getElementById("btnDescDocPaciente");
-            if (btnPac) btnPac.addEventListener("click", async () => await descargarDocumento("paciente"));
-
-            const btnDoc = document.getElementById("btnDescDocDoctor");
-            if (btnDoc) btnDoc.addEventListener("click", async () => await descargarDocumento("doctor"));
-
-            // 4. Lógica de carga según Rol (Admin o Doctor)
-            if (ES_ADMIN) {
-                await cargarDoctores();
-
-                const cbo = document.getElementById("cboDoctor");
-                if (cbo) {
-                    cbo.addEventListener("change", async () => {
-                        const idDoctor = getIdDoctorPantalla_SAFE();
-                        if (!idDoctor) return;
-                        await verAgenda();
-                        await refrescarBotonCalAgenda(idDoctor);
-                    });
-                }
-            } else {
-                const idDoctor = getIdDoctorPantalla_SAFE();
-                if (idDoctor) {
-                    await verAgenda();
-                    await refrescarBotonCalAgenda(idDoctor);
-                }
-            }
-        }); // <--- Aquí cerramos correctamente el DOMContentLoaded
-
-        function cargarDetalleSincroCita(idCita) {
-            // Limpiamos los campos antes de cargar
-            $("#resCalStatus").text("-").removeClass("text-success text-danger");
-            $("#resCalFecha").text("-");
-            $("#resCalError").text("Cargando...").removeClass("text-danger");
-            $("#resCalUID").text("-");
-            $("#resCalApiStatus").text("-").removeClass("bg-success bg-danger bg-secondary").addClass("bg-secondary");
-
-            // Ocultamos la sección por defecto al abrir nueva cita
-            $("#secResCalcom").collapse('hide');
-
-            if (!idCita || idCita <= 0) return;
-
-            $.get("/Citas/VerResultadoSincro", { idCita: idCita }, function (res) {
-                if (res.ok && res.data) {
-                    const d = res.data;
-
-                    // 1. Resultado Texto (OK/KO)
-                    const isOk = (d.resultsincro || "").toUpperCase() === "OK";
-                    $("#resCalStatus").text(isOk ? "SINCRONIZADO" : "ERROR DE SINCRONÍA")
-                                     .addClass(isOk ? "text-success" : "text-danger");
-
-                    // 2. Fecha formateada
-                    if (d.fecha_sincro) {
-                        $("#resCalFecha").text(new Date(d.fecha_sincro).toLocaleString());
-                    }
-
-                    // 3. Error técnico
-                    $("#resCalError").text(d.cal_last_error || "Proceso finalizado correctamente.")
-                                     .toggleClass("text-danger", !isOk);
-
-                    // 4. Datos de la API
-                    $("#resCalUID").text(d.booking_uid || "N/A");
-
-                    // 5. Badge de estado API
-                    const apiStat = (d.booking_status || "UNKNOWN").toUpperCase();
-                    $("#resCalApiStatus").text(apiStat);
-                    if(apiStat === "ACCEPTED") $("#resCalApiStatus").addClass("bg-success");
-                    else if(apiStat === "CANCELLED" || apiStat === "REJECTED") $("#resCalApiStatus").addClass("bg-danger");
-                    else $("#resCalApiStatus").addClass("bg-secondary");
-
-                } else {
-                    $("#resCalError").text("No hay registros de sincronización para esta cita.");
-                }
-            });
+        if (!slots || slots.length === 0) {
+            cont.innerHTML = `<div class="text-muted">Sin horarios para esta fecha.</div>`;
+            return;
         }
 
-           function visualizarResultadoSincro() {
-            const idCita = $("#chk_idCita").val();
-            if (!idCita) return;
+        const fecha = (fechaTxt || document.getElementById("txtFecha").value || "").trim();
 
-            $.get("/Citas/VerResultadoSincro", { idCita: idCita }, function (res) {
-                if (res.ok && res.data) {
-                    const d = res.data;
-                    const isOk = (d.resultsincro || "").toUpperCase() === "OK";
+        for (const s of slots) {
+            /* ========================================================== */
+            /* 1. DETECCIÓN POR EL CAMPO 'ESTADO' (Tu versión antigua)     */
+            /* ========================================================== */
+            const textoEstado = (s.estado || "").toString().toUpperCase();
+            const esAnulada = textoEstado.includes("ANULA") || s.idEstadoCita === 3;
 
-                    // Poblar campos de la tabla doctorhorariodetallecalcom
-                    $("#lblResIdCita").text(idCita);
-                    $("#lblResUID").text(d.booking_uid || "Sin UID");
-                    $("#lblResFecha").text(d.fecha_sincro ? new Date(d.fecha_sincro).toLocaleString() : "---");
-
-                    // Estado visual
-                    $("#lblResStatus").text(isOk ? "SINCRONIZADO" : "ERROR")
-                                     .removeClass("bg-success bg-danger")
-                                     .addClass(isOk ? "bg-success" : "bg-danger");
-
-                    // Mensaje técnico del programa chkcitacalcom
-                    $("#lblResError").text(d.cal_last_error || "Sin observaciones.");
-
-                    // Estado que viene directamente de la API de Cal.com
-                    const apiStat = (d.booking_status || "UNKNOWN").toUpperCase();
-                    $("#lblResApiStatus").text(apiStat);
-
-                    $("#secResultadoSincro").slideDown();
-                } else {
-                    Swal.fire("Aviso", "No hay datos de sincronización para esta cita.", "info");
-                }
-            });
-        }
-            function abrirModalCancelarCita(idCita) {
-            const inputId = document.getElementById("cancelarIdCita");
-            const inputMotivo = document.getElementById("cancelarMotivo");
-            const modalElem = document.getElementById('mdCancelarCita');
-
-            if (inputId) { inputId.value = idCita; }
-            if (inputMotivo) { inputMotivo.value = ""; }
-
-            if (modalElem) {
-                // Usamos la variable que declaraste arriba
-                if (!modalCancelarObj) {
-                    modalCancelarObj = new bootstrap.Modal(modalElem);
-                }
-                modalCancelarObj.show();
+            let tieneCitaEfectiva = !!s.tieneCita;
+            if (esAnulada) {
+                tieneCitaEfectiva = false;
             }
-        }
+            /* ========================================================== */
 
-        // Usamos el ID exacto que tienes en tu HTML: btnConfirmarCancelPac
-             document.addEventListener("click", async function (e) {
-            // Verificamos si el elemento clicado es nuestro botón de confirmación
-            if (e.target && e.target.id === "btnConfirmarCancelPac") {
-                e.preventDefault();
+            const col = document.createElement("div");
+            col.className = "col-12 col-md-6 mb-3";
 
-                // Leemos los valores usando JavaScript nativo para máxima compatibilidad
-                const elId = document.getElementById("cancelarIdCita");
-                const elMotivo = document.getElementById("cancelarMotivo");
+            const hora = normHora(s.hora || s.turnoHora);
 
-                if (!elId) return;
+            const div = document.createElement("div");
+            div.className = "slot-card " + (tieneCitaEfectiva ? "ocupado" : "libre");
 
-                const idCita = elId.value;
-                const motivoRaw = elMotivo ? elMotivo.value : "";
-                const motivo = motivoRaw.trim();
+            /* comienzo cambio slot_inex_calcom */
+            // Verificamos si el slot existe en Cal.com (0 o null es inexistente)
+            const idCalcom = parseInt(s.idDoctorHorarioDetalleCalcom) || 0;
+            let avisoCalcom = "";
+            if (idCalcom === 0) {
+                avisoCalcom = ` <span style="color:red; font-weight:bold; font-size:0.85em; margin-left:5px;">(Slot Inex Cal.Com)</span>`;
+            }
+            /* final cambio slot_inex_calcom */
 
-                if (!motivo) {
-                    Swal.fire("Atención", "Debe indicar un motivo para cancelar.", "warning");
-                    return;
-                }
+            const titulo = document.createElement("div");
+            titulo.innerHTML = `
+                <div class="slot-time"><strong>${hora || "(sin hora)"}</strong>${avisoCalcom}</div>
+                <div class="slot-date">${fecha}</div>
+            `;
 
-                // Bloqueamos la interfaz con Swal (que sí suele estar cargado globalmente)
-                Swal.fire({
-                    title: 'Procesando...',
-                    allowOutsideClick: false,
-                    didOpen: () => Swal.showLoading()
-                });
+            const subt = document.createElement("div");
+            subt.className = "muted";
+            subt.textContent = tieneCitaEfectiva
+                ? `Cita: ${s.paciente || ""}${s.estado ? " (" + s.estado + ")" : ""}`
+                : "Libre";
 
-                try {
-                    // Llamada al endpoint de Agenda
-                    const response = await fetch(`/Citas/CancelarCitaAgenda?idCita=${idCita}&motivo=${encodeURIComponent(motivo)}`, {
-                        method: "POST"
-                    });
+            const acciones = document.createElement("div");
+            acciones.className = "slot-actions mt-2 d-flex flex-wrap gap-1";
 
-                    const result = await response.json();
+            if (tieneCitaEfectiva) {
+                // --- BLOQUE CITA ACTIVA ---
+                const btn = document.createElement("button");
+                btn.className = "btn btn-sm btn-light px-2";
+                btn.textContent = "Ver";
+                btn.onclick = (ev) => { ev.stopPropagation(); abrirModalCita(s); };
+                acciones.appendChild(btn);
 
-                    if (result.ok) {
-                        // Cerramos el modal usando la referencia global declarada al inicio
-                        if (window.modalCancelarObj) {
-                            window.modalCancelarObj.hide();
+                const btnRepro = document.createElement("button");
+                btnRepro.className = "btn btn-sm btn-dark px-2";
+                btnRepro.textContent = "Repro";
+                btnRepro.onclick = (ev) => { ev.stopPropagation(); abrirModalReprogramar(s); };
+                acciones.appendChild(btnRepro);
+
+                const btnCancel = document.createElement("button");
+                btnCancel.className = "btn btn-sm btn-warning text-dark fw-bold px-2";
+                btnCancel.innerHTML = '<i class="bi bi-x-circle"></i> Canc';
+                btnCancel.onclick = function(ev) {
+                    ev.stopPropagation();
+                    let idCita = s.idCita || (s.cita ? s.cita.idCita : 0) || s.IdCita || (s.cita ? s.cita.IdCita : 0);
+                    if (idCita > 0) {
+                        if (typeof abrirModalCancelarCita === "function") {
+                            abrirModalCancelarCita(idCita);
+                        } else {
+                            console.error("La función abrirModalCancelarCita no está definida.");
                         }
-                        iniciarPollingCancelacion(result.idAccion);
                     } else {
-                        Swal.fire("Error", result.mensaje || "Error desconocido", "error");
+                        Swal.fire("Aviso", "ID de cita no encontrado.", "warning");
                     }
-                } catch (error) {
-                    console.error("Error en la petición:", error);
-                    Swal.fire("Error", "No se pudo conectar con el servidor.", "error");
-                }
+                };
+                acciones.appendChild(btnCancel);
+
+                const btnChk = document.createElement("button");
+                btnChk.className = "btn btn-sm btn-chk-calcom text-white px-2";
+                btnChk.title = "Chequear integridad en Cal.com";
+                btnChk.innerHTML = '<i class="fa fa-sync"></i> Sinc';
+                btnChk.onclick = (e) => {
+                    e.stopPropagation();
+                    let idCitaChk = s.idCita || (s.cita ? s.cita.idCita : 0) || s.IdCita || (s.cita ? s.cita.IdCita : 0);
+                    if (idCitaChk > 0) {
+                        abrirModalChequeo(idCitaChk);
+                    } else {
+                        Swal.fire("Aviso", "ID de cita no encontrado.", "warning");
+                    }
+                };
+                acciones.appendChild(btnChk);
+
+                // ── Botón IA (abre ventana popup independiente) ──
+                const btnIA = document.createElement("button");
+                btnIA.className = "btn btn-sm btn-success px-2";
+                btnIA.title = "Análisis IA de esta cita";
+                btnIA.innerHTML = '<i class="fas fa-robot me-1"></i>IA';
+                btnIA.onclick = (e) => {
+                    e.stopPropagation();
+                    const idCitaIA = s.idCita || (s.cita ? s.cita.idCita : 0) || s.IdCita || 0;
+                    const pacienteIA = encodeURIComponent(s.paciente || "");
+                    if (!idCitaIA) { Swal.fire("Aviso","ID de cita no encontrado.","warning"); return; }
+                    const w = 960, h = 720;
+                    const left = Math.max(0, (screen.width - w) / 2);
+                    const top  = Math.max(0, (screen.height - h) / 2);
+                    window.open(
+                        `/Citas/AnalisisIA?idCita=${idCitaIA}&paciente=${pacienteIA}`,
+                        `ia_cita_${idCitaIA}`,
+                        `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,status=no`
+                    );
+                };
+                acciones.appendChild(btnIA);
+
+            } else {
+                // --- BLOQUE LIBRE ---
+                const btnDel = document.createElement("button");
+                btnDel.className = "btn btn-sm btn-outline-danger";
+                btnDel.textContent = "Borrar slot";
+                btnDel.onclick = async (ev) => {
+                    ev.stopPropagation();
+                    await borrarSlot(parseInt(s.idDoctorHorarioDetalle || "0", 10));
+                };
+                acciones.appendChild(btnDel);
             }
+
+            div.appendChild(titulo);
+            div.appendChild(subt);
+            div.appendChild(acciones);
+            col.appendChild(div);
+            cont.appendChild(col);
+        }
+
+        if (typeof initTooltips === "function") initTooltips(cont);
+    }
+      @* /* cambio comienzo */ *@
+     let fpRepro;
+     function abrirModalReprogramar(slot) {
+         // 0) Limpieza de tooltips
+         try {
+             document.querySelectorAll(".tooltip").forEach(t => t.remove());
+         } catch (e) { }
+
+         // 1) Identificar cita
+         const idCita = (slot && (slot.idCita ?? slot.IdCita)) ??
+                        (slot && slot.cita && (slot.cita.idCita ?? slot.cita.IdCita)) ?? 0;
+
+         if (!idCita) {
+             Swal.fire("Error", "No se identificó la cita.", "error");
+             return;
+         }
+
+         document.getElementById("reproIdCitaVieja").value = idCita;
+         document.getElementById("reproHora").value = "";
+         document.getElementById("reproMotivo").value = "";
+
+         // 2) Inicializar flatpickr interno si no existe
+         if (!fpRepro) {
+             fpRepro = flatpickr("#reproFecha", {
+                 locale: "es",
+                 dateFormat: "d/m/Y",
+                 minDate: "today"
+             });
+         }
+
+         const myModal = new bootstrap.Modal(document.getElementById('mdReprogramar'));
+         myModal.show();
+     }
+
+     /* cambio comienzo */
+    document.getElementById("btnConfirmarRepro").onclick = async () => {
+        const idCitaVieja = document.getElementById("reproIdCitaVieja").value;
+        const fecha = document.getElementById("reproFecha").value;
+        const hora = document.getElementById("reproHora").value;
+        const motivo = document.getElementById("reproMotivo").value;
+
+        if (!fecha || !hora) {
+            Swal.fire("Aviso", "Debe indicar nueva fecha y hora.", "info");
+            return;
+        }
+            Swal.fire({
+            title: 'Sincronizando...',
+            text: 'Por favor, espere mientras se procesa el cambio en Cal.com',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
         });
 
-        /* La función de polling permanece igual ya que usa fetch nativo */
-        function iniciarPollingCancelacion(idAccion) {
-            console.log("--- Iniciando Polling de Cancelación ---");
-            let intentos = 0;
+        try {
+            const res = await fetch("/Citas/ReprogramarCita", {
+                method: "POST",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    idCitaVieja: parseInt(idCitaVieja),
+                    nuevaFecha: fecha,
+                    nuevaHora: hora,
+                    motivo: motivo
+                })
+            });
+            const result = await res.json();
 
+            if (!result.ok) {
+                Swal.fire("Error", result.data, "error");
+                return;
+            }
+
+            const idAccion = result.idAccion || result.IdAccion;
+
+            // Bucle de consulta (Polling) cada 3 segundos
+            let intentos = 0;
             const intervalo = setInterval(async () => {
                 intentos++;
                 try {
                     const check = await fetch(`/Citas/ConsultarEstadoAccion?id=${idAccion}`);
-                    const res = await check.json();
-                    const estado = (res.status || "").trim().toUpperCase();
+                    const resAccion = await check.json();
 
-                    if (estado === 'S' || estado === 'Z' || intentos > 20) {
+                    const estado = (resAccion.status || resAccion.Status || "").trim().toUpperCase();
+                    const log = (resAccion.log || resAccion.Log || "");
+
+                    if (estado === 'S') {
                         clearInterval(intervalo);
 
-                        let titulo = (estado === 'S') ? "Éxito" : "Info";
-                        let texto = (estado === 'S') ? "Cita cancelada correctamente." : "Sincronización finalizada.";
+                        // ✅ CERRAMOS MODAL Y REFRESCAMOS AGENDA (Clic Virtual)
+                        bootstrap.Modal.getInstance(document.getElementById('mdReprogramar')).hide();
 
-                        Swal.fire(titulo, texto, (estado === 'S' ? "success" : "info")).then(() => {
-                            // Si verAgenda es una función de jQuery, la llamamos con seguridad
-                            if (typeof verAgenda === "function") {
-                                verAgenda();
-                            } else {
-                                window.location.reload();
-                            }
+                        Swal.fire({
+                            title: "¡Éxito!",
+                            text: "Cita reprogramada. Refrescando agenda...",
+                            icon: "success",
+                            timer: 2000,
+                            showConfirmButton: false
                         });
+
+                        // Invocamos la función que refresca los slots
+                        await verAgenda();
+                    }
+                    else if (estado === 'Z' || (estado === 'R' && log.includes("KO|"))) {
+                        clearInterval(intervalo);
+                        Swal.fire("Atención", "Error en Cal.com: " + log, "warning");
                     }
                 } catch (err) {
-                    console.error("Error en el polling:", err);
+                    console.error("Error consultando estado:", err);
+                }
+
+                if (intentos > 30) {
+                    clearInterval(intervalo);
+                    Swal.fire("Sincronización lenta", "El proceso sigue en curso, refresque manualmente en unos segundos.", "info");
                 }
             }, 3000);
 
+        } catch (e) {
+            Swal.fire("Error", "No se pudo conectar con el servidor.", "error");
+        }
+    };
+    /* cambio fin */
+     @* /* cambio fin */ *@
+
+    function abrirModalChequeo(idCita) {
+        $("#chk_idCita").val(idCita);
+        $("#secResultadoSincro").hide();
+        new bootstrap.Modal(document.getElementById('mdChkCalcom')).show();
+    }
+
+    function ejecutarChequeoSincro() {
+        const idCita = parseInt($("#chk_idCita").val());
+        const refresh = $("input[name='radRefresh']:checked").val();
+
+        $.LoadingOverlay("show");
+        $.ajax({
+            url: "/Citas/LanzarChequeoCalcom",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({ IdCita: idCita, Refresh: refresh }),
+            success: function (res) {
+                if (res.ok) {
+                    hacerPollingSincro(res.idAccion);
+                } else {
+                    $.LoadingOverlay("hide");
+                    Swal.fire("Error", res.data, "error");
+                }
+            }
+        });
+    }
+
+    function hacerPollingSincro(idAccion) {
+        let intentos = 0;
+        const intervalo = setInterval(async () => {
+            intentos++;
+            const check = await fetch(`/Citas/ConsultarEstadoAccionSincro?idAccion=${idAccion}`);
+            const estado = await check.text();
+
+            if (estado === 'S' || intentos > 15) {
+                clearInterval(intervalo);
+                $.LoadingOverlay("hide");
+                visualizarResultadoSincro();
+            }
+        }, 3000);
+    }
+
+    function visualizarResultadoSincro() {
+        const idCita = $("#chk_idCita").val();
+        $.get("/Citas/VerResultadoSincro", { idCita: idCita }, function (res) {
+            if (res.ok) {
+                $("#lblResStatus").text(res.data.resultsincro || "OK");
+                $("#lblResFecha").text(res.data.fecha_sincro ? new Date(res.data.fecha_sincro).toLocaleString() : "---");
+                $("#lblResError").text(res.data.cal_last_error || "Ninguno");
+                $("#secResultadoSincro").slideDown();
+            } else {
+                Swal.fire("Info", "Sin registros de sincronización previos.", "info");
+            }
+        });
+    }
+
+    function visualizarResultadoSincroDirecto() {
+       // Muestra el modal de chequeo con los datos ya cargados
+        const idCita = $("#chk_idCita").val();
+         $("#chk_idCita").val(idCita);
+         visualizarResultadoSincro();
+
+    }
+    // fin cambio chkcalcom */
+      async function descargarDocumento(tipo) {
+          if (!idCitaActual) {
+              Swal.fire("Aviso", "No se ha podido identificar la cita.", "info");
+              return;
+          }
+
+          const url = (tipo === "paciente")
+              ?
+              `/Citas/DescargarDocumentoPaciente?idCita=${idCitaActual}`
+              : `/Citas/DescargarDocumentoDoctor?idCita=${idCitaActual}`;
+          const r = await fetch(url, { method: "GET" });
+
+          if (!r.ok) {
+              if (r.status === 404) Swal.fire("Información", "No hay documento para descargar.", "info");
+              else Swal.fire("Error", "No se pudo descargar el documento.", "error");
+              return;
+          }
+
+          const blob = await r.blob();
+
+          let filename = "";
+          const cd = r.headers.get("content-disposition") || "";
+          const m = /filename\*=UTF-8''([^;]+)|filename="?([^"]+)"?/i.exec(cd);
+          if (m) filename = decodeURIComponent(m[1] || m[2] || "");
+
+          if (!filename) {
+              filename = (tipo === "paciente")
+                  ? `documento_paciente_cita_${idCitaActual}`
+                  : `documento_doctor_cita_${idCitaActual}`;
+          }
+
+
+          const urlObj = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = urlObj;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(urlObj), 1000);
+      }
+                 function abrirModalCita(slot) {
+        // 0) Limpieza y habilitar descargas
+        try {
+            document.querySelectorAll(".tooltip").forEach(t => t.remove());
+        } catch (e) { }
+
+        if (typeof initTooltips === "function") initTooltips();
+
+        // 1) Identificación de cita
+        const rawId = (slot && (slot.idCita ?? slot.IdCita)) ?? (slot && slot.cita && (slot.cita.idCita ?? slot.cita.IdCita)) ?? 0;
+        idCitaActual = parseInt(rawId || 0, 10);
+
+        // Botones descarga
+        const btnPac = document.getElementById("btnDescDocPaciente");
+        const btnDoc = document.getElementById("btnDescDocDoctor");
+        if (btnPac) btnPac.disabled = !idCitaActual;
+        if (btnDoc) btnDoc.disabled = !idCitaActual;
+
+        const modalEl = document.getElementById("mdCita");
+        const setVal = (sel, val) => {
+            const el = modalEl.querySelector(sel);
+            if (el) el.value = (val ?? "").toString();
+        };
+
+        // 2) Datos básicos de la cita
+        const cita = (slot && slot.cita) ? slot.cita : {};
+        setVal("#citaIdCita", cita.idCita || slot.idCita || 0);
+        setVal("#citaHora", normHora(cita.hora || slot.hora || ""));
+        setVal("#citaPaciente", (cita.paciente || slot.paciente || "").trim());
+        setVal("#citaEstado", (cita.estado || "").trim());
+        setVal("#citaOrigen", (cita.origenCita || "").trim());
+        setVal("#citaRazon", (cita.razonCitaUsr || "").trim());
+        setVal("#citaIndicaciones", (cita.indicaciones || "").trim());
+
+        // 3) CARGA DE METADATA CAL.COM (JSON)
+        const idSlot = slot.idDoctorHorarioDetalle;
+        window.ultimoSlotIdParaCalcom = idSlot;
+
+        // Reset campos Metadata
+        document.getElementById("calApe").value = "Cargando...";
+        document.getElementById("calEmail").value = "";
+        document.getElementById("calMovil").value = "";
+        document.getElementById("calUid").value = "";
+        document.getElementById("calRazon").value = "";
+
+        fetch(`/Doctor/ObtenerDetalleCalcom?idSlot=${idSlot}`)
+            .then(r => r.json())
+            .then(r => {
+                if (r.ok && r.data) {
+                    document.getElementById("calApe").value = r.data.pacienteApellido || "";
+                    document.getElementById("calEmail").value = r.data.pacienteEmail || "";
+                    document.getElementById("calMovil").value = r.data.pacienteMovil || "";
+                    document.getElementById("calUid").value = r.data.bookingUid || "";
+                    document.getElementById("calRazon").value = r.data.razoncitausr || "";
+                    window.currentCalJsonStr = r.data.calJsonFull;
+                } else {
+                    document.getElementById("calApe").value = "Sin datos";
+                    document.getElementById("calRazon").value = "No hay información extendida.";
+                }
+            }).catch(e => console.error("Error calcom", e));
+
+        // 4) ACTUALIZAR ESTADO DE SINCRONIZACIÓN (Badge OK/ERROR)
+        // Llamamos a tu función existente para que rellene la parte de abajo
+        if (idCitaActual > 0 && typeof cargarDetalleSincroCita === "function") {
+            cargarDetalleSincroCita(idCitaActual);
         }
 
+        // 5) Abrir modal
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
 
-    </script>
+        // 6) Cargar detalles de reconfirmación
+        if (idCitaActual > 0) {
+            fetch("/Citas/ObtenerDetalleCita?idCita=" + encodeURIComponent(idCitaActual))
+                .then(r => r.json())
+                    .then(json => {
+                    const d = json.data ?? json.Data;
+                    if (!d) return;
+                    setVal("#citaConfirmada", d.citaConfirmada ?? "");
+                    setVal("#citaFechaPeticion", fmtDateTime(d.fechaPeticion ?? ""));
+                    setVal("#citaFechaConfirmacion", fmtDateTime(d.fechaConfirmacion ?? ""));
+                    setVal("#citaMetodoPeticion", d.metodoPeticion ?? "");
+                });
+        }
+    }
+          function descargarJSON() {
+        if (!window.currentCalJsonStr) { alert("No hay datos"); return; }
+        const blob = new Blob([window.currentCalJsonStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "cita_calcom.json";
+        a.click();
+    }
+
+      async function borrarSlot(idDoctorHorarioDetalle) {
+        if (!idDoctorHorarioDetalle) return;
+        const confirm = await Swal.fire({
+            title: "Borrar slot",
+            text: "¿Seguro? Solo se permite si NO hay cita asignada.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Sí, borrar",
+            cancelButtonText: "Cancelar"
+        });
+
+        if (!confirm.isConfirmed) return;
+
+        const r = await fetch(`/Citas/EliminarSlot?idDoctorHorarioDetalle=${idDoctorHorarioDetalle}`, { method: "DELETE" });
+        const j = await r.json().catch(() => null);
+
+        if (!r.ok || (j && j.ok === false)) {
+            Swal.fire("Error", (j && (j.msg || j.data)) ? (j.msg || j.data) : "No se pudo borrar el slot.", "error");
+            return;
+        }
+
+        Swal.fire("OK", "Slot borrado.", "success");
+
+        // ✅ CORRECCIÓN 1: Damos medio segundo de oxígeno al VPS para que cierre la transacción
+        // de base de datos antes de pedirle que nos devuelva la agenda actualizada.
+        setTimeout(async () => {
+            await verAgenda();
+        }, 800);
+    }
+
+      // ✅ Validación mínima HH:MM (no rangos, no 00/30, SOLO formato)
+      function esHoraValidaMinima(hhmm) {
+          const s = (hhmm || "").trim();
+          return /^([01]\d|2[0-3]):([0-5]\d)$/.test(s);
+      }
+    async function addSlot() {
+          const fechaInput = (document.getElementById("txtFecha").value || "").trim();
+          const horaInput = (document.getElementById("txtNuevoSlotHora").value || "").trim();
+          const idDoctor = getIdDoctorPantalla_SAFE();
+
+          if (!fechaInput) { Swal.fire("Aviso", "Selecciona una fecha.", "info"); return; }
+          if (!idDoctor) { Swal.fire("Aviso", "IdDoctor inválido.", "error"); return; }
+
+          if (!esHoraValidaMinima(horaInput)) {
+              Swal.fire("Aviso", "Hora inválida. Usa formato HH:MM (ej: 10:00).", "info");
+              return;
+          }
+
+          // endpoint: el tuyo (el que ya te funcionó antes)
+          const url = `/Citas/AgregarSlot?fecha=${encodeURIComponent(fechaInput)}&idDoctor=${idDoctor}&hora=${encodeURIComponent(horaInput)}`;
+          const r = await fetch(url, { method: "POST", headers: { "Accept": "application/json" } });
+          const j = await r.json().catch(() => null);
+
+          if (!r.ok || !j || j.ok === false) {
+              Swal.fire("Error", (j && j.msg) ? j.msg : "No se pudo crear el slot.", "error");
+              return;
+          }
+
+          // Vaciamos el cajetín de texto de la hora
+          document.getElementById("txtNuevoSlotHora").value = "";
+
+          Swal.fire({
+              title: "OK",
+              text: "Slot creado: " + horaInput,
+              icon: "success",
+              timer: 1500,          // Hacemos que el mensaje desaparezca solo para que sea más fluido
+              showConfirmButton: false
+          });
+
+          // ✅ CORRECCIÓN: Damos 400ms de oxígeno al VPS para que cierre la transacción
+          // antes de recargar la pantalla con verAgenda() (que ya tiene los anti-cachés)
+          setTimeout(async () => {
+              await verAgenda();
+          }, 800);
+      }
+       function getIdDoctorPantalla() {
+           const v = document.getElementById("ddlDoctor").value;
+           return v ? parseInt(v) : null;
+       }
+
+    async function verAgenda() {
+        // 1) Fecha
+        const txtFechaEl = document.getElementById("txtFecha");
+        const fechaInput = (txtFechaEl ? (txtFechaEl.value || "") : "").trim();
+        if (!fechaInput) { Swal.fire("Aviso", "Selecciona una fecha.", "info"); return; }
+
+        // 2) Doctor
+        const idDoctor = getIdDoctorPantalla_SAFE();
+
+        if (ES_ADMIN && !idDoctor) { Swal.fire("Aviso", "Selecciona un doctor.", "info"); return; }
+        if (ES_DOCTOR && !idDoctor) { Swal.fire("Aviso", "No se ha podido resolver el doctor logueado.", "warning"); return; }
+        if (!idDoctor) {
+            const btn = document.getElementById("btnCalAgenda");
+            if (btn) { btn.style.display = "none"; btn.href = "#"; }
+            return;
+        }
+
+        // ✅ CORRECCIÓN 2: Generamos una cadena 100% aleatoria para engañar al Proxy de Nginx.
+        const NukeCache = new Date().getTime() + "-" + Math.random().toString(36).substring(2);
+        const url = `/Citas/AgendaDia?fecha=${encodeURIComponent(fechaInput)}&idDoctor=${idDoctor}&anticache=${NukeCache}`;
+
+        // ✅ CORRECCIÓN 3: Le inyectamos los "Headers Anti-Caché" más agresivos que existen.
+        const r = await fetch(url, {
+            headers: {
+                "Accept": "application/json",
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0"
+            },
+            cache: "no-store"
+        });
+
+        const payload = await r.json().catch(() => null);
+        if (!r.ok || !payload || payload.ok === false) {
+            Swal.fire("Aviso", (payload && payload.msg) ? payload.msg : "No se pudo cargar la agenda.", "warning");
+            return;
+        }
+
+        FECHA_EN_PANTALLA = (payload.fecha || fechaInput || "").trim();
+        renderSlots("slotsAM", payload.am || [], FECHA_EN_PANTALLA);
+        renderSlots("slotsPM", payload.pm || [], FECHA_EN_PANTALLA);
+    }
+    document.addEventListener("DOMContentLoaded", async () => {
+        // 1. Inicialización de Flatpickr (Calendario principal)
+        const fp = flatpickr("#txtFecha", {
+            locale: "es",
+            dateFormat: "d/m/Y",
+            allowInput: true,
+            defaultDate: hoyDmy()
+        });
+
+        fp.setDate(hoyDmy(), true, "d/m/Y");
+
+        /* cambio cancelacion: INICIALIZAR MODAL Y EVENTO */
+        const elModalCancel = document.getElementById('mdCancelarCita');
+        if (elModalCancel) {
+            modalCancelarObj = new bootstrap.Modal(elModalCancel);
+        }
+
+        const btnConfCancel = document.getElementById("btnConfirmarCancelacionCita");
+        if (btnConfCancel) {
+            btnConfCancel.onclick = async () => {
+                await ejecutarCancelacionCita();
+            };
+        }
+        /* final cambio */
+
+        // 2. Inicializar tooltips de Bootstrap 5
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+            new bootstrap.Tooltip(el);
+        });
+
+        // 3. Eventos de botones de la interfaz
+        document.getElementById("btnHoy").addEventListener("dblclick", async () => {
+            fp.setDate(new Date(), true);
+            await verAgenda();
+        });
+
+        document.getElementById("btnVer").addEventListener("click", async () => {
+            await verAgenda();
+        });
+
+        document.getElementById("btnAddSlot").addEventListener("dblclick", async () => {
+            await addSlot();
+        });
+
+        const btnPac = document.getElementById("btnDescDocPaciente");
+        if (btnPac) btnPac.addEventListener("click", async () => await descargarDocumento("paciente"));
+
+        const btnDoc = document.getElementById("btnDescDocDoctor");
+        if (btnDoc) btnDoc.addEventListener("click", async () => await descargarDocumento("doctor"));
+
+        // 4. Lógica de carga según Rol (Admin o Doctor)
+        if (ES_ADMIN) {
+            await cargarDoctores();
+
+            const cbo = document.getElementById("cboDoctor");
+            if (cbo) {
+                cbo.addEventListener("change", async () => {
+                    const idDoctor = getIdDoctorPantalla_SAFE();
+                    if (!idDoctor) return;
+                    await verAgenda();
+                    await refrescarBotonCalAgenda(idDoctor);
+                });
+            }
+        } else {
+            const idDoctor = getIdDoctorPantalla_SAFE();
+            if (idDoctor) {
+                await verAgenda();
+                await refrescarBotonCalAgenda(idDoctor);
+            }
+        }
+    }); // <--- Aquí cerramos correctamente el DOMContentLoaded
+
+    function cargarDetalleSincroCita(idCita) {
+        // Limpiamos los campos antes de cargar
+        $("#resCalStatus").text("-").removeClass("text-success text-danger");
+        $("#resCalFecha").text("-");
+        $("#resCalError").text("Cargando...").removeClass("text-danger");
+        $("#resCalUID").text("-");
+        $("#resCalApiStatus").text("-").removeClass("bg-success bg-danger bg-secondary").addClass("bg-secondary");
+
+        // Ocultamos la sección por defecto al abrir nueva cita
+        $("#secResCalcom").collapse('hide');
+
+        if (!idCita || idCita <= 0) return;
+
+        $.get("/Citas/VerResultadoSincro", { idCita: idCita }, function (res) {
+            if (res.ok && res.data) {
+                const d = res.data;
+
+                // 1. Resultado Texto (OK/KO)
+                const isOk = (d.resultsincro || "").toUpperCase() === "OK";
+                $("#resCalStatus").text(isOk ? "SINCRONIZADO" : "ERROR DE SINCRONÍA")
+                                 .addClass(isOk ? "text-success" : "text-danger");
+
+                // 2. Fecha formateada
+                if (d.fecha_sincro) {
+                    $("#resCalFecha").text(new Date(d.fecha_sincro).toLocaleString());
+                }
+
+                // 3. Error técnico
+                $("#resCalError").text(d.cal_last_error || "Proceso finalizado correctamente.")
+                                 .toggleClass("text-danger", !isOk);
+
+                // 4. Datos de la API
+                $("#resCalUID").text(d.booking_uid || "N/A");
+
+                // 5. Badge de estado API
+                const apiStat = (d.booking_status || "UNKNOWN").toUpperCase();
+                $("#resCalApiStatus").text(apiStat);
+                if(apiStat === "ACCEPTED") $("#resCalApiStatus").addClass("bg-success");
+                else if(apiStat === "CANCELLED" || apiStat === "REJECTED") $("#resCalApiStatus").addClass("bg-danger");
+                else $("#resCalApiStatus").addClass("bg-secondary");
+
+            } else {
+                $("#resCalError").text("No hay registros de sincronización para esta cita.");
+            }
+        });
+    }
+
+       function visualizarResultadoSincro() {
+        const idCita = $("#chk_idCita").val();
+        if (!idCita) return;
+
+        $.get("/Citas/VerResultadoSincro", { idCita: idCita }, function (res) {
+            if (res.ok && res.data) {
+                const d = res.data;
+                const isOk = (d.resultsincro || "").toUpperCase() === "OK";
+
+                // Poblar campos de la tabla doctorhorariodetallecalcom
+                $("#lblResIdCita").text(idCita);
+                $("#lblResUID").text(d.booking_uid || "Sin UID");
+                $("#lblResFecha").text(d.fecha_sincro ? new Date(d.fecha_sincro).toLocaleString() : "---");
+
+                // Estado visual
+                $("#lblResStatus").text(isOk ? "SINCRONIZADO" : "ERROR")
+                                 .removeClass("bg-success bg-danger")
+                                 .addClass(isOk ? "bg-success" : "bg-danger");
+
+                // Mensaje técnico del programa chkcitacalcom
+                $("#lblResError").text(d.cal_last_error || "Sin observaciones.");
+
+                // Estado que viene directamente de la API de Cal.com
+                const apiStat = (d.booking_status || "UNKNOWN").toUpperCase();
+                $("#lblResApiStatus").text(apiStat);
+
+                $("#secResultadoSincro").slideDown();
+            } else {
+                Swal.fire("Aviso", "No hay datos de sincronización para esta cita.", "info");
+            }
+        });
+    }
+        function abrirModalCancelarCita(idCita) {
+        const inputId = document.getElementById("cancelarIdCita");
+        const inputMotivo = document.getElementById("cancelarMotivo");
+        const modalElem = document.getElementById('mdCancelarCita');
+
+        if (inputId) { inputId.value = idCita; }
+        if (inputMotivo) { inputMotivo.value = ""; }
+
+        if (modalElem) {
+            // Usamos la variable que declaraste arriba
+            if (!modalCancelarObj) {
+                modalCancelarObj = new bootstrap.Modal(modalElem);
+            }
+            modalCancelarObj.show();
+        }
+    }
+
+    // Usamos el ID exacto que tienes en tu HTML: btnConfirmarCancelPac
+         document.addEventListener("click", async function (e) {
+        // Verificamos si el elemento clicado es nuestro botón de confirmación
+        if (e.target && e.target.id === "btnConfirmarCancelPac") {
+            e.preventDefault();
+
+            // Leemos los valores usando JavaScript nativo para máxima compatibilidad
+            const elId = document.getElementById("cancelarIdCita");
+            const elMotivo = document.getElementById("cancelarMotivo");
+
+            if (!elId) return;
+
+            const idCita = elId.value;
+            const motivoRaw = elMotivo ? elMotivo.value : "";
+            const motivo = motivoRaw.trim();
+
+            if (!motivo) {
+                Swal.fire("Atención", "Debe indicar un motivo para cancelar.", "warning");
+                return;
+            }
+
+            // Bloqueamos la interfaz con Swal (que sí suele estar cargado globalmente)
+            Swal.fire({
+                title: 'Procesando...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            try {
+                // Llamada al endpoint de Agenda
+                const response = await fetch(`/Citas/CancelarCitaAgenda?idCita=${idCita}&motivo=${encodeURIComponent(motivo)}`, {
+                    method: "POST"
+                });
+
+                const result = await response.json();
+
+                if (result.ok) {
+                    // Cerramos el modal usando la referencia global declarada al inicio
+                    if (window.modalCancelarObj) {
+                        window.modalCancelarObj.hide();
+                    }
+                    iniciarPollingCancelacion(result.idAccion);
+                } else {
+                    Swal.fire("Error", result.mensaje || "Error desconocido", "error");
+                }
+            } catch (error) {
+                console.error("Error en la petición:", error);
+                Swal.fire("Error", "No se pudo conectar con el servidor.", "error");
+            }
+        }
+    });
+
+    /* La función de polling permanece igual ya que usa fetch nativo */
+    function iniciarPollingCancelacion(idAccion) {
+        console.log("--- Iniciando Polling de Cancelación ---");
+        let intentos = 0;
+
+        const intervalo = setInterval(async () => {
+            intentos++;
+            try {
+                const check = await fetch(`/Citas/ConsultarEstadoAccion?id=${idAccion}`);
+                const res = await check.json();
+                const estado = (res.status || "").trim().toUpperCase();
+
+                if (estado === 'S' || estado === 'Z' || intentos > 20) {
+                    clearInterval(intervalo);
+
+                    let titulo = (estado === 'S') ? "Éxito" : "Info";
+                    let texto = (estado === 'S') ? "Cita cancelada correctamente." : "Sincronización finalizada.";
+
+                    Swal.fire(titulo, texto, (estado === 'S' ? "success" : "info")).then(() => {
+                        // Si verAgenda es una función de jQuery, la llamamos con seguridad
+                        if (typeof verAgenda === "function") {
+                            verAgenda();
+                        } else {
+                            window.location.reload();
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error("Error en el polling:", err);
+            }
+        }, 3000);
+
+    }
+
+
+</script>
 @section Scripts {
     @* Mantenemos los scripts que ya tenías antes si los hay *@
 
-        /* cambio txtfecha comzo */
-        <script>
-            // Usamos esta forma de jQuery para asegurar que no haya conflictos
-            jQuery(document).ready(function ($) {
-                console.log("Detalle_Horario_Citas JS cargado y jQuery detectado");
+                /* cambio txtfecha comzo */
+    <script>
+        // Usamos esta forma de jQuery para asegurar que no haya conflictos
+        jQuery(document).ready(function ($) {
+            console.log("Detalle_Horario_Citas JS cargado y jQuery detectado");
 
-                // Escuchamos el cambio en el campo de fecha
-                $("#txtFecha").on("change", async function () {
-                    const fechaVal = $(this).val();
-                    const idDoc = $("#cboDoctor").val();
+            // Escuchamos el cambio en el campo de fecha
+            $("#txtFecha").on("change", async function () {
+                const fechaVal = $(this).val();
+                const idDoc = $("#cboDoctor").val();
 
-                    // Validación: Fecha con longitud mínima y Doctor seleccionado
-                    if (fechaVal && fechaVal.length >= 8 && idDoc && parseInt(idDoc) > 0) {
-                        console.log("Detectado cambio en fecha. Refrescando agenda...");
+                // Validación: Fecha con longitud mínima y Doctor seleccionado
+                if (fechaVal && fechaVal.length >= 8 && idDoc && parseInt(idDoc) > 0) {
+                    console.log("Detectado cambio en fecha. Refrescando agenda...");
 
-                        // Verificamos si la función verAgenda existe antes de llamarla
-                        if (typeof verAgenda === "function") {
-                            await verAgenda();
-                        } else {
-                            console.warn("La función verAgenda() no está definida todavía.");
-                        }
-                    }
-                });
-
-                // Refrescar automáticamente al cambiar el doctor
-                $("#cboDoctor").on("change", function() {
-                    if($("#txtFecha").val()){
-                        $("#txtFecha").trigger("change");
-                    }
-                });
-            });
-
-            // ── Variables globales IA Detalle_Horario_Citas ───────────────────────
-            var dhcPacBase64 = null, dhcPacContentType = null;
-            var dhcDocBase64 = null, dhcDocContentType = null;
-            var dhcImagenBlob = null, dhcIdCita = 0;
-            var dhcFsCropper = null, dhcFsStream = null, dhcFsFacingMode = "environment";
-
-            function dhcCargarDatosCita(cita) {
-                if (!cita) return;
-                const tipoMap = { P:"Presencial", T:"Telefónica", V:"Virtual" };
-                const tipoCitaEl = document.getElementById("citaTipoCita");
-                if (tipoCitaEl) tipoCitaEl.value = cita.tipoDeCita || "P";
-                const calUid = cita.calBookingUid || null;
-                const urlCal = calUid ? `https://app.cal.eu/video/${calUid}` : (cita.urlCitaOTelefono || null);
-                const btnCal = document.getElementById("citaBtnCalcom");
-                if (btnCal) { urlCal ? (btnCal.classList.remove("d-none"), btnCal.href=urlCal) : btnCal.classList.add("d-none"); }
-                dhcIdCita = cita.idCita || 0;
-                if (cita.diagnosticoIA) {
-                    document.getElementById("dhcTextoIA").innerText = cita.diagnosticoIA;
-                    document.getElementById("dhcResultadoIA").classList.remove("d-none");
-                } else {
-                    document.getElementById("dhcTextoIA").innerText = "";
-                    document.getElementById("dhcResultadoIA").classList.add("d-none");
-                }
-                dhcPacBase64      = cita.documentoCitaUsr || null;
-                dhcPacContentType = cita.contentType || "application/octet-stream";
-                dhcDocBase64      = cita.docIndicacionesDoctor || null;
-                dhcDocContentType = cita.contentTypeDoctor || "application/octet-stream";
-                const esImgPac = !!(dhcPacBase64 && (cita.contentType||"").startsWith("image/"));
-                ["dhcBtnAnalizarBDPac","dhcBtnAnalizarBDPacSel","dhcBtnAnalizarBDPacYolo"].forEach(id=>document.getElementById(id).disabled=!esImgPac);
-                document.getElementById("dhcLblBDPac").textContent = esImgPac ? "Se analizará la imagen del paciente en BD." : (dhcPacBase64 ? "El doc. no es una imagen." : "No hay documento del paciente en BD.");
-                const esImgDoc = !!(dhcDocBase64 && (cita.contentTypeDoctor||"").startsWith("image/"));
-                document.getElementById("dhcBtnAnalizarBDDoc").disabled = !esImgDoc;
-                document.getElementById("dhcLblBDDoc").textContent = esImgDoc ? "Se analizará el documento del doctor en BD." : (dhcDocBase64 ? "El doc. no es una imagen." : "No hay documento del doctor en BD.");
-                dhcImagenBlob = null;
-                document.getElementById("dhcMiniPreview").classList.add("d-none");
-                document.getElementById("dhcPastePreview").classList.add("d-none");
-                document.getElementById("dhcBtnAnalizarPaste").classList.add("d-none");
-            }
-
-            document.addEventListener("DOMContentLoaded", function() {
-                const originalFn = window.abrirModalCita;
-                if (originalFn) {
-                    window.abrirModalCita = function(slot) {
-                        originalFn(slot);
-                        const cita = (slot && slot.cita) ? slot.cita : slot;
-                        dhcCargarDatosCita(cita);
-                    };
-                }
-                document.getElementById("dhcBtnAbrirCamara").addEventListener("click", dhcFsAbrir);
-                document.getElementById("dhcFsBtnVolver").addEventListener("click", dhcFsCerrar);
-                document.getElementById("dhcFsBtnVoltear").addEventListener("click", function() {
-                    dhcFsFacingMode = dhcFsFacingMode==="environment"?"user":"environment"; dhcFsAbrirStream();
-                });
-                document.getElementById("dhcFsBtnCapturar").addEventListener("click", function() {
-                    const video=document.getElementById("dhcFsVideo");
-                    const canvas=document.createElement("canvas");
-                    canvas.width=video.videoWidth; canvas.height=video.videoHeight;
-                    canvas.getContext("2d").drawImage(video,0,0);
-                    dhcFsCerrarStream();
-                    document.getElementById("dhcFsStreamDiv").style.display="none";
-                    const img=document.getElementById("dhcFsImgCropper");
-                    img.src=canvas.toDataURL("image/jpeg",0.92);
-                    document.getElementById("dhcFsCropperDiv").style.display="block";
-                    document.getElementById("dhcFsControles").style.display="block";
-                    if(dhcFsCropper){dhcFsCropper.destroy();dhcFsCropper=null;}
-                    // Esperar al siguiente frame para que el DOM calcule alturas reales
-                    requestAnimationFrame(function(){
-                        requestAnimationFrame(function(){
-                            const fsArea = document.getElementById("dhcFsArea");
-                            const areaH = fsArea.offsetHeight || (window.innerHeight - 160);
-                            const areaW = fsArea.offsetWidth || window.innerWidth;
-                            img.style.height = areaH + "px";
-                            img.style.maxHeight = areaH + "px";
-                            img.style.width = "100%";
-                            if(dhcFsCropper){dhcFsCropper.destroy();dhcFsCropper=null;}
-                            dhcFsCropper=new Cropper(img,{
-                                aspectRatio:NaN, viewMode:1, autoCropArea:0.5,
-                                responsive:true, movable:true, zoomable:true,
-                                cropBoxMovable:true, cropBoxResizable:true, dragMode:"crop",
-                                minContainerHeight: areaH,
-                                minContainerWidth: areaW
-                            });
-                            document.getElementById("dhcFsSliderZoom").value=0.1;
-                        });
-                    });
-                });
-                document.getElementById("dhcFsSliderZoom").addEventListener("input",function(){if(dhcFsCropper)dhcFsCropper.zoomTo(parseFloat(this.value));});
-                document.getElementById("dhcFsBtnReset").addEventListener("click",function(){if(dhcFsCropper){dhcFsCropper.reset();document.getElementById("dhcFsSliderZoom").value=0.1;}});
-                document.getElementById("dhcFsBtnMover").addEventListener("click",function(){if(!dhcFsCropper)return;dhcFsCropper.setDragMode("move");this.classList.add("active");document.getElementById("dhcFsBtnRecortar").classList.remove("active");});
-                document.getElementById("dhcFsBtnRecortar").addEventListener("click",function(){if(!dhcFsCropper)return;dhcFsCropper.setDragMode("crop");this.classList.add("active");document.getElementById("dhcFsBtnMover").classList.remove("active");});
-                document.getElementById("dhcFsBtnAnalizarFS").addEventListener("click",function(){
-                    if(!dhcFsCropper){Swal.fire("Aviso","Capture primero.","warning");return;}
-                    const canvas=dhcFsCropper.getCroppedCanvas({maxWidth:1600,maxHeight:1600});
-                    const mx=Math.round(canvas.width*0.10),my=Math.round(canvas.height*0.10);
-                    const full=document.createElement("canvas");
-                    full.width=canvas.width+mx*2;full.height=canvas.height+my*2;
-                    full.getContext("2d").drawImage(canvas,mx,my);
-                    const btn=this;btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin me-1"></i>Analizando...';
-                    full.toBlob(function(blob){
-                        if(window._fsModoIA) {
-                            // Viene del submodal IA
-                            iaImagenBlob = blob;
-                            document.getElementById("iaMiniImg").src=URL.createObjectURL(blob);
-                            document.getElementById("iaMiniPreview").classList.remove("d-none");
-                            iaAnalizarBlob(blob, function(){
-                                btn.disabled=false;btn.innerHTML='<i class="fas fa-microscope me-1"></i>Analizar recorte con IA';
-                                document.getElementById("dhcFsBtnVerResultados").classList.remove("d-none");
-                            });
-                        } else {
-                            // Viene del modal principal
-                            dhcImagenBlob=blob;
-                            document.getElementById("dhcMiniImg").src=URL.createObjectURL(blob);
-                            document.getElementById("dhcMiniPreview").classList.remove("d-none");
-                            dhcAnalizarBlob(blob,function(){
-                                btn.disabled=false;btn.innerHTML='<i class="fas fa-microscope me-1"></i>Analizar recorte con IA';
-                                document.getElementById("dhcFsBtnVerResultados").classList.remove("d-none");
-                            });
-                        }
-                    },"image/jpeg",0.92);
-                });
-                document.getElementById("dhcFsBtnVerResultados").addEventListener("click",function(){
-                    dhcFsCerrar();
-                    setTimeout(()=>{
-                        if(window._fsModoIA) {
-                            window._fsModoIA = false;
-                            // Volver al submodal IA
-                            bootstrap.Modal.getOrCreateInstance(document.getElementById("mdIA")).show();
-                            setTimeout(()=>{
-                                document.getElementById("iaResultadoIA").scrollIntoView({behavior:"smooth"});
-                            },300);
-                        } else {
-                            const diag=document.getElementById("dhcTextoIA").innerText;
-                            const ind=document.getElementById("citaIndicaciones");
-                            if(diag && ind && ind.value.trim()==="") ind.value=diag;
-                            document.getElementById("dhcResultadoIA").scrollIntoView({behavior:"smooth"});
-                        }
-                    },350);
-                });
-                const pa=document.getElementById("dhcPasteArea");
-                pa.addEventListener("click",()=>pa.focus());
-                pa.addEventListener("paste",function(e){
-                    for(const item of(e.clipboardData?.items||[])){
-                        if(item.type.startsWith("image/")){
-                            const blob=item.getAsFile();dhcImagenBlob=blob;
-                            document.getElementById("dhcPasteImg").src=URL.createObjectURL(blob);
-                            document.getElementById("dhcPastePreview").classList.remove("d-none");
-                            document.getElementById("dhcBtnAnalizarPaste").classList.remove("d-none");
-                            pa.querySelector("span").textContent="✔ Pegada. Pulse Analizar.";
-                            break;
-                        }
-                    }
-                });
-                document.getElementById("dhcBtnAnalizarPaste").addEventListener("click",()=>{if(dhcImagenBlob)dhcAnalizarBlob(dhcImagenBlob);});
-                document.getElementById("dhcBtnAnalizarFichero").addEventListener("click",function(){
-                    const file=document.getElementById("dhcFileIA").files[0];
-                    if(!file){Swal.fire("Aviso","Seleccione un fichero.","warning");return;}
-                    if(!file.type.startsWith("image/")){Swal.fire("Aviso","Solo imágenes.","warning");return;}
-                    dhcAnalizarBlob(file);
-                });
-                function blobPac(){if(!dhcPacBase64)return null;const b=atob(dhcPacBase64),a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return new Blob([a],{type:dhcPacContentType||"image/jpeg"});}
-                document.getElementById("dhcBtnAnalizarBDPac").addEventListener("click",()=>{const bl=blobPac();if(bl)dhcAnalizarBlob(bl);});
-                document.getElementById("dhcBtnAnalizarBDPacSel").addEventListener("click",()=>{const bl=blobPac();if(bl)dhcAnalizarBlob(bl);});
-                document.getElementById("dhcBtnAnalizarBDPacYolo").addEventListener("click",()=>{const bl=blobPac();if(bl)dhcAnalizarBlob(bl);});
-                document.getElementById("dhcBtnAnalizarBDDoc").addEventListener("click",function(){
-                    if(!dhcDocBase64)return;
-                    const b=atob(dhcDocBase64),a=new Uint8Array(b.length);
-                    for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);
-                    dhcAnalizarBlob(new Blob([a],{type:dhcDocContentType||"image/jpeg"}));
-                });
-            });
-
-            function dhcAnalizarBlob(blob,cb) {
-                if(!dhcIdCita){Swal.fire("Aviso","No hay cita seleccionada.","warning");return;}
-                Swal.fire({title:"Analizando con IA...",allowOutsideClick:false,didOpen:()=>Swal.showLoading()});
-                const servicio=document.getElementById("dhcServicioIA").value||"dental";
-                const razon=document.getElementById("citaRazon")?.value||"";
-                const contexto=razon?`El paciente describe: "${razon}". Analiza la imagen.`:"Analiza esta imagen clínica y describe los hallazgos.";
-                const form=new FormData();
-                form.append("idCita",dhcIdCita);form.append("imagen",blob,"imagen.jpg");
-                form.append("servicio",servicio);form.append("contexto",contexto);
-                fetch("/Citas/AnalizarImagenIA",{method:"POST",body:form})
-                .then(r=>r.json()).then(res=>{
-                    Swal.close();
-                    if(res.ok){
-                        document.getElementById("dhcTextoIA").innerText=res.diagnostico;
-                        document.getElementById("dhcResultadoIA").classList.remove("d-none");
-                        document.getElementById("dhcResultadoIA").scrollIntoView({behavior:"smooth"});
-                        document.getElementById("dhcFsResultado").innerText=res.diagnostico;
-                        document.getElementById("dhcFsResultado").style.display="block";
-                        const ind=document.getElementById("citaIndicaciones");
-                        if(ind&&ind.value.trim()==="")ind.value=res.diagnostico;
-                        if(cb)cb();
-                    } else {Swal.fire("Error IA",res.msg||"Error","error");if(cb)cb();}
-                }).catch(()=>{Swal.fire("Error","Fallo de comunicación.","error");if(cb)cb();});
-            }
-            // Guardar tipo de cita
-            document.addEventListener("DOMContentLoaded", function() {
-                const btnGuardarTipo = document.getElementById("citaBtnGuardarTipo");
-                if (btnGuardarTipo) {
-                    btnGuardarTipo.addEventListener("click", function() {
-                        if (!dhcIdCita) { Swal.fire("Aviso","No hay cita seleccionada.","warning"); return; }
-                        const tipo = document.getElementById("citaTipoCita").value;
-                        fetch(`/Citas/ActualizarTipoCita?idCita=${dhcIdCita}&tipoDeCita=${tipo}`, { method:"POST" })
-                        .then(r=>r.json())
-                        .then(res=>{
-                            if(res.ok) Swal.fire("Guardado","Tipo de cita actualizado.","success");
-                            else Swal.fire("Error", res.msg||"Error al guardar","error");
-                        })
-                        .catch(()=>Swal.fire("Error","Fallo de comunicación.","error"));
-                    });
-                }
-            });
-
-            // ═══════════════════════════════════════════
-            // SUBMODAL IA
-            // ═══════════════════════════════════════════
-            var iaIdCita = 0;
-            var iaPacBase64 = null, iaPacContentType = null;
-            var iaDocBase64 = null, iaDocContentType = null;
-            var iaImagenBlob = null;
-
-            function abrirModalIA(slot) {
-                console.log("abrirModalIA llamado, slot=", slot);
-                const mdIAEl = document.getElementById("mdIA");
-                console.log("mdIA elemento=", mdIAEl);
-                const cita = (slot && slot.cita) ? slot.cita : slot;
-                iaIdCita = cita.idCita || slot.idCita || 0;
-                console.log("iaIdCita=", iaIdCita);
-
-                // Nombre paciente en título
-                const pacNom = (cita.paciente || slot.paciente || "").trim();
-                document.getElementById("iaModalPaciente").textContent = pacNom;
-
-                // Cargar indicaciones actuales
-                document.getElementById("iaIndicaciones").value = (cita.indicaciones || "").trim();
-
-                // Cargar resultado IA previo si existe
-                if (cita.diagnosticoIA) {
-                    document.getElementById("iaTextoIA").innerText = cita.diagnosticoIA;
-                    document.getElementById("iaResultadoIA").classList.remove("d-none");
-                } else {
-                    document.getElementById("iaTextoIA").innerText = "";
-                    document.getElementById("iaResultadoIA").classList.add("d-none");
-                }
-
-                // Sincronizar servicio IA
-                const dhcSvc = document.getElementById("dhcServicioIA");
-                const iaSvc = document.getElementById("iaServicioIA");
-                if (dhcSvc && iaSvc) iaSvc.value = dhcSvc.value;
-
-                // Documentos BD
-                iaPacBase64 = cita.documentoCitaUsr || null;
-                iaPacContentType = cita.contentType || "application/octet-stream";
-                iaDocBase64 = cita.docIndicacionesDoctor || null;
-                iaDocContentType = cita.contentTypeDoctor || "application/octet-stream";
-
-                const esImgPac = !!(iaPacBase64 && (iaPacContentType||"").startsWith("image/"));
-                document.getElementById("iaBtnAnalizarBDPac").disabled = !esImgPac;
-                document.getElementById("iaLblBDPac").textContent = esImgPac
-                    ? "Se analizará la imagen del paciente en BD."
-                    : (iaPacBase64 ? "El doc. no es una imagen." : "No hay documento del paciente en BD.");
-
-                const esImgDoc = !!(iaDocBase64 && (iaDocContentType||"").startsWith("image/"));
-                document.getElementById("iaBtnAnalizarBDDoc").disabled = !esImgDoc;
-                document.getElementById("iaBtnDescDocDoctor").disabled = !iaDocBase64;
-                document.getElementById("iaLblBDDoc").textContent = esImgDoc
-                    ? "Se analizará el documento del doctor en BD."
-                    : (iaDocBase64 ? "El doc. no es una imagen." : "No hay documento del doctor en BD.");
-
-                // Reset estado
-                iaImagenBlob = null;
-                document.getElementById("iaMiniPreview").classList.add("d-none");
-                document.getElementById("iaPastePreview").classList.add("d-none");
-                document.getElementById("iaBtnAnalizarPaste").classList.add("d-none");
-
-                // ── SOLUCIÓN DEFINITIVA: cerrar mdCita → limpiar → abrir mdIA ──
-                try {
-                    const mdIADom  = document.getElementById("mdIA");
-                    const mdCitaDom = document.getElementById("mdCita");
-
-                    // 1) Destruir cualquier instancia previa de mdIA
-                    const prevIA = bootstrap.Modal.getInstance(mdIADom);
-                    if (prevIA) { prevIA.dispose(); }
-
-                    // 2) Limpiar clases/atributos residuales del mdIA
-                    mdIADom.classList.remove("show");
-                    mdIADom.style.display = "";
-                    mdIADom.removeAttribute("aria-modal");
-                    mdIADom.removeAttribute("role");
-
-                    // 3) Cerrar mdCita si está abierto (Bootstrap lo anima ~300ms)
-                    const instCita = bootstrap.Modal.getInstance(mdCitaDom);
-                    if (instCita) {
-                        // Escuchar el momento en que mdCita termine de ocultarse
-                        mdCitaDom.addEventListener("hidden.bs.modal", function _onCitaHidden() {
-                            mdCitaDom.removeEventListener("hidden.bs.modal", _onCitaHidden);
-                            _abrirMdIALimpio(mdIADom, mdCitaDom);
-                        }, { once: true });
-                        instCita.hide();
+                    // Verificamos si la función verAgenda existe antes de llamarla
+                    if (typeof verAgenda === "function") {
+                        await verAgenda();
                     } else {
-                        // mdCita no estaba abierto: limpiar backdrops y abrir directo
-                        document.querySelectorAll(".modal-backdrop").forEach(b => b.remove());
-                        document.body.classList.remove("modal-open");
-                        document.body.style.overflow = "";
-                        document.body.style.paddingRight = "";
-                        _abrirMdIALimpio(mdIADom, mdCitaDom);
+                        console.warn("La función verAgenda() no está definida todavía.");
                     }
-                } catch(err) {
-                    console.error("Error abriendo mdIA:", err);
                 }
-            }
+            });
 
-            function _abrirMdIALimpio(mdIADom, mdCitaDom) {
-                // Limpiar cualquier backdrop residual antes de mostrar mdIA
-                document.querySelectorAll(".modal-backdrop").forEach(b => b.remove());
-                document.body.classList.remove("modal-open");
-                document.body.style.overflow = "";
-                document.body.style.paddingRight = "";
-
-                const mdIA = new bootstrap.Modal(mdIADom, { backdrop: true, keyboard: true });
-
-                // Al cerrar mdIA → reabrir mdCita
-                mdIADom.addEventListener("hidden.bs.modal", function _onIAHidden() {
-                    mdIADom.removeEventListener("hidden.bs.modal", _onIAHidden);
-                    // Limpiar backdrops que deje mdIA
-                    document.querySelectorAll(".modal-backdrop").forEach(b => b.remove());
-                    document.body.classList.remove("modal-open");
-                    document.body.style.overflow = "";
-                    document.body.style.paddingRight = "";
-                    // Reabrir mdCita
-                    if (mdCitaDom) {
-                        const inst = bootstrap.Modal.getInstance(mdCitaDom) || new bootstrap.Modal(mdCitaDom);
-                        inst.show();
-                    }
-                }, { once: true });
-
-                mdIA.show();
-                console.log("mdIA.show() llamado OK (fresh, mdCita cerrado primero)");
-            }
-
-            function iaAnalizarBlob(blob, cb) {
-                if (!iaIdCita) { Swal.fire("Aviso","No hay cita seleccionada.","warning"); return; }
-                Swal.fire({title:"Analizando con IA...",allowOutsideClick:false,didOpen:()=>Swal.showLoading()});
-                const servicio = document.getElementById("iaServicioIA").value || "dental";
-                const razon = document.getElementById("iaIndicaciones")?.value || "";
-                const contexto = razon
-                    ? `El paciente describe: "${razon}". Analiza la imagen.`
-                    : "Analiza esta imagen clínica y describe los hallazgos.";
-                const form = new FormData();
-                form.append("idCita", iaIdCita);
-                form.append("imagen", blob, "imagen.jpg");
-                form.append("servicio", servicio);
-                form.append("contexto", contexto);
-                fetch("/Citas/AnalizarImagenIA", {method:"POST", body:form})
-                .then(r => r.json()).then(res => {
-                    Swal.close();
-                    if (res.ok) {
-                        document.getElementById("iaTextoIA").innerText = res.diagnostico;
-                        document.getElementById("iaResultadoIA").classList.remove("d-none");
-                        // También actualizar el modal principal
-                        const dhcTxt = document.getElementById("dhcTextoIA");
-                        const dhcRes = document.getElementById("dhcResultadoIA");
-                        if(dhcTxt) dhcTxt.innerText = res.diagnostico;
-                        if(dhcRes) dhcRes.classList.remove("d-none");
-                        // Si indicaciones vacías, prellenar
-                        const ind = document.getElementById("iaIndicaciones");
-                        if(ind && ind.value.trim() === "") ind.value = res.diagnostico;
-                        if(cb) cb();
-                    } else {
-                        Swal.fire("Error IA", res.msg || "Error", "error");
-                        if(cb) cb();
-                    }
-                }).catch(() => { Swal.fire("Error","Fallo de comunicación.","error"); if(cb)cb(); });
-            }
-
-            document.addEventListener("DOMContentLoaded", function() {
-
-                // Guardar indicaciones desde submodal
-                document.getElementById("iaBtnGuardarIndicaciones").addEventListener("click", function() {
-                    if (!iaIdCita) { Swal.fire("Aviso","No hay cita.","warning"); return; }
-                    const texto = document.getElementById("iaIndicaciones").value.trim();
-                    fetch(`/Citas/GuardarIndicaciones?idCita=${iaIdCita}`, {
-                        method:"POST",
-                        headers:{"Content-Type":"application/json"},
-                        body: JSON.stringify({indicaciones: texto})
-                    }).then(r => r.json()).then(res => {
-                        if(res.ok) {
-                            // Sincronizar con modal principal
-                            const mainInd = document.getElementById("citaIndicaciones");
-                            if(mainInd) mainInd.value = texto;
-                            Swal.fire({title:"Guardado",icon:"success",timer:1200,showConfirmButton:false});
-                        } else {
-                            Swal.fire("Error", res.msg || "Error al guardar","error");
-                        }
-                    }).catch(()=>Swal.fire("Error","Fallo de comunicación.","error"));
-                });
-
-                // Botón usar diagnóstico en indicaciones
-                document.getElementById("iaBtnUsarDiagnostico").addEventListener("click", function() {
-                    const diag = document.getElementById("iaTextoIA").innerText;
-                    const ind = document.getElementById("iaIndicaciones");
-                    if(diag && ind) ind.value = diag;
-                });
-
-                // Cámara desde submodal — reutiliza el fullscreen existente
-                document.getElementById("iaBtnAbrirCamara").addEventListener("click", function() {
-                    // Marcar que el fullscreen pertenece al submodal IA
-                    window._fsModoIA = true;
-                    dhcFsAbrir();
-                });
-
-                // Pegar captura
-                const iaPa = document.getElementById("iaPasteArea");
-                iaPa.addEventListener("click", () => iaPa.focus());
-                iaPa.addEventListener("paste", function(e) {
-                    for (const item of (e.clipboardData?.items || [])) {
-                        if (item.type.startsWith("image/")) {
-                            const blob = item.getAsFile();
-                            iaImagenBlob = blob;
-                            document.getElementById("iaPasteImg").src = URL.createObjectURL(blob);
-                            document.getElementById("iaPastePreview").classList.remove("d-none");
-                            document.getElementById("iaBtnAnalizarPaste").classList.remove("d-none");
-                            iaPa.querySelector("span").textContent = "✔ Pegada. Pulse Analizar.";
-                            break;
-                        }
-                    }
-                });
-                document.getElementById("iaBtnAnalizarPaste").addEventListener("click", () => {
-                    if(iaImagenBlob) iaAnalizarBlob(iaImagenBlob);
-                });
-
-                // Fichero
-                document.getElementById("iaBtnAnalizarFichero").addEventListener("click", function() {
-                    const file = document.getElementById("iaFileIA").files[0];
-                    if(!file){Swal.fire("Aviso","Seleccione un fichero.","warning");return;}
-                    if(!file.type.startsWith("image/")){Swal.fire("Aviso","Solo imágenes.","warning");return;}
-                    iaAnalizarBlob(file);
-                });
-
-                // BD Paciente
-                document.getElementById("iaBtnAnalizarBDPac").addEventListener("click", function() {
-                    if(!iaPacBase64) return;
-                    const b=atob(iaPacBase64), a=new Uint8Array(b.length);
-                    for(let i=0;i<b.length;i++) a[i]=b.charCodeAt(i);
-                    iaAnalizarBlob(new Blob([a],{type:iaPacContentType||"image/jpeg"}));
-                });
-
-                // BD Doctor
-                document.getElementById("iaBtnAnalizarBDDoc").addEventListener("click", function() {
-                    if(!iaDocBase64) return;
-                    const b=atob(iaDocBase64), a=new Uint8Array(b.length);
-                    for(let i=0;i<b.length;i++) a[i]=b.charCodeAt(i);
-                    iaAnalizarBlob(new Blob([a],{type:iaDocContentType||"image/jpeg"}));
-                });
-
-                // Descargar doc doctor
-                document.getElementById("iaBtnDescDocDoctor").addEventListener("click", async function() {
-                    if(!iaIdCita) return;
-                    const url = `/Citas/DescargarDocumentoDoctor?idCita=${iaIdCita}`;
-                    const r = await fetch(url,{method:"GET"});
-                    if(!r.ok){Swal.fire("Info","No hay documento.","info");return;}
-                    const blob = await r.blob();
-                    const cd = r.headers.get("content-disposition")||"";
-                    const m = /filename\*=UTF-8''([^;]+)|filename="?([^"]+)"?/i.exec(cd);
-                    const filename = m ? decodeURIComponent(m[1]||m[2]||"") : `doc_doctor_${iaIdCita}`;
-                    const urlObj = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href=urlObj; a.download=filename;
-                    document.body.appendChild(a); a.click(); a.remove();
-                    setTimeout(()=>URL.revokeObjectURL(urlObj),1000);
-                });
-
-            }); // fin DOMContentLoaded submodal IA
-
-            function dhcFsAbrir(){
-                // Si venimos del submodal IA, cerrarlo temporalmente
-                if(window._fsModoIA) {
-                    const mdIAEl = document.getElementById("mdIA");
-                    if(mdIAEl) bootstrap.Modal.getInstance(mdIAEl)?.hide();
+            // Refrescar automáticamente al cambiar el doctor
+            $("#cboDoctor").on("change", function() {
+                if($("#txtFecha").val()){
+                    $("#txtFecha").trigger("change");
                 }
-                document.getElementById("dhcFullscreen").style.display="flex";
-                document.body.style.overflow="hidden";
-                document.getElementById("dhcFsStreamDiv").style.display="flex";
-                document.getElementById("dhcFsCropperDiv").style.display="none";
-                document.getElementById("dhcFsControles").style.display="none";
-                document.getElementById("dhcFsResultado").style.display="none";
-                document.getElementById("dhcFsBtnVerResultados").classList.add("d-none");
-                dhcFsAbrirStream();
-            }
-            function dhcFsCerrar(){
-                dhcFsCerrarStream();
-                if(dhcFsCropper){dhcFsCropper.destroy();dhcFsCropper=null;}
-                document.getElementById("dhcFullscreen").style.display="none";
-                document.body.style.overflow="";
-            }
-            function dhcFsAbrirStream(){
-                dhcFsCerrarStream();
-                navigator.mediaDevices.getUserMedia({video:{facingMode:dhcFsFacingMode,width:{ideal:1280},height:{ideal:720}}})
-                .then(s=>{dhcFsStream=s;document.getElementById("dhcFsVideo").srcObject=s;})
-                .catch(e=>Swal.fire("Error","No se pudo acceder a la cámara: "+e.message,"error"));
-            }
-            function dhcFsCerrarStream(){
-                if(dhcFsStream){dhcFsStream.getTracks().forEach(t=>t.stop());dhcFsStream=null;}
-            }
-        </script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
-        /* cambio txtfecha fin */
+            });
+        });
+    </script>
+                /* cambio txtfecha fin */
 }
 
-    <style>
-        /* ✅ Tooltips Bootstrap: fondo verde oscuro + texto blanco */
-        .tooltip .tooltip-inner {
-            background-color: #1f7a3a !important;
-            /* verde oscuro */
-            color: #ffffff !important;
-            /* blanco */
-            opacity: 1 !important;
-        }
-
-        /* ✅ Color de la flechita (arrow) */
-        .bs-tooltip-top .tooltip-arrow::before {
-            border-top-color: #1f7a3a !important;
-        }
-
-        .bs-tooltip-bottom .tooltip-arrow::before {
-            border-bottom-color: #1f7a3a !important;
-        }
-
-        .bs-tooltip-start .tooltip-arrow::before {
-            border-left-color: #1f7a3a !important;
-        }
-
-        .bs-tooltip-end .tooltip-arrow::before {
-            border-right-color: #1f7a3a !important;
-        }
-    </style>
+<style>
+    /* ✅ Tooltips Bootstrap: fondo verde oscuro + texto blanco */
+    .tooltip .tooltip-inner {
+        background-color: #1f7a3a !important;
+        /* verde oscuro */
+        color: #ffffff !important;
+        /* blanco */
+        opacity: 1 !important;
     }
 
+    /* ✅ Color de la flechita (arrow) */
+    .bs-tooltip-top .tooltip-arrow::before {
+        border-top-color: #1f7a3a !important;
+    }
+
+    .bs-tooltip-bottom .tooltip-arrow::before {
+        border-bottom-color: #1f7a3a !important;
+    }
+
+    .bs-tooltip-start .tooltip-arrow::before {
+        border-left-color: #1f7a3a !important;
+    }
+
+    .bs-tooltip-end .tooltip-arrow::before {
+        border-right-color: #1f7a3a !important;
+    }
+</style>
+}

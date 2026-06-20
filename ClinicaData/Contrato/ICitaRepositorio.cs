@@ -160,5 +160,9 @@ namespace ClinicaData.Contrato
         Task<string> GuardarDiagnosticoIA(int idCita, string diagnosticoIA);
 
 
+
+        Task<string> GuardarIndicaciones(int idCita, string indicaciones);
+
+
     }
 }

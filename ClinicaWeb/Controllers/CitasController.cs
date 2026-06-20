@@ -2329,6 +2329,35 @@ LIMIT 1;
                 return Json(new { ok = false, msg = "Error: " + ex.Message });
             }
         }
+        // ── NUEVA VISTA POPUP ANÁLISIS IA ──
+        [HttpGet]
+        [Authorize(Roles = "Doctor,Administrador")]
+        public IActionResult AnalisisIA(int idCita, string paciente = "")
+        {
+            ViewBag.IdCita = idCita;
+            ViewBag.Paciente = paciente;
+            return View();
+        }
+
+        // ── GUARDAR INDICACIONES DESDE LA VENTANA IA ──
+        [HttpPost]
+        [Authorize(Roles = "Doctor,Administrador")]
+        public async Task<IActionResult> GuardarIndicaciones(int idCita, [FromBody] JsonElement body)
+        {
+            if (idCita <= 0)
+                return Json(new { ok = false, msg = "IdCita inválido." });
+
+            string indicaciones = "";
+            if (body.TryGetProperty("indicaciones", out var prop))
+                indicaciones = prop.GetString() ?? "";
+
+            var resultado = await _repositorioCita.GuardarIndicaciones(idCita, indicaciones);
+
+            if (!string.IsNullOrEmpty(resultado))
+                return Json(new { ok = false, msg = resultado });
+
+            return Json(new { ok = true });
+        }
 
     }
 }   
