@@ -134,9 +134,26 @@
         }
 
     .slot-actions .btn {
-        font-size: 0.75rem;
-        padding: 0.25rem 0.4rem;
+        font-size: 0.7rem;
+        padding: 0.18rem 0.3rem;
         white-space: nowrap;
+    }
+
+    .slot-actions {
+        gap: 3px !important;
+    }
+
+    /* Modal IA: z-index superior para evitar conflicto de backdrops */
+    #mdIA {
+        z-index: 1060 !important;
+    }
+
+        #mdIA ~ .modal-backdrop {
+            z-index: 1055 !important;
+        }
+    /* Cuando mdIA está abierto, el backdrop anterior queda debajo */
+    .modal-backdrop:last-of-type {
+        z-index: 1055 !important;
     }
 
     /* ===== RESPONSIVE MÓVIL ===== */
@@ -706,7 +723,7 @@
 @* /* cambio comienzo */ *@
 
     <!-- ===== SUBMODAL IA ===== -->
-    <div class="modal fade" id="mdIA" tabindex="-1" aria-labelledby="mdIALabel" aria-hidden="true">
+    <div class="modal fade" id="mdIA" tabindex="-1" aria-labelledby="mdIALabel" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header" style="background:#198754;color:#fff;">
@@ -1205,20 +1222,23 @@
                 if (tieneCitaEfectiva) {
                     // --- BLOQUE CITA ACTIVA ---
                     const btn = document.createElement("button");
-                    btn.className = "btn btn-sm btn-light px-2";
-                    btn.textContent = "Ver";
+                    btn.className = "btn btn-sm btn-light px-1";
+                    btn.innerHTML = '<i class="fas fa-eye"></i>';
+                    btn.title = "Ver detalle cita";
                     btn.onclick = (ev) => { ev.stopPropagation(); abrirModalCita(s); };
                     acciones.appendChild(btn);
 
                     const btnRepro = document.createElement("button");
-                    btnRepro.className = "btn btn-sm btn-dark px-2";
-                    btnRepro.textContent = "Repro";
+                    btnRepro.className = "btn btn-sm btn-dark px-1";
+                    btnRepro.innerHTML = '<i class="fas fa-calendar-alt"></i>';
+                    btnRepro.title = "Reprogramar";
                     btnRepro.onclick = (ev) => { ev.stopPropagation(); abrirModalReprogramar(s); };
                     acciones.appendChild(btnRepro);
 
                     const btnCancel = document.createElement("button");
-                    btnCancel.className = "btn btn-sm btn-warning text-dark fw-bold px-2";
-                    btnCancel.innerHTML = '<i class="bi bi-x-circle"></i> Canc';
+                    btnCancel.className = "btn btn-sm btn-warning text-dark fw-bold px-1";
+                    btnCancel.innerHTML = '<i class="fas fa-times"></i>';
+                    btnCancel.title = "Cancelar cita";
                     btnCancel.onclick = function(ev) {
                         ev.stopPropagation();
                         let idCita = s.idCita || (s.cita ? s.cita.idCita : 0) || s.IdCita || (s.cita ? s.cita.IdCita : 0);
@@ -1237,7 +1257,7 @@
                     const btnChk = document.createElement("button");
                     btnChk.className = "btn btn-sm btn-chk-calcom text-white px-2";
                     btnChk.title = "Chequear integridad en Cal.com";
-                    btnChk.innerHTML = '<i class="fa fa-sync"></i> Sinc';
+                    btnChk.innerHTML = '<i class="fa fa-sync"></i>';
                     btnChk.onclick = (e) => {
                         e.stopPropagation();
                         let idCitaChk = s.idCita || (s.cita ? s.cita.idCita : 0) || s.IdCita || (s.cita ? s.cita.IdCita : 0);
@@ -1253,6 +1273,7 @@
                     btnIA.className = "btn btn-sm btn-success px-2";
                     btnIA.title = "Análisis IA + Indicaciones";
                     btnIA.innerHTML = '<i class="fas fa-robot"></i> IA';
+                    btnIA.style.cssText = "font-size:0.7rem;padding:0.2rem 0.35rem;";
                     btnIA.onclick = (e) => {
                         e.stopPropagation();
                         abrirModalIA(s);
@@ -1574,6 +1595,9 @@
             }
 
             // 5) Abrir modal
+            // Limpiar backdrops huérfanos antes de abrir
+            document.querySelectorAll(".modal-backdrop").forEach(function(b) { b.remove(); });
+            document.body.classList.remove("modal-open");
             bootstrap.Modal.getOrCreateInstance(modalEl).show();
 
             // 6) Cargar detalles de reconfirmación
@@ -2235,6 +2259,19 @@
             var iaImagenBlob = null;
 
             function abrirModalIA(slot) {
+                // Cerrar cualquier modal abierto para evitar backdrops apilados
+                document.querySelectorAll(".modal.show").forEach(function(m) {
+                    const inst = bootstrap.Modal.getInstance(m);
+                    if(inst) inst.hide();
+                });
+                // Limpiar backdrops huérfanos
+                setTimeout(function() {
+                    document.querySelectorAll(".modal-backdrop").forEach(function(b) { b.remove(); });
+                    document.body.classList.remove("modal-open");
+                    document.body.style.overflow = "";
+                    document.body.style.paddingRight = "";
+                }, 200);
+
                 const cita = (slot && slot.cita) ? slot.cita : slot;
                 iaIdCita = cita.idCita || slot.idCita || 0;
 
