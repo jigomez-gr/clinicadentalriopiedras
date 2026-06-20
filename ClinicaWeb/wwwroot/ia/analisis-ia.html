@@ -1,524 +1,625 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>🤖 Análisis IA — __PACIENTE__</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css"/>
-<style>
-body { background:#f0fdf4; font-family:system-ui,sans-serif; margin:0; }
-.ia-header { background:#198754; color:#fff; padding:.75rem 1.25rem; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
-.ia-body { padding:1rem; max-width:900px; margin:0 auto; }
-.indicaciones-box { background:#fff; border:1px solid #c3e6cb; border-radius:.5rem; padding:1rem; margin-bottom:1rem; }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🤖 Análisis IA — __PACIENTE__</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" />
+    <style>
+        body {
+            background: #f0fdf4;
+            font-family: system-ui,sans-serif;
+            margin: 0;
+        }
 
-/* Pantalla completa cámara — idéntico a CitasAsignadas */
-#docFullscreen {
-    display: none;
-    position: fixed;
-    top: 0; left: 0;
-    width: 100vw; height: 100vh;
-    background: #000;
-    z-index: 99999;
-    flex-direction: column;
-    overflow-y: auto;
-}
-#docFullscreen.activo { display: flex; }
-#docFullscreen .fs-toolbar {
-    background: #1a1a2e;
-    padding: 8px 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-    flex-shrink: 0;
-}
-#docFullscreen .fs-area {
-    flex: 1;
-    min-height: 0;
-    position: relative;
-    background: #000;
-}
-#docFullscreen .fs-controls {
-    background: #1a1a2e;
-    padding: 8px 12px;
-    flex-shrink: 0;
-}
-#docFullscreen .fs-resultado {
-    background: #0f3460;
-    color: #fff;
-    padding: 12px;
-    flex-shrink: 0;
-    display: none;
-    white-space: pre-line;
-    font-size: .9rem;
-    max-height: 35vh;
-    overflow-y: auto;
-}
-#docFullscreen .fs-resultado.visible { display: block; }
-</style>
+        .ia-header {
+            background: #198754;
+            color: #fff;
+            padding: .75rem 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .ia-body {
+            padding: 1rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .indicaciones-box {
+            background: #fff;
+            border: 1px solid #c3e6cb;
+            border-radius: .5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Pantalla completa cámara — idéntico a CitasAsignadas */
+        #docFullscreen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 99999;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+            #docFullscreen.activo {
+                display: flex;
+            }
+
+            #docFullscreen .fs-toolbar {
+                background: #1a1a2e;
+                padding: 8px 12px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex-wrap: wrap;
+                flex-shrink: 0;
+            }
+
+            #docFullscreen .fs-area {
+                flex: 1;
+                min-height: 0;
+                position: relative;
+                background: #000;
+            }
+
+            #docFullscreen .fs-controls {
+                background: #1a1a2e;
+                padding: 8px 12px;
+                flex-shrink: 0;
+            }
+
+            #docFullscreen .fs-resultado {
+                background: #0f3460;
+                color: #fff;
+                padding: 12px;
+                flex-shrink: 0;
+                display: none;
+                white-space: pre-line;
+                font-size: .9rem;
+                max-height: 35vh;
+                overflow-y: auto;
+            }
+
+                #docFullscreen .fs-resultado.visible {
+                    display: block;
+                }
+    </style>
 </head>
 <body>
 
-<!-- CABECERA -->
-<div class="ia-header">
-  <div><i class="fas fa-robot me-2"></i><strong>Análisis IA</strong><span class="ms-2 opacity-75 small" id="hdrPaciente">__PACIENTE__</span></div>
-  <button class="btn btn-sm btn-outline-light" onclick="window.close()"><i class="fas fa-times me-1"></i>Cerrar</button>
-</div>
-
-<!-- PANTALLA COMPLETA CÁMARA — idéntica a CitasAsignadas -->
-<div id="docFullscreen">
-  <div class="fs-toolbar">
-    <button type="button" class="btn btn-outline-light btn-sm" id="fsBtnVolver">
-      <i class="fas fa-arrow-left me-1"></i>Volver
-    </button>
-    <span class="text-white small ms-2">Cámara — captura, recorta y analiza</span>
-    <div class="ms-auto">
-      <button type="button" class="btn btn-warning btn-sm d-none" id="fsBtnVerResultados">
-        <i class="fas fa-eye me-1"></i>Ver resultados y volver
-      </button>
+    <!-- CABECERA -->
+    <div class="ia-header">
+        <div><i class="fas fa-robot me-2"></i><strong>Análisis IA</strong><span class="ms-2 opacity-75 small" id="hdrPaciente">__PACIENTE__</span></div>
+        <button class="btn btn-sm btn-outline-light" onclick="window.close()"><i class="fas fa-times me-1"></i>Cerrar</button>
     </div>
-  </div>
-  <div class="fs-area" id="fsArea">
-    <div id="fsStreamDiv" style="width:100%;height:100%;display:flex;flex-direction:column;">
-      <video id="fsVideo" autoplay playsinline style="width:100%;flex:1;object-fit:cover;background:#000;"></video>
-      <div style="background:#1a1a2e;padding:10px;display:flex;gap:10px;flex-wrap:wrap;">
-        <button type="button" class="btn btn-primary" id="fsBtnCapturar">
-          <i class="fas fa-camera me-1"></i>Capturar foto
-        </button>
-        <button type="button" class="btn btn-outline-light" id="fsBtnVoltearFS">
-          <i class="fas fa-sync-alt me-1"></i>Voltear cámara
-        </button>
-      </div>
+
+    <!-- PANTALLA COMPLETA CÁMARA — idéntica a CitasAsignadas -->
+    <div id="docFullscreen">
+        <div class="fs-toolbar">
+            <button type="button" class="btn btn-outline-light btn-sm" id="fsBtnVolver">
+                <i class="fas fa-arrow-left me-1"></i>Volver
+            </button>
+            <span class="text-white small ms-2">Cámara — captura, recorta y analiza</span>
+            <div class="ms-auto">
+                <button type="button" class="btn btn-warning btn-sm d-none" id="fsBtnVerResultados">
+                    <i class="fas fa-eye me-1"></i>Ver resultados y volver
+                </button>
+            </div>
+        </div>
+        <div class="fs-area" id="fsArea">
+            <div id="fsStreamDiv" style="width:100%;height:100%;display:flex;flex-direction:column;">
+                <video id="fsVideo" autoplay playsinline style="width:100%;flex:1;object-fit:cover;background:#000;"></video>
+                <div style="background:#1a1a2e;padding:10px;display:flex;gap:10px;flex-wrap:wrap;">
+                    <button type="button" class="btn btn-primary" id="fsBtnCapturar">
+                        <i class="fas fa-camera me-1"></i>Capturar foto
+                    </button>
+                    <button type="button" class="btn btn-outline-light" id="fsBtnVoltearFS">
+                        <i class="fas fa-sync-alt me-1"></i>Voltear cámara
+                    </button>
+                </div>
+            </div>
+            <div id="fsCropperDiv" style="display:none;width:100%;height:100%;overflow:auto;background:#111;">
+                <img id="fsImgCropper" src="" alt="Recortar" style="max-width:100%;display:block;" />
+            </div>
+        </div>
+        <div class="fs-controls" id="fsControles" style="display:none;">
+            <div class="d-flex gap-2 align-items-center mb-2 flex-wrap">
+                <span class="text-white small">Zoom:</span>
+                <i class="fas fa-search-minus text-white"></i>
+                <input type="range" id="fsSliderZoom" min="0.1" max="5" step="0.05" value="0.1"
+                       class="form-range flex-grow-1" style="max-width:260px;" />
+                <i class="fas fa-search-plus text-white"></i>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-light" id="fsBtnModeMover">
+                        <i class="fas fa-hand-paper me-1"></i>Mover
+                    </button>
+                    <button type="button" class="btn btn-outline-light active" id="fsBtnModeRecortar">
+                        <i class="fas fa-crop-alt me-1"></i>Recortar
+                    </button>
+                </div>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="fsBtnReset">
+                    <i class="fas fa-undo"></i> Reset
+                </button>
+                <button type="button" class="btn btn-success ms-auto" id="fsBtnAnalizarFS">
+                    <i class="fas fa-microscope me-1"></i>Analizar recorte con IA
+                </button>
+            </div>
+        </div>
+        <div class="fs-resultado" id="fsResultado"></div>
     </div>
-    <div id="fsCropperDiv" style="display:none;width:100%;height:100%;">
-      <img id="fsImgCropper" src="" alt="Recortar" style="max-width:100%;display:block;" />
+
+    <!-- CUERPO -->
+    <div class="ia-body">
+        <input type="hidden" id="iaIdCita" value="__IDCITA__" />
+
+        <div class="indicaciones-box">
+            <label class="fw-bold mb-1"><i class="fas fa-notes-medical me-1 text-warning"></i>Indicaciones del doctor</label>
+            <textarea id="iaIndicaciones" class="form-control mb-2" rows="3" placeholder="Diagnóstico e indicaciones para el paciente..."></textarea>
+            <button class="btn btn-warning btn-sm" id="btnGuardarInd"><i class="fas fa-save me-1"></i>Guardar indicaciones</button>
+            <span id="msgGuardado" class="text-success ms-3 small d-none">✔ Guardado correctamente</span>
+            <span id="msgError" class="text-danger ms-3 small d-none"></span>
+        </div>
+
+        <hr />
+
+        <div class="mb-3">
+            <label class="fw-bold small"><i class="fas fa-stethoscope me-1"></i>Tipo de análisis</label>
+            <select class="form-select form-select-sm" id="iaServicio" style="max-width:240px;">
+                <option value="dental">🦷 Dental (boca/encías)</option>
+                <option value="rx">🩻 Radiografía dental</option>
+                <option value="derma">🔬 Dermatología</option>
+                <option value="belleza">✨ Estética</option>
+                <option value="general">🏥 General</option>
+            </select>
+        </div>
+
+        <ul class="nav nav-tabs mb-3">
+            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabCamara"><i class="fas fa-camera me-1"></i>Cámara</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabPegar"><i class="fas fa-paste me-1"></i>Pegar</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabFichero"><i class="fas fa-file-image me-1"></i>Fichero</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabBDPac"><i class="fas fa-database me-1"></i>Doc. paciente BD</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabBDDoc"><i class="fas fa-user-md me-1"></i>Doc. doctor BD</button></li>
+        </ul>
+
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="tabCamara">
+                <button type="button" class="btn btn-success" id="docBtnAbrirCamara">
+                    <i class="fas fa-camera me-1"></i>Abrir cámara a pantalla completa
+                </button>
+                <p class="text-muted small mt-2 mb-1">Pantalla completa para capturar, recortar con zoom y analizar.</p>
+                <div id="docCamaraMiniPreview" class="d-none mt-1">
+                    <img id="docCamaraMiniImg" src="" style="max-height:70px;border-radius:6px;border:2px solid #198754;" />
+                    <span class="badge bg-success ms-2">✓ Imagen capturada</span>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="tabPegar">
+                <div class="alert alert-info small py-2">Haz PrintScreen, clic en el área y pega con <kbd>Ctrl+V</kbd>.</div>
+                <div id="docPasteArea" tabindex="0"
+                     style="min-height:100px;border:2px dashed #6c757d;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#f8f9fa;"
+                     class="mb-2">
+                    <span class="text-muted small">Clic aquí y pega (Ctrl+V)</span>
+                </div>
+                <div id="docPastePreview" class="d-none mb-2">
+                    <img id="docPasteImg" src="" style="max-width:100%;max-height:180px;border-radius:8px;border:1px solid #dee2e6;" />
+                </div>
+                <button type="button" class="btn btn-success btn-sm d-none" id="docBtnAnalizarPaste">
+                    <i class="fas fa-microscope me-1"></i>Analizar captura con IA
+                </button>
+            </div>
+            <div class="tab-pane fade" id="tabFichero">
+                <input type="file" class="form-control form-control-sm mb-2" id="docFileIA" accept="image/*" />
+                <button type="button" class="btn btn-success btn-sm" id="docBtnAnalizarFichero">
+                    <i class="fas fa-microscope me-1"></i>Analizar fichero con IA
+                </button>
+            </div>
+            <div class="tab-pane fade" id="tabBDPac">
+                <p class="small text-muted mb-2" id="docLblBDInfo">Cargando...</p>
+                <button type="button" class="btn btn-success btn-sm" id="docBtnAnalizarBD" disabled>
+                    <i class="fas fa-database me-1"></i>Analizar doc. paciente con IA
+                </button>
+            </div>
+            <div class="tab-pane fade" id="tabBDDoc">
+                <p class="small text-muted mb-2" id="docLblDoctorBDInfo">Cargando...</p>
+                <button type="button" class="btn btn-success btn-sm" id="docBtnAnalizarDoctorBD" disabled>
+                    <i class="fas fa-user-md me-1"></i>Analizar doc. doctor con IA
+                </button>
+                <button type="button" class="btn btn-warning btn-sm ms-2" id="btnDescDocDoctor" disabled>
+                    <i class="fas fa-download me-1"></i>Descargar doc. doctor
+                </button>
+            </div>
+
+            <!-- GUARDAR DOC DOCTOR -->
+            <div class="mt-3 p-3 border rounded bg-white">
+                <label class="fw-bold small mb-2"><i class="fas fa-file-medical me-1 text-success"></i>Guardar documento del doctor</label>
+                <div class="mb-2">
+                    <input type="file" class="form-control form-control-sm" id="fileDocDoctor" accept="image/*,.pdf,.doc,.docx" />
+                    <small class="text-muted">Selecciona un fichero, o si hay imagen recortada de cámara se usará automáticamente al guardar indicaciones.</small>
+                </div>
+                <button type="button" class="btn btn-success btn-sm" id="btnGuardarDocDoctor">
+                    <i class="fas fa-save me-1"></i>Guardar documento del doctor
+                </button>
+                <span id="msgDocGuardado" class="text-success ms-3 small d-none">✔ Documento guardado</span>
+                <span id="msgDocError" class="text-danger ms-3 small d-none"></span>
+            </div>
+        </div>
+
+        <div id="docResultadoIA" class="d-none mt-3">
+            <label class="form-label fw-bold text-success"><i class="fas fa-check-circle me-1"></i>Resultado del análisis IA:</label>
+            <div class="alert alert-success small py-2 mb-1" id="docTextoIA" style="white-space:pre-line;max-height:220px;overflow-y:auto;"></div>
+            <button type="button" class="btn btn-sm btn-outline-success" id="btnCopiarInd">
+                <i class="fas fa-arrow-up me-1"></i>Copiar a Indicaciones
+            </button>
+        </div>
     </div>
-  </div>
-  <div class="fs-controls" id="fsControles" style="display:none;">
-    <div class="d-flex gap-2 align-items-center mb-2 flex-wrap">
-      <span class="text-white small">Zoom:</span>
-      <i class="fas fa-search-minus text-white"></i>
-      <input type="range" id="fsSliderZoom" min="0.1" max="5" step="0.05" value="0.1"
-             class="form-range flex-grow-1" style="max-width:260px;" />
-      <i class="fas fa-search-plus text-white"></i>
-    </div>
-    <div class="d-flex gap-2 flex-wrap">
-      <div class="btn-group btn-group-sm">
-        <button type="button" class="btn btn-outline-light" id="fsBtnModeMover">
-          <i class="fas fa-hand-paper me-1"></i>Mover
-        </button>
-        <button type="button" class="btn btn-outline-light active" id="fsBtnModeRecortar">
-          <i class="fas fa-crop-alt me-1"></i>Recortar
-        </button>
-      </div>
-      <button type="button" class="btn btn-outline-secondary btn-sm" id="fsBtnReset">
-        <i class="fas fa-undo"></i> Reset
-      </button>
-      <button type="button" class="btn btn-success ms-auto" id="fsBtnAnalizarFS">
-        <i class="fas fa-microscope me-1"></i>Analizar recorte con IA
-      </button>
-    </div>
-  </div>
-  <div class="fs-resultado" id="fsResultado"></div>
-</div>
 
-<!-- CUERPO -->
-<div class="ia-body">
-  <input type="hidden" id="iaIdCita" value="__IDCITA__"/>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+    <script>
+        // Variables — igual que CitasAsignadas
+        const IA_ID_CITA = parseInt(document.getElementById('iaIdCita').value) || 0;
+        var docPacienteBase64 = null, docPacienteContentType = null;
+        var docDoctorBase64 = null, docDoctorContentType = null;
+        var docImagenBlob = null;
+        var fsCropper = null, fsStream = null, fsFacingMode = 'environment';
 
-  <div class="indicaciones-box">
-    <label class="fw-bold mb-1"><i class="fas fa-notes-medical me-1 text-warning"></i>Indicaciones del doctor</label>
-    <textarea id="iaIndicaciones" class="form-control mb-2" rows="3" placeholder="Diagnóstico e indicaciones para el paciente..."></textarea>
-    <button class="btn btn-warning btn-sm" id="btnGuardarInd"><i class="fas fa-save me-1"></i>Guardar indicaciones</button>
-    <span id="msgGuardado" class="text-success ms-3 small d-none">✔ Guardado correctamente</span>
-    <span id="msgError" class="text-danger ms-3 small d-none"></span>
-  </div>
-
-  <hr/>
-
-  <div class="mb-3">
-    <label class="fw-bold small"><i class="fas fa-stethoscope me-1"></i>Tipo de análisis</label>
-    <select class="form-select form-select-sm" id="iaServicio" style="max-width:240px;">
-      <option value="dental">🦷 Dental (boca/encías)</option>
-      <option value="rx">🩻 Radiografía dental</option>
-      <option value="derma">🔬 Dermatología</option>
-      <option value="belleza">✨ Estética</option>
-      <option value="general">🏥 General</option>
-    </select>
-  </div>
-
-  <ul class="nav nav-tabs mb-3">
-    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabCamara"><i class="fas fa-camera me-1"></i>Cámara</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabPegar"><i class="fas fa-paste me-1"></i>Pegar</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabFichero"><i class="fas fa-file-image me-1"></i>Fichero</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabBDPac"><i class="fas fa-database me-1"></i>Doc. paciente BD</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabBDDoc"><i class="fas fa-user-md me-1"></i>Doc. doctor BD</button></li>
-  </ul>
-
-  <div class="tab-content">
-    <div class="tab-pane fade show active" id="tabCamara">
-      <button type="button" class="btn btn-success" id="docBtnAbrirCamara">
-        <i class="fas fa-camera me-1"></i>Abrir cámara a pantalla completa
-      </button>
-      <p class="text-muted small mt-2 mb-1">Pantalla completa para capturar, recortar con zoom y analizar.</p>
-      <div id="docCamaraMiniPreview" class="d-none mt-1">
-        <img id="docCamaraMiniImg" src="" style="max-height:70px;border-radius:6px;border:2px solid #198754;"/>
-        <span class="badge bg-success ms-2">✓ Imagen capturada</span>
-      </div>
-    </div>
-    <div class="tab-pane fade" id="tabPegar">
-      <div class="alert alert-info small py-2">Haz PrintScreen, clic en el área y pega con <kbd>Ctrl+V</kbd>.</div>
-      <div id="docPasteArea" tabindex="0"
-           style="min-height:100px;border:2px dashed #6c757d;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#f8f9fa;"
-           class="mb-2">
-        <span class="text-muted small">Clic aquí y pega (Ctrl+V)</span>
-      </div>
-      <div id="docPastePreview" class="d-none mb-2">
-        <img id="docPasteImg" src="" style="max-width:100%;max-height:180px;border-radius:8px;border:1px solid #dee2e6;"/>
-      </div>
-      <button type="button" class="btn btn-success btn-sm d-none" id="docBtnAnalizarPaste">
-        <i class="fas fa-microscope me-1"></i>Analizar captura con IA
-      </button>
-    </div>
-    <div class="tab-pane fade" id="tabFichero">
-      <input type="file" class="form-control form-control-sm mb-2" id="docFileIA" accept="image/*"/>
-      <button type="button" class="btn btn-success btn-sm" id="docBtnAnalizarFichero">
-        <i class="fas fa-microscope me-1"></i>Analizar fichero con IA
-      </button>
-    </div>
-    <div class="tab-pane fade" id="tabBDPac">
-      <p class="small text-muted mb-2" id="docLblBDInfo">Cargando...</p>
-      <button type="button" class="btn btn-success btn-sm" id="docBtnAnalizarBD" disabled>
-        <i class="fas fa-database me-1"></i>Analizar doc. paciente con IA
-      </button>
-    </div>
-    <div class="tab-pane fade" id="tabBDDoc">
-      <p class="small text-muted mb-2" id="docLblDoctorBDInfo">Cargando...</p>
-      <button type="button" class="btn btn-success btn-sm" id="docBtnAnalizarDoctorBD" disabled>
-        <i class="fas fa-user-md me-1"></i>Analizar doc. doctor con IA
-      </button>
-      <button type="button" class="btn btn-warning btn-sm ms-2" id="btnDescDocDoctor" disabled>
-        <i class="fas fa-download me-1"></i>Descargar doc. doctor
-      </button>
-    </div>
-  </div>
-
-  <div id="docResultadoIA" class="d-none mt-3">
-    <label class="form-label fw-bold text-success"><i class="fas fa-check-circle me-1"></i>Resultado del análisis IA:</label>
-    <div class="alert alert-success small py-2 mb-1" id="docTextoIA" style="white-space:pre-line;max-height:220px;overflow-y:auto;"></div>
-    <button type="button" class="btn btn-sm btn-outline-success" id="btnCopiarInd">
-      <i class="fas fa-arrow-up me-1"></i>Copiar a Indicaciones
-    </button>
-  </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
-<script>
-// Variables — igual que CitasAsignadas
-const IA_ID_CITA = parseInt(document.getElementById('iaIdCita').value) || 0;
-var docPacienteBase64 = null, docPacienteContentType = null;
-var docDoctorBase64   = null, docDoctorContentType   = null;
-var docImagenBlob     = null;
-var fsCropper = null, fsStream = null, fsFacingMode = 'environment';
-
-// Pantalla completa — idéntico a CitasAsignadas
-function fsAbrirPantallaCompleta() {
-    document.getElementById('docFullscreen').classList.add('activo');
-    document.body.style.overflow = 'hidden';
-    document.getElementById('fsStreamDiv').style.display = 'flex';
-    document.getElementById('fsCropperDiv').style.display = 'none';
-    document.getElementById('fsControles').style.display = 'none';
-    document.getElementById('fsResultado').classList.remove('visible');
-    document.getElementById('fsBtnVerResultados').classList.add('d-none');
-    fsAbrirStream();
-}
-function fsCerrarPantallaCompleta() {
-    fsCerrarStream();
-    if (fsCropper) { fsCropper.destroy(); fsCropper = null; }
-    document.getElementById('docFullscreen').classList.remove('activo');
-    document.body.style.overflow = '';
-}
-function fsAbrirStream() {
-    fsCerrarStream();
-    navigator.mediaDevices.getUserMedia({
-        video: { facingMode: fsFacingMode, width:{ideal:1280}, height:{ideal:720} }
-    }).then(s => {
-        fsStream = s;
-        document.getElementById('fsVideo').srcObject = s;
-    }).catch(e => Swal.fire('Error','No se pudo acceder a la cámara: '+e.message,'error'));
-}
-function fsCerrarStream() {
-    if (fsStream) { fsStream.getTracks().forEach(t=>t.stop()); fsStream=null; }
-}
-
-// Análisis desde pantalla completa — idéntico a CitasAsignadas
-function fsAnalizarBlob(blob, btn) {
-    const servicio = document.getElementById('iaServicio').value || 'dental';
-    const razon    = (document.getElementById('iaIndicaciones').value || '').trim();
-    const contexto = razon ? `El paciente describe: "${razon}". Analiza la imagen teniendo en cuenta este contexto.`
-                           : 'Analiza esta imagen clínica y describe los hallazgos observables.';
-    const form = new FormData();
-    form.append('idCita', IA_ID_CITA);
-    form.append('imagen', blob, 'imagen.jpg');
-    form.append('servicio', servicio);
-    form.append('contexto', contexto);
-    fetch('/Citas/AnalizarImagenIA', { method:'POST', body:form })
-    .then(r=>r.json())
-    .then(res => {
-        if (btn) { btn.disabled=false; btn.innerHTML='<i class="fas fa-microscope me-1"></i>Analizar recorte con IA'; }
-        if (res.ok) {
-            document.getElementById('fsResultado').innerText = res.diagnostico;
-            document.getElementById('fsResultado').classList.add('visible');
-            document.getElementById('fsBtnVerResultados').classList.remove('d-none');
-            document.getElementById('docTextoIA').innerText = res.diagnostico;
-            document.getElementById('docResultadoIA').classList.remove('d-none');
-            if (document.getElementById('iaIndicaciones').value.trim()==='')
-                document.getElementById('iaIndicaciones').value = res.diagnostico;
-        } else { Swal.fire('Error IA', res.msg||'Error desconocido', 'error'); }
-    })
-    .catch(() => {
-        if (btn) { btn.disabled=false; btn.innerHTML='<i class="fas fa-microscope me-1"></i>Analizar recorte con IA'; }
-        Swal.fire('Error','Fallo de comunicación.','error');
-    });
-}
-
-// Análisis general (tabs pegar/fichero/BD) — idéntico a CitasAsignadas
-function docAnalizarBlob(blob) {
-    if (!IA_ID_CITA) { Swal.fire('Aviso','No hay cita seleccionada.','warning'); return; }
-    Swal.fire({ title:'Analizando con IA...', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
-    const servicio = document.getElementById('iaServicio').value || 'dental';
-    const razon    = (document.getElementById('iaIndicaciones').value || '').trim();
-    const contexto = razon ? `El paciente describe: "${razon}". Analiza la imagen teniendo en cuenta este contexto.`
-                           : 'Analiza esta imagen clínica y describe los hallazgos observables.';
-    const form = new FormData();
-    form.append('idCita', IA_ID_CITA);
-    form.append('imagen', blob, 'imagen.jpg');
-    form.append('servicio', servicio);
-    form.append('contexto', contexto);
-    fetch('/Citas/AnalizarImagenIA', { method:'POST', body:form })
-    .then(r=>r.json())
-    .then(res => {
-        Swal.close();
-        if (res.ok) {
-            document.getElementById('docTextoIA').innerText = res.diagnostico;
-            document.getElementById('docResultadoIA').classList.remove('d-none');
-            document.getElementById('docResultadoIA').scrollIntoView({behavior:'smooth'});
-            if (document.getElementById('iaIndicaciones').value.trim()==='')
-                document.getElementById('iaIndicaciones').value = res.diagnostico;
-        } else { Swal.fire('Error IA', res.msg||'Error desconocido','error'); }
-    })
-    .catch(() => Swal.fire('Error','Fallo de comunicación con el servidor.','error'));
-}
-
-function guardarIndicaciones() {
-    const texto = document.getElementById('iaIndicaciones').value.trim();
-    document.getElementById('msgGuardado').classList.add('d-none');
-    document.getElementById('msgError').classList.add('d-none');
-    fetch(`/Citas/GuardarIndicaciones?idCita=${IA_ID_CITA}`, {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({indicaciones: texto})
-    }).then(r=>r.json()).then(res => {
-        if (res.ok) {
-            const ok = document.getElementById('msgGuardado');
-            ok.classList.remove('d-none');
-            setTimeout(()=>ok.classList.add('d-none'), 2500);
-        } else {
-            const err = document.getElementById('msgError');
-            err.textContent = res.msg||'Error al guardar';
-            err.classList.remove('d-none');
+        // Pantalla completa — idéntico a CitasAsignadas
+        function fsAbrirPantallaCompleta() {
+            document.getElementById('docFullscreen').classList.add('activo');
+            document.body.style.overflow = 'hidden';
+            document.getElementById('fsStreamDiv').style.display = 'flex';
+            document.getElementById('fsCropperDiv').style.display = 'none';
+            document.getElementById('fsControles').style.display = 'none';
+            document.getElementById('fsResultado').classList.remove('visible');
+            document.getElementById('fsBtnVerResultados').classList.add('d-none');
+            fsAbrirStream();
         }
-    }).catch(() => {
-        const err = document.getElementById('msgError');
-        err.textContent = 'Fallo de comunicación.';
-        err.classList.remove('d-none');
-    });
-}
+        function fsCerrarPantallaCompleta() {
+            fsCerrarStream();
+            if (fsCropper) { fsCropper.destroy(); fsCropper = null; }
+            document.getElementById('docFullscreen').classList.remove('activo');
+            document.body.style.overflow = '';
+        }
+        function fsAbrirStream() {
+            fsCerrarStream();
+            navigator.mediaDevices.getUserMedia({
+                video: { facingMode: fsFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } }
+            }).then(s => {
+                fsStream = s;
+                document.getElementById('fsVideo').srcObject = s;
+            }).catch(e => Swal.fire('Error', 'No se pudo acceder a la cámara: ' + e.message, 'error'));
+        }
+        function fsCerrarStream() {
+            if (fsStream) { fsStream.getTracks().forEach(t => t.stop()); fsStream = null; }
+        }
 
-async function descargarDocDoctor() {
-    const r = await fetch(`/Citas/DescargarDocumentoDoctor?idCita=${IA_ID_CITA}`);
-    if (!r.ok) { Swal.fire('Info','No hay documento del doctor.','info'); return; }
-    const blob = await r.blob();
-    const cd = r.headers.get('content-disposition')||'';
-    const m = /filename\*=UTF-8''([^;]+)|filename="?([^"]+)"?/i.exec(cd);
-    const filename = m ? decodeURIComponent(m[1]||m[2]||'') : `doc_doctor_${IA_ID_CITA}`;
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href=url; a.download=filename;
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),1000);
-}
+        // Análisis desde pantalla completa — idéntico a CitasAsignadas
+        function fsAnalizarBlob(blob, btn) {
+            const servicio = document.getElementById('iaServicio').value || 'dental';
+            const razon = (document.getElementById('iaIndicaciones').value || '').trim();
+            const contexto = razon ? `El paciente describe: "${razon}". Analiza la imagen teniendo en cuenta este contexto.`
+                : 'Analiza esta imagen clínica y describe los hallazgos observables.';
+            const form = new FormData();
+            form.append('idCita', IA_ID_CITA);
+            form.append('imagen', blob, 'imagen.jpg');
+            form.append('servicio', servicio);
+            form.append('contexto', contexto);
+            fetch('/Citas/AnalizarImagenIA', { method: 'POST', body: form })
+                .then(r => r.json())
+                .then(res => {
+                    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-microscope me-1"></i>Analizar recorte con IA'; }
+                    if (res.ok) {
+                        document.getElementById('fsResultado').innerText = res.diagnostico;
+                        document.getElementById('fsResultado').classList.add('visible');
+                        document.getElementById('fsBtnVerResultados').classList.remove('d-none');
+                        document.getElementById('docTextoIA').innerText = res.diagnostico;
+                        document.getElementById('docResultadoIA').classList.remove('d-none');
+                        if (document.getElementById('iaIndicaciones').value.trim() === '')
+                            document.getElementById('iaIndicaciones').value = res.diagnostico;
+                    } else { Swal.fire('Error IA', res.msg || 'Error desconocido', 'error'); }
+                })
+                .catch(() => {
+                    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-microscope me-1"></i>Analizar recorte con IA'; }
+                    Swal.fire('Error', 'Fallo de comunicación.', 'error');
+                });
+        }
 
-document.addEventListener('DOMContentLoaded', async function() {
+        // Análisis general (tabs pegar/fichero/BD) — idéntico a CitasAsignadas
+        function docAnalizarBlob(blob) {
+            if (!IA_ID_CITA) { Swal.fire('Aviso', 'No hay cita seleccionada.', 'warning'); return; }
+            Swal.fire({ title: 'Analizando con IA...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            const servicio = document.getElementById('iaServicio').value || 'dental';
+            const razon = (document.getElementById('iaIndicaciones').value || '').trim();
+            const contexto = razon ? `El paciente describe: "${razon}". Analiza la imagen teniendo en cuenta este contexto.`
+                : 'Analiza esta imagen clínica y describe los hallazgos observables.';
+            const form = new FormData();
+            form.append('idCita', IA_ID_CITA);
+            form.append('imagen', blob, 'imagen.jpg');
+            form.append('servicio', servicio);
+            form.append('contexto', contexto);
+            fetch('/Citas/AnalizarImagenIA', { method: 'POST', body: form })
+                .then(r => r.json())
+                .then(res => {
+                    Swal.close();
+                    if (res.ok) {
+                        document.getElementById('docTextoIA').innerText = res.diagnostico;
+                        document.getElementById('docResultadoIA').classList.remove('d-none');
+                        document.getElementById('docResultadoIA').scrollIntoView({ behavior: 'smooth' });
+                        if (document.getElementById('iaIndicaciones').value.trim() === '')
+                            document.getElementById('iaIndicaciones').value = res.diagnostico;
+                    } else { Swal.fire('Error IA', res.msg || 'Error desconocido', 'error'); }
+                })
+                .catch(() => Swal.fire('Error', 'Fallo de comunicación con el servidor.', 'error'));
+        }
 
-    // Botón guardar indicaciones
-    document.getElementById('btnGuardarInd').addEventListener('click', guardarIndicaciones);
+        function guardarIndicaciones() {
+            const texto = document.getElementById('iaIndicaciones').value.trim();
+            document.getElementById('msgGuardado').classList.add('d-none');
+            document.getElementById('msgError').classList.add('d-none');
+            fetch(`/Citas/GuardarIndicaciones?idCita=${IA_ID_CITA}`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ indicaciones: texto })
+            }).then(r => r.json()).then(res => {
+                if (res.ok) {
+                    const ok = document.getElementById('msgGuardado');
+                    ok.classList.remove('d-none');
+                    setTimeout(() => ok.classList.add('d-none'), 2500);
+                    // Si hay imagen recortada y no se ha subido fichero manual, guardarla como doc doctor
+                    const fileManual = document.getElementById('fileDocDoctor').files[0];
+                    if (!fileManual && docImagenBlob) {
+                        var rd = new FileReader();
+                        rd.onload = function (e) {
+                            guardarDocDoctor(e.target.result.split(',')[1], docImagenBlob.type || 'image/jpeg');
+                        };
+                        rd.readAsDataURL(docImagenBlob);
+                    }
+                } else {
+                    const err = document.getElementById('msgError');
+                    err.textContent = res.msg || 'Error al guardar';
+                    err.classList.remove('d-none');
+                }
+            }).catch(() => {
+                const err = document.getElementById('msgError');
+                err.textContent = 'Fallo de comunicación.';
+                err.classList.remove('d-none');
+            });
+        }
 
-    // Pantalla completa — eventos idénticos a CitasAsignadas
-    document.getElementById('docBtnAbrirCamara').addEventListener('click', fsAbrirPantallaCompleta);
-    document.getElementById('fsBtnVolver').addEventListener('click', fsCerrarPantallaCompleta);
+        function guardarDocDoctor(b64, tipo) {
+            const msgOk = document.getElementById('msgDocGuardado');
+            const msgErr = document.getElementById('msgDocError');
+            if (msgOk) msgOk.classList.add('d-none');
+            if (msgErr) msgErr.classList.add('d-none');
 
-    document.getElementById('fsBtnVoltearFS').addEventListener('click', function() {
-        fsFacingMode = fsFacingMode==='environment' ? 'user' : 'environment';
-        fsAbrirStream();
-    });
+            fetch('/Citas/GuardarDocumentoDoctor', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json;charset=utf-8' },
+                body: JSON.stringify({ IdCita: IA_ID_CITA, DocIndicacionesDoctor: b64, ContentTypeDoctor: tipo })
+            }).then(r => r.json()).then(res => {
+                if (res.data === '' || res.ok === true) {
+                    if (msgOk) { msgOk.classList.remove('d-none'); setTimeout(() => msgOk.classList.add('d-none'), 2500); }
+                } else {
+                    if (msgErr) { msgErr.textContent = res.data || res.msg || 'Error al guardar'; msgErr.classList.remove('d-none'); }
+                }
+            }).catch(() => { if (msgErr) { msgErr.textContent = 'Fallo de comunicación.'; msgErr.classList.remove('d-none'); } });
+        }
 
-    document.getElementById('fsBtnCapturar').addEventListener('click', function() {
-        const video = document.getElementById('fsVideo');
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
-        fsCerrarStream();
-        document.getElementById('fsStreamDiv').style.display = 'none';
-        const img = document.getElementById('fsImgCropper');
-        img.src = canvas.toDataURL('image/jpeg', 0.92);
-        document.getElementById('fsCropperDiv').style.display = 'block';
-        document.getElementById('fsControles').style.display = 'block';
-        if (fsCropper) { fsCropper.destroy(); fsCropper=null; }
-        fsCropper = new Cropper(img, {
-            aspectRatio: NaN, viewMode: 1, autoCropArea: 0.5,
-            responsive: true, movable: true, zoomable: true,
-            cropBoxMovable: true, cropBoxResizable: true, dragMode: 'crop'
+        async function descargarDocDoctor() {
+            const r = await fetch(`/Citas/DescargarDocumentoDoctor?idCita=${IA_ID_CITA}`);
+            if (!r.ok) { Swal.fire('Info', 'No hay documento del doctor.', 'info'); return; }
+            const blob = await r.blob();
+            const cd = r.headers.get('content-disposition') || '';
+            const m = /filename\*=UTF-8''([^;]+)|filename="?([^"]+)"?/i.exec(cd);
+            const filename = m ? decodeURIComponent(m[1] || m[2] || '') : `doc_doctor_${IA_ID_CITA}`;
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = filename;
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        document.addEventListener('DOMContentLoaded', async function () {
+
+            // Botón guardar indicaciones
+            document.getElementById('btnGuardarInd').addEventListener('click', guardarIndicaciones);
+
+            // Pantalla completa — eventos idénticos a CitasAsignadas
+            document.getElementById('docBtnAbrirCamara').addEventListener('click', fsAbrirPantallaCompleta);
+            document.getElementById('fsBtnVolver').addEventListener('click', fsCerrarPantallaCompleta);
+
+            document.getElementById('fsBtnVoltearFS').addEventListener('click', function () {
+                fsFacingMode = fsFacingMode === 'environment' ? 'user' : 'environment';
+                fsAbrirStream();
+            });
+
+            document.getElementById('fsBtnCapturar').addEventListener('click', function () {
+                const video = document.getElementById('fsVideo');
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+                canvas.getContext('2d').drawImage(video, 0, 0);
+                fsCerrarStream();
+                document.getElementById('fsStreamDiv').style.display = 'none';
+                const img = document.getElementById('fsImgCropper');
+                img.src = canvas.toDataURL('image/jpeg', 0.92);
+                document.getElementById('fsCropperDiv').style.display = 'block';
+                document.getElementById('fsControles').style.display = 'block';
+                if (fsCropper) { fsCropper.destroy(); fsCropper = null; }
+                fsCropper = new Cropper(img, {
+                    aspectRatio: NaN, viewMode: 1, autoCropArea: 0.5,
+                    responsive: true, movable: true, zoomable: true,
+                    cropBoxMovable: true, cropBoxResizable: true, dragMode: 'crop'
+                });
+                document.getElementById('fsSliderZoom').value = 0.1;
+            });
+
+            document.getElementById('fsSliderZoom').addEventListener('input', function () {
+                if (fsCropper) fsCropper.zoomTo(parseFloat(this.value));
+            });
+            document.getElementById('fsBtnReset').addEventListener('click', function () {
+                if (fsCropper) { fsCropper.reset(); document.getElementById('fsSliderZoom').value = 0.1; }
+            });
+            document.getElementById('fsBtnModeMover').addEventListener('click', function () {
+                if (!fsCropper) return;
+                fsCropper.setDragMode('move');
+                this.classList.add('active');
+                document.getElementById('fsBtnModeRecortar').classList.remove('active');
+            });
+            document.getElementById('fsBtnModeRecortar').addEventListener('click', function () {
+                if (!fsCropper) return;
+                fsCropper.setDragMode('crop');
+                this.classList.add('active');
+                document.getElementById('fsBtnModeMover').classList.remove('active');
+            });
+
+            document.getElementById('fsBtnAnalizarFS').addEventListener('click', function () {
+                if (!fsCropper) { Swal.fire('Aviso', 'Primero capture una foto.', 'warning'); return; }
+                const canvas = fsCropper.getCroppedCanvas({ maxWidth: 1600, maxHeight: 1600 });
+                const mx = Math.round(canvas.width * 0.10), my = Math.round(canvas.height * 0.10);
+                const full = document.createElement('canvas');
+                full.width = canvas.width + mx * 2; full.height = canvas.height + my * 2;
+                full.getContext('2d').drawImage(canvas, mx, my);
+                const btn = this;
+                btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Analizando...';
+                full.toBlob(function (blob) {
+                    docImagenBlob = blob;
+                    document.getElementById('docCamaraMiniImg').src = URL.createObjectURL(blob);
+                    document.getElementById('docCamaraMiniPreview').classList.remove('d-none');
+                    fsAnalizarBlob(blob, btn);
+                }, 'image/jpeg', 0.92);
+            });
+
+            document.getElementById('fsBtnVerResultados').addEventListener('click', function () {
+                fsCerrarPantallaCompleta();
+                setTimeout(function () {
+                    const diag = document.getElementById('docTextoIA').innerText;
+                    const ind = document.getElementById('iaIndicaciones');
+                    if (diag && ind.value.trim() === '') ind.value = diag;
+                    else if (diag) ind.value += '\n\n[IA] ' + diag;
+                    if (diag) { ind.focus(); ind.scrollIntoView({ behavior: 'smooth' }); }
+                    document.getElementById('docResultadoIA').scrollIntoView({ behavior: 'smooth' });
+                }, 350);
+            });
+
+            document.getElementById('btnCopiarInd').addEventListener('click', function () {
+                const d = document.getElementById('docTextoIA').innerText;
+                if (d) document.getElementById('iaIndicaciones').value = d;
+            });
+
+            // Pegar captura
+            const pasteArea = document.getElementById('docPasteArea');
+            pasteArea.addEventListener('click', function () { pasteArea.focus(); });
+            pasteArea.addEventListener('paste', function (e) {
+                for (var i = 0; i < (e.clipboardData ? e.clipboardData.items.length : 0); i++) {
+                    var item = e.clipboardData.items[i];
+                    if (item.type.startsWith('image/')) {
+                        var blob = item.getAsFile();
+                        docImagenBlob = blob;
+                        document.getElementById('docPasteImg').src = URL.createObjectURL(blob);
+                        document.getElementById('docPastePreview').classList.remove('d-none');
+                        document.getElementById('docBtnAnalizarPaste').classList.remove('d-none');
+                        pasteArea.querySelector('span').textContent = '✔ Captura pegada. Pulse Analizar.';
+                        break;
+                    }
+                }
+            });
+            document.getElementById('docBtnAnalizarPaste').addEventListener('click', function () {
+                if (docImagenBlob) docAnalizarBlob(docImagenBlob);
+            });
+
+            // Fichero
+            document.getElementById('docBtnAnalizarFichero').addEventListener('click', function () {
+                var file = document.getElementById('docFileIA').files[0];
+                if (!file) { Swal.fire('Aviso', 'Seleccione un fichero de imagen.', 'warning'); return; }
+                if (!file.type.startsWith('image/')) { Swal.fire('Aviso', 'Solo imágenes.', 'warning'); return; }
+                docAnalizarBlob(file);
+            });
+
+            // BD paciente
+            document.getElementById('docBtnAnalizarBD').addEventListener('click', function () {
+                if (!docPacienteBase64) return;
+                var b = atob(docPacienteBase64), a = new Uint8Array(b.length);
+                for (var i = 0; i < b.length; i++) a[i] = b.charCodeAt(i);
+                docAnalizarBlob(new Blob([a], { type: docPacienteContentType || 'image/jpeg' }));
+            });
+
+            // BD doctor
+            document.getElementById('docBtnAnalizarDoctorBD').addEventListener('click', function () {
+                if (!docDoctorBase64) return;
+                var b = atob(docDoctorBase64), a = new Uint8Array(b.length);
+                for (var i = 0; i < b.length; i++) a[i] = b.charCodeAt(i);
+                docAnalizarBlob(new Blob([a], { type: docDoctorContentType || 'image/jpeg' }));
+            });
+
+            document.getElementById('btnDescDocDoctor').addEventListener('click', descargarDocDoctor);
+
+            // Guardar documento del doctor (fichero seleccionado o imagen recortada)
+            document.getElementById('btnGuardarDocDoctor').addEventListener('click', function () {
+                const file = document.getElementById('fileDocDoctor').files[0];
+                if (file) {
+                    var rd = new FileReader();
+                    rd.onload = function (e) {
+                        guardarDocDoctor(e.target.result.split(',')[1], file.type);
+                    };
+                    rd.readAsDataURL(file);
+                } else if (docImagenBlob) {
+                    var rd = new FileReader();
+                    rd.onload = function (e) {
+                        guardarDocDoctor(e.target.result.split(',')[1], docImagenBlob.type || 'image/jpeg');
+                    };
+                    rd.readAsDataURL(docImagenBlob);
+                } else {
+                    Swal.fire('Aviso', 'Seleccione un fichero o capture una imagen primero.', 'warning');
+                }
+            });
+
+            // Carga inicial
+            if (!IA_ID_CITA) return;
+            try {
+                var r = await fetch('/Citas/ObtenerDetalleCita?idCita=' + IA_ID_CITA);
+                var res = await r.json();
+                if (!res.ok) return;
+                var dto = res.data;
+
+                document.getElementById('iaIndicaciones').value = (dto.indicaciones || '').trim();
+
+                if (dto.diagnosticoIA) {
+                    document.getElementById('docTextoIA').innerText = dto.diagnosticoIA;
+                    document.getElementById('docResultadoIA').classList.remove('d-none');
+                }
+
+                docPacienteBase64 = dto.documentoCitaUsr || null;
+                docPacienteContentType = dto.contentType || 'application/octet-stream';
+                var esImgPac = !!(docPacienteBase64 && (docPacienteContentType || '').startsWith('image/'));
+                document.getElementById('docBtnAnalizarBD').disabled = !esImgPac;
+                document.getElementById('docLblBDInfo').textContent = esImgPac
+                    ? 'Se analizará la imagen del paciente en BD.'
+                    : (docPacienteBase64 ? 'El doc. del paciente no es una imagen.' : 'No hay documento del paciente en BD.');
+
+                docDoctorBase64 = dto.docIndicacionesDoctor || null;
+                docDoctorContentType = dto.contentTypeDoctor || 'application/octet-stream';
+                var esImgDoc = !!(docDoctorBase64 && (docDoctorContentType || '').startsWith('image/'));
+                document.getElementById('docBtnAnalizarDoctorBD').disabled = !esImgDoc;
+                document.getElementById('btnDescDocDoctor').disabled = !docDoctorBase64;
+                document.getElementById('docLblDoctorBDInfo').textContent = esImgDoc
+                    ? 'Se analizará el documento del doctor en BD.'
+                    : (docDoctorBase64 ? 'El doc. del doctor no es una imagen.' : 'No hay documento del doctor en BD.');
+
+            } catch (e) { console.warn('No se pudo cargar detalle:', e); }
         });
-        document.getElementById('fsSliderZoom').value = 0.1;
-    });
-
-    document.getElementById('fsSliderZoom').addEventListener('input', function() {
-        if (fsCropper) fsCropper.zoomTo(parseFloat(this.value));
-    });
-    document.getElementById('fsBtnReset').addEventListener('click', function() {
-        if (fsCropper) { fsCropper.reset(); document.getElementById('fsSliderZoom').value=0.1; }
-    });
-    document.getElementById('fsBtnModeMover').addEventListener('click', function() {
-        if (!fsCropper) return;
-        fsCropper.setDragMode('move');
-        this.classList.add('active');
-        document.getElementById('fsBtnModeRecortar').classList.remove('active');
-    });
-    document.getElementById('fsBtnModeRecortar').addEventListener('click', function() {
-        if (!fsCropper) return;
-        fsCropper.setDragMode('crop');
-        this.classList.add('active');
-        document.getElementById('fsBtnModeMover').classList.remove('active');
-    });
-
-    document.getElementById('fsBtnAnalizarFS').addEventListener('click', function() {
-        if (!fsCropper) { Swal.fire('Aviso','Primero capture una foto.','warning'); return; }
-        const canvas = fsCropper.getCroppedCanvas({ maxWidth:1600, maxHeight:1600 });
-        const mx = Math.round(canvas.width*0.10), my = Math.round(canvas.height*0.10);
-        const full = document.createElement('canvas');
-        full.width = canvas.width+mx*2; full.height = canvas.height+my*2;
-        full.getContext('2d').drawImage(canvas, mx, my);
-        const btn = this;
-        btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin me-1"></i>Analizando...';
-        full.toBlob(function(blob) {
-            docImagenBlob = blob;
-            document.getElementById('docCamaraMiniImg').src = URL.createObjectURL(blob);
-            document.getElementById('docCamaraMiniPreview').classList.remove('d-none');
-            fsAnalizarBlob(blob, btn);
-        }, 'image/jpeg', 0.92);
-    });
-
-    document.getElementById('fsBtnVerResultados').addEventListener('click', function() {
-        fsCerrarPantallaCompleta();
-        setTimeout(function() {
-            const diag = document.getElementById('docTextoIA').innerText;
-            const ind  = document.getElementById('iaIndicaciones');
-            if (diag && ind.value.trim()==='') ind.value = diag;
-            else if (diag) ind.value += '\n\n[IA] ' + diag;
-            if (diag) { ind.focus(); ind.scrollIntoView({behavior:'smooth'}); }
-            document.getElementById('docResultadoIA').scrollIntoView({behavior:'smooth'});
-        }, 350);
-    });
-
-    document.getElementById('btnCopiarInd').addEventListener('click', function() {
-        const d = document.getElementById('docTextoIA').innerText;
-        if (d) document.getElementById('iaIndicaciones').value = d;
-    });
-
-    // Pegar captura
-    const pasteArea = document.getElementById('docPasteArea');
-    pasteArea.addEventListener('click', function() { pasteArea.focus(); });
-    pasteArea.addEventListener('paste', function(e) {
-        for (var i=0; i<(e.clipboardData ? e.clipboardData.items.length : 0); i++) {
-            var item = e.clipboardData.items[i];
-            if (item.type.startsWith('image/')) {
-                var blob = item.getAsFile();
-                docImagenBlob = blob;
-                document.getElementById('docPasteImg').src = URL.createObjectURL(blob);
-                document.getElementById('docPastePreview').classList.remove('d-none');
-                document.getElementById('docBtnAnalizarPaste').classList.remove('d-none');
-                pasteArea.querySelector('span').textContent = '✔ Captura pegada. Pulse Analizar.';
-                break;
-            }
-        }
-    });
-    document.getElementById('docBtnAnalizarPaste').addEventListener('click', function() {
-        if (docImagenBlob) docAnalizarBlob(docImagenBlob);
-    });
-
-    // Fichero
-    document.getElementById('docBtnAnalizarFichero').addEventListener('click', function() {
-        var file = document.getElementById('docFileIA').files[0];
-        if (!file) { Swal.fire('Aviso','Seleccione un fichero de imagen.','warning'); return; }
-        if (!file.type.startsWith('image/')) { Swal.fire('Aviso','Solo imágenes.','warning'); return; }
-        docAnalizarBlob(file);
-    });
-
-    // BD paciente
-    document.getElementById('docBtnAnalizarBD').addEventListener('click', function() {
-        if (!docPacienteBase64) return;
-        var b=atob(docPacienteBase64), a=new Uint8Array(b.length);
-        for(var i=0;i<b.length;i++) a[i]=b.charCodeAt(i);
-        docAnalizarBlob(new Blob([a],{type:docPacienteContentType||'image/jpeg'}));
-    });
-
-    // BD doctor
-    document.getElementById('docBtnAnalizarDoctorBD').addEventListener('click', function() {
-        if (!docDoctorBase64) return;
-        var b=atob(docDoctorBase64), a=new Uint8Array(b.length);
-        for(var i=0;i<b.length;i++) a[i]=b.charCodeAt(i);
-        docAnalizarBlob(new Blob([a],{type:docDoctorContentType||'image/jpeg'}));
-    });
-
-    document.getElementById('btnDescDocDoctor').addEventListener('click', descargarDocDoctor);
-
-    // Carga inicial
-    if (!IA_ID_CITA) return;
-    try {
-        var r   = await fetch('/Citas/ObtenerDetalleCita?idCita=' + IA_ID_CITA);
-        var res = await r.json();
-        if (!res.ok) return;
-        var dto = res.data;
-
-        document.getElementById('iaIndicaciones').value = (dto.indicaciones||'').trim();
-
-        if (dto.diagnosticoIA) {
-            document.getElementById('docTextoIA').innerText = dto.diagnosticoIA;
-            document.getElementById('docResultadoIA').classList.remove('d-none');
-        }
-
-        docPacienteBase64      = dto.documentoCitaUsr || null;
-        docPacienteContentType = dto.contentType || 'application/octet-stream';
-        var esImgPac = !!(docPacienteBase64 && (docPacienteContentType||'').startsWith('image/'));
-        document.getElementById('docBtnAnalizarBD').disabled = !esImgPac;
-        document.getElementById('docLblBDInfo').textContent = esImgPac
-            ? 'Se analizará la imagen del paciente en BD.'
-            : (docPacienteBase64 ? 'El doc. del paciente no es una imagen.' : 'No hay documento del paciente en BD.');
-
-        docDoctorBase64      = dto.docIndicacionesDoctor || null;
-        docDoctorContentType = dto.contentTypeDoctor || 'application/octet-stream';
-        var esImgDoc = !!(docDoctorBase64 && (docDoctorContentType||'').startsWith('image/'));
-        document.getElementById('docBtnAnalizarDoctorBD').disabled = !esImgDoc;
-        document.getElementById('btnDescDocDoctor').disabled = !docDoctorBase64;
-        document.getElementById('docLblDoctorBDInfo').textContent = esImgDoc
-            ? 'Se analizará el documento del doctor en BD.'
-            : (docDoctorBase64 ? 'El doc. del doctor no es una imagen.' : 'No hay documento del doctor en BD.');
-
-    } catch(e) { console.warn('No se pudo cargar detalle:', e); }
-});
-</script>
+    </script>
 </body>
 </html>

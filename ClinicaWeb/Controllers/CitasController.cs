@@ -931,6 +931,7 @@ namespace ClinicaWeb.Controllers
                             ? Convert.ToBase64String(cita.DocIndicacionesDoctor)
                             : null,
                         contentTypeDoctor = cita.ContentTypeDoctor ?? ""
+
                     };
 
                 }
