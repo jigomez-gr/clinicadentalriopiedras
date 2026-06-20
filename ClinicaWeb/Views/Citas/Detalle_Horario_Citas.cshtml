@@ -303,7 +303,20 @@
                                    title="Datos Identificativos del paciente" />
                         </div>
 
-                        <div class="col-12 col-md-4">
+                        <div class="col-12 col-md-2">
+                            <label class="form-label" title="Tipo de cita: Presencial, Telefónica o Virtual">Tipo</label>
+                            <input id="citaTipo" class="form-control" readonly title="Tipo de cita" />
+                        </div>
+
+                        <div class="col-12 col-md-2 d-flex align-items-end pb-1">
+                            <a id="btnUnirseCalcom" href="#" target="_blank"
+                               class="btn btn-info btn-sm w-100 d-none"
+                               title="Unirse a la reunión virtual en Cal.com">
+                                <i class="fas fa-video me-1"></i>Unirse
+                            </a>
+                        </div>
+
+                        <div class="col-12 col-md-3">
                             <label class="form-label"
                                    data-bs-toggle="tooltip" data-bs-placement="top"
                                    data-bs-custom-class="tooltip-agenda"
@@ -938,9 +951,9 @@
                     if (!idCitaIA) { Swal.fire("Aviso","ID de cita no encontrado.","warning"); return; }
                     const pac = encodeURIComponent(s.paciente || "");
                     const w=960,h=720,left=Math.max(0,(screen.width-w)/2),top=Math.max(0,(screen.height-h)/2);
-                    window.open(`/Citas/AnalisisIA?idCita=${idCitaIA}&paciente=${pac}`,
-                        `ia_${idCitaIA}`,
-                        `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no`);
+                    window.open("/Citas/AnalisisIA?idCita="+idCitaIA+"&paciente="+pac,
+                        "ia_"+idCitaIA,
+                        "width="+w+",height="+h+",left="+left+",top="+top+",resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no");
                 };
                 acciones.appendChild(btnIA);
 
@@ -1222,6 +1235,23 @@
         setVal("#citaPaciente", (cita.paciente || slot.paciente || "").trim());
         setVal("#citaEstado", (cita.estado || "").trim());
         setVal("#citaOrigen", (cita.origenCita || "").trim());
+
+        // Tipo de cita
+        const tipoMap = { P: "Presencial", T: "Telefónica", V: "Virtual" };
+        setVal("#citaTipo", tipoMap[cita.tipoDeCita] || cita.tipoDeCita || "");
+
+        // Botón Cal.com — solo visible si es Virtual y tiene URL
+        const btnCal = document.getElementById("btnUnirseCalcom");
+        if (btnCal) {
+            const urlVirtual = cita.urlCitaOTelefono || null;
+            if (urlVirtual && cita.tipoDeCita === "V") {
+                btnCal.href = urlVirtual;
+                btnCal.classList.remove("d-none");
+            } else {
+                btnCal.href = "#";
+                btnCal.classList.add("d-none");
+            }
+        }
         setVal("#citaRazon", (cita.razonCitaUsr || "").trim());
         setVal("#citaIndicaciones", (cita.indicaciones || "").trim());
 

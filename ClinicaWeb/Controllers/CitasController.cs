@@ -2329,7 +2329,23 @@ LIMIT 1;
                 return Json(new { ok = false, msg = "Error: " + ex.Message });
             }
         }
-       
+        // ── ANÁLISIS IA — sirve el HTML desde wwwroot/ia/analisis-ia.html ──
+        [HttpGet]
+        [Authorize(Roles = "Doctor,Administrador")]
+        public IActionResult AnalisisIA(int idCita, string paciente = "")
+        {
+            string rutaHtml = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "ia", "analisis-ia.html");
+
+            if (!System.IO.File.Exists(rutaHtml))
+                return Content("<h2>Error: no se encontró wwwroot/ia/analisis-ia.html</h2>", "text/html");
+
+            string html = System.IO.File.ReadAllText(rutaHtml, System.Text.Encoding.UTF8);
+            html = html.Replace("__IDCITA__", idCita.ToString());
+            html = html.Replace("__PACIENTE__", System.Net.WebUtility.HtmlEncode(paciente));
+
+            return Content(html, "text/html", System.Text.Encoding.UTF8);
+        }
+
         // ── GUARDAR INDICACIONES DESDE LA VENTANA IA ──
         [HttpPost]
         [Authorize(Roles = "Doctor,Administrador")]
@@ -2342,7 +2358,12 @@ LIMIT 1;
             if (body.TryGetProperty("indicaciones", out var prop))
                 indicaciones = prop.GetString() ?? "";
 
-            var resultado = await _repositorioCita.GuardarIndicaciones(idCita, indicaciones);
+            // Reutiliza CambiarEstado existente — obtiene el estado actual para no pisarlo
+            var todasCitas = await _repositorioCita.ListaCitasGestion(0);
+            var citaActual = todasCitas.FirstOrDefault(x => x != null && x.IdCita == idCita);
+            int idEstadoActual = citaActual?.EstadoCita?.IdEstadoCita ?? 1;
+
+            string resultado = await _repositorioCita.CambiarEstado(idCita, idEstadoActual, indicaciones);
 
             if (!string.IsNullOrEmpty(resultado))
                 return Json(new { ok = false, msg = resultado });
@@ -2350,25 +2371,7 @@ LIMIT 1;
             return Json(new { ok = true });
         }
 
-
-
-
-        // ── ANÁLISIS IA — sirve el HTML desde wwwroot/ia/analisis-ia.html ──
-        [HttpGet]
-[Authorize(Roles = "Doctor,Administrador")]
-public IActionResult AnalisisIA(int idCita, string paciente = "")
-{
-    string rutaHtml = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "ia", "analisis-ia.html");
-
-    if (!System.IO.File.Exists(rutaHtml))
-        return Content("<h2>Error: no se encontró wwwroot/ia/analisis-ia.html</h2>", "text/html");
-
-    string html = System.IO.File.ReadAllText(rutaHtml, System.Text.Encoding.UTF8);
-    html = html.Replace("__IDCITA__", idCita.ToString());
-    html = html.Replace("__PACIENTE__", System.Net.WebUtility.HtmlEncode(paciente));
-
-    return Content(html, "text/html", System.Text.Encoding.UTF8);
-}
+ 
 
     }
 }   
