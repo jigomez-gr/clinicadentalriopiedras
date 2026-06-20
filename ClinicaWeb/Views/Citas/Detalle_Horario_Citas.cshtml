@@ -512,7 +512,10 @@
                             <label class="form-label"
                                    data-bs-toggle="tooltip" data-bs-placement="top"
                                    data-bs-custom-class="tooltip-agenda"
-                                   title="Texto que pone el doctor indicando diagnóstico y las recomendaciones">Indicaciones</label>
+                                   title="Texto que pone el doctor indicando diagnóstico y las recomendaciones">
+                                Indicaciones
+                                <small class="text-muted ms-2">(editar desde botón IA del slot)</small>
+                            </label>
                             <textarea id="citaIndicaciones" class="form-control" rows="2" readonly
                                       data-bs-toggle="tooltip" data-bs-placement="top"
                                       data-bs-custom-class="tooltip-agenda"
@@ -615,9 +618,8 @@
 
                 <div id="infoDirectaSincro" class="small mt-2" style="display:none">
                 </div>
-                <hr />
-                <!-- ── Análisis IA ── -->
-                <div class="mb-3" id="dhcSeccionIA">
+                <!-- ── Análisis IA movido al submodal IA ── -->
+                <div class="mb-3" id="dhcSeccionIA" style="display:none">
                     <label class="form-label fw-bold">
                         <i class="fas fa-robot me-1 text-success"></i>Análisis IA
                     </label>
@@ -702,6 +704,123 @@
     </div>
 
 @* /* cambio comienzo */ *@
+
+    <!-- ===== SUBMODAL IA ===== -->
+    <div class="modal fade" id="mdIA" tabindex="-1" aria-labelledby="mdIALabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header" style="background:#198754;color:#fff;">
+                    <h5 class="modal-title" id="mdIALabel">
+                        <i class="fas fa-robot me-2"></i>Análisis IA — <span id="iaModalPaciente"></span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+
+                    <!-- Indicaciones editables -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-notes-medical me-1 text-warning"></i>Indicaciones del doctor
+                        </label>
+                        <textarea id="iaIndicaciones" class="form-control" rows="3"
+                                  placeholder="Diagnóstico e indicaciones para el paciente..."></textarea>
+                        <button type="button" class="btn btn-warning btn-sm mt-1" id="iaBtnGuardarIndicaciones">
+                            <i class="fas fa-save me-1"></i>Guardar indicaciones
+                        </button>
+                    </div>
+
+                    <hr />
+
+                    <!-- Análisis IA -->
+                    <div class="mb-2">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-robot me-1 text-success"></i>Análisis IA
+                        </label>
+                        <select class="form-select form-select-sm mb-2" id="iaServicioIA" style="max-width:220px;">
+                            <option value="dental">🦷 Dental (boca/encías)</option>
+                            <option value="rx">🩻 Radiografía dental</option>
+                            <option value="derma">🔬 Dermatología</option>
+                            <option value="belleza">✨ Estética</option>
+                            <option value="general">🏥 General</option>
+                        </select>
+                        <ul class="nav nav-tabs nav-sm mb-2">
+                            <li class="nav-item"><button class="nav-link active small" data-bs-toggle="tab" data-bs-target="#iaTabCamara"><i class="fas fa-camera me-1"></i>Cámara</button></li>
+                            <li class="nav-item"><button class="nav-link small" data-bs-toggle="tab" data-bs-target="#iaTabPegar"><i class="fas fa-paste me-1"></i>Pegar</button></li>
+                            <li class="nav-item"><button class="nav-link small" data-bs-toggle="tab" data-bs-target="#iaTabFichero"><i class="fas fa-file-image me-1"></i>Fichero</button></li>
+                            <li class="nav-item"><button class="nav-link small" data-bs-toggle="tab" data-bs-target="#iaTabBDPac"><i class="fas fa-database me-1"></i>Doc. paciente</button></li>
+                            <li class="nav-item"><button class="nav-link small" data-bs-toggle="tab" data-bs-target="#iaTabBDDoc"><i class="fas fa-user-md me-1"></i>Doc. doctor</button></li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane fade show active" id="iaTabCamara">
+                                <button type="button" class="btn btn-success btn-sm" id="iaBtnAbrirCamara">
+                                    <i class="fas fa-camera me-1"></i>Abrir cámara a pantalla completa
+                                </button>
+                                <p class="text-muted small mt-1 mb-1">Captura, recorta y analiza.</p>
+                                <div id="iaMiniPreview" class="d-none mt-1">
+                                    <img id="iaMiniImg" src="" style="max-height:60px;border-radius:6px;border:2px solid #198754;" />
+                                    <span class="badge bg-success ms-2">✓ Capturada</span>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="iaTabPegar">
+                                <div class="alert alert-info small py-1">Haz PrintScreen, clic aquí y pega con <kbd>Ctrl+V</kbd>.</div>
+                                <div id="iaPasteArea" tabindex="0" style="min-height:80px;border:2px dashed #6c757d;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#f8f9fa;" class="mb-2">
+                                    <span class="text-muted small">Clic y pega (Ctrl+V)</span>
+                                </div>
+                                <div id="iaPastePreview" class="d-none mb-2">
+                                    <img id="iaPasteImg" src="" style="max-width:100%;max-height:160px;border-radius:8px;" />
+                                </div>
+                                <button type="button" class="btn btn-success btn-sm d-none" id="iaBtnAnalizarPaste">
+                                    <i class="fas fa-microscope me-1"></i>Analizar
+                                </button>
+                            </div>
+                            <div class="tab-pane fade" id="iaTabFichero">
+                                <input type="file" class="form-control form-control-sm mb-2" id="iaFileIA" accept="image/*" />
+                                <button type="button" class="btn btn-success btn-sm" id="iaBtnAnalizarFichero">
+                                    <i class="fas fa-microscope me-1"></i>Analizar fichero
+                                </button>
+                            </div>
+                            <div class="tab-pane fade" id="iaTabBDPac">
+                                <p class="small text-muted mb-2" id="iaLblBDPac">Doc. paciente en BD.</p>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button type="button" class="btn btn-success btn-sm" id="iaBtnAnalizarBDPac" disabled>
+                                        <i class="fas fa-database me-1"></i>Analizar con IA
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="iaTabBDDoc">
+                                <p class="small text-muted mb-2" id="iaLblBDDoc">Doc. doctor en BD.</p>
+                                <button type="button" class="btn btn-success btn-sm" id="iaBtnAnalizarBDDoc" disabled>
+                                    <i class="fas fa-user-md me-1"></i>Analizar con IA
+                                </button>
+                                <div class="mt-2">
+                                    <button type="button" class="btn btn-warning btn-sm" id="iaBtnDescDocDoctor" disabled>
+                                        <i class="fas fa-download me-1"></i>Descargar doc. doctor
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="iaResultadoIA" class="d-none mt-3">
+                            <label class="form-label fw-bold text-success">
+                                <i class="fas fa-check-circle me-1"></i>Resultado análisis IA:
+                            </label>
+                            <div class="alert alert-success small py-2 mb-0" id="iaTextoIA"
+                                 style="white-space:pre-line;max-height:200px;overflow-y:auto;"></div>
+                            <button type="button" class="btn btn-sm btn-outline-success mt-1" id="iaBtnUsarDiagnostico">
+                                <i class="fas fa-arrow-up me-1"></i>Copiar a Indicaciones
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ===== FIN SUBMODAL IA ===== -->
+
     <div class="modal fade" id="mdReprogramar" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -1129,6 +1248,16 @@
                         }
                     };
                     acciones.appendChild(btnChk);
+
+                    const btnIA = document.createElement("button");
+                    btnIA.className = "btn btn-sm btn-success px-2";
+                    btnIA.title = "Análisis IA + Indicaciones";
+                    btnIA.innerHTML = '<i class="fas fa-robot"></i> IA';
+                    btnIA.onclick = (e) => {
+                        e.stopPropagation();
+                        abrirModalIA(s);
+                    };
+                    acciones.appendChild(btnIA);
 
                 } else {
                     // --- BLOQUE LIBRE ---
@@ -1983,22 +2112,43 @@
                     full.getContext("2d").drawImage(canvas,mx,my);
                     const btn=this;btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin me-1"></i>Analizando...';
                     full.toBlob(function(blob){
-                        dhcImagenBlob=blob;
-                        document.getElementById("dhcMiniImg").src=URL.createObjectURL(blob);
-                        document.getElementById("dhcMiniPreview").classList.remove("d-none");
-                        dhcAnalizarBlob(blob,function(){
-                            btn.disabled=false;btn.innerHTML='<i class="fas fa-microscope me-1"></i>Analizar recorte con IA';
-                            document.getElementById("dhcFsBtnVerResultados").classList.remove("d-none");
-                        });
+                        if(window._fsModoIA) {
+                            // Viene del submodal IA
+                            iaImagenBlob = blob;
+                            document.getElementById("iaMiniImg").src=URL.createObjectURL(blob);
+                            document.getElementById("iaMiniPreview").classList.remove("d-none");
+                            iaAnalizarBlob(blob, function(){
+                                btn.disabled=false;btn.innerHTML='<i class="fas fa-microscope me-1"></i>Analizar recorte con IA';
+                                document.getElementById("dhcFsBtnVerResultados").classList.remove("d-none");
+                            });
+                        } else {
+                            // Viene del modal principal
+                            dhcImagenBlob=blob;
+                            document.getElementById("dhcMiniImg").src=URL.createObjectURL(blob);
+                            document.getElementById("dhcMiniPreview").classList.remove("d-none");
+                            dhcAnalizarBlob(blob,function(){
+                                btn.disabled=false;btn.innerHTML='<i class="fas fa-microscope me-1"></i>Analizar recorte con IA';
+                                document.getElementById("dhcFsBtnVerResultados").classList.remove("d-none");
+                            });
+                        }
                     },"image/jpeg",0.92);
                 });
                 document.getElementById("dhcFsBtnVerResultados").addEventListener("click",function(){
                     dhcFsCerrar();
                     setTimeout(()=>{
-                        const diag=document.getElementById("dhcTextoIA").innerText;
-                        const ind=document.getElementById("citaIndicaciones");
-                        if(diag && ind && ind.value.trim()==="") ind.value=diag;
-                        document.getElementById("dhcResultadoIA").scrollIntoView({behavior:"smooth"});
+                        if(window._fsModoIA) {
+                            window._fsModoIA = false;
+                            // Volver al submodal IA
+                            bootstrap.Modal.getOrCreateInstance(document.getElementById("mdIA")).show();
+                            setTimeout(()=>{
+                                document.getElementById("iaResultadoIA").scrollIntoView({behavior:"smooth"});
+                            },300);
+                        } else {
+                            const diag=document.getElementById("dhcTextoIA").innerText;
+                            const ind=document.getElementById("citaIndicaciones");
+                            if(diag && ind && ind.value.trim()==="") ind.value=diag;
+                            document.getElementById("dhcResultadoIA").scrollIntoView({behavior:"smooth"});
+                        }
                     },350);
                 });
                 const pa=document.getElementById("dhcPasteArea");
@@ -2076,7 +2226,207 @@
                 }
             });
 
+            // ═══════════════════════════════════════════
+            // SUBMODAL IA
+            // ═══════════════════════════════════════════
+            var iaIdCita = 0;
+            var iaPacBase64 = null, iaPacContentType = null;
+            var iaDocBase64 = null, iaDocContentType = null;
+            var iaImagenBlob = null;
+
+            function abrirModalIA(slot) {
+                const cita = (slot && slot.cita) ? slot.cita : slot;
+                iaIdCita = cita.idCita || slot.idCita || 0;
+
+                // Nombre paciente en título
+                const pacNom = (cita.paciente || slot.paciente || "").trim();
+                document.getElementById("iaModalPaciente").textContent = pacNom;
+
+                // Cargar indicaciones actuales
+                document.getElementById("iaIndicaciones").value = (cita.indicaciones || "").trim();
+
+                // Cargar resultado IA previo si existe
+                if (cita.diagnosticoIA) {
+                    document.getElementById("iaTextoIA").innerText = cita.diagnosticoIA;
+                    document.getElementById("iaResultadoIA").classList.remove("d-none");
+                } else {
+                    document.getElementById("iaTextoIA").innerText = "";
+                    document.getElementById("iaResultadoIA").classList.add("d-none");
+                }
+
+                // Sincronizar servicio IA
+                const dhcSvc = document.getElementById("dhcServicioIA");
+                const iaSvc = document.getElementById("iaServicioIA");
+                if (dhcSvc && iaSvc) iaSvc.value = dhcSvc.value;
+
+                // Documentos BD
+                iaPacBase64 = cita.documentoCitaUsr || null;
+                iaPacContentType = cita.contentType || "application/octet-stream";
+                iaDocBase64 = cita.docIndicacionesDoctor || null;
+                iaDocContentType = cita.contentTypeDoctor || "application/octet-stream";
+
+                const esImgPac = !!(iaPacBase64 && (iaPacContentType||"").startsWith("image/"));
+                document.getElementById("iaBtnAnalizarBDPac").disabled = !esImgPac;
+                document.getElementById("iaLblBDPac").textContent = esImgPac
+                    ? "Se analizará la imagen del paciente en BD."
+                    : (iaPacBase64 ? "El doc. no es una imagen." : "No hay documento del paciente en BD.");
+
+                const esImgDoc = !!(iaDocBase64 && (iaDocContentType||"").startsWith("image/"));
+                document.getElementById("iaBtnAnalizarBDDoc").disabled = !esImgDoc;
+                document.getElementById("iaBtnDescDocDoctor").disabled = !iaDocBase64;
+                document.getElementById("iaLblBDDoc").textContent = esImgDoc
+                    ? "Se analizará el documento del doctor en BD."
+                    : (iaDocBase64 ? "El doc. no es una imagen." : "No hay documento del doctor en BD.");
+
+                // Reset estado
+                iaImagenBlob = null;
+                document.getElementById("iaMiniPreview").classList.add("d-none");
+                document.getElementById("iaPastePreview").classList.add("d-none");
+                document.getElementById("iaBtnAnalizarPaste").classList.add("d-none");
+
+                bootstrap.Modal.getOrCreateInstance(document.getElementById("mdIA")).show();
+            }
+
+            function iaAnalizarBlob(blob, cb) {
+                if (!iaIdCita) { Swal.fire("Aviso","No hay cita seleccionada.","warning"); return; }
+                Swal.fire({title:"Analizando con IA...",allowOutsideClick:false,didOpen:()=>Swal.showLoading()});
+                const servicio = document.getElementById("iaServicioIA").value || "dental";
+                const razon = document.getElementById("iaIndicaciones")?.value || "";
+                const contexto = razon
+                    ? `El paciente describe: "${razon}". Analiza la imagen.`
+                    : "Analiza esta imagen clínica y describe los hallazgos.";
+                const form = new FormData();
+                form.append("idCita", iaIdCita);
+                form.append("imagen", blob, "imagen.jpg");
+                form.append("servicio", servicio);
+                form.append("contexto", contexto);
+                fetch("/Citas/AnalizarImagenIA", {method:"POST", body:form})
+                .then(r => r.json()).then(res => {
+                    Swal.close();
+                    if (res.ok) {
+                        document.getElementById("iaTextoIA").innerText = res.diagnostico;
+                        document.getElementById("iaResultadoIA").classList.remove("d-none");
+                        // También actualizar el modal principal
+                        const dhcTxt = document.getElementById("dhcTextoIA");
+                        const dhcRes = document.getElementById("dhcResultadoIA");
+                        if(dhcTxt) dhcTxt.innerText = res.diagnostico;
+                        if(dhcRes) dhcRes.classList.remove("d-none");
+                        // Si indicaciones vacías, prellenar
+                        const ind = document.getElementById("iaIndicaciones");
+                        if(ind && ind.value.trim() === "") ind.value = res.diagnostico;
+                        if(cb) cb();
+                    } else {
+                        Swal.fire("Error IA", res.msg || "Error", "error");
+                        if(cb) cb();
+                    }
+                }).catch(() => { Swal.fire("Error","Fallo de comunicación.","error"); if(cb)cb(); });
+            }
+
+            document.addEventListener("DOMContentLoaded", function() {
+
+                // Guardar indicaciones desde submodal
+                document.getElementById("iaBtnGuardarIndicaciones").addEventListener("click", function() {
+                    if (!iaIdCita) { Swal.fire("Aviso","No hay cita.","warning"); return; }
+                    const texto = document.getElementById("iaIndicaciones").value.trim();
+                    fetch(`/Citas/GuardarIndicaciones?idCita=${iaIdCita}`, {
+                        method:"POST",
+                        headers:{"Content-Type":"application/json"},
+                        body: JSON.stringify({indicaciones: texto})
+                    }).then(r => r.json()).then(res => {
+                        if(res.ok) {
+                            // Sincronizar con modal principal
+                            const mainInd = document.getElementById("citaIndicaciones");
+                            if(mainInd) mainInd.value = texto;
+                            Swal.fire({title:"Guardado",icon:"success",timer:1200,showConfirmButton:false});
+                        } else {
+                            Swal.fire("Error", res.msg || "Error al guardar","error");
+                        }
+                    }).catch(()=>Swal.fire("Error","Fallo de comunicación.","error"));
+                });
+
+                // Botón usar diagnóstico en indicaciones
+                document.getElementById("iaBtnUsarDiagnostico").addEventListener("click", function() {
+                    const diag = document.getElementById("iaTextoIA").innerText;
+                    const ind = document.getElementById("iaIndicaciones");
+                    if(diag && ind) ind.value = diag;
+                });
+
+                // Cámara desde submodal — reutiliza el fullscreen existente
+                document.getElementById("iaBtnAbrirCamara").addEventListener("click", function() {
+                    // Marcar que el fullscreen pertenece al submodal IA
+                    window._fsModoIA = true;
+                    dhcFsAbrir();
+                });
+
+                // Pegar captura
+                const iaPa = document.getElementById("iaPasteArea");
+                iaPa.addEventListener("click", () => iaPa.focus());
+                iaPa.addEventListener("paste", function(e) {
+                    for (const item of (e.clipboardData?.items || [])) {
+                        if (item.type.startsWith("image/")) {
+                            const blob = item.getAsFile();
+                            iaImagenBlob = blob;
+                            document.getElementById("iaPasteImg").src = URL.createObjectURL(blob);
+                            document.getElementById("iaPastePreview").classList.remove("d-none");
+                            document.getElementById("iaBtnAnalizarPaste").classList.remove("d-none");
+                            iaPa.querySelector("span").textContent = "✔ Pegada. Pulse Analizar.";
+                            break;
+                        }
+                    }
+                });
+                document.getElementById("iaBtnAnalizarPaste").addEventListener("click", () => {
+                    if(iaImagenBlob) iaAnalizarBlob(iaImagenBlob);
+                });
+
+                // Fichero
+                document.getElementById("iaBtnAnalizarFichero").addEventListener("click", function() {
+                    const file = document.getElementById("iaFileIA").files[0];
+                    if(!file){Swal.fire("Aviso","Seleccione un fichero.","warning");return;}
+                    if(!file.type.startsWith("image/")){Swal.fire("Aviso","Solo imágenes.","warning");return;}
+                    iaAnalizarBlob(file);
+                });
+
+                // BD Paciente
+                document.getElementById("iaBtnAnalizarBDPac").addEventListener("click", function() {
+                    if(!iaPacBase64) return;
+                    const b=atob(iaPacBase64), a=new Uint8Array(b.length);
+                    for(let i=0;i<b.length;i++) a[i]=b.charCodeAt(i);
+                    iaAnalizarBlob(new Blob([a],{type:iaPacContentType||"image/jpeg"}));
+                });
+
+                // BD Doctor
+                document.getElementById("iaBtnAnalizarBDDoc").addEventListener("click", function() {
+                    if(!iaDocBase64) return;
+                    const b=atob(iaDocBase64), a=new Uint8Array(b.length);
+                    for(let i=0;i<b.length;i++) a[i]=b.charCodeAt(i);
+                    iaAnalizarBlob(new Blob([a],{type:iaDocContentType||"image/jpeg"}));
+                });
+
+                // Descargar doc doctor
+                document.getElementById("iaBtnDescDocDoctor").addEventListener("click", async function() {
+                    if(!iaIdCita) return;
+                    const url = `/Citas/DescargarDocumentoDoctor?idCita=${iaIdCita}`;
+                    const r = await fetch(url,{method:"GET"});
+                    if(!r.ok){Swal.fire("Info","No hay documento.","info");return;}
+                    const blob = await r.blob();
+                    const cd = r.headers.get("content-disposition")||"";
+                    const m = /filename\*=UTF-8''([^;]+)|filename="?([^"]+)"?/i.exec(cd);
+                    const filename = m ? decodeURIComponent(m[1]||m[2]||"") : `doc_doctor_${iaIdCita}`;
+                    const urlObj = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href=urlObj; a.download=filename;
+                    document.body.appendChild(a); a.click(); a.remove();
+                    setTimeout(()=>URL.revokeObjectURL(urlObj),1000);
+                });
+
+            }); // fin DOMContentLoaded submodal IA
+
             function dhcFsAbrir(){
+                // Si venimos del submodal IA, cerrarlo temporalmente
+                if(window._fsModoIA) {
+                    const mdIAEl = document.getElementById("mdIA");
+                    if(mdIAEl) bootstrap.Modal.getInstance(mdIAEl)?.hide();
+                }
                 document.getElementById("dhcFullscreen").style.display="flex";
                 document.body.style.overflow="hidden";
                 document.getElementById("dhcFsStreamDiv").style.display="flex";
