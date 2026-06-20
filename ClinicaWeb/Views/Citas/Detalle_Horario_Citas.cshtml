@@ -1240,12 +1240,12 @@
         const tipoMap = { P: "Presencial", T: "Telefónica", V: "Virtual" };
         setVal("#citaTipo", tipoMap[cita.tipoDeCita] || cita.tipoDeCita || "");
 
-        // Botón Cal.com — solo visible si es Virtual y tiene URL
+        // Botón Cal.com — visible siempre que haya calBookingUid
         const btnCal = document.getElementById("btnUnirseCalcom");
         if (btnCal) {
-            const urlVirtual = cita.urlCitaOTelefono || null;
-            if (urlVirtual && cita.tipoDeCita === "V") {
-                btnCal.href = urlVirtual;
+            const uid = cita.calBookingUid || null;
+            if (uid) {
+                btnCal.href = "https://app.cal.eu/video/" + uid;
                 btnCal.classList.remove("d-none");
             } else {
                 btnCal.href = "#";
@@ -1276,12 +1276,6 @@
                     document.getElementById("calUid").value = r.data.bookingUid || "";
                     document.getElementById("calRazon").value = r.data.razoncitausr || "";
                     window.currentCalJsonStr = r.data.calJsonFull;
-                    // Botón reunión Cal.com — construir URL con booking_uid
-                    const btnCal2 = document.getElementById("btnUnirseCalcom");
-                    if (btnCal2 && r.data.bookingUid) {
-                        btnCal2.href = "https://app.cal.eu/video/" + r.data.bookingUid;
-                        btnCal2.classList.remove("d-none");
-                    }
                 } else {
                     document.getElementById("calApe").value = "Sin datos";
                     document.getElementById("calRazon").value = "No hay información extendida.";

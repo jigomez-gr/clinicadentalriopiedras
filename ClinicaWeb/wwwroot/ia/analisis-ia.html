@@ -406,12 +406,12 @@
             if (msgOk) msgOk.classList.add('d-none');
             if (msgErr) msgErr.classList.add('d-none');
 
-            fetch('/Citas/GuardarDocumentoDoctor', {
+            fetch('/Citas/ActualizarDocumentoDoctor', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json;charset=utf-8' },
-                body: JSON.stringify({ IdCita: IA_ID_CITA, DocIndicacionesDoctor: b64, ContentTypeDoctor: tipo })
+                body: JSON.stringify({ IdCita: IA_ID_CITA, DocumentoBase64: b64, ContentTypeDoctor: tipo })
             }).then(r => r.json()).then(res => {
-                if (res.data === '' || res.ok === true) {
+                if (res.data === '' || res.data === null || res.ok === true) {
                     if (msgOk) { msgOk.classList.remove('d-none'); setTimeout(() => msgOk.classList.add('d-none'), 2500); }
                 } else {
                     if (msgErr) { msgErr.textContent = res.data || res.msg || 'Error al guardar'; msgErr.classList.remove('d-none'); }
