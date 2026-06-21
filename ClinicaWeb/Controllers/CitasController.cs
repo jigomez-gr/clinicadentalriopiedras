@@ -2330,6 +2330,23 @@ LIMIT 1;
                 return Json(new { ok = false, msg = "Error: " + ex.Message });
             }
         }
+        // ── ANÁLISIS IA ALTA — popup para AltaCita (doc paciente, sin idCita) ──
+        [HttpGet]
+        [Authorize(Roles = "Doctor,Administrador,Paciente")]
+        public IActionResult AnalisisIAAlta(string razon = "", string servicio = "dental")
+        {
+            string rutaHtml = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "ia", "analisis-ia-alta.html");
+            if (!System.IO.File.Exists(rutaHtml))
+                return Content("<h2>Error: no se encontró wwwroot/ia/analisis-ia-alta.html</h2>", "text/html");
+
+            string html = System.IO.File.ReadAllText(rutaHtml, System.Text.Encoding.UTF8);
+            html = html.Replace("__RAZON__", System.Net.WebUtility.HtmlEncode(razon));
+            html = html.Replace("__SERVICIO__", System.Net.WebUtility.HtmlEncode(servicio));
+
+            return Content(html, "text/html", System.Text.Encoding.UTF8);
+        }
+
+
         // ── ANÁLISIS IA — sirve el HTML desde wwwroot/ia/analisis-ia.html ──
         [HttpGet]
         [Authorize(Roles = "Doctor,Administrador")]
