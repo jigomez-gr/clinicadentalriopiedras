@@ -2345,6 +2345,22 @@ LIMIT 1;
 
             return Content(html, "text/html", System.Text.Encoding.UTF8);
         }
+        // ── ANÁLISIS IA CITA — popup para Index y Reenviarfoto (con idCita) ──
+        [HttpGet]
+        [Authorize(Roles = "Doctor,Administrador,Paciente")]
+        public IActionResult AnalisisIACita(int idCita = 0, string razon = "", string servicio = "dental")
+        {
+            string rutaHtml = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "ia", "analisis-ia-cita.html");
+            if (!System.IO.File.Exists(rutaHtml))
+                return Content("<h2>Error: no se encontró wwwroot/ia/analisis-ia-cita.html</h2>", "text/html");
+
+            string html = System.IO.File.ReadAllText(rutaHtml, System.Text.Encoding.UTF8);
+            html = html.Replace("__IDCITA__", idCita.ToString());
+            html = html.Replace("__RAZON__", System.Net.WebUtility.HtmlEncode(razon));
+            html = html.Replace("__SERVICIO__", System.Net.WebUtility.HtmlEncode(servicio));
+
+            return Content(html, "text/html", System.Text.Encoding.UTF8);
+        }
 
 
         // ── ANÁLISIS IA — sirve el HTML desde wwwroot/ia/analisis-ia.html ──

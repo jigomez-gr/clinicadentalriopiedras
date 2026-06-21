@@ -307,36 +307,13 @@
                     </ul>
                     <div class="tab-content">
                         <div class="tab-pane fade show active" id="idxTabCamara">
-                            <div class="d-flex gap-2 mb-2">
-                                <button type="button" class="btn btn-success btn-sm" id="idxBtnAbrirCamara">
-                                    <i class="fas fa-camera me-1"></i>Tomar foto
-                                </button>
-                                <button type="button" class="btn btn-outline-secondary btn-sm d-none" id="idxBtnCerrarCamara">Cancelar</button>
-                            </div>
-                            <div id="idxCamaraStream" class="d-none mb-2 position-relative">
-                                <video id="idxVideo" autoplay playsinline
-                                       style="width:100%;max-height:240px;border-radius:8px;background:#000;"></video>
-                                <button type="button" id="idxBtnVoltear" class="btn btn-dark btn-sm position-absolute" style="top:8px;right:8px;opacity:0.8;">
-                                    <i class="fas fa-sync-alt"></i>
-                                </button>
-                                <div class="mt-1">
-                                    <button type="button" class="btn btn-primary btn-sm" id="idxBtnCapturar">
-                                        <i class="fas fa-camera me-1"></i>Capturar
-                                    </button>
-                                </div>
-                            </div>
-                            <div id="idxCropperWrapper" class="d-none mb-2">
-                                <div style="max-height:240px;background:#000;border-radius:8px;overflow:hidden;">
-                                    <img id="idxImgCropper" src="" alt="Recortar" style="max-width:100%;display:block;" />
-                                </div>
-                                <div class="d-flex gap-2 mt-1 flex-wrap">
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="idxBtnZoomIn"><i class="fas fa-search-plus"></i></button>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="idxBtnZoomOut"><i class="fas fa-search-minus"></i></button>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="idxBtnResetCrop"><i class="fas fa-undo"></i></button>
-                                    <button type="button" class="btn btn-success btn-sm ms-auto" id="idxBtnAnalizarCamara">
-                                        <i class="fas fa-microscope me-1"></i>Analizar con IA
-                                    </button>
-                                </div>
+                            <button type="button" class="btn btn-success btn-sm" id="idxBtnAbrirCamara">
+                                <i class="fas fa-camera me-1"></i>Abrir cámara
+                            </button>
+                            <p class="text-muted small mt-1 mb-0">Se abre en ventana independiente.</p>
+                            <div id="idxCamaraMiniPreview" class="d-none mt-2">
+                                <img id="idxCamaraMiniImg" src="" style="max-height:70px;border-radius:6px;border:2px solid #198754;" />
+                                <span class="badge bg-success ms-2">✓ Imagen capturada</span>
                             </div>
                         </div>
                         <div class="tab-pane fade" id="idxTabFichero">
@@ -832,44 +809,32 @@
 
         // ── Lógica IA ─────────────────────────────────────────────────────────
         document.addEventListener("DOMContentLoaded", function () {
+            // Cámara → ventana popup independiente
             document.getElementById("idxBtnAbrirCamara").addEventListener("click", function () {
-                idxFacingMode = "environment"; idxAbrirStream();
+                var razon    = document.getElementById("txtRazonCitaUsr")?.value || "";
+                var servicio = document.getElementById("idxServicioIA")?.value || "dental";
+                var idCita   = idEditar || 0;
+                var w = 960, h = 720;
+                var left = Math.max(0, (screen.width - w) / 2);
+                var top  = Math.max(0, (screen.height - h) / 2);
+                window.open(
+                    "/Citas/AnalisisIACita?idCita=" + idCita + "&razon=" + encodeURIComponent(razon) + "&servicio=" + encodeURIComponent(servicio),
+                    "ia_cita_camara",
+                    "width=" + w + ",height=" + h + ",left=" + left + ",top=" + top + ",resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no"
+                );
             });
-            document.getElementById("idxBtnVoltear").addEventListener("click", function () {
-                idxFacingMode = idxFacingMode === "environment" ? "user" : "environment"; idxAbrirStream();
-            });
-            document.getElementById("idxBtnCerrarCamara").addEventListener("click", function () {
-                idxCerrarStream();
-                document.getElementById("idxBtnCerrarCamara").classList.add("d-none");
-            });
-            document.getElementById("idxBtnCapturar").addEventListener("click", function () {
-                const video = document.getElementById("idxVideo");
-                const canvas = document.createElement("canvas");
-                canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-                canvas.getContext("2d").drawImage(video, 0, 0);
-                idxCerrarStream();
-                document.getElementById("idxCamaraStream").classList.add("d-none");
-                const img = document.getElementById("idxImgCropper");
-                img.src = canvas.toDataURL("image/jpeg", 0.92);
-                document.getElementById("idxCropperWrapper").classList.remove("d-none");
-                if (idxCropper) { idxCropper.destroy(); idxCropper = null; }
-                idxCropper = new Cropper(img, {
-                    aspectRatio: NaN, viewMode: 1, autoCropArea: 0.85,
-                    responsive: true, movable: true, zoomable: true,
-                    cropBoxMovable: true, cropBoxResizable: true, dragMode: "move"
-                });
-            });
-            document.getElementById("idxBtnZoomIn").addEventListener("click",    () => idxCropper?.zoom(0.1));
-            document.getElementById("idxBtnZoomOut").addEventListener("click",   () => idxCropper?.zoom(-0.1));
-            document.getElementById("idxBtnResetCrop").addEventListener("click", () => idxCropper?.reset());
-            document.getElementById("idxBtnAnalizarCamara").addEventListener("click", function () {
-                if (!idxCropper) { Swal.fire("Aviso", "Primero capture una foto.", "warning"); return; }
-                const canvas = idxCropper.getCroppedCanvas({ maxWidth: 1600, maxHeight: 1600 });
-                const mx = Math.round(canvas.width * 0.10), my = Math.round(canvas.height * 0.10);
-                const full = document.createElement("canvas");
-                full.width = canvas.width + mx * 2; full.height = canvas.height + my * 2;
-                full.getContext("2d").drawImage(canvas, mx, my);
-                full.toBlob(function(blob) { idxImagenBlob = blob; idxAnalizarBlob(blob); }, "image/jpeg", 0.92);
+            window.addEventListener("message", function(event) {
+                if (!event.data || event.data.tipo !== "iaCitaResultado") return;
+                var diag = event.data.diagnostico || "";
+                var blob = event.data.blob || null;
+                if (diag) {
+                    document.getElementById("idxTextoIA").innerText = diag;
+                    document.getElementById("idxResultadoIA").classList.remove("d-none");
+                }
+                if (blob) {
+                    document.getElementById("idxCamaraMiniImg").src = URL.createObjectURL(blob);
+                    document.getElementById("idxCamaraMiniPreview").classList.remove("d-none");
+                }
             });
             document.getElementById("idxBtnAnalizarFichero").addEventListener("click", function () {
                 const file = document.getElementById("fileDocPaciente").files[0];
@@ -928,12 +893,9 @@
                 document.getElementById("idxCamaraStream").classList.add("d-none");
             }
             document.getElementById("mdData").addEventListener("hidden.bs.modal", function () {
-                idxCerrarStream();
-                if (idxCropper) { idxCropper.destroy(); idxCropper = null; }
                 idxImagenBlob = null;
-                document.getElementById("idxCropperWrapper").classList.add("d-none");
                 document.getElementById("idxResultadoIA").classList.add("d-none");
-                document.getElementById("idxBtnCerrarCamara").classList.add("d-none");
+                document.getElementById("idxCamaraMiniPreview").classList.add("d-none");
             });
         });
     </script>

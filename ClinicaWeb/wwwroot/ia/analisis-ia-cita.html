@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>📷 Análisis IA — Cámara</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css"/>
+<style>
+html, body { margin:0; padding:0; height:100%; background:#1a1a2e; font-family:system-ui,sans-serif; overflow:hidden; }
+#fsWrap { display:flex; flex-direction:column; height:100vh; height:100dvh; background:#000; overflow:hidden; }
+.fs-toolbar { background:#1a1a2e; padding:8px 12px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; flex-shrink:0; min-height:48px; }
+.fs-area { flex:1 1 0; min-height:0; overflow:hidden; background:#000; display:flex; flex-direction:column; }
+#fsStreamDiv { flex:1 1 0; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
+#fsVideo { flex:1 1 0; min-height:0; width:100%; object-fit:cover; display:block; background:#000; }
+.stream-btns { background:#1a1a2e; padding:10px; display:flex; gap:10px; flex-wrap:wrap; flex-shrink:0; }
+#fsCropperDiv { flex:1 1 0; min-height:0; display:none; overflow:auto; background:#111; }
+.fs-controls { background:#1a1a2e; padding:8px 12px; flex-shrink:0; display:none; }
+.fs-resultado { background:#0f3460; color:#fff; padding:12px; flex-shrink:0; display:none; white-space:pre-line; font-size:.9rem; max-height:30vh; overflow-y:auto; }
+.fs-resultado.visible { display:block; }
+@media (max-width:600px) {
+    .fs-toolbar { padding:6px 8px; min-height:44px; }
+    .fs-controls { padding:6px 8px; }
+    .fs-controls .form-range { max-width:140px !important; }
+    .fs-controls .btn { padding:.25rem .5rem; font-size:.8rem; }
+}
+</style>
+</head>
+<body>
+<div id="fsWrap">
+  <div class="fs-toolbar">
+    <button type="button" class="btn btn-outline-light btn-sm" id="btnCerrar">
+      <i class="fas fa-times me-1"></i>Cancelar
+    </button>
+    <span class="text-white small ms-2">Captura, recorta y analiza</span>
+    <div class="ms-auto">
+      <select class="form-select form-select-sm" id="fsServicio" style="max-width:180px;background:#2a2a4e;color:#fff;border-color:#555;">
+        <option value="dental">🦷 Dental</option>
+        <option value="rx">🩻 Radiografía</option>
+        <option value="derma">🔬 Derma</option>
+        <option value="belleza">✨ Estética</option>
+        <option value="general">🏥 General</option>
+      </select>
+    </div>
+  </div>
+  <div class="fs-area">
+    <div id="fsStreamDiv">
+      <video id="fsVideo" autoplay playsinline muted></video>
+      <div class="stream-btns">
+        <button type="button" class="btn btn-primary" id="btnCapturar"><i class="fas fa-camera me-1"></i>Capturar foto</button>
+        <button type="button" class="btn btn-outline-light" id="btnVoltear"><i class="fas fa-sync-alt me-1"></i>Voltear</button>
+      </div>
+    </div>
+    <div id="fsCropperDiv">
+      <img id="fsImg" src="" alt="" style="max-width:100%;display:block;"/>
+    </div>
+  </div>
+  <div class="fs-controls" id="fsControles">
+    <div class="d-flex gap-2 align-items-center mb-2 flex-wrap">
+      <span class="text-white small">Zoom:</span>
+      <i class="fas fa-search-minus text-white"></i>
+      <input type="range" id="fsZoom" min="0.1" max="5" step="0.05" value="0.1" class="form-range flex-grow-1" style="max-width:260px;"/>
+      <i class="fas fa-search-plus text-white"></i>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <div class="btn-group btn-group-sm">
+        <button type="button" class="btn btn-outline-light" id="btnMover"><i class="fas fa-hand-paper me-1"></i>Mover</button>
+        <button type="button" class="btn btn-outline-light active" id="btnRecortar"><i class="fas fa-crop-alt me-1"></i>Recortar</button>
+      </div>
+      <button type="button" class="btn btn-outline-secondary btn-sm" id="btnReset"><i class="fas fa-undo"></i></button>
+      <button type="button" class="btn btn-success ms-auto" id="btnAnalizar"><i class="fas fa-microscope me-1"></i>Analizar con IA</button>
+    </div>
+  </div>
+  <div class="fs-resultado" id="fsResultado">
+    <div id="fsTexto"></div>
+    <div class="mt-2">
+      <button type="button" class="btn btn-warning btn-sm" id="btnAceptar"><i class="fas fa-check me-1"></i>Usar resultado y cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+<script>
+var params   = new URLSearchParams(window.location.search);
+var IDCITA   = parseInt(params.get("idCita") || "0");
+var RAZON    = params.get("razon")    || "";
+var SERVICIO = params.get("servicio") || "dental";
+
+var sel = document.getElementById("fsServicio");
+if (SERVICIO) { sel.value = SERVICIO; }
+
+var stream = null, cropper = null, facingMode = "environment", imagenBlob = null;
+
+function abrirStream() {
+    cerrarStream();
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode, width:{ideal:1280}, height:{ideal:720} } })
+    .then(function(s) { stream = s; document.getElementById("fsVideo").srcObject = s; })
+    .catch(function(e) { Swal.fire("Error","No se pudo acceder a la cámara: " + e.message,"error"); });
+}
+function cerrarStream() {
+    if (stream) { stream.getTracks().forEach(function(t){t.stop();}); stream = null; }
+}
+
+document.getElementById("btnCerrar").addEventListener("click", function() { cerrarStream(); window.close(); });
+document.getElementById("btnVoltear").addEventListener("click", function() {
+    facingMode = facingMode === "environment" ? "user" : "environment"; abrirStream();
+});
+document.getElementById("btnCapturar").addEventListener("click", function() {
+    var video = document.getElementById("fsVideo");
+    var canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth || 1280; canvas.height = video.videoHeight || 720;
+    canvas.getContext("2d").drawImage(video, 0, 0);
+    cerrarStream();
+    document.getElementById("fsStreamDiv").style.display = "none";
+    var img = document.getElementById("fsImg");
+    img.src = canvas.toDataURL("image/jpeg", 0.92);
+    document.getElementById("fsCropperDiv").style.display = "flex";
+    document.getElementById("fsControles").style.display = "block";
+    if (cropper) { cropper.destroy(); cropper = null; }
+    requestAnimationFrame(function() { requestAnimationFrame(function() {
+        cropper = new Cropper(img, { aspectRatio:NaN, viewMode:1, autoCropArea:0.5,
+            responsive:true, movable:true, zoomable:true, cropBoxMovable:true, cropBoxResizable:true, dragMode:"crop" });
+    }); });
+    document.getElementById("fsZoom").value = 0.1;
+});
+document.getElementById("fsZoom").addEventListener("input", function() { if (cropper) cropper.zoomTo(parseFloat(this.value)); });
+document.getElementById("btnReset").addEventListener("click", function() { if (cropper) { cropper.reset(); document.getElementById("fsZoom").value = 0.1; } });
+document.getElementById("btnMover").addEventListener("click", function() {
+    if (!cropper) return; cropper.setDragMode("move");
+    this.classList.add("active"); document.getElementById("btnRecortar").classList.remove("active");
+});
+document.getElementById("btnRecortar").addEventListener("click", function() {
+    if (!cropper) return; cropper.setDragMode("crop");
+    this.classList.add("active"); document.getElementById("btnMover").classList.remove("active");
+});
+document.getElementById("btnAnalizar").addEventListener("click", function() {
+    if (!cropper) { Swal.fire("Aviso","Primero capture una foto.","warning"); return; }
+    var canvas = cropper.getCroppedCanvas({ maxWidth:1600, maxHeight:1600 });
+    var mx = Math.round(canvas.width*0.10), my = Math.round(canvas.height*0.10);
+    var full = document.createElement("canvas");
+    full.width = canvas.width+mx*2; full.height = canvas.height+my*2;
+    full.getContext("2d").drawImage(canvas, mx, my);
+    var btn = this;
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Analizando...';
+    full.toBlob(function(blob) {
+        imagenBlob = blob;
+        var servicio = document.getElementById("fsServicio").value || "dental";
+        var contexto = RAZON
+            ? "El paciente describe: \"" + RAZON + "\". Analiza la imagen teniendo en cuenta este contexto."
+            : "Analiza esta imagen clínica y describe los hallazgos observables.";
+        var form = new FormData();
+        form.append("idCita", IDCITA);
+        form.append("imagen", blob, "imagen.jpg");
+        form.append("servicio", servicio);
+        form.append("contexto", contexto);
+        fetch("/Citas/AnalizarImagenIA", { method:"POST", body:form })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-microscope me-1"></i>Analizar con IA';
+            if (res.ok) {
+                document.getElementById("fsTexto").innerText = res.diagnostico;
+                document.getElementById("fsResultado").classList.add("visible");
+            } else { Swal.fire("Error IA", res.msg || "Error desconocido", "error"); }
+        })
+        .catch(function() {
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-microscope me-1"></i>Analizar con IA';
+            Swal.fire("Error","Fallo de comunicación.","error");
+        });
+    }, "image/jpeg", 0.92);
+});
+document.getElementById("btnAceptar").addEventListener("click", function() {
+    var diagnostico = document.getElementById("fsTexto").innerText;
+    if (window.opener && !window.opener.closed) {
+        window.opener.postMessage({ tipo: "iaCitaResultado", diagnostico: diagnostico, blob: imagenBlob }, "*");
+    }
+    window.close();
+});
+
+abrirStream();
+</script>
+</body>
+</html>
