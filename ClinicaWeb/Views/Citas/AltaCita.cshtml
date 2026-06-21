@@ -73,7 +73,7 @@
 
         /* comienzo cambio ggg */
         /* MEJORA DE LEGIBILIDAD: Cuando la tarjeta se pone azul (bg-primary)
-                                           forzamos a que todo el texto e iconos sean blancos */
+                                                   forzamos a que todo el texto e iconos sean blancos */
         .card-doctor.bg-primary,
         .card-doctor.bg-primary h6,
         .card-doctor.bg-primary .resumen-ai-mini,
@@ -102,53 +102,68 @@
             width: 100vw;
             height: 100vh;
             background: #000;
-            z-index: 99999;
+            z-index: 999999;
             flex-direction: column;
-            overflow-y: auto;
+            overflow-y: hidden;
+            touch-action: none;
         }
 
-            #altaFullscreen.activo {
-                display: flex;
-            }
-
+        @@media (max-width: 768px) {
             #altaFullscreen .fs-toolbar {
-                background: #1a1a2e;
-                padding: 8px 12px;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                flex-wrap: wrap;
-                flex-shrink: 0;
-            }
-
-            #altaFullscreen .fs-area {
-                flex: 1;
-                min-height: 0;
-                position: relative;
-                background: #000;
+                padding: 6px 8px;
             }
 
             #altaFullscreen .fs-controls {
-                background: #1a1a2e;
-                padding: 8px 12px;
-                flex-shrink: 0;
+                padding: 6px 8px;
             }
 
-            #altaFullscreen .fs-resultado {
-                background: #0f3460;
-                color: #fff;
-                padding: 12px;
-                flex-shrink: 0;
-                display: none;
-                white-space: pre-line;
-                font-size: .9rem;
-                max-height: 35vh;
-                overflow-y: auto;
-            }
-
-                #altaFullscreen .fs-resultado.visible {
-                    display: block;
+                #altaFullscreen .fs-controls .form-range {
+                    max-width: 160px !important;
                 }
+        }
+
+        #altaFullscreen.activo {
+            display: flex;
+        }
+
+        #altaFullscreen .fs-toolbar {
+            background: #1a1a2e;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+
+        #altaFullscreen .fs-area {
+            flex: 1;
+            min-height: 0;
+            position: relative;
+            background: #000;
+        }
+
+        #altaFullscreen .fs-controls {
+            background: #1a1a2e;
+            padding: 8px 12px;
+            flex-shrink: 0;
+        }
+
+        #altaFullscreen .fs-resultado {
+            background: #0f3460;
+            color: #fff;
+            padding: 12px;
+            flex-shrink: 0;
+            display: none;
+            white-space: pre-line;
+            font-size: .9rem;
+            max-height: 35vh;
+            overflow-y: auto;
+        }
+
+            #altaFullscreen .fs-resultado.visible {
+                display: block;
+            }
     </style>
 }
 <h2 class="mt-4 mb-4 d-flex align-items-center">
@@ -1103,6 +1118,11 @@
             // Abrir cámara
             // ── Pantalla completa cámara — idéntico a CitasAsignadas ──
             function altaFsAbrir() {
+                // Móvil: bajar z-index del modal para que el fullscreen quede encima
+                const _modal = document.getElementById("mdData");
+                if (_modal) _modal.style.zIndex = "0";
+                document.querySelectorAll(".modal-backdrop").forEach(b => b.style.zIndex = "0");
+
                 document.getElementById("altaFullscreen").classList.add("activo");
                 document.body.style.overflow = "hidden";
                 document.getElementById("altaFsStreamDiv").style.display = "flex";
@@ -1117,6 +1137,10 @@
                 if (altaCropper) { altaCropper.destroy(); altaCropper = null; }
                 document.getElementById("altaFullscreen").classList.remove("activo");
                 document.body.style.overflow = "";
+                // Restaurar z-index del modal
+                const _modal = document.getElementById("mdData");
+                if (_modal) _modal.style.zIndex = "";
+                document.querySelectorAll(".modal-backdrop").forEach(b => b.style.zIndex = "");
             }
             function altaFsAbrirStream() {
                 altaFsCerrarStream();
