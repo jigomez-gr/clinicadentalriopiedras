@@ -73,7 +73,7 @@
 
         /* comienzo cambio ggg */
         /* MEJORA DE LEGIBILIDAD: Cuando la tarjeta se pone azul (bg-primary)
-                                   forzamos a que todo el texto e iconos sean blancos */
+                                           forzamos a que todo el texto e iconos sean blancos */
         .card-doctor.bg-primary,
         .card-doctor.bg-primary h6,
         .card-doctor.bg-primary .resumen-ai-mini,
@@ -92,6 +92,63 @@
             }
         /* final cambio GGG */
 
+
+        /* ── Pantalla completa cámara IA — igual que CitasAsignadas ── */
+        #altaFullscreen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 99999;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+            #altaFullscreen.activo {
+                display: flex;
+            }
+
+            #altaFullscreen .fs-toolbar {
+                background: #1a1a2e;
+                padding: 8px 12px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex-wrap: wrap;
+                flex-shrink: 0;
+            }
+
+            #altaFullscreen .fs-area {
+                flex: 1;
+                min-height: 0;
+                position: relative;
+                background: #000;
+            }
+
+            #altaFullscreen .fs-controls {
+                background: #1a1a2e;
+                padding: 8px 12px;
+                flex-shrink: 0;
+            }
+
+            #altaFullscreen .fs-resultado {
+                background: #0f3460;
+                color: #fff;
+                padding: 12px;
+                flex-shrink: 0;
+                display: none;
+                white-space: pre-line;
+                font-size: .9rem;
+                max-height: 35vh;
+                overflow-y: auto;
+            }
+
+                #altaFullscreen .fs-resultado.visible {
+                    display: block;
+                }
     </style>
 }
 <h2 class="mt-4 mb-4 d-flex align-items-center">
@@ -170,6 +227,63 @@
         <button type="button" class="btn btn-secondary float-start me-2" id="btnRegresar">Regresar</button>
         <button type="button" class="btn btn-primary float-end" id="btnSiguiente">Siguiente</button>
     </div>
+</div>
+
+<!-- ── Pantalla completa cámara AltaCita — idéntico a CitasAsignadas ── -->
+<div id="altaFullscreen">
+    <div class="fs-toolbar">
+        <button type="button" class="btn btn-outline-light btn-sm" id="altaFsBtnVolver">
+            <i class="fas fa-arrow-left me-1"></i>Volver
+        </button>
+        <span class="text-white small ms-2">Cámara — captura, recorta y analiza</span>
+        <div class="ms-auto">
+            <button type="button" class="btn btn-warning btn-sm d-none" id="altaFsBtnVerResultados">
+                <i class="fas fa-eye me-1"></i>Ver resultados y volver
+            </button>
+        </div>
+    </div>
+    <div class="fs-area" id="altaFsArea">
+        <div id="altaFsStreamDiv" style="width:100%;height:100%;display:flex;flex-direction:column;">
+            <video id="altaFsVideo" autoplay playsinline style="width:100%;flex:1;object-fit:cover;background:#000;"></video>
+            <div style="background:#1a1a2e;padding:10px;display:flex;gap:10px;flex-wrap:wrap;">
+                <button type="button" class="btn btn-primary" id="altaFsBtnCapturar">
+                    <i class="fas fa-camera me-1"></i>Capturar foto
+                </button>
+                <button type="button" class="btn btn-outline-light" id="altaFsBtnVoltear">
+                    <i class="fas fa-sync-alt me-1"></i>Voltear cámara
+                </button>
+            </div>
+        </div>
+        <div id="altaFsCropperDiv" style="display:none;width:100%;height:100%;overflow:auto;background:#111;">
+            <img id="altaFsImgCropper" src="" alt="Recortar" style="max-width:100%;display:block;" />
+        </div>
+    </div>
+    <div class="fs-controls" id="altaFsControles" style="display:none;">
+        <div class="d-flex gap-2 align-items-center mb-2 flex-wrap">
+            <span class="text-white small">Zoom:</span>
+            <i class="fas fa-search-minus text-white"></i>
+            <input type="range" id="altaFsSliderZoom" min="0.1" max="5" step="0.05" value="0.1"
+                   class="form-range flex-grow-1" style="max-width:260px;" />
+            <i class="fas fa-search-plus text-white"></i>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <div class="btn-group btn-group-sm">
+                <button type="button" class="btn btn-outline-light" id="altaFsBtnModeMover">
+                    <i class="fas fa-hand-paper me-1"></i>Mover
+                </button>
+                <button type="button" class="btn btn-outline-light active" id="altaFsBtnModeRecortar">
+                    <i class="fas fa-crop-alt me-1"></i>Recortar
+                </button>
+            </div>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="altaFsBtnReset">
+                <i class="fas fa-undo"></i> Reset
+            </button>
+            <button type="button" class="btn btn-success ms-auto" id="altaFsBtnAnalizar">
+                <i class="fas fa-microscope me-1"></i>Analizar recorte con IA
+            </button>
+        </div>
+    </div>
+    <div class="fs-resultado" id="altaFsResultado"></div>
 </div>
 
 @* Modal de resumen: aquí volvemos a incluir motivo + documento del paciente *@
@@ -329,42 +443,17 @@
                     </li>
                 </ul>
                 <div class="tab-content">
-                    <!-- Tab Cámara -->
+                    <!-- Tab Cámara — abre pantalla completa, idéntico a CitasAsignadas -->
                     <div class="tab-pane fade show active" id="altaTabCamara">
-                        <div class="d-flex gap-2 mb-2">
-                            <button type="button" class="btn btn-success btn-sm" id="altaBtnAbrirCamara">
-                                <i class="fas fa-camera me-1"></i>Tomar foto
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary btn-sm d-none" id="altaBtnCerrarCamara">
-                                Cancelar
-                            </button>
-                        </div>
-                        <div id="altaCamaraStream" class="d-none mb-2 position-relative">
-                            <video id="altaVideo" autoplay playsinline
-                                   style="width:100%;max-height:220px;border-radius:8px;background:#000;"></video>
-                            <button type="button" id="altaBtnVoltear"
-                                    class="btn btn-dark btn-sm position-absolute"
-                                    style="top:8px;right:8px;opacity:0.8;">
-                                <i class="fas fa-sync-alt"></i>
-                            </button>
-                            <div class="mt-1">
-                                <button type="button" class="btn btn-primary btn-sm" id="altaBtnCapturar">
-                                    <i class="fas fa-camera me-1"></i>Capturar
-                                </button>
-                            </div>
-                        </div>
-                        <div id="altaCropperWrapper" class="d-none mb-2">
-                            <div style="max-height:220px;background:#000;border-radius:8px;overflow:hidden;">
-                                <img id="altaImgCropper" src="" alt="Recortar" style="max-width:100%;display:block;" />
-                            </div>
-                            <div class="d-flex gap-2 mt-1 flex-wrap">
-                                <button type="button" class="btn btn-outline-secondary btn-sm" id="altaBtnZoomIn"><i class="fas fa-search-plus"></i></button>
-                                <button type="button" class="btn btn-outline-secondary btn-sm" id="altaBtnZoomOut"><i class="fas fa-search-minus"></i></button>
-                                <button type="button" class="btn btn-outline-secondary btn-sm" id="altaBtnResetCrop"><i class="fas fa-undo"></i></button>
-                                <button type="button" class="btn btn-success btn-sm ms-auto" id="altaBtnAnalizarCamara">
-                                    <i class="fas fa-microscope me-1"></i>Analizar con IA
-                                </button>
-                            </div>
+                        <button type="button" class="btn btn-success btn-sm" id="altaBtnAbrirCamara">
+                            <i class="fas fa-camera me-1"></i>Abrir cámara a pantalla completa
+                        </button>
+                        <p class="text-muted small mt-2 mb-1">
+                            Pantalla completa para capturar, recortar con zoom y analizar.
+                        </p>
+                        <div id="altaCamaraMiniPreview" class="d-none mt-1">
+                            <img id="altaCamaraMiniImg" src="" style="max-height:70px;border-radius:6px;border:2px solid #198754;" />
+                            <span class="badge bg-success ms-2">✓ Imagen capturada</span>
                         </div>
                     </div>
                     <!-- Tab Fichero -->
@@ -1012,121 +1101,159 @@
         document.addEventListener("DOMContentLoaded", function () {
 
             // Abrir cámara
-            document.getElementById("altaBtnAbrirCamara").addEventListener("click", function () {
-                altaFacingMode = "environment";
-                altaAbrirStream();
-            });
-            document.getElementById("altaBtnVoltear").addEventListener("click", function () {
+            // ── Pantalla completa cámara — idéntico a CitasAsignadas ──
+            function altaFsAbrir() {
+                document.getElementById("altaFullscreen").classList.add("activo");
+                document.body.style.overflow = "hidden";
+                document.getElementById("altaFsStreamDiv").style.display = "flex";
+                document.getElementById("altaFsCropperDiv").style.display = "none";
+                document.getElementById("altaFsControles").style.display = "none";
+                document.getElementById("altaFsResultado").classList.remove("visible");
+                document.getElementById("altaFsBtnVerResultados").classList.add("d-none");
+                altaFsAbrirStream();
+            }
+            function altaFsCerrar() {
+                altaFsCerrarStream();
+                if (altaCropper) { altaCropper.destroy(); altaCropper = null; }
+                document.getElementById("altaFullscreen").classList.remove("activo");
+                document.body.style.overflow = "";
+            }
+            function altaFsAbrirStream() {
+                altaFsCerrarStream();
+                navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: altaFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } }
+                }).then(function(s) {
+                    altaStreamCamara = s;
+                    document.getElementById("altaFsVideo").srcObject = s;
+                }).catch(function(e) {
+                    Swal.fire("Error", "No se pudo acceder a la cámara: " + e.message, "error");
+                });
+            }
+            function altaFsCerrarStream() {
+                if (altaStreamCamara) { altaStreamCamara.getTracks().forEach(t => t.stop()); altaStreamCamara = null; }
+            }
+
+            document.getElementById("altaBtnAbrirCamara").addEventListener("click", altaFsAbrir);
+            document.getElementById("altaFsBtnVolver").addEventListener("click", altaFsCerrar);
+            document.getElementById("altaFsBtnVoltear").addEventListener("click", function() {
                 altaFacingMode = altaFacingMode === "environment" ? "user" : "environment";
-                altaAbrirStream();
+                altaFsAbrirStream();
             });
-            document.getElementById("altaBtnCerrarCamara").addEventListener("click", function () {
-                altaCerrarStream();
-                document.getElementById("altaBtnCerrarCamara").classList.add("d-none");
-            });
-            document.getElementById("altaBtnCapturar").addEventListener("click", function () {
-                const video  = document.getElementById("altaVideo");
+            document.getElementById("altaFsBtnCapturar").addEventListener("click", function() {
+                const video = document.getElementById("altaFsVideo");
                 const canvas = document.createElement("canvas");
-                canvas.width  = video.videoWidth;
-                canvas.height = video.videoHeight;
+                canvas.width = video.videoWidth; canvas.height = video.videoHeight;
                 canvas.getContext("2d").drawImage(video, 0, 0);
-                altaCerrarStream();
-                document.getElementById("altaCamaraStream").classList.add("d-none");
-                const img = document.getElementById("altaImgCropper");
-                img.src   = canvas.toDataURL("image/jpeg", 0.92);
-                document.getElementById("altaCropperWrapper").classList.remove("d-none");
+                altaFsCerrarStream();
+                document.getElementById("altaFsStreamDiv").style.display = "none";
+                const img = document.getElementById("altaFsImgCropper");
+                img.src = canvas.toDataURL("image/jpeg", 0.92);
+                document.getElementById("altaFsCropperDiv").style.display = "block";
+                document.getElementById("altaFsControles").style.display = "block";
                 if (altaCropper) { altaCropper.destroy(); altaCropper = null; }
                 altaCropper = new Cropper(img, {
-                    aspectRatio: NaN, viewMode: 1, autoCropArea: 0.85,
+                    aspectRatio: NaN, viewMode: 1, autoCropArea: 0.5,
                     responsive: true, movable: true, zoomable: true,
-                    cropBoxMovable: true, cropBoxResizable: true, dragMode: "move"
+                    cropBoxMovable: true, cropBoxResizable: true, dragMode: "crop"
                 });
+                document.getElementById("altaFsSliderZoom").value = 0.1;
             });
-            document.getElementById("altaBtnZoomIn").addEventListener("click",    () => altaCropper?.zoom(0.1));
-            document.getElementById("altaBtnZoomOut").addEventListener("click",   () => altaCropper?.zoom(-0.1));
-            document.getElementById("altaBtnResetCrop").addEventListener("click", () => altaCropper?.reset());
-
-            // Analizar recorte cámara
-            document.getElementById("altaBtnAnalizarCamara").addEventListener("click", function () {
+            document.getElementById("altaFsSliderZoom").addEventListener("input", function() {
+                if (altaCropper) altaCropper.zoomTo(parseFloat(this.value));
+            });
+            document.getElementById("altaFsBtnReset").addEventListener("click", function() {
+                if (altaCropper) { altaCropper.reset(); document.getElementById("altaFsSliderZoom").value = 0.1; }
+            });
+            document.getElementById("altaFsBtnModeMover").addEventListener("click", function() {
+                if (!altaCropper) return;
+                altaCropper.setDragMode("move");
+                this.classList.add("active");
+                document.getElementById("altaFsBtnModeRecortar").classList.remove("active");
+            });
+            document.getElementById("altaFsBtnModeRecortar").addEventListener("click", function() {
+                if (!altaCropper) return;
+                altaCropper.setDragMode("crop");
+                this.classList.add("active");
+                document.getElementById("altaFsBtnModeMover").classList.remove("active");
+            });
+            document.getElementById("altaFsBtnAnalizar").addEventListener("click", function() {
                 if (!altaCropper) { Swal.fire("Aviso", "Primero capture una foto.", "warning"); return; }
                 const canvas = altaCropper.getCroppedCanvas({ maxWidth: 1600, maxHeight: 1600 });
                 const mx = Math.round(canvas.width * 0.10), my = Math.round(canvas.height * 0.10);
                 const full = document.createElement("canvas");
-                full.width  = canvas.width  + mx * 2;
-                full.height = canvas.height + my * 2;
+                full.width = canvas.width + mx * 2; full.height = canvas.height + my * 2;
                 full.getContext("2d").drawImage(canvas, mx, my);
+                const btn = this;
+                btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Analizando...';
                 full.toBlob(function(blob) {
                     altaImagenBlob = blob;
-                    altaAnalizarBlob(blob);
+                    // Minipreview en el tab
+                    document.getElementById("altaCamaraMiniImg").src = URL.createObjectURL(blob);
+                    document.getElementById("altaCamaraMiniPreview").classList.remove("d-none");
+                    altaAnalizarBlob(blob, btn);
                 }, "image/jpeg", 0.92);
             });
+            document.getElementById("altaFsBtnVerResultados").addEventListener("click", function() {
+                altaFsCerrar();
+                setTimeout(function() {
+                    document.getElementById("altaResultadoIA").classList.remove("d-none");
+                    document.getElementById("altaResultadoIA").scrollIntoView({ behavior: "smooth" });
+                }, 350);
+            });
 
-            // Analizar fichero subido
+            // Analizar fichero subido — sin cambios
             document.getElementById("altaBtnAnalizarFichero").addEventListener("click", function () {
                 const file = document.getElementById("fileDocumentoCitaUsr").files[0];
                 if (!file) { Swal.fire("Aviso", "Primero seleccione un fichero de imagen.", "warning"); return; }
                 if (!file.type.startsWith("image/")) { Swal.fire("Aviso", "Solo se pueden analizar imágenes con IA.", "warning"); return; }
-                altaAnalizarBlob(file);
+                altaAnalizarBlob(file, null);
             });
 
-            function altaAnalizarBlob(blob) {
+            function altaAnalizarBlob(blob, btn) {
                 Swal.fire({ title: "Analizando con IA...", allowOutsideClick: false, didOpen: () => Swal.showLoading() });
                 const servicio = document.getElementById("altaServicioIA").value || "dental";
                 const razon    = document.getElementById("txtRazonCitaUsr")?.value || "";
                 const contexto = razon
                     ? `El paciente describe: "${razon}". Analiza la imagen teniendo en cuenta este contexto.`
                     : "Analiza esta imagen clínica y describe los hallazgos observables.";
-
                 const form = new FormData();
                 form.append("idCita",   0);
                 form.append("imagen",   blob, "imagen.jpg");
                 form.append("servicio", servicio);
                 form.append("contexto", contexto);
-
                 fetch("/Citas/AnalizarImagenIA", { method: "POST", body: form })
                 .then(r => r.json())
                 .then(res => {
                     Swal.close();
+                    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-microscope me-1"></i>Analizar recorte con IA'; }
                     if (res.ok) {
                         altaDiagnosticoIA = res.diagnostico;
                         document.getElementById("altaTextoIA").innerText = res.diagnostico;
                         document.getElementById("altaResultadoIA").classList.remove("d-none");
+                        // Mostrar botón "Ver resultados y volver" si estamos en fullscreen
+                        if (document.getElementById("altaFullscreen").classList.contains("activo")) {
+                            document.getElementById("altaFsResultado").innerText = res.diagnostico;
+                            document.getElementById("altaFsResultado").classList.add("visible");
+                            document.getElementById("altaFsBtnVerResultados").classList.remove("d-none");
+                        }
                     } else {
                         Swal.fire("Error IA", res.msg || "Error desconocido", "error");
                     }
                 })
-                .catch(() => Swal.fire("Error", "Fallo de comunicación con el servidor.", "error"));
-            }
-
-            function altaAbrirStream() {
-                altaCerrarStream();
-                document.getElementById("altaCropperWrapper").classList.add("d-none");
-                navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: altaFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } }
-                }).then(function(stream) {
-                    altaStreamCamara = stream;
-                    document.getElementById("altaVideo").srcObject = stream;
-                    document.getElementById("altaCamaraStream").classList.remove("d-none");
-                    document.getElementById("altaBtnCerrarCamara").classList.remove("d-none");
-                }).catch(function(e) {
-                    Swal.fire("Error", "No se pudo acceder a la cámara: " + e.message, "error");
+                .catch(() => {
+                    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-microscope me-1"></i>Analizar recorte con IA'; }
+                    Swal.fire("Error", "Fallo de comunicación con el servidor.", "error");
                 });
-            }
-
-            function altaCerrarStream() {
-                if (altaStreamCamara) { altaStreamCamara.getTracks().forEach(t => t.stop()); altaStreamCamara = null; }
-                document.getElementById("altaCamaraStream").classList.add("d-none");
             }
 
             // Cerrar cámara al cerrar modal
             document.getElementById("mdData").addEventListener("hidden.bs.modal", function () {
-                altaCerrarStream();
+                altaFsCerrar();
                 if (altaCropper) { altaCropper.destroy(); altaCropper = null; }
-                altaImagenBlob   = null;
+                altaImagenBlob    = null;
                 altaDiagnosticoIA = "";
-                document.getElementById("altaCropperWrapper").classList.add("d-none");
                 document.getElementById("altaResultadoIA").classList.add("d-none");
-                document.getElementById("altaBtnCerrarCamara").classList.add("d-none");
+                document.getElementById("altaCamaraMiniPreview").classList.add("d-none");
             });
         });
     </script>
