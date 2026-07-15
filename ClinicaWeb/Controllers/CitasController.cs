@@ -2453,13 +2453,14 @@ LIMIT 1;
         // 0) Vista del simulador — ahora como Vista Razor en Views/Citas
         //    GET /Citas/PublicoSimulador
         // -----------------------------------------------------------------
+       
         [HttpGet]
         [AllowAnonymous]
-        public IActionResult PublicoSimulador()
+        public IActionResult PublicoSimulador(string doctorCorreo = null)
         {
-            return View();   // busca Views/Citas/PublicoSimulador.cshtml
+            ViewBag.DoctorCorreoFijo = doctorCorreo;
+            return View();
         }
-
         // -----------------------------------------------------------------
         // 1) Identificar / dar de alta al contacto
         //    POST /Citas/PublicoIdentificarUsuario
