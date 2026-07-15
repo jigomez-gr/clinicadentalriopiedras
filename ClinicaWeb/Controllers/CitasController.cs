@@ -2405,7 +2405,432 @@ LIMIT 1;
             return Json(new { ok = true });
         }
 
- 
+        // =====================================================================
+        // 1) CAMBIOS EN EL CONSTRUCTOR DE CitasController
+        //    (añade el repo nuevo + logger; no toques lo que ya tenías)
+        // =====================================================================
+
+        /*
+        private readonly IDoctorRepositorio _repositorioDoctor;
+        private readonly ICitaRepositorio _repositorioCita;
+        private readonly IConfiguration _config;
+        private readonly IPeticionDiagnosticoLandingRepositorio _repositorioLanding;   // NUEVO
+        private readonly ILogger<CitasController> _logger;                            // NUEVO
+
+        public CitasController(
+            IDoctorRepositorio repositorioDoctor,
+            ICitaRepositorio repositorioCita,
+            IConfiguration config,
+            IPeticionDiagnosticoLandingRepositorio repositorioLanding,   // NUEVO
+            ILogger<CitasController> logger)                              // NUEVO
+        {
+            _repositorioDoctor = repositorioDoctor;
+            _repositorioCita = repositorioCita;
+            _config = config;
+            _repositorioLanding = repositorioLanding;   // NUEVO
+            _logger = logger;                           // NUEVO
+        }
+        */
+
+        // Añade también estos dos usings arriba del archivo si no los tienes ya:
+        // using ClinicaData.Contrato;   (ya lo tienes)
+        // using System.Text.Json;       (ya lo tienes, se usa en AnalizarImagenIA)
+
+
+        // =====================================================================
+        // 2) MÉTODOS PÚBLICOS DEL SIMULADOR — pegar dentro de la clase CitasController
+        //    OJO: [AllowAnonymous] va EN CADA ACCIÓN, nunca a nivel de clase,
+        //    porque este controller mezcla endpoints con [Authorize] y sin él.
+        //    Prefijo "Publico" en los nombres para no chocar con tus métodos
+        //    existentes (AnalizarImagenIA, etc.).
+        // =====================================================================
+
+        // -----------------------------------------------------------------
+        // 0) Vista del simulador (sirve el HTML estático desde wwwroot)
+        //    GET /Citas/PublicoSimulador
+        // -----------------------------------------------------------------
+        // -----------------------------------------------------------------
+        // 0) Vista del simulador — ahora como Vista Razor en Views/Citas
+        //    GET /Citas/PublicoSimulador
+        // -----------------------------------------------------------------
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult PublicoSimulador()
+        {
+            return View();   // busca Views/Citas/PublicoSimulador.cshtml
+        }
+
+        // -----------------------------------------------------------------
+        // 1) Identificar / dar de alta al contacto
+        //    POST /Citas/PublicoIdentificarUsuario
+        //    body: { "correo": "...", "movil": "...", "telegramId": "...",
+        //            "telegramUsername": "...", "nombre": "...", "apellido": "..." }
+        // -----------------------------------------------------------------
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> PublicoIdentificarUsuario([FromBody] JsonElement body)
+        {
+            string correo = LeerString(body, "correo");
+            string movil = LeerString(body, "movil");
+            string telegramId = LeerString(body, "telegramId");
+            string telegramUsername = LeerString(body, "telegramUsername");
+            string nombre = LeerString(body, "nombre");
+            string apellido = LeerString(body, "apellido");
+
+            if (string.IsNullOrWhiteSpace(correo) && string.IsNullOrWhiteSpace(movil) && string.IsNullOrWhiteSpace(telegramId))
+                return BadRequest(new { ok = false, msg = "Indique correo, móvil o Telegram." });
+
+            var existente = await _repositorioCita.BuscarUsuarioLanding(correo, movil, telegramId);
+            if (existente.existe)
+            {
+                return Ok(new
+                {
+                    ok = true,
+                    existe = true,
+                    idUsuario = existente.idUsuario,
+                    tieneEmail = !string.IsNullOrWhiteSpace(existente.correo),
+                    tieneMovil = !string.IsNullOrWhiteSpace(existente.movil),
+                    tieneTelegram = !string.IsNullOrWhiteSpace(existente.telegramId)
+                });
+            }
+
+            var alta = await _repositorioCita.AltaUsuarioLanding(correo, movil, telegramId, telegramUsername, nombre, apellido);
+            if (!alta.ok)
+                return StatusCode(StatusCodes.Status400BadRequest, new { ok = false, existe = false, msg = alta.msg });
+
+            return Ok(new
+            {
+                ok = true,
+                existe = false,
+                idUsuario = alta.idUsuario,
+                tieneEmail = !string.IsNullOrWhiteSpace(correo),
+                tieneMovil = !string.IsNullOrWhiteSpace(movil),
+                tieneTelegram = !string.IsNullOrWhiteSpace(telegramId)
+            });
+        }
+
+        // -----------------------------------------------------------------
+        // 2) Catálogo de servicios IA
+        //    GET /Citas/PublicoListaServicios
+        // -----------------------------------------------------------------
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> PublicoListaServicios()
+        {
+            var lista = await _repositorioCita.ListaServiciosIA();
+
+            var data = new List<object>();
+            foreach (var s in lista)
+                data.Add(new { idServicioIA = s.idServicioIA, codigo = s.codigo, nombre = s.nombre });
+
+            return Ok(new { ok = true, data });
+        }
+
+        // -----------------------------------------------------------------
+        // Helpers de lectura de JsonElement (sin clases de request/DTO)
+        // Pégalos también dentro de la clase, una sola vez.
+        // -----------------------------------------------------------------
+        private static string LeerString(JsonElement body, string prop)
+        {
+            if (body.ValueKind == JsonValueKind.Object && body.TryGetProperty(prop, out var v) && v.ValueKind == JsonValueKind.String)
+                return v.GetString();
+            return null;
+        }
+
+        private static int LeerInt(JsonElement body, string prop)
+        {
+            if (body.ValueKind == JsonValueKind.Object && body.TryGetProperty(prop, out var v))
+            {
+                if (v.ValueKind == JsonValueKind.Number && v.TryGetInt32(out var n)) return n;
+                if (v.ValueKind == JsonValueKind.String && int.TryParse(v.GetString(), out var n2)) return n2;
+            }
+            return 0;
+        }
+
+        private static bool LeerBool(JsonElement body, string prop)
+        {
+            if (body.ValueKind == JsonValueKind.Object && body.TryGetProperty(prop, out var v))
+            {
+                if (v.ValueKind == JsonValueKind.True) return true;
+                if (v.ValueKind == JsonValueKind.False) return false;
+                if (v.ValueKind == JsonValueKind.String) return bool.TryParse(v.GetString(), out var b) && b;
+            }
+            return false;
+        }
+        // =====================================================================
+        // PASO 2 — pegar dentro de la clase CitasController, junto a los
+        // métodos del paso 1 (PublicoSimulador, PublicoIdentificarUsuario,
+        // PublicoListaServicios, LeerString/LeerInt/LeerBool).
+        // Todo usa _repositorioCita (ICitaRepositorio), nada de repos nuevos.
+        // =====================================================================
+
+        // -----------------------------------------------------------------
+        // 3) Analizar imagen en el DGX
+        //    POST /Citas/PublicoAnalizarImagen
+        //    form-data: idUsuario, imagen (file), servicio, contexto
+        // -----------------------------------------------------------------
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> PublicoAnalizarImagen(
+            int idUsuario,
+            IFormFile imagen,
+            string servicio,
+            string contexto = null)
+        {
+            try
+            {
+                if (idUsuario <= 0)
+                    return Ok(new { ok = false, msg = "Contacto no identificado." });
+
+                if (imagen == null || imagen.Length == 0)
+                    return Ok(new { ok = false, msg = "Debe adjuntar una imagen." });
+
+                var servicioIA = await _repositorioCita.ObtenerServicioIA(servicio);
+
+                var iaConfig = _config.GetSection("IAConfig");
+                string urlIA = servicioIA.existe && !string.IsNullOrWhiteSpace(servicioIA.urlEndpointDgx)
+                    ? servicioIA.urlEndpointDgx
+                    : servicio switch
+                    {
+                        "rx" => iaConfig["UrlAnalizarRx"] ?? "",
+                        "general" => iaConfig["UrlAnalizarGeneral"] ?? "",
+                        "derma" => iaConfig["UrlAnalizarDerma"] ?? "",
+                        "belleza" => iaConfig["UrlAnalizarBelleza"] ?? "",
+                        _ => iaConfig["UrlAnalizarDental"] ?? ""
+                    };
+
+                if (string.IsNullOrWhiteSpace(urlIA))
+                    return Ok(new { ok = false, msg = "Servicio IA no configurado." });
+
+                byte[] imageBytes;
+                using (var ms = new MemoryStream())
+                {
+                    await imagen.CopyToAsync(ms);
+                    imageBytes = ms.ToArray();
+                }
+
+                string diagnosticoIA;
+                using (var client = new HttpClient { Timeout = TimeSpan.FromSeconds(120) })
+                {
+                    using var form = new MultipartFormDataContent();
+
+                    var imageContent = new ByteArrayContent(imageBytes);
+                    imageContent.Headers.ContentType =
+                        new System.Net.Http.Headers.MediaTypeHeaderValue(imagen.ContentType ?? "image/jpeg");
+                    form.Add(imageContent, "imagen", imagen.FileName);
+
+                    string textoPrompt = string.IsNullOrWhiteSpace(contexto)
+                        ? "Analiza esta imagen clínica enviada por un usuario de la landing y describe los hallazgos observables."
+                        : contexto;
+                    form.Add(new StringContent(textoPrompt), "texto");
+                    form.Add(new StringContent(servicio ?? "dental"), "servicio");
+
+                    var respuesta = await client.PostAsync(urlIA, form);
+                    if (!respuesta.IsSuccessStatusCode)
+                        return Ok(new { ok = false, msg = $"Error servicio IA: {respuesta.StatusCode}" });
+
+                    var json = await respuesta.Content.ReadAsStringAsync();
+                    using var doc = System.Text.Json.JsonDocument.Parse(json);
+                    var root = doc.RootElement;
+
+                    if (!root.TryGetProperty("ok", out var okProp) || !okProp.GetBoolean())
+                    {
+                        string errMsg = root.TryGetProperty("error", out var e) ? e.GetString() ?? "" : "Error IA";
+                        return Ok(new { ok = false, msg = errMsg });
+                    }
+
+                    diagnosticoIA = root.TryGetProperty("respuesta", out var rProp) ? rProp.GetString() ?? "" : "";
+                }
+
+                return Ok(new
+                {
+                    ok = true,
+                    diagnostico = diagnosticoIA,
+                    imagenBase64 = Convert.ToBase64String(imageBytes),
+                    imagenContentType = imagen.ContentType ?? "image/jpeg"
+                });
+            }
+            catch (Exception ex)
+            {
+                await _repositorioCita.LogEnTexte("PublicoAnalizarImagen: " + ex.Message);
+                return Ok(new { ok = false, msg = "Error: " + ex.Message });
+            }
+        }
+
+        // -----------------------------------------------------------------
+        // 4) Guardar la petición y avisar al doctor
+        //    POST /Citas/PublicoEnviarPeticion
+        //    body: { "idUsuario": 0, "servicioCodigo": "dental", "doctorCorreo": "...",
+        //            "canalRespuesta": "email|whatsapp|telegram", "motivoPaciente": "...",
+        //            "imagenBase64": "...", "imagenContentType": "image/jpeg",
+        //            "diagnosticoIA": "...", "consentimiento": true }
+        // -----------------------------------------------------------------
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> PublicoEnviarPeticion([FromBody] System.Text.Json.JsonElement body)
+        {
+            int idUsuario = LeerInt(body, "idUsuario");
+            string servicioCodigo = LeerString(body, "servicioCodigo");
+            string doctorCorreoParam = LeerString(body, "doctorCorreo");
+            string canalRespuesta = LeerString(body, "canalRespuesta");
+            string motivoPaciente = LeerString(body, "motivoPaciente");
+            string imagenBase64 = LeerString(body, "imagenBase64");
+            string imagenContentType = LeerString(body, "imagenContentType");
+            string diagnosticoIA = LeerString(body, "diagnosticoIA");
+            bool consentimiento = LeerBool(body, "consentimiento");
+
+            if (idUsuario <= 0)
+                return BadRequest(new { ok = false, msg = "Contacto no identificado." });
+
+            if (!consentimiento)
+                return BadRequest(new { ok = false, msg = "Debe otorgar su consentimiento explícito para enviar la petición al doctor." });
+
+            if (canalRespuesta != "email" && canalRespuesta != "whatsapp" && canalRespuesta != "telegram")
+                return BadRequest(new { ok = false, msg = "Canal de respuesta inválido." });
+
+            if (string.IsNullOrWhiteSpace(doctorCorreoParam))
+                return BadRequest(new { ok = false, msg = "Falta el correo del doctor." });
+
+            var usuario = await _repositorioCita.BuscarUsuarioLandingPorId(idUsuario);
+            if (!usuario.existe)
+                return BadRequest(new { ok = false, msg = "Contacto no encontrado." });
+
+            string contacto = canalRespuesta switch
+            {
+                "email" => usuario.correo,
+                "whatsapp" => usuario.movil,
+                "telegram" => usuario.telegramId,
+                _ => ""
+            };
+
+            if (string.IsNullOrWhiteSpace(contacto))
+                return BadRequest(new { ok = false, msg = $"No tiene registrado un contacto válido para el canal '{canalRespuesta}'." });
+
+            var doctor = await _repositorioCita.ValidarDoctorPorCorreo(doctorCorreoParam);
+            if (!doctor.esDoctor)
+                return BadRequest(new { ok = false, msg = "El doctor indicado no es válido." });
+
+            string doctorNombreCompleto = (doctor.nombre + " " + doctor.apellido).Trim();
+
+            var servicioIA = await _repositorioCita.ObtenerServicioIA(servicioCodigo);
+
+            byte[] imagenBytes = null;
+            if (!string.IsNullOrWhiteSpace(imagenBase64))
+            {
+                try { imagenBytes = Convert.FromBase64String(imagenBase64); }
+                catch { /* si viene corrupta seguimos sin imagen antes que romper la petición */ }
+            }
+
+            int idPeticion = await _repositorioCita.GuardarPeticionLanding(
+                idUsuario,
+                servicioIA.existe ? servicioIA.idServicioIA : (int?)null,
+                servicioCodigo,
+                doctor.idUsuario,
+                doctorNombreCompleto,
+                doctor.correo,
+                canalRespuesta,
+                contacto,
+                motivoPaciente,
+                imagenBytes,
+                imagenContentType,
+                diagnosticoIA,
+                HttpContext.Connection.RemoteIpAddress?.ToString());
+
+            try
+            {
+                await EnviarCorreoDoctorLanding(
+                    doctor.correo, doctorNombreCompleto, usuario.nombre, usuario.apellido,
+                    canalRespuesta, contacto, motivoPaciente, diagnosticoIA,
+                    servicioIA.existe ? servicioIA.nombre : servicioCodigo,
+                    imagenBase64, imagenContentType, idPeticion);
+
+                await _repositorioCita.MarcarCorreoEnviadoLanding(idPeticion, true, null);
+            }
+            catch (Exception ex)
+            {
+                await _repositorioCita.LogEnTexte($"PublicoEnviarPeticion #{idPeticion}: " + ex.Message);
+                await _repositorioCita.MarcarCorreoEnviadoLanding(idPeticion, false, ex.Message);
+                return Ok(new { ok = true, idPeticion, correoEnviado = false, msg = "Petición registrada, pero hubo un problema notificando al doctor. El equipo lo revisará." });
+            }
+
+            return Ok(new { ok = true, idPeticion, correoEnviado = true });
+        }
+
+        // -----------------------------------------------------------------
+        // Envío de correo — SmtpConfig en appsettings.json (System.Net.Mail,
+        // confirmado que funciona bien con Gmail + App Password en 587/STARTTLS)
+        // -----------------------------------------------------------------
+        private async Task EnviarCorreoDoctorLanding(
+            string doctorCorreo, string doctorNombre,
+            string pacienteNombre, string pacienteApellido,
+            string canalRespuesta, string contactoRespuesta,
+            string motivoPaciente, string diagnosticoIA, string servicioNombre,
+            string imagenBase64, string imagenContentType, int idPeticion)
+        {
+            var smtp = _config.GetSection("SmtpConfig");
+            string host = smtp["Host"];
+            if (string.IsNullOrWhiteSpace(host))
+                throw new Exception("SmtpConfig:Host no configurado en appsettings.json");
+
+            int port = int.TryParse(smtp["Port"], out var p) ? p : 587;
+            string usuarioSmtp = smtp["Usuario"] ?? "";
+            string claveSmtp = smtp["Clave"] ?? "";
+            string desdeCorreo = smtp["DesdeCorreo"] ?? usuarioSmtp;
+            string desdeNombre = smtp["DesdeNombre"] ?? "Clínica";
+            bool enableSsl = !bool.TryParse(smtp["EnableSsl"], out var ssl) || ssl;
+
+            string canalTexto = canalRespuesta switch
+            {
+                "email" => "Email",
+                "whatsapp" => "WhatsApp",
+                "telegram" => "Telegram",
+                _ => canalRespuesta
+            };
+
+            string cuerpo =
+                "<h3>Nueva petición de diagnóstico desde la landing</h3>" +
+                $"<p><b>Referencia interna:</b> #{idPeticion}</p>" +
+                $"<p><b>Servicio:</b> {System.Net.WebUtility.HtmlEncode(servicioNombre)}</p>" +
+                $"<p><b>Paciente:</b> {System.Net.WebUtility.HtmlEncode(pacienteNombre)} {System.Net.WebUtility.HtmlEncode(pacienteApellido)}</p>" +
+                $"<p><b>Canal preferido de respuesta:</b> {canalTexto} — {System.Net.WebUtility.HtmlEncode(contactoRespuesta)}</p>" +
+                $"<p><b>Motivo indicado por el paciente:</b><br/>{System.Net.WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(motivoPaciente) ? "(sin motivo)" : motivoPaciente)}</p>" +
+                "<hr/>" +
+                "<p><b>Diagnóstico preliminar IA:</b></p>" +
+                $"<p style='white-space:pre-line'>{System.Net.WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(diagnosticoIA) ? "(sin diagnóstico)" : diagnosticoIA)}</p>" +
+                "<hr/>" +
+                "<p style='color:#888;font-size:12px'>El paciente dio su consentimiento explícito para remitirle estos datos y la imagen adjunta (si aplica) para que pueda contactarle.</p>";
+
+            using var mensaje = new System.Net.Mail.MailMessage();
+            mensaje.From = new System.Net.Mail.MailAddress(desdeCorreo, desdeNombre);
+            mensaje.To.Add(new System.Net.Mail.MailAddress(doctorCorreo, doctorNombre));
+            mensaje.Subject = "PETICION DIAGNOSTICO LANDING";
+            mensaje.Body = cuerpo;
+            mensaje.IsBodyHtml = true;
+
+            MemoryStream msImagen = null;
+            if (!string.IsNullOrWhiteSpace(imagenBase64))
+            {
+                var bytes = Convert.FromBase64String(imagenBase64);
+                msImagen = new MemoryStream(bytes);
+                string ext = (imagenContentType ?? "image/jpeg").Contains("png") ? "png" : "jpg";
+                mensaje.Attachments.Add(new System.Net.Mail.Attachment(msImagen, $"imagen_peticion_{idPeticion}.{ext}", imagenContentType ?? "image/jpeg"));
+            }
+
+            using var smtpClient = new System.Net.Mail.SmtpClient(host, port)
+            {
+                Credentials = new System.Net.NetworkCredential(usuarioSmtp, claveSmtp),
+                EnableSsl = enableSsl
+            };
+
+            try
+            {
+                await smtpClient.SendMailAsync(mensaje);
+            }
+            finally
+            {
+                msImagen?.Dispose();
+            }
+        }
 
     }
 }   

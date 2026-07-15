@@ -2215,6 +2215,303 @@ AND c.fechacita <= NOW() + INTERVAL '48 hours'
                 return $"Error al guardar indicaciones: {ex.Message}";
             }
         }
+        // =====================================================================
+        // Añadir estos métodos dentro de la clase CitaRepositorio (implementa
+        // las firmas nuevas de ICitaRepositorio). Usan el mismo "con.CadenaSQL"
+        // que ya usa toda la clase, así que landingclinica debe estar en la
+        // MISMA base de datos que public.
+        // =====================================================================
+
+        public async Task<(bool existe, int idUsuario, string nombre, string apellido, string correo,
+                            string movil, string telegramId, string telegramUsername)>
+            BuscarUsuarioLanding(string correo, string movil, string telegramId)
+        {
+            correo = string.IsNullOrWhiteSpace(correo) ? null : correo.Trim().ToLower();
+            movil = string.IsNullOrWhiteSpace(movil) ? null : movil.Trim();
+            telegramId = string.IsNullOrWhiteSpace(telegramId) ? null : telegramId.Trim();
+
+            if (correo == null && movil == null && telegramId == null)
+                return (false, 0, "", "", "", "", "", "");
+
+            await using var conexion = new NpgsqlConnection(con.CadenaSQL);
+            await conexion.OpenAsync();
+
+            const string sql = @"
+        SELECT idusuario, nombre, apellido, correo, movil, telegram_id, telegram_username
+        FROM landingclinica.usuario
+        WHERE (@correo IS NOT NULL AND lower(correo) = @correo)
+           OR (@movil IS NOT NULL AND movil = @movil)
+           OR (@telegramId IS NOT NULL AND telegram_id = @telegramId)
+        LIMIT 1";
+
+            await using var cmd = new NpgsqlCommand(sql, conexion);
+            cmd.Parameters.AddWithValue("@correo", (object)correo ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@movil", (object)movil ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@telegramId", (object)telegramId ?? DBNull.Value);
+
+            await using var reader = await cmd.ExecuteReaderAsync();
+            if (!await reader.ReadAsync())
+                return (false, 0, "", "", "", "", "", "");
+
+            return (
+                true,
+                reader.GetInt32(reader.GetOrdinal("idusuario")),
+                reader.IsDBNull(reader.GetOrdinal("nombre")) ? "" : reader.GetString(reader.GetOrdinal("nombre")),
+                reader.IsDBNull(reader.GetOrdinal("apellido")) ? "" : reader.GetString(reader.GetOrdinal("apellido")),
+                reader.IsDBNull(reader.GetOrdinal("correo")) ? "" : reader.GetString(reader.GetOrdinal("correo")),
+                reader.IsDBNull(reader.GetOrdinal("movil")) ? "" : reader.GetString(reader.GetOrdinal("movil")),
+                reader.IsDBNull(reader.GetOrdinal("telegram_id")) ? "" : reader.GetString(reader.GetOrdinal("telegram_id")),
+                reader.IsDBNull(reader.GetOrdinal("telegram_username")) ? "" : reader.GetString(reader.GetOrdinal("telegram_username"))
+            );
+        }
+
+        public async Task<(bool existe, int idUsuario, string nombre, string apellido, string correo,
+                            string movil, string telegramId, string telegramUsername)>
+            BuscarUsuarioLandingPorId(int idUsuario)
+        {
+            await using var conexion = new NpgsqlConnection(con.CadenaSQL);
+            await conexion.OpenAsync();
+
+            const string sql = @"
+        SELECT idusuario, nombre, apellido, correo, movil, telegram_id, telegram_username
+        FROM landingclinica.usuario
+        WHERE idusuario = @idUsuario
+        LIMIT 1";
+
+            await using var cmd = new NpgsqlCommand(sql, conexion);
+            cmd.Parameters.AddWithValue("@idUsuario", idUsuario);
+
+            await using var reader = await cmd.ExecuteReaderAsync();
+            if (!await reader.ReadAsync())
+                return (false, 0, "", "", "", "", "", "");
+
+            return (
+                true,
+                reader.GetInt32(reader.GetOrdinal("idusuario")),
+                reader.IsDBNull(reader.GetOrdinal("nombre")) ? "" : reader.GetString(reader.GetOrdinal("nombre")),
+                reader.IsDBNull(reader.GetOrdinal("apellido")) ? "" : reader.GetString(reader.GetOrdinal("apellido")),
+                reader.IsDBNull(reader.GetOrdinal("correo")) ? "" : reader.GetString(reader.GetOrdinal("correo")),
+                reader.IsDBNull(reader.GetOrdinal("movil")) ? "" : reader.GetString(reader.GetOrdinal("movil")),
+                reader.IsDBNull(reader.GetOrdinal("telegram_id")) ? "" : reader.GetString(reader.GetOrdinal("telegram_id")),
+                reader.IsDBNull(reader.GetOrdinal("telegram_username")) ? "" : reader.GetString(reader.GetOrdinal("telegram_username"))
+            );
+        }
+
+        public async Task<(bool ok, string msg, int idUsuario)>
+            AltaUsuarioLanding(string correo, string movil, string telegramId,
+                                string telegramUsername, string nombre, string apellido)
+        {
+            correo = string.IsNullOrWhiteSpace(correo) ? null : correo.Trim().ToLower();
+            movil = string.IsNullOrWhiteSpace(movil) ? null : movil.Trim();
+            telegramId = string.IsNullOrWhiteSpace(telegramId) ? null : telegramId.Trim();
+            telegramUsername = string.IsNullOrWhiteSpace(telegramUsername) ? null : telegramUsername.Trim();
+            nombre = string.IsNullOrWhiteSpace(nombre) ? null : nombre.Trim();
+            apellido = string.IsNullOrWhiteSpace(apellido) ? null : apellido.Trim();
+
+            if (correo == null && movil == null && telegramId == null)
+                return (false, "Debe indicar al menos un correo, móvil o Telegram para continuar.", 0);
+
+            await using var conexion = new NpgsqlConnection(con.CadenaSQL);
+            await conexion.OpenAsync();
+
+            const string sqlInsert = @"
+        INSERT INTO landingclinica.usuario
+            (nombre, apellido, correo, movil, telegram_id, telegram_username, fechacreacion)
+        VALUES
+            (@nombre, @apellido, @correo, @movil, @telegramId, @telegramUsername, CURRENT_TIMESTAMP)
+        RETURNING idusuario";
+
+            await using var cmd = new NpgsqlCommand(sqlInsert, conexion);
+            cmd.Parameters.AddWithValue("@nombre", (object)nombre ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@apellido", (object)apellido ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@correo", (object)correo ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@movil", (object)movil ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@telegramId", (object)telegramId ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@telegramUsername", (object)telegramUsername ?? DBNull.Value);
+
+            try
+            {
+                var idNuevo = (int)(await cmd.ExecuteScalarAsync())!;
+                return (true, "", idNuevo);
+            }
+            catch (PostgresException pgEx) when (pgEx.SqlState == "23505") // unique_violation
+            {
+                var existente = await BuscarUsuarioLanding(correo, movil, telegramId);
+                if (existente.existe)
+                    return (true, "", existente.idUsuario);
+
+                return (false, "El contacto ya está registrado, pero no se pudo recuperar. Intente de nuevo.", 0);
+            }
+            catch (Exception ex)
+            {
+                return (false, "No se pudo registrar el contacto: " + ex.Message, 0);
+            }
+        }
+
+        public async Task<List<(int idServicioIA, string codigo, string nombre, string urlEndpointDgx)>>
+            ListaServiciosIA()
+        {
+            var lista = new List<(int, string, string, string)>();
+
+            await using var conexion = new NpgsqlConnection(con.CadenaSQL);
+            await conexion.OpenAsync();
+
+            const string sql = @"
+        SELECT idservicioia, codigo, nombre, url_endpoint_dgx
+        FROM landingclinica.servicioia
+        WHERE activo = true
+        ORDER BY orden ASC, nombre ASC";
+
+            await using var cmd = new NpgsqlCommand(sql, conexion);
+            await using var reader = await cmd.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                lista.Add((
+                    reader.GetInt32(reader.GetOrdinal("idservicioia")),
+                    reader.GetString(reader.GetOrdinal("codigo")),
+                    reader.GetString(reader.GetOrdinal("nombre")),
+                    reader.IsDBNull(reader.GetOrdinal("url_endpoint_dgx")) ? "" : reader.GetString(reader.GetOrdinal("url_endpoint_dgx"))
+                ));
+            }
+
+            return lista;
+        }
+
+        public async Task<(bool existe, int idServicioIA, string codigo, string nombre, string urlEndpointDgx)>
+            ObtenerServicioIA(string codigo)
+        {
+            await using var conexion = new NpgsqlConnection(con.CadenaSQL);
+            await conexion.OpenAsync();
+
+            const string sql = @"
+        SELECT idservicioia, codigo, nombre, url_endpoint_dgx
+        FROM landingclinica.servicioia
+        WHERE codigo = @codigo AND activo = true
+        LIMIT 1";
+
+            await using var cmd = new NpgsqlCommand(sql, conexion);
+            cmd.Parameters.AddWithValue("@codigo", codigo ?? "");
+
+            await using var reader = await cmd.ExecuteReaderAsync();
+            if (!await reader.ReadAsync())
+                return (false, 0, "", "", "");
+
+            return (
+                true,
+                reader.GetInt32(reader.GetOrdinal("idservicioia")),
+                reader.GetString(reader.GetOrdinal("codigo")),
+                reader.GetString(reader.GetOrdinal("nombre")),
+                reader.IsDBNull(reader.GetOrdinal("url_endpoint_dgx")) ? "" : reader.GetString(reader.GetOrdinal("url_endpoint_dgx"))
+            );
+        }
+
+        // OJO: asume que public.usuario tiene idusuario, nombre, apellido, correo,
+        // idrolusuario (mismo patrón que ya usa tu ObtenerPorChatId de este archivo).
+        public async Task<(bool esDoctor, int idUsuario, string nombre, string apellido, string correo)>
+            ValidarDoctorPorCorreo(string correoDoctor)
+        {
+            if (string.IsNullOrWhiteSpace(correoDoctor))
+                return (false, 0, "", "", "");
+
+            await using var conexion = new NpgsqlConnection(con.CadenaSQL);
+            await conexion.OpenAsync();
+
+            const string sql = @"
+        SELECT idusuario, nombre, apellido, correo
+        FROM public.usuario
+        WHERE lower(correo) = @correo
+          AND idrolusuario = 2
+        LIMIT 1";
+
+            await using var cmd = new NpgsqlCommand(sql, conexion);
+            cmd.Parameters.AddWithValue("@correo", correoDoctor.Trim().ToLower());
+
+            await using var reader = await cmd.ExecuteReaderAsync();
+            if (!await reader.ReadAsync())
+                return (false, 0, "", "", "");
+
+            return (
+                true,
+                reader.GetInt32(reader.GetOrdinal("idusuario")),
+                reader.IsDBNull(reader.GetOrdinal("nombre")) ? "" : reader.GetString(reader.GetOrdinal("nombre")),
+                reader.IsDBNull(reader.GetOrdinal("apellido")) ? "" : reader.GetString(reader.GetOrdinal("apellido")),
+                reader.GetString(reader.GetOrdinal("correo"))
+            );
+        }
+
+        public async Task<int> GuardarPeticionLanding(
+            int idUsuario,
+            int? idServicioIA,
+            string servicioCodigo,
+            int? idUsuarioDoctor,
+            string doctorNombre,
+            string doctorCorreo,
+            string canalRespuesta,
+            string contactoRespuesta,
+            string motivoPaciente,
+            byte[] imagen,
+            string imagenContentType,
+            string diagnosticoIA,
+            string ipOrigen)
+        {
+            await using var conexion = new NpgsqlConnection(con.CadenaSQL);
+            await conexion.OpenAsync();
+
+            const string sql = @"
+        INSERT INTO landingclinica.peticiondiagnostico
+            (idusuario, idservicioia, servicio_codigo, idusuario_doctor, doctor_nombre, doctor_correo,
+             canal_respuesta, contacto_respuesta, motivo_paciente, imagen, imagen_contenttype,
+             diagnostico_ia, consentimiento, fecha_consentimiento, ip_origen, estado)
+        VALUES
+            (@idUsuario, @idServicioIA, @servicioCodigo, @idUsuarioDoctor, @doctorNombre, @doctorCorreo,
+             @canalRespuesta, @contactoRespuesta, @motivoPaciente, @imagen, @imagenContentType,
+             @diagnosticoIA, true, CURRENT_TIMESTAMP, @ipOrigen, 'pendiente')
+        RETURNING idpeticion";
+
+            await using var cmd = new NpgsqlCommand(sql, conexion);
+
+            cmd.Parameters.AddWithValue("@idUsuario", idUsuario);
+            cmd.Parameters.AddWithValue("@idServicioIA", (object)idServicioIA ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@servicioCodigo", servicioCodigo ?? "");
+            cmd.Parameters.AddWithValue("@idUsuarioDoctor", (object)idUsuarioDoctor ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@doctorNombre", doctorNombre ?? "");
+            cmd.Parameters.AddWithValue("@doctorCorreo", doctorCorreo ?? "");
+            cmd.Parameters.AddWithValue("@canalRespuesta", canalRespuesta ?? "");
+            cmd.Parameters.AddWithValue("@contactoRespuesta", contactoRespuesta ?? "");
+            cmd.Parameters.AddWithValue("@motivoPaciente", (object)motivoPaciente ?? DBNull.Value);
+
+            var pImagen = cmd.Parameters.Add("@imagen", NpgsqlDbType.Bytea);
+            pImagen.Value = (imagen != null && imagen.Length > 0) ? (object)imagen : DBNull.Value;
+
+            cmd.Parameters.AddWithValue("@imagenContentType", (object)imagenContentType ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@diagnosticoIA", (object)diagnosticoIA ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@ipOrigen", (object)ipOrigen ?? DBNull.Value);
+
+            var idPeticion = (int)(await cmd.ExecuteScalarAsync())!;
+            return idPeticion;
+        }
+
+        public async Task MarcarCorreoEnviadoLanding(int idPeticion, bool ok, string mensajeError)
+        {
+            await using var conexion = new NpgsqlConnection(con.CadenaSQL);
+            await conexion.OpenAsync();
+
+            const string sql = @"
+        UPDATE landingclinica.peticiondiagnostico
+        SET correo_enviado = @ok,
+            fecha_envio_correo = CASE WHEN @ok THEN CURRENT_TIMESTAMP ELSE fecha_envio_correo END,
+            estado = CASE WHEN @ok THEN 'enviada' ELSE 'error' END,
+            mensaje_error = @mensajeError
+        WHERE idpeticion = @idPeticion";
+
+            await using var cmd = new NpgsqlCommand(sql, conexion);
+            cmd.Parameters.AddWithValue("@ok", ok);
+            cmd.Parameters.AddWithValue("@mensajeError", (object)mensajeError ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@idPeticion", idPeticion);
+
+            await cmd.ExecuteNonQueryAsync();
+        }
 
 
     }

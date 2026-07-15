@@ -1,0 +1,401 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador IA — Clínica</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" />
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f7f9fb;
+        }
+
+        h2 {
+            color: #0d6efd;
+        }
+
+        .paso {
+            display: none;
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+            margin-bottom: 16px;
+        }
+
+            .paso.activo {
+                display: block;
+            }
+
+        label {
+            display: block;
+            margin-top: 12px;
+            font-weight: bold;
+            font-size: .9rem;
+        }
+
+        input[type=text], input[type=email], input[type=tel], select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            margin-top: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-weight: bold;
+            margin-top: 14px;
+            margin-right: 8px;
+        }
+
+        .btn-primary {
+            background: #0d6efd;
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background: #e9ecef;
+            color: #333;
+        }
+
+        .btn-success {
+            background: #198754;
+            color: #fff;
+        }
+
+        #imgPreview, #cropImg {
+            max-width: 100%;
+            margin-top: 10px;
+            border-radius: 8px;
+        }
+
+        .msg-error {
+            color: #dc3545;
+            font-size: .85rem;
+            margin-top: 6px;
+        }
+
+        .msg-ok {
+            color: #198754;
+            font-size: .85rem;
+            margin-top: 6px;
+        }
+
+        .caja-diagnostico {
+            background: #eef7ee;
+            border: 1px solid #198754;
+            border-radius: 8px;
+            padding: 10px;
+            white-space: pre-line;
+            font-size: .9rem;
+            margin-top: 10px;
+        }
+
+        .canal {
+            display: inline-block;
+            margin-right: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Simulador de análisis IA</h2>
+
+    <!-- PASO 1: Contacto -->
+    <div class="paso activo" id="paso1">
+        <p>Indícanos cómo contactarte (al menos un dato):</p>
+        <label>Correo</label>
+        <input type="email" id="txtCorreo" placeholder="tucorreo@@ejemplo.com" />
+        <label>Móvil (WhatsApp)</label>
+        <input type="tel" id="txtMovil" placeholder="+34 600 000 000" />
+        <label>Telegram ID (opcional)</label>
+        <input type="text" id="txtTelegramId" placeholder="Solo si ya usas nuestro bot de Telegram" />
+        <label>Nombre</label>
+        <input type="text" id="txtNombre" />
+        <label>Apellido</label>
+        <input type="text" id="txtApellido" />
+        <div id="msgPaso1"></div>
+        <button class="btn-primary" onclick="identificar()">Continuar</button>
+    </div>
+
+    <!-- PASO 2: Servicio + doctor -->
+    <div class="paso" id="paso2">
+        <p>Selecciona el tipo de análisis:</p>
+        <select id="selServicio"></select>
+        <label>Correo del doctor que revisará tu caso</label>
+        <input type="email" id="txtDoctorCorreo" placeholder="doctor@@clinica.com" />
+        <div id="msgPaso2"></div>
+        <button class="btn-secondary" onclick="irPaso(1)">Volver</button>
+        <button class="btn-primary" onclick="irPaso(3)">Continuar</button>
+    </div>
+
+    <!-- PASO 3: Imagen + análisis IA -->
+    <div class="paso" id="paso3">
+        <p>Sube una foto o ábrela con la cámara para el análisis:</p>
+        <input type="file" id="fileImagen" accept="image/*" onchange="onFileSeleccionado(event)" />
+        <img id="cropImg" style="display:none;max-height:300px;" />
+        <div id="cropAcciones" style="display:none;">
+            <button class="btn-secondary" type="button" onclick="rotarRecorte()">Rotar</button>
+            <button class="btn-success" type="button" onclick="confirmarRecorte()">Confirmar recorte</button>
+        </div>
+        <img id="imgPreview" style="display:none;max-height:200px;" />
+        <label>Motivo / descripción (opcional)</label>
+        <textarea id="txtMotivo" rows="3"></textarea>
+        <div id="msgPaso3"></div>
+        <button class="btn-secondary" onclick="irPaso(2)">Volver</button>
+        <button class="btn-success" onclick="analizarImagen()">Analizar con IA</button>
+        <div id="resultadoIA" style="display:none;">
+            <div class="caja-diagnostico" id="txtDiagnostico"></div>
+            <button class="btn-primary" onclick="irPaso(4)">Continuar</button>
+        </div>
+    </div>
+
+    <!-- PASO 4: Consentimiento + canal + enviar -->
+    <div class="paso" id="paso4">
+        <p>¿Por dónde quieres que el doctor te responda?</p>
+        <div id="canales"></div>
+
+        <label style="display:flex;align-items:center;gap:8px;font-weight:normal;margin-top:16px;">
+            <input type="checkbox" id="chkConsentimiento" style="width:auto;" />
+            Doy mi consentimiento explícito para enviar mis datos de contacto, el motivo y el
+            diagnóstico preliminar de IA al doctor indicado, para que pueda contactarme.
+        </label>
+
+        <div id="msgPaso4"></div>
+        <button class="btn-secondary" onclick="irPaso(3)">Volver</button>
+        <button class="btn-primary" id="btnEnviar" onclick="enviarPeticion()">Enviar petición al doctor</button>
+    </div>
+
+    <!-- PASO 5: Confirmación -->
+    <div class="paso" id="paso5">
+        <h3 style="color:#198754;">✅ Petición enviada</h3>
+        <p>Hemos avisado al doctor. Te responderá por el canal que elegiste.</p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+    <script>
+        // Estado del simulador
+        let idUsuario = 0;
+        let canalesDisponibles = { email: false, movil: false, telegram: false };
+        let cropper = null;
+        let imagenBlobFinal = null;   // blob ya recortado, listo para enviar a AnalizarImagen
+        let diagnosticoIA = "";
+        let imagenBase64 = "";
+        let imagenContentType = "";
+
+        function irPaso(n) {
+            document.querySelectorAll(".paso").forEach(p => p.classList.remove("activo"));
+            document.getElementById("paso" + n).classList.add("activo");
+        }
+
+        // ---------- PASO 1 ----------
+        async function identificar() {
+            const correo = document.getElementById("txtCorreo").value.trim();
+            const movil = document.getElementById("txtMovil").value.trim();
+            const telegramId = document.getElementById("txtTelegramId").value.trim();
+            const nombre = document.getElementById("txtNombre").value.trim();
+            const apellido = document.getElementById("txtApellido").value.trim();
+            const msg = document.getElementById("msgPaso1");
+            msg.innerHTML = "";
+
+            if (!correo && !movil && !telegramId) {
+                msg.innerHTML = '<div class="msg-error">Indica al menos un correo, móvil o Telegram.</div>';
+                return;
+            }
+
+            try {
+                const r = await fetch("/Citas/PublicoIdentificarUsuario", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ correo, movil, telegramId, nombre, apellido })
+                });
+                const data = await r.json();
+                if (!data.ok) {
+                    msg.innerHTML = '<div class="msg-error">' + (data.msg || "No se pudo continuar.") + '</div>';
+                    return;
+                }
+                idUsuario = data.idUsuario;
+                canalesDisponibles = { email: data.tieneEmail, movil: data.tieneMovil, telegram: data.tieneTelegram };
+                await cargarServicios();
+                irPaso(2);
+            } catch (e) {
+                msg.innerHTML = '<div class="msg-error">Error de comunicación con el servidor.</div>';
+            }
+        }
+
+        // ---------- PASO 2 ----------
+        async function cargarServicios() {
+            const sel = document.getElementById("selServicio");
+            sel.innerHTML = "";
+            try {
+                const r = await fetch("/Citas/PublicoListaServicios");
+                const data = await r.json();
+                (data.data || []).forEach(s => {
+                    const opt = document.createElement("option");
+                    opt.value = s.codigo;
+                    opt.textContent = s.nombre;
+                    sel.appendChild(opt);
+                });
+            } catch (e) {
+                console.log("No se pudieron cargar los servicios", e);
+            }
+        }
+
+        // ---------- PASO 3 ----------
+        function onFileSeleccionado(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const img = document.getElementById("cropImg");
+            img.style.display = "block";
+            img.src = URL.createObjectURL(file);
+            document.getElementById("cropAcciones").style.display = "block";
+
+            if (cropper) cropper.destroy();
+            img.onload = function () {
+                cropper = new Cropper(img, { viewMode: 1, aspectRatio: NaN, autoCropArea: 1 });
+            };
+        }
+
+        function rotarRecorte() {
+            if (cropper) cropper.rotate(90);
+        }
+
+        function confirmarRecorte() {
+            if (!cropper) return;
+            cropper.getCroppedCanvas().toBlob(function (blob) {
+                imagenBlobFinal = blob;
+                const prev = document.getElementById("imgPreview");
+                prev.style.display = "block";
+                prev.src = URL.createObjectURL(blob);
+            }, "image/jpeg", 0.9);
+        }
+
+        async function analizarImagen() {
+            const msg = document.getElementById("msgPaso3");
+            msg.innerHTML = "";
+
+            if (!imagenBlobFinal) {
+                msg.innerHTML = '<div class="msg-error">Selecciona y confirma el recorte de una imagen primero.</div>';
+                return;
+            }
+
+            const servicio = document.getElementById("selServicio").value;
+            const motivo = document.getElementById("txtMotivo").value.trim();
+            const contexto = motivo
+                ? `El paciente describe: "${motivo}". Analiza la imagen teniendo en cuenta este contexto.`
+                : "Analiza esta imagen clínica y describe los hallazgos observables.";
+
+            const form = new FormData();
+            form.append("idUsuario", idUsuario);
+            form.append("imagen", imagenBlobFinal, "imagen.jpg");
+            form.append("servicio", servicio);
+            form.append("contexto", contexto);
+
+            msg.innerHTML = "Analizando con IA...";
+
+            try {
+                const r = await fetch("/Citas/PublicoAnalizarImagen", { method: "POST", body: form });
+                const data = await r.json();
+                msg.innerHTML = "";
+
+                if (!data.ok) {
+                    msg.innerHTML = '<div class="msg-error">' + (data.msg || "Error en el análisis.") + '</div>';
+                    return;
+                }
+
+                diagnosticoIA = data.diagnostico;
+                imagenBase64 = data.imagenBase64;
+                imagenContentType = data.imagenContentType;
+
+                document.getElementById("txtDiagnostico").textContent = diagnosticoIA;
+                document.getElementById("resultadoIA").style.display = "block";
+                prepararCanales();
+            } catch (e) {
+                msg.innerHTML = '<div class="msg-error">Error de comunicación con el servidor.</div>';
+            }
+        }
+
+        // ---------- PASO 4 ----------
+        function prepararCanales() {
+            const cont = document.getElementById("canales");
+            cont.innerHTML = "";
+            const opciones = [
+                { valor: "email", texto: "Email", disponible: canalesDisponibles.email },
+                { valor: "whatsapp", texto: "WhatsApp", disponible: canalesDisponibles.movil },
+                { valor: "telegram", texto: "Telegram", disponible: canalesDisponibles.telegram }
+            ];
+            opciones.forEach((o, i) => {
+                const label = document.createElement("label");
+                label.className = "canal";
+                label.style.fontWeight = "normal";
+                label.innerHTML = `<input type="radio" name="canal" value="${o.valor}" ${o.disponible ? "" : "disabled"} ${i === 0 && o.disponible ? "checked" : ""}/> ${o.texto}${o.disponible ? "" : " (sin datos)"}`;
+                cont.appendChild(label);
+            });
+        }
+
+        async function enviarPeticion() {
+            const msg = document.getElementById("msgPaso4");
+            msg.innerHTML = "";
+
+            const canalEl = document.querySelector('input[name="canal"]:checked');
+            const consentimiento = document.getElementById("chkConsentimiento").checked;
+            const doctorCorreo = document.getElementById("txtDoctorCorreo").value.trim();
+            const servicioCodigo = document.getElementById("selServicio").value;
+            const motivo = document.getElementById("txtMotivo").value.trim();
+
+            if (!canalEl) {
+                msg.innerHTML = '<div class="msg-error">Selecciona un canal de respuesta.</div>';
+                return;
+            }
+            if (!consentimiento) {
+                msg.innerHTML = '<div class="msg-error">Debes dar tu consentimiento explícito para continuar.</div>';
+                return;
+            }
+
+            document.getElementById("btnEnviar").disabled = true;
+
+            try {
+                const r = await fetch("/Citas/PublicoEnviarPeticion", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        idUsuario,
+                        servicioCodigo,
+                        doctorCorreo,
+                        canalRespuesta: canalEl.value,
+                        motivoPaciente: motivo,
+                        imagenBase64,
+                        imagenContentType,
+                        diagnosticoIA,
+                        consentimiento
+                    })
+                });
+                const data = await r.json();
+                document.getElementById("btnEnviar").disabled = false;
+
+                if (!data.ok) {
+                    msg.innerHTML = '<div class="msg-error">' + (data.msg || "No se pudo enviar la petición.") + '</div>';
+                    return;
+                }
+
+                irPaso(5);
+            } catch (e) {
+                document.getElementById("btnEnviar").disabled = false;
+                msg.innerHTML = '<div class="msg-error">Error de comunicación con el servidor.</div>';
+            }
+        }
+    </script>
+</body>
+</html>

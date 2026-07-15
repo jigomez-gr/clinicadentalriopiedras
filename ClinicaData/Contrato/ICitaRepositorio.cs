@@ -163,6 +163,56 @@ namespace ClinicaData.Contrato
 
         Task<string> GuardarIndicaciones(int idCita, string indicaciones);
 
+        // =====================================================================
+        // Añadir estas firmas dentro de la interfaz ICitaRepositorio
+        // (al final, antes del cierre de la interfaz)
+        // =====================================================================
+
+        // ---------- Simulador IA landing: contacto (landingclinica.usuario) ----------
+
+        Task<(bool existe, int idUsuario, string nombre, string apellido, string correo,
+              string movil, string telegramId, string telegramUsername)>
+            BuscarUsuarioLanding(string correo, string movil, string telegramId);
+
+        Task<(bool existe, int idUsuario, string nombre, string apellido, string correo,
+              string movil, string telegramId, string telegramUsername)>
+            BuscarUsuarioLandingPorId(int idUsuario);
+
+        Task<(bool ok, string msg, int idUsuario)>
+            AltaUsuarioLanding(string correo, string movil, string telegramId,
+                                string telegramUsername, string nombre, string apellido);
+
+        // ---------- Simulador IA landing: catálogo de servicios (landingclinica.servicioia) ----------
+
+        Task<List<(int idServicioIA, string codigo, string nombre, string urlEndpointDgx)>>
+            ListaServiciosIA();
+
+        Task<(bool existe, int idServicioIA, string codigo, string nombre, string urlEndpointDgx)>
+            ObtenerServicioIA(string codigo);
+
+        // ---------- Simulador IA landing: validar doctor contra public.usuario (rol = 2) ----------
+
+        Task<(bool esDoctor, int idUsuario, string nombre, string apellido, string correo)>
+            ValidarDoctorPorCorreo(string correoDoctor);
+
+        // ---------- Simulador IA landing: petición (landingclinica.peticiondiagnostico) ----------
+
+        Task<int> GuardarPeticionLanding(
+            int idUsuario,
+            int? idServicioIA,
+            string servicioCodigo,
+            int? idUsuarioDoctor,
+            string doctorNombre,
+            string doctorCorreo,
+            string canalRespuesta,
+            string contactoRespuesta,
+            string motivoPaciente,
+            byte[] imagen,
+            string imagenContentType,
+            string diagnosticoIA,
+            string ipOrigen);
+
+        Task MarcarCorreoEnviadoLanding(int idPeticion, bool ok, string mensajeError);
 
     }
 }
