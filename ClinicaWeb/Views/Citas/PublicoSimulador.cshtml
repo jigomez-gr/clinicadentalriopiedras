@@ -20,7 +20,7 @@
         }
 
         .simulador-wrap {
-            max-width: 1040px;
+            max-width: 1080px;
             margin: 0 auto;
             padding: 24px 16px 60px;
         }
@@ -56,12 +56,29 @@
             font-size: .85rem;
             margin-right: 8px;
         }
-        /* Imagen bien grande en escritorio, contenida en móvil */
-        #cropImg {
+
+        /* IMPORTANTE: nada de max-height/object-fit sobre #cropImg directamente,
+               eso rompe los cálculos internos de Cropper.js (zoom y recorte dejan
+               de funcionar bien). El tamaño se controla con el contenedor. */
+        #cropContainer {
             display: none;
             width: 100%;
-            max-height: 480px;
-            object-fit: contain;
+            height: 440px;
+            background: #111;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #cropImg {
+            display: block;
+            max-width: 100%;
+        }
+
+        #videoCamara {
+            display: none;
+            width: 100%;
+            height: 360px;
+            object-fit: cover;
             background: #111;
             border-radius: 10px;
         }
@@ -69,15 +86,16 @@
         #imgPreview {
             display: none;
             width: 100%;
-            max-height: 480px;
+            max-height: 440px;
             object-fit: contain;
             border-radius: 10px;
             border: 1px solid #dee2e6;
         }
 
         @@media (max-width: 767.98px) {
-            #cropImg, #imgPreview {
-                max-height: 260px;
+            #cropContainer, #videoCamara, #imgPreview {
+                height: 280px;
+                max-height: 280px;
             }
         }
 
@@ -204,29 +222,74 @@
                 </div>
                 <div class="card-body">
                     <div class="row g-4">
-                        <div class="col-lg-5">
-                            <label class="form-label">Selecciona o haz una foto</label>
-                            <input type="file" class="form-control" id="fileImagen" accept="image/*" onchange="onFileSeleccionado(event)">
+                        <div class="col-lg-6">
 
-                            <div id="cropAcciones" class="mt-2" style="display:none;">
-                                <button class="btn btn-outline-secondary btn-sm" type="button" onclick="rotarRecorte()">
-                                    <i class="fa-solid fa-rotate-right me-1"></i> Rotar
-                                </button>
-                                <button class="btn btn-success btn-sm" type="button" onclick="confirmarRecorte()">
-                                    <i class="fa-solid fa-crop me-1"></i> Confirmar recorte
-                                </button>
+                            <!-- Tabs: Cámara / Archivo -->
+                            <ul class="nav nav-tabs" role="tablist">
+                                <li class="nav-item">
+                                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabCamara" type="button">
+                                        <i class="fa-solid fa-camera me-1"></i> Cámara
+                                    </button>
+                                </li>
+                                <li class="nav-item">
+                                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabArchivo" type="button">
+                                        <i class="fa-solid fa-file-image me-1"></i> Archivo
+                                    </button>
+                                </li>
+                            </ul>
+
+                            <div class="tab-content border border-top-0 rounded-bottom p-3">
+                                <!-- Cámara -->
+                                <div class="tab-pane fade show active" id="tabCamara">
+                                    <video id="videoCamara" autoplay playsinline></video>
+                                    <div class="d-flex gap-2 mt-2">
+                                        <button class="btn btn-success btn-sm" id="btnAbrirCamara" type="button" onclick="abrirCamara()">
+                                            <i class="fa-solid fa-camera me-1"></i> Abrir cámara
+                                        </button>
+                                        <div id="camaraControles" style="display:none;" class="d-flex gap-2">
+                                            <button class="btn btn-outline-secondary btn-sm" type="button" onclick="voltearCamara()">
+                                                <i class="fa-solid fa-camera-rotate me-1"></i> Voltear
+                                            </button>
+                                            <button class="btn btn-primary btn-sm" type="button" onclick="capturarFoto()">
+                                                <i class="fa-solid fa-circle-dot me-1"></i> Capturar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Archivo -->
+                                <div class="tab-pane fade" id="tabArchivo">
+                                    <input type="file" class="form-control" id="fileImagen" accept="image/*" onchange="onFileSeleccionado(event)">
+                                </div>
                             </div>
 
                             <label class="form-label mt-3">Motivo / descripción (opcional)</label>
-                            <textarea class="form-control" id="txtMotivo" rows="4" placeholder="Ej: me duele esta zona desde hace 3 días..."></textarea>
+                            <textarea class="form-control" id="txtMotivo" rows="3" placeholder="Ej: me duele esta zona desde hace 3 días..."></textarea>
 
                             <button class="btn btn-success w-100 mt-3" id="btnAnalizar" onclick="analizarImagen()">
                                 <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Analizar con IA
                             </button>
                         </div>
 
-                        <div class="col-lg-7">
-                            <img id="cropImg" alt="Imagen a recortar">
+                        <div class="col-lg-6">
+                            <div id="cropContainer">
+                                <img id="cropImg" alt="Imagen a recortar">
+                            </div>
+
+                            <div id="cropAcciones" class="d-flex gap-2 mt-2" style="display:none;">
+                                <button class="btn btn-outline-secondary btn-sm" type="button" onclick="rotarRecorte()">
+                                    <i class="fa-solid fa-rotate-right me-1"></i> Rotar
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" type="button" onclick="zoomIn()">
+                                    <i class="fa-solid fa-magnifying-glass-plus me-1"></i> Zoom +
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" type="button" onclick="zoomOut()">
+                                    <i class="fa-solid fa-magnifying-glass-minus me-1"></i> Zoom -
+                                </button>
+                                <button class="btn btn-success btn-sm ms-auto" type="button" onclick="confirmarRecorte()">
+                                    <i class="fa-solid fa-crop me-1"></i> Confirmar recorte
+                                </button>
+                            </div>
+
                             <img id="imgPreview" alt="Vista previa">
 
                             <div id="resultadoIA" class="mt-3" style="display:none;">
@@ -298,6 +361,8 @@
         let diagnosticoIA = "";
         let imagenBase64 = "";
         let imagenContentType = "";
+        let mediaStream = null;
+        let facingMode = "environment";
 
         function irPaso(n) {
             $(".paso").removeClass("activo");
@@ -362,36 +427,112 @@
             }
         }
 
-        // ---------- PASO 3 ----------
+        // ---------- PASO 3: CÁMARA ----------
+        async function abrirCamara() {
+            try {
+                pararCamara();
+                mediaStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { ideal: facingMode } },
+                    audio: false
+                });
+                const video = document.getElementById("videoCamara");
+                video.srcObject = mediaStream;
+                video.style.display = "block";
+                await video.play();
+                $("#btnAbrirCamara").hide();
+                $("#camaraControles").css("display", "flex");
+            } catch (e) {
+                toastError("No se pudo acceder a la cámara: " + e.message);
+            }
+        }
+
+        function voltearCamara() {
+            facingMode = (facingMode === "user") ? "environment" : "user";
+            abrirCamara();
+        }
+
+        function capturarFoto() {
+            const video = document.getElementById("videoCamara");
+            if (!video.videoWidth) {
+                toastError("La cámara todavía no está lista, espera un segundo.");
+                return;
+            }
+            const canvas = document.createElement("canvas");
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext("2d").drawImage(video, 0, 0);
+            canvas.toBlob(function (blob) {
+                cargarImagenParaRecorte(URL.createObjectURL(blob));
+                pararCamara();
+            }, "image/jpeg", 0.92);
+        }
+
+        function pararCamara() {
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(t => t.stop());
+                mediaStream = null;
+            }
+            $("#videoCamara").hide();
+            $("#camaraControles").hide();
+            $("#btnAbrirCamara").show();
+        }
+
+        // ---------- PASO 3: ARCHIVO ----------
         function onFileSeleccionado(event) {
             const file = event.target.files[0];
             if (!file) return;
+            cargarImagenParaRecorte(URL.createObjectURL(file));
+        }
 
+        // ---------- PASO 3: CROPPER (recorte + zoom) ----------
+        function cargarImagenParaRecorte(url) {
             $("#imgPreview").hide();
             $("#resultadoIA").hide();
             $("#btnContinuarPaso3").hide();
             imagenBlobFinal = null;
 
             const img = document.getElementById("cropImg");
-            img.style.display = "block";
-            img.src = URL.createObjectURL(file);
-            $("#cropAcciones").show();
+            if (cropper) { cropper.destroy(); cropper = null; }
 
-            if (cropper) cropper.destroy();
+            $("#cropContainer").show();
+
             img.onload = function () {
-                cropper = new Cropper(img, { viewMode: 1, aspectRatio: NaN, autoCropArea: 1 });
+                cropper = new Cropper(img, {
+                    viewMode: 1,
+                    dragMode: "move",
+                    autoCropArea: 0.85,
+                    background: false,
+                    responsive: true,
+                    checkOrientation: true,
+                    zoomable: true,
+                    scalable: true,
+                    movable: true,
+                    cropBoxMovable: true,
+                    cropBoxResizable: true,
+                    wheelZoomRatio: 0.1
+                });
+                $("#cropAcciones").css("display", "flex");
             };
+            img.src = url;
         }
 
         function rotarRecorte() {
             if (cropper) cropper.rotate(90);
         }
 
+        function zoomIn() {
+            if (cropper) cropper.zoom(0.1);
+        }
+
+        function zoomOut() {
+            if (cropper) cropper.zoom(-0.1);
+        }
+
         function confirmarRecorte() {
             if (!cropper) return;
             cropper.getCroppedCanvas().toBlob(function (blob) {
                 imagenBlobFinal = blob;
-                $("#cropImg").hide();
+                $("#cropContainer").hide();
                 $("#cropAcciones").hide();
                 const prev = document.getElementById("imgPreview");
                 prev.style.display = "block";
@@ -399,9 +540,10 @@
             }, "image/jpeg", 0.9);
         }
 
+        // ---------- PASO 3: ANALIZAR ----------
         async function analizarImagen() {
             if (!imagenBlobFinal) {
-                toastError("Selecciona y confirma el recorte de una imagen primero.");
+                toastError("Selecciona una foto (cámara o archivo) y confirma el recorte primero.");
                 return;
             }
 
@@ -522,6 +664,9 @@
                 toastError("Error de comunicación con el servidor.");
             }
         }
+
+        // Cortar la cámara si el usuario navega hacia atrás o cierra pestaña
+        window.addEventListener("beforeunload", pararCamara);
     </script>
 </body>
 </html>
