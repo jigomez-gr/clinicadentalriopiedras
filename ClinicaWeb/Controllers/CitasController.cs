@@ -2470,6 +2470,10 @@ LIMIT 1;
         //    body: { "correo": "...", "movil": "...", "telegramId": "...",
         //            "telegramUsername": "...", "nombre": "...", "apellido": "..." }
         // -----------------------------------------------------------------
+        // -----------------------------------------------------------------
+        // 1) Identificar / dar de alta al contacto — CORREO Y MÓVIL OBLIGATORIOS
+        //    telegramId es siempre opcional y nunca provoca error.
+        // -----------------------------------------------------------------
         [HttpPost]
         [AllowAnonymous]
         [EnableCors("PublicoIA")]
@@ -2477,13 +2481,14 @@ LIMIT 1;
         {
             string correo = LeerString(body, "correo");
             string movil = LeerString(body, "movil");
-            string telegramId = LeerString(body, "telegramId");
-            string telegramUsername = LeerString(body, "telegramUsername");
+            string telegramId = LeerString(body, "telegramId");         // opcional siempre
+            string telegramUsername = LeerString(body, "telegramUsername"); // opcional siempre
             string nombre = LeerString(body, "nombre");
             string apellido = LeerString(body, "apellido");
 
-            if (string.IsNullOrWhiteSpace(correo) && string.IsNullOrWhiteSpace(movil) && string.IsNullOrWhiteSpace(telegramId))
-                return BadRequest(new { ok = false, msg = "Indique correo, móvil o Telegram." });
+            // Antes: "al menos uno de los tres". Ahora: correo Y móvil obligatorios.
+            if (string.IsNullOrWhiteSpace(correo) || string.IsNullOrWhiteSpace(movil))
+                return BadRequest(new { ok = false, msg = "El correo y el móvil son obligatorios." });
 
             var existente = await _repositorioCita.BuscarUsuarioLanding(correo, movil, telegramId);
             if (existente.existe)
@@ -2513,6 +2518,8 @@ LIMIT 1;
                 tieneTelegram = !string.IsNullOrWhiteSpace(telegramId)
             });
         }
+
+       
 
         // -----------------------------------------------------------------
         // 2) Catálogo de servicios IA
