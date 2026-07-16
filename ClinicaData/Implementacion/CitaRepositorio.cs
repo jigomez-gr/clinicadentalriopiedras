@@ -2216,10 +2216,15 @@ AND c.fechacita <= NOW() + INTERVAL '48 hours'
             }
         }
         // =====================================================================
-        // Añadir estos métodos dentro de la clase CitaRepositorio (implementa
-        // las firmas nuevas de ICitaRepositorio). Usan el mismo "con.CadenaSQL"
-        // que ya usa toda la clase, así que landingclinica debe estar en la
-        // MISMA base de datos que public.
+        // Pegar dentro de la clase CitaRepositorio, sustituyendo los métodos
+        // del simulador que ya tenías (BuscarUsuarioLanding, BuscarUsuarioLandingPorId,
+        // AltaUsuarioLanding, ListaServiciosIA, ObtenerServicioIA, ValidarDoctorPorCorreo,
+        // GuardarPeticionLanding, MarcarCorreoEnviadoLanding).
+        //
+        // using necesarios en la cabecera del archivo:
+        //   using Npgsql;        (driver ADO.NET de Postgres, imprescindible)
+        //   using System.Data;   (DbType — estándar ADO.NET, en vez de NpgsqlDbType)
+        // Puedes quitar "using NpgsqlTypes;" si lo tenías, ya no se usa.
         // =====================================================================
 
         public async Task<(bool existe, int idUsuario, string nombre, string apellido, string correo,
@@ -2245,23 +2250,48 @@ AND c.fechacita <= NOW() + INTERVAL '48 hours'
         LIMIT 1";
 
             await using var cmd = new NpgsqlCommand(sql, conexion);
-            cmd.Parameters.AddWithValue("@correo", (object)correo ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@movil", (object)movil ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@telegramId", (object)telegramId ?? DBNull.Value);
+
+            // Tipo declarado explícitamente (DbType.String) para que Postgres no
+            // tenga que adivinarlo cuando el valor es DBNull (evita el error 42P08).
+            var pCorreo = cmd.CreateParameter();
+            pCorreo.ParameterName = "@correo";
+            pCorreo.DbType = DbType.String;
+            pCorreo.Value = string.IsNullOrEmpty(correo) ? (object)DBNull.Value : correo;
+            cmd.Parameters.Add(pCorreo);
+
+            var pMovil = cmd.CreateParameter();
+            pMovil.ParameterName = "@movil";
+            pMovil.DbType = DbType.String;
+            pMovil.Value = string.IsNullOrEmpty(movil) ? (object)DBNull.Value : movil;
+            cmd.Parameters.Add(pMovil);
+
+            var pTelegramId = cmd.CreateParameter();
+            pTelegramId.ParameterName = "@telegramId";
+            pTelegramId.DbType = DbType.String;
+            pTelegramId.Value = string.IsNullOrEmpty(telegramId) ? (object)DBNull.Value : telegramId;
+            cmd.Parameters.Add(pTelegramId);
 
             await using var reader = await cmd.ExecuteReaderAsync();
             if (!await reader.ReadAsync())
                 return (false, 0, "", "", "", "", "", "");
 
+            int colIdUsuario = reader.GetOrdinal("idusuario");
+            int colNombre = reader.GetOrdinal("nombre");
+            int colApellido = reader.GetOrdinal("apellido");
+            int colCorreo = reader.GetOrdinal("correo");
+            int colMovil = reader.GetOrdinal("movil");
+            int colTelegramId = reader.GetOrdinal("telegram_id");
+            int colTelegramUsername = reader.GetOrdinal("telegram_username");
+
             return (
                 true,
-                reader.GetInt32(reader.GetOrdinal("idusuario")),
-                reader.IsDBNull(reader.GetOrdinal("nombre")) ? "" : reader.GetString(reader.GetOrdinal("nombre")),
-                reader.IsDBNull(reader.GetOrdinal("apellido")) ? "" : reader.GetString(reader.GetOrdinal("apellido")),
-                reader.IsDBNull(reader.GetOrdinal("correo")) ? "" : reader.GetString(reader.GetOrdinal("correo")),
-                reader.IsDBNull(reader.GetOrdinal("movil")) ? "" : reader.GetString(reader.GetOrdinal("movil")),
-                reader.IsDBNull(reader.GetOrdinal("telegram_id")) ? "" : reader.GetString(reader.GetOrdinal("telegram_id")),
-                reader.IsDBNull(reader.GetOrdinal("telegram_username")) ? "" : reader.GetString(reader.GetOrdinal("telegram_username"))
+                reader.IsDBNull(colIdUsuario) ? 0 : reader.GetInt32(colIdUsuario),
+                reader.IsDBNull(colNombre) ? "" : reader.GetString(colNombre),
+                reader.IsDBNull(colApellido) ? "" : reader.GetString(colApellido),
+                reader.IsDBNull(colCorreo) ? "" : reader.GetString(colCorreo),
+                reader.IsDBNull(colMovil) ? "" : reader.GetString(colMovil),
+                reader.IsDBNull(colTelegramId) ? "" : reader.GetString(colTelegramId),
+                reader.IsDBNull(colTelegramUsername) ? "" : reader.GetString(colTelegramUsername)
             );
         }
 
@@ -2279,21 +2309,34 @@ AND c.fechacita <= NOW() + INTERVAL '48 hours'
         LIMIT 1";
 
             await using var cmd = new NpgsqlCommand(sql, conexion);
-            cmd.Parameters.AddWithValue("@idUsuario", idUsuario);
+
+            var pIdUsuario = cmd.CreateParameter();
+            pIdUsuario.ParameterName = "@idUsuario";
+            pIdUsuario.DbType = DbType.Int32;
+            pIdUsuario.Value = idUsuario;
+            cmd.Parameters.Add(pIdUsuario);
 
             await using var reader = await cmd.ExecuteReaderAsync();
             if (!await reader.ReadAsync())
                 return (false, 0, "", "", "", "", "", "");
 
+            int colIdUsuario = reader.GetOrdinal("idusuario");
+            int colNombre = reader.GetOrdinal("nombre");
+            int colApellido = reader.GetOrdinal("apellido");
+            int colCorreo = reader.GetOrdinal("correo");
+            int colMovil = reader.GetOrdinal("movil");
+            int colTelegramId = reader.GetOrdinal("telegram_id");
+            int colTelegramUsername = reader.GetOrdinal("telegram_username");
+
             return (
                 true,
-                reader.GetInt32(reader.GetOrdinal("idusuario")),
-                reader.IsDBNull(reader.GetOrdinal("nombre")) ? "" : reader.GetString(reader.GetOrdinal("nombre")),
-                reader.IsDBNull(reader.GetOrdinal("apellido")) ? "" : reader.GetString(reader.GetOrdinal("apellido")),
-                reader.IsDBNull(reader.GetOrdinal("correo")) ? "" : reader.GetString(reader.GetOrdinal("correo")),
-                reader.IsDBNull(reader.GetOrdinal("movil")) ? "" : reader.GetString(reader.GetOrdinal("movil")),
-                reader.IsDBNull(reader.GetOrdinal("telegram_id")) ? "" : reader.GetString(reader.GetOrdinal("telegram_id")),
-                reader.IsDBNull(reader.GetOrdinal("telegram_username")) ? "" : reader.GetString(reader.GetOrdinal("telegram_username"))
+                reader.IsDBNull(colIdUsuario) ? 0 : reader.GetInt32(colIdUsuario),
+                reader.IsDBNull(colNombre) ? "" : reader.GetString(colNombre),
+                reader.IsDBNull(colApellido) ? "" : reader.GetString(colApellido),
+                reader.IsDBNull(colCorreo) ? "" : reader.GetString(colCorreo),
+                reader.IsDBNull(colMovil) ? "" : reader.GetString(colMovil),
+                reader.IsDBNull(colTelegramId) ? "" : reader.GetString(colTelegramId),
+                reader.IsDBNull(colTelegramUsername) ? "" : reader.GetString(colTelegramUsername)
             );
         }
 
@@ -2322,16 +2365,47 @@ AND c.fechacita <= NOW() + INTERVAL '48 hours'
         RETURNING idusuario";
 
             await using var cmd = new NpgsqlCommand(sqlInsert, conexion);
-            cmd.Parameters.AddWithValue("@nombre", (object)nombre ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@apellido", (object)apellido ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@correo", (object)correo ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@movil", (object)movil ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@telegramId", (object)telegramId ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@telegramUsername", (object)telegramUsername ?? DBNull.Value);
+
+            var pNombre = cmd.CreateParameter();
+            pNombre.ParameterName = "@nombre";
+            pNombre.DbType = DbType.String;
+            pNombre.Value = string.IsNullOrEmpty(nombre) ? (object)DBNull.Value : nombre;
+            cmd.Parameters.Add(pNombre);
+
+            var pApellido = cmd.CreateParameter();
+            pApellido.ParameterName = "@apellido";
+            pApellido.DbType = DbType.String;
+            pApellido.Value = string.IsNullOrEmpty(apellido) ? (object)DBNull.Value : apellido;
+            cmd.Parameters.Add(pApellido);
+
+            var pCorreo = cmd.CreateParameter();
+            pCorreo.ParameterName = "@correo";
+            pCorreo.DbType = DbType.String;
+            pCorreo.Value = string.IsNullOrEmpty(correo) ? (object)DBNull.Value : correo;
+            cmd.Parameters.Add(pCorreo);
+
+            var pMovil = cmd.CreateParameter();
+            pMovil.ParameterName = "@movil";
+            pMovil.DbType = DbType.String;
+            pMovil.Value = string.IsNullOrEmpty(movil) ? (object)DBNull.Value : movil;
+            cmd.Parameters.Add(pMovil);
+
+            var pTelegramId = cmd.CreateParameter();
+            pTelegramId.ParameterName = "@telegramId";
+            pTelegramId.DbType = DbType.String;
+            pTelegramId.Value = string.IsNullOrEmpty(telegramId) ? (object)DBNull.Value : telegramId;
+            cmd.Parameters.Add(pTelegramId);
+
+            var pTelegramUsername = cmd.CreateParameter();
+            pTelegramUsername.ParameterName = "@telegramUsername";
+            pTelegramUsername.DbType = DbType.String;
+            pTelegramUsername.Value = string.IsNullOrEmpty(telegramUsername) ? (object)DBNull.Value : telegramUsername;
+            cmd.Parameters.Add(pTelegramUsername);
 
             try
             {
-                var idNuevo = (int)(await cmd.ExecuteScalarAsync())!;
+                var resultado = await cmd.ExecuteScalarAsync();
+                int idNuevo = (resultado == null || resultado == DBNull.Value) ? 0 : Convert.ToInt32(resultado);
                 return (true, "", idNuevo);
             }
             catch (PostgresException pgEx) when (pgEx.SqlState == "23505") // unique_violation
@@ -2365,13 +2439,18 @@ AND c.fechacita <= NOW() + INTERVAL '48 hours'
             await using var cmd = new NpgsqlCommand(sql, conexion);
             await using var reader = await cmd.ExecuteReaderAsync();
 
+            int colId = reader.GetOrdinal("idservicioia");
+            int colCodigo = reader.GetOrdinal("codigo");
+            int colNombre = reader.GetOrdinal("nombre");
+            int colUrl = reader.GetOrdinal("url_endpoint_dgx");
+
             while (await reader.ReadAsync())
             {
                 lista.Add((
-                    reader.GetInt32(reader.GetOrdinal("idservicioia")),
-                    reader.GetString(reader.GetOrdinal("codigo")),
-                    reader.GetString(reader.GetOrdinal("nombre")),
-                    reader.IsDBNull(reader.GetOrdinal("url_endpoint_dgx")) ? "" : reader.GetString(reader.GetOrdinal("url_endpoint_dgx"))
+                    reader.IsDBNull(colId) ? 0 : reader.GetInt32(colId),
+                    reader.IsDBNull(colCodigo) ? "" : reader.GetString(colCodigo),
+                    reader.IsDBNull(colNombre) ? "" : reader.GetString(colNombre),
+                    reader.IsDBNull(colUrl) ? "" : reader.GetString(colUrl)
                 ));
             }
 
@@ -2391,18 +2470,28 @@ AND c.fechacita <= NOW() + INTERVAL '48 hours'
         LIMIT 1";
 
             await using var cmd = new NpgsqlCommand(sql, conexion);
-            cmd.Parameters.AddWithValue("@codigo", codigo ?? "");
+
+            var pCodigo = cmd.CreateParameter();
+            pCodigo.ParameterName = "@codigo";
+            pCodigo.DbType = DbType.String;
+            pCodigo.Value = string.IsNullOrEmpty(codigo) ? (object)DBNull.Value : codigo;
+            cmd.Parameters.Add(pCodigo);
 
             await using var reader = await cmd.ExecuteReaderAsync();
             if (!await reader.ReadAsync())
                 return (false, 0, "", "", "");
 
+            int colId = reader.GetOrdinal("idservicioia");
+            int colCodigo = reader.GetOrdinal("codigo");
+            int colNombre = reader.GetOrdinal("nombre");
+            int colUrl = reader.GetOrdinal("url_endpoint_dgx");
+
             return (
                 true,
-                reader.GetInt32(reader.GetOrdinal("idservicioia")),
-                reader.GetString(reader.GetOrdinal("codigo")),
-                reader.GetString(reader.GetOrdinal("nombre")),
-                reader.IsDBNull(reader.GetOrdinal("url_endpoint_dgx")) ? "" : reader.GetString(reader.GetOrdinal("url_endpoint_dgx"))
+                reader.IsDBNull(colId) ? 0 : reader.GetInt32(colId),
+                reader.IsDBNull(colCodigo) ? "" : reader.GetString(colCodigo),
+                reader.IsDBNull(colNombre) ? "" : reader.GetString(colNombre),
+                reader.IsDBNull(colUrl) ? "" : reader.GetString(colUrl)
             );
         }
 
@@ -2425,18 +2514,28 @@ AND c.fechacita <= NOW() + INTERVAL '48 hours'
         LIMIT 1";
 
             await using var cmd = new NpgsqlCommand(sql, conexion);
-            cmd.Parameters.AddWithValue("@correo", correoDoctor.Trim().ToLower());
+
+            var pCorreo = cmd.CreateParameter();
+            pCorreo.ParameterName = "@correo";
+            pCorreo.DbType = DbType.String;
+            pCorreo.Value = correoDoctor.Trim().ToLower();
+            cmd.Parameters.Add(pCorreo);
 
             await using var reader = await cmd.ExecuteReaderAsync();
             if (!await reader.ReadAsync())
                 return (false, 0, "", "", "");
 
+            int colIdUsuario = reader.GetOrdinal("idusuario");
+            int colNombre = reader.GetOrdinal("nombre");
+            int colApellido = reader.GetOrdinal("apellido");
+            int colCorreo = reader.GetOrdinal("correo");
+
             return (
                 true,
-                reader.GetInt32(reader.GetOrdinal("idusuario")),
-                reader.IsDBNull(reader.GetOrdinal("nombre")) ? "" : reader.GetString(reader.GetOrdinal("nombre")),
-                reader.IsDBNull(reader.GetOrdinal("apellido")) ? "" : reader.GetString(reader.GetOrdinal("apellido")),
-                reader.GetString(reader.GetOrdinal("correo"))
+                reader.IsDBNull(colIdUsuario) ? 0 : reader.GetInt32(colIdUsuario),
+                reader.IsDBNull(colNombre) ? "" : reader.GetString(colNombre),
+                reader.IsDBNull(colApellido) ? "" : reader.GetString(colApellido),
+                reader.IsDBNull(colCorreo) ? "" : reader.GetString(colCorreo)
             );
         }
 
@@ -2471,24 +2570,86 @@ AND c.fechacita <= NOW() + INTERVAL '48 hours'
 
             await using var cmd = new NpgsqlCommand(sql, conexion);
 
-            cmd.Parameters.AddWithValue("@idUsuario", idUsuario);
-            cmd.Parameters.AddWithValue("@idServicioIA", (object)idServicioIA ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@servicioCodigo", servicioCodigo ?? "");
-            cmd.Parameters.AddWithValue("@idUsuarioDoctor", (object)idUsuarioDoctor ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@doctorNombre", doctorNombre ?? "");
-            cmd.Parameters.AddWithValue("@doctorCorreo", doctorCorreo ?? "");
-            cmd.Parameters.AddWithValue("@canalRespuesta", canalRespuesta ?? "");
-            cmd.Parameters.AddWithValue("@contactoRespuesta", contactoRespuesta ?? "");
-            cmd.Parameters.AddWithValue("@motivoPaciente", (object)motivoPaciente ?? DBNull.Value);
+            var pIdUsuario = cmd.CreateParameter();
+            pIdUsuario.ParameterName = "@idUsuario";
+            pIdUsuario.DbType = DbType.Int32;
+            pIdUsuario.Value = idUsuario;
+            cmd.Parameters.Add(pIdUsuario);
 
-            var pImagen = cmd.Parameters.Add("@imagen", NpgsqlDbType.Bytea);
+            var pIdServicioIA = cmd.CreateParameter();
+            pIdServicioIA.ParameterName = "@idServicioIA";
+            pIdServicioIA.DbType = DbType.Int32;
+            pIdServicioIA.Value = idServicioIA.HasValue ? (object)idServicioIA.Value : DBNull.Value;
+            cmd.Parameters.Add(pIdServicioIA);
+
+            var pServicioCodigo = cmd.CreateParameter();
+            pServicioCodigo.ParameterName = "@servicioCodigo";
+            pServicioCodigo.DbType = DbType.String;
+            pServicioCodigo.Value = string.IsNullOrEmpty(servicioCodigo) ? (object)DBNull.Value : servicioCodigo;
+            cmd.Parameters.Add(pServicioCodigo);
+
+            var pIdUsuarioDoctor = cmd.CreateParameter();
+            pIdUsuarioDoctor.ParameterName = "@idUsuarioDoctor";
+            pIdUsuarioDoctor.DbType = DbType.Int32;
+            pIdUsuarioDoctor.Value = idUsuarioDoctor.HasValue ? (object)idUsuarioDoctor.Value : DBNull.Value;
+            cmd.Parameters.Add(pIdUsuarioDoctor);
+
+            var pDoctorNombre = cmd.CreateParameter();
+            pDoctorNombre.ParameterName = "@doctorNombre";
+            pDoctorNombre.DbType = DbType.String;
+            pDoctorNombre.Value = string.IsNullOrEmpty(doctorNombre) ? (object)DBNull.Value : doctorNombre;
+            cmd.Parameters.Add(pDoctorNombre);
+
+            var pDoctorCorreo = cmd.CreateParameter();
+            pDoctorCorreo.ParameterName = "@doctorCorreo";
+            pDoctorCorreo.DbType = DbType.String;
+            pDoctorCorreo.Value = string.IsNullOrEmpty(doctorCorreo) ? (object)DBNull.Value : doctorCorreo;
+            cmd.Parameters.Add(pDoctorCorreo);
+
+            var pCanalRespuesta = cmd.CreateParameter();
+            pCanalRespuesta.ParameterName = "@canalRespuesta";
+            pCanalRespuesta.DbType = DbType.String;
+            pCanalRespuesta.Value = string.IsNullOrEmpty(canalRespuesta) ? (object)DBNull.Value : canalRespuesta;
+            cmd.Parameters.Add(pCanalRespuesta);
+
+            var pContactoRespuesta = cmd.CreateParameter();
+            pContactoRespuesta.ParameterName = "@contactoRespuesta";
+            pContactoRespuesta.DbType = DbType.String;
+            pContactoRespuesta.Value = string.IsNullOrEmpty(contactoRespuesta) ? (object)DBNull.Value : contactoRespuesta;
+            cmd.Parameters.Add(pContactoRespuesta);
+
+            var pMotivoPaciente = cmd.CreateParameter();
+            pMotivoPaciente.ParameterName = "@motivoPaciente";
+            pMotivoPaciente.DbType = DbType.String;
+            pMotivoPaciente.Value = string.IsNullOrEmpty(motivoPaciente) ? (object)DBNull.Value : motivoPaciente;
+            cmd.Parameters.Add(pMotivoPaciente);
+
+            var pImagen = cmd.CreateParameter();
+            pImagen.ParameterName = "@imagen";
+            pImagen.DbType = DbType.Binary;
             pImagen.Value = (imagen != null && imagen.Length > 0) ? (object)imagen : DBNull.Value;
+            cmd.Parameters.Add(pImagen);
 
-            cmd.Parameters.AddWithValue("@imagenContentType", (object)imagenContentType ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@diagnosticoIA", (object)diagnosticoIA ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@ipOrigen", (object)ipOrigen ?? DBNull.Value);
+            var pImagenContentType = cmd.CreateParameter();
+            pImagenContentType.ParameterName = "@imagenContentType";
+            pImagenContentType.DbType = DbType.String;
+            pImagenContentType.Value = string.IsNullOrEmpty(imagenContentType) ? (object)DBNull.Value : imagenContentType;
+            cmd.Parameters.Add(pImagenContentType);
 
-            var idPeticion = (int)(await cmd.ExecuteScalarAsync())!;
+            var pDiagnosticoIA = cmd.CreateParameter();
+            pDiagnosticoIA.ParameterName = "@diagnosticoIA";
+            pDiagnosticoIA.DbType = DbType.String;
+            pDiagnosticoIA.Value = string.IsNullOrEmpty(diagnosticoIA) ? (object)DBNull.Value : diagnosticoIA;
+            cmd.Parameters.Add(pDiagnosticoIA);
+
+            var pIpOrigen = cmd.CreateParameter();
+            pIpOrigen.ParameterName = "@ipOrigen";
+            pIpOrigen.DbType = DbType.String;
+            pIpOrigen.Value = string.IsNullOrEmpty(ipOrigen) ? (object)DBNull.Value : ipOrigen;
+            cmd.Parameters.Add(pIpOrigen);
+
+            var resultado = await cmd.ExecuteScalarAsync();
+            int idPeticion = (resultado == null || resultado == DBNull.Value) ? 0 : Convert.ToInt32(resultado);
             return idPeticion;
         }
 
@@ -2506,9 +2667,24 @@ AND c.fechacita <= NOW() + INTERVAL '48 hours'
         WHERE idpeticion = @idPeticion";
 
             await using var cmd = new NpgsqlCommand(sql, conexion);
-            cmd.Parameters.AddWithValue("@ok", ok);
-            cmd.Parameters.AddWithValue("@mensajeError", (object)mensajeError ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@idPeticion", idPeticion);
+
+            var pOk = cmd.CreateParameter();
+            pOk.ParameterName = "@ok";
+            pOk.DbType = DbType.Boolean;
+            pOk.Value = ok;
+            cmd.Parameters.Add(pOk);
+
+            var pMensajeError = cmd.CreateParameter();
+            pMensajeError.ParameterName = "@mensajeError";
+            pMensajeError.DbType = DbType.String;
+            pMensajeError.Value = string.IsNullOrEmpty(mensajeError) ? (object)DBNull.Value : mensajeError;
+            cmd.Parameters.Add(pMensajeError);
+
+            var pIdPeticion = cmd.CreateParameter();
+            pIdPeticion.ParameterName = "@idPeticion";
+            pIdPeticion.DbType = DbType.Int32;
+            pIdPeticion.Value = idPeticion;
+            cmd.Parameters.Add(pIdPeticion);
 
             await cmd.ExecuteNonQueryAsync();
         }
