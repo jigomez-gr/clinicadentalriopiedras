@@ -7,6 +7,7 @@ using Dapper;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -23,6 +24,7 @@ using System.Security.Claims;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Threading.Tasks;
+
 
 namespace ClinicaWeb.Controllers
 {
@@ -2456,6 +2458,7 @@ LIMIT 1;
        
         [HttpGet]
         [AllowAnonymous]
+        [EnableCors("PublicoIA")]
         public IActionResult PublicoSimulador(string doctorCorreo = null)
         {
             ViewBag.DoctorCorreoFijo = doctorCorreo;
@@ -2469,6 +2472,7 @@ LIMIT 1;
         // -----------------------------------------------------------------
         [HttpPost]
         [AllowAnonymous]
+        [EnableCors("PublicoIA")]
         public async Task<IActionResult> PublicoIdentificarUsuario([FromBody] JsonElement body)
         {
             string correo = LeerString(body, "correo");
@@ -2516,6 +2520,7 @@ LIMIT 1;
         // -----------------------------------------------------------------
         [HttpGet]
         [AllowAnonymous]
+        [EnableCors("PublicoIA")]
         public async Task<IActionResult> PublicoListaServicios()
         {
             var lista = await _repositorioCita.ListaServiciosIA();
@@ -2572,6 +2577,7 @@ LIMIT 1;
         // -----------------------------------------------------------------
         [HttpPost]
         [AllowAnonymous]
+        [EnableCors("PublicoIA")]
         public async Task<IActionResult> PublicoAnalizarImagen(
             int idUsuario,
             IFormFile imagen,
@@ -2668,6 +2674,7 @@ LIMIT 1;
         // -----------------------------------------------------------------
         [HttpPost]
         [AllowAnonymous]
+        [EnableCors("PublicoIA")]
         public async Task<IActionResult> PublicoEnviarPeticion([FromBody] System.Text.Json.JsonElement body)
         {
             int idUsuario = LeerInt(body, "idUsuario");

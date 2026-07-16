@@ -26,6 +26,16 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 
 builder.Services.AddControllersWithViews();
 
+// --- CORS PARA LOS ENDPOINTS PUBLICOS DEL SIMULADOR IA (PublicoXXX en CitasController) ---
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("PublicoIA", policy =>
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod());
+});
+// ------------------------------------------------------------------------------------------
+
 builder.Services.Configure<ConnectionStrings>(builder.Configuration.GetSection("ConnectionStrings"));
 builder.Services.AddScoped<IMenuRepositorio, MenuRepositorio>();
 builder.Services.AddScoped<ICitaRepositorio, CitaRepositorio>();
@@ -81,6 +91,9 @@ if (!app.Environment.IsDevelopment())
 
 app.UseStaticFiles();
 app.UseRouting();
+
+// CORS debe ir DESPUÉS de UseRouting y ANTES de UseAuthentication/UseAuthorization
+app.UseCors("PublicoIA");
 
 // EL ORDEN AQUÍ ES CRÍTICO
 app.UseAuthentication();
