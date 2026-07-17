@@ -1720,8 +1720,9 @@ LIMIT 1;
                 if (string.IsNullOrEmpty(chat_id))
                     return Json(new { ESTADO = 2, MENSAJE = "⚠️ Error: chat_id vacío." });
 
-                string urlWeb = $"https://clinicadentalriopiedras.n8njigretera.cloud/Citas/EditarTemp?chat_id={chat_id}";
-
+               // string urlWeb = $"https://clinicadentalriopiedras.n8njigretera.cloud/Citas/EditarTemp?chat_id={chat_id}";
+                string baseUrl = _config["SiteConfig:BaseUrl"] ?? "https://clinicadentalriopiedras.jigretera.com";
+                string urlWeb = $"{baseUrl}/Citas/EditarTemp?chat_id={chat_id}";
                 using (var conexion = new NpgsqlConnection(Conexion.CN))
                 {
                     await conexion.OpenAsync();
@@ -1986,8 +1987,9 @@ LIMIT 1;
                 }
 
                 string token = CalcularMd5(chat_id + "MiClaveSecreta2026");
-                string urlWeb = $"https://clinicadentalriopiedras.n8njigretera.cloud/Citas/EditarGestionGlobal?chat_id={chat_id}&token={token}";
-
+               // string urlWeb = $"https://clinicadentalriopiedras.n8njigretera.cloud/Citas/EditarGestionGlobal?chat_id={chat_id}&token={token}";
+                string baseUrl = _config["SiteConfig:BaseUrl"] ?? "https://clinicadentalriopiedras.jigretera.com";
+                string urlWeb = $"{baseUrl}/Citas/EditarGestionGlobal?chat_id={chat_id}&token={token}";
                 // 2. Usamos 'objetoTemp' para que no haya dudas de qué clase estamos usando
                 TelegramCitaTemp objetoTemp = await _repositorioCita.ObtenerCitaGestionGlobal(chat_id);
 
@@ -2033,8 +2035,9 @@ LIMIT 1;
                 }
 
                 string token = CalcularMd5(chat_id + "MiClaveSecreta2026");
-                string urlWeb = $"https://clinicadentalriopiedras.n8njigretera.cloud/Citas/EditarGestionGlobalConfirmar?chat_id={chat_id}&token={token}";
-
+               // string urlWeb = $"https://clinicadentalriopiedras.n8njigretera.cloud/Citas/EditarGestionGlobalConfirmar?chat_id={chat_id}&token={token}";
+                string baseUrl = _config["SiteConfig:BaseUrl"] ?? "https://clinicadentalriopiedras.jigretera.com";
+                string urlWeb = $"{baseUrl}/Citas/EditarGestionGlobalConfirmar?chat_id={chat_id}&token={token}";
                 // 2. Usamos 'objetoTemp' para que no haya dudas de qué clase estamos usando
                 TelegramCitaTemp objetoTemp = await _repositorioCita.ObtenerCitaGestionGlobal(chat_id);
 
