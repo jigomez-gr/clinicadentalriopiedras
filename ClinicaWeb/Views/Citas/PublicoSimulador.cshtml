@@ -225,22 +225,17 @@
                         <div class="col-lg-6">
 
                             <!-- Tabs: Cámara / Archivo -->
-                            <ul class="nav nav-tabs" role="tablist">
-                                <li class="nav-item">
-                                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabCamara" type="button">
-                                        <i class="fa-solid fa-camera me-1"></i> Cámara
-                                    </button>
-                                </li>
-                                <li class="nav-item">
-                                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabArchivo" type="button">
-                                        <i class="fa-solid fa-file-image me-1"></i> Archivo
-                                    </button>
-                                </li>
-                            </ul>
+                            <div class="btn-group w-100" role="group">
+                                <button class="btn btn-primary" id="btnTabCamara" type="button" onclick="mostrarTab('camara')">
+                                    <i class="fa-solid fa-camera me-1"></i> Cámara
+                                </button>
+                                <button class="btn btn-outline-primary" id="btnTabArchivo" type="button" onclick="mostrarTab('archivo')">
+                                    <i class="fa-solid fa-file-image me-1"></i> Archivo
+                                </button>
+                            </div>
 
-                            <div class="tab-content border border-top-0 rounded-bottom p-3">
-                                <!-- Cámara -->
-                                <div class="tab-pane fade show active" id="tabCamara">
+                            <div class="border border-top-0 rounded-bottom p-3">
+                                <div id="tabCamara">
                                     <video id="videoCamara" autoplay playsinline></video>
                                     <div class="d-flex gap-2 mt-2">
                                         <button class="btn btn-success btn-sm" id="btnAbrirCamara" type="button" onclick="abrirCamara()">
@@ -256,8 +251,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!-- Archivo -->
-                                <div class="tab-pane fade" id="tabArchivo">
+                                <div id="tabArchivo" style="display:none;">
                                     <input type="file" class="form-control" id="fileImagen" accept="image/*" onchange="onFileSeleccionado(event)">
                                 </div>
                             </div>
@@ -368,6 +362,21 @@
             $(".paso").removeClass("activo");
             $("#paso" + n).addClass("activo");
             window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+
+        function mostrarTab(tab) {
+            if (tab === "camara") {
+                $("#tabCamara").show();
+                $("#tabArchivo").hide();
+                $("#btnTabCamara").removeClass("btn-outline-primary").addClass("btn-primary");
+                $("#btnTabArchivo").removeClass("btn-primary").addClass("btn-outline-primary");
+            } else {
+                pararCamara();
+                $("#tabCamara").hide();
+                $("#tabArchivo").show();
+                $("#btnTabArchivo").removeClass("btn-outline-primary").addClass("btn-primary");
+                $("#btnTabCamara").removeClass("btn-primary").addClass("btn-outline-primary");
+            }
         }
 
         function toastError(msg) {
