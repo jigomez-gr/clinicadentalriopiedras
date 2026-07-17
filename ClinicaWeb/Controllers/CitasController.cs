@@ -2585,6 +2585,16 @@ LIMIT 1;
         //    POST /Citas/PublicoAnalizarImagen
         //    form-data: idUsuario, imagen (file), servicio, contexto
         // -----------------------------------------------------------------
+        // -----------------------------------------------------------------
+        // 3) Analizar imagen en el DGX
+        //    POST /Citas/PublicoAnalizarImagen
+        //    form-data: idUsuario, imagen (file), servicio, contexto
+        //
+        //    CAMBIO: el FastAPI del DGX tiene UN SOLO endpoint para los 5
+        //    servicios (dental/rx/derma/belleza/general) — decide el prompt
+        //    según el campo "servicio" que le mandamos. Ya no hace falta
+        //    una URL distinta por servicio, solo IAConfig:UrlAnalizar.
+        // -----------------------------------------------------------------
         [HttpPost]
         [AllowAnonymous]
         [EnableCors("PublicoIA")]
@@ -2605,16 +2615,13 @@ LIMIT 1;
                 var servicioIA = await _repositorioCita.ObtenerServicioIA(servicio);
 
                 var iaConfig = _config.GetSection("IAConfig");
+
+                // Antes había un switch con UrlAnalizarDental/Rx/Derma/Belleza/General.
+                // Ya no hace falta: es un único endpoint, el FastAPI decide el prompt
+                // según el campo "servicio" que le mandamos más abajo.
                 string urlIA = servicioIA.existe && !string.IsNullOrWhiteSpace(servicioIA.urlEndpointDgx)
                     ? servicioIA.urlEndpointDgx
-                    : servicio switch
-                    {
-                        "rx" => iaConfig["UrlAnalizarRx"] ?? "",
-                        "general" => iaConfig["UrlAnalizarGeneral"] ?? "",
-                        "derma" => iaConfig["UrlAnalizarDerma"] ?? "",
-                        "belleza" => iaConfig["UrlAnalizarBelleza"] ?? "",
-                        _ => iaConfig["UrlAnalizarDental"] ?? ""
-                    };
+                    : iaConfig["UrlAnalizar"] ?? "";
 
                 if (string.IsNullOrWhiteSpace(urlIA))
                     return Ok(new { ok = false, msg = "Servicio IA no configurado." });
